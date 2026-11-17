@@ -154,12 +154,14 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             mainHandler.post { lanMessage = error }
         }
     }
-    LaunchedEffect(lanScreen, lanHost) {
-        when (lanScreen) {
-            LanScreen.JOIN -> nearby.discover { lanRooms = it }
-            LanScreen.HOST_WAIT -> lanHost?.let {
+    LaunchedEffect(lanScreen, lanHost, lanRole) {
+        when {
+            lanRole == LanRole.HOST && lanHost != null -> lanHost?.let {
+                // Keep the room advertised while the game is active so the
+                // same guest can discover it again after a Wi-Fi interruption.
                 nearby.advertise(it.port, it.code.isNotEmpty())
             }
+            lanScreen == LanScreen.JOIN -> nearby.discover { lanRooms = it }
             else -> nearby.stop()
         }
     }
