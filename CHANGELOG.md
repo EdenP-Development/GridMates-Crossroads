@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.2 tabletop-feedback QA 1040] — November 16/17, 2026
+- Owner QA1037 showed **1 win / 2 completed matches**, AI3 briar setback, and AI1 pranking the human back 2 spaces; the history and negative-event/Mischief cards rendered properly.
+- Added a brief ~360ms visual-only dice-face animation before the **single authoritative Kotlin rules-engine roll** (no RNG or probability changes).
+- Added a ~2-second nonblocking new-encounter notice in the persistent action area, while keeping the full journal/history.
+- Moved Leave match outside the scrollable choice list and gave the active numbered token slightly more emphasis.
+- [Design validation PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44005645444), [Kotlin rules PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44005650763), [signed QA1040 Android build PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44005645389).
+- [**Actual Android 15 QA1037→1040 emulator update PASS**](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44006111587), preserving seeded stats. [Emulator UI screenshots](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44006111587/artifacts/14294641972) capture readable crossroads controls and separate Leave action.
+- Owner phone QA of dice animation and event banner still pending. [Exact QA receipt](docs/QA_RECEIPT_1040_2026_11_16.md).
+
+
 ## [0.3.1 owner-screen polish QA 1037] — November 16/17, 2026
 - Confirmed four-player AI3 victory, functioning journal, and earlier saved 1 win/1 match in owner screenshots.
 - Fixed “Your turn”, singular match/win/step/encounter grammar and lower action-panel heading clipping. Actions reset to top after every game revision; route choice lists remain scrollable.

@@ -32,3 +32,6 @@
 
 - `docs/QA_OWNER_PHONE_FOUR_PLAYER_TURN_FLOW.md` — 4-player AI victory, journal observation and initial 1026 phone feedback.
 - `docs/QA_RECEIPT_1037_2026_11_16.md` — exact signed APK and 1026→1037 emulator update proof.
+
+- `docs/QA_OWNER_PHONE_1037_EVENTS.md` — phone evidence of 1 win / 2 matches, setback and AI→human Mischief.
+- `docs/QA_RECEIPT_1040_2026_11_16.md` — exact APK, source, SHA and real 1037→1040 emulator update.
