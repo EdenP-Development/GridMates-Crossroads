@@ -10,35 +10,35 @@ on:
       base_run:
         description: "Previous QA run ID"
         type: string
-        default: "43997729223"
+        default: "43999320965"
       base_name:
         description: "Previous artifact name"
         type: string
-        default: "Crossroads-Android-QA-1018-7b551924d4a83e59e5cca2e80a7cf5df897ae2e3"
+        default: "Crossroads-Android-QA-1020-9f12c6101bf50829e4935bc17ab55720969fba7a"
       base_code:
         description: "Previous Android versionCode"
         type: string
-        default: "1018"
+        default: "1020"
       base_sha:
         description: "Previous exact APK SHA-256"
         type: string
-        default: "5b70cca909d6154bb5fa5cd227df6abf7a8480424da6e45cdf4776813c395d2d"
+        default: "f528d0b722363e3df8043faa4344427afad506ec29b79b212231813499dcad40"
       next_run:
         description: "Candidate QA run ID"
         type: string
-        default: "43999320965"
+        default: "44001688534"
       next_name:
         description: "Candidate artifact name"
         type: string
-        default: "Crossroads-Android-QA-1020-9f12c6101bf50829e4935bc17ab55720969fba7a"
+        default: "Crossroads-Android-QA-1026-d4c11fe236ddc7763beb02ebdf3bc990ab151ea8"
       next_code:
         description: "Candidate Android versionCode"
         type: string
-        default: "1020"
+        default: "1026"
       next_sha:
         description: "Candidate exact APK SHA-256"
         type: string
-        default: "f528d0b722363e3df8043faa4344427afad506ec29b79b212231813499dcad40"
+        default: "8afa05795a0f00e4259d6d2d85e7a5f4b20a0e04df3160bc7899daceac8c4704"
 permissions:
   contents: read
   actions: read
@@ -47,22 +47,22 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      BASE_CODE: ${{ inputs.base_code || '1018' }}
-      NEXT_CODE: ${{ inputs.next_code || '1020' }}
-      BASE_SHA: ${{ inputs.base_sha || '5b70cca909d6154bb5fa5cd227df6abf7a8480424da6e45cdf4776813c395d2d' }}
-      NEXT_SHA: ${{ inputs.next_sha || 'f528d0b722363e3df8043faa4344427afad506ec29b79b212231813499dcad40' }}
+      BASE_CODE: ${{ inputs.base_code || '1020' }}
+      NEXT_CODE: ${{ inputs.next_code || '1026' }}
+      BASE_SHA: ${{ inputs.base_sha || 'f528d0b722363e3df8043faa4344427afad506ec29b79b212231813499dcad40' }}
+      NEXT_SHA: ${{ inputs.next_sha || '8afa05795a0f00e4259d6d2d85e7a5f4b20a0e04df3160bc7899daceac8c4704' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: ${{ inputs.base_name || 'Crossroads-Android-QA-1018-7b551924d4a83e59e5cca2e80a7cf5df897ae2e3' }}
-          run-id: ${{ inputs.base_run || '43997729223' }}
+          name: ${{ inputs.base_name || 'Crossroads-Android-QA-1020-9f12c6101bf50829e4935bc17ab55720969fba7a' }}
+          run-id: ${{ inputs.base_run || '43999320965' }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: qa-archives/base
       - uses: actions/download-artifact@v4
         with:
-          name: ${{ inputs.next_name || 'Crossroads-Android-QA-1020-9f12c6101bf50829e4935bc17ab55720969fba7a' }}
-          run-id: ${{ inputs.next_run || '43999320965' }}
+          name: ${{ inputs.next_name || 'Crossroads-Android-QA-1026-d4c11fe236ddc7763beb02ebdf3bc990ab151ea8' }}
+          run-id: ${{ inputs.next_run || '44001688534' }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: qa-archives/next
       - name: Verify distinct prior and candidate APK identity/checksums
