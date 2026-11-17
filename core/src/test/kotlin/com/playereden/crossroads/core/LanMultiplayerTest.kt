@@ -74,6 +74,7 @@ class LanMultiplayerTest {
             }
         }
         assertEquals(1, game.currentIndex)
+        val initialRevision = game.revision
         val welcome = CountDownLatch(1)
         val afterRoll = CountDownLatch(1)
         val latest = AtomicReference<MatchCheckpoint>()
@@ -90,7 +91,7 @@ class LanMultiplayerTest {
         val client = CrossroadsLanGuest(
             onState = { value ->
                 latest.set(value)
-                if (value.expected.revision > 0 && value.expected.die != null) {
+                if (value.expected.revision > initialRevision) {
                     afterRoll.countDown()
                 }
                 welcome.countDown()
