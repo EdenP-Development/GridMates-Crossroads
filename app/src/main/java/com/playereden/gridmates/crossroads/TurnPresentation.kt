@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,11 +39,17 @@ private val DiceOutline = Color(0xFFB4A285)
 @Composable
 internal fun DieFace(
     face: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    announceFace: Boolean = true
 ) {
     val shown = face.coerceIn(1, 6)
+    // The button's decorative die should not announce an arbitrary preview
+    // face (often a 1) before the real roll. The result die stays accessible.
+    val dieModifier = if (announceFace)
+        modifier.semantics { contentDescription = "Die showing $shown" }
+    else modifier.clearAndSetSemantics { }
     Canvas(
-        modifier = modifier.semantics { contentDescription = "Die showing $shown" }
+        modifier = dieModifier
     ) {
         val side = size.minDimension
         if (side <= 0f) return@Canvas
