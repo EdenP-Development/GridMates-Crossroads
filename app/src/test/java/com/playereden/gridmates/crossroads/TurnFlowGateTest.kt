@@ -51,18 +51,18 @@ class TurnFlowGateTest {
     @Test fun finishedMatchesNeverAdvanceAndOpenRouteIsStillAnAiDecision() {
         assertFalse(
             TurnFlowGate.mayAdvanceAi(
-                state(phase = Phase.FINISHED), turnReady = true, readingOrMenuOpen = false
+                state(phase = Phase.FINISHED), turnReady = true, readingOrMenuOpen = false, appInForeground = true
             )
         )
         // When not paused, the existing engine still resolves bot route decisions.
         assertTrue(
             TurnFlowGate.mayAdvanceAi(
-                state(phase = Phase.ROUTE), turnReady = true, readingOrMenuOpen = false
+                state(phase = Phase.ROUTE), turnReady = true, readingOrMenuOpen = false, appInForeground = true
             )
         )
         assertFalse(
             TurnFlowGate.mayAdvanceAi(
-                state(phase = Phase.TARGET), turnReady = true, readingOrMenuOpen = true
+                state(phase = Phase.TARGET), turnReady = true, readingOrMenuOpen = true, appInForeground = true
             )
         )
     }
