@@ -110,7 +110,7 @@ internal fun CrossroadsHowToPlayDialog(onDismiss: () -> Unit) {
                             color = HelpBark
                         )
                         Text(
-                            "Current test mode: offline solo play against 1–3 AI opponents.",
+                            "Offline choices: Solo against 1–3 AI opponents, or Pass & Play for 2–4 people taking turns on one phone. Same-Wi-Fi play is not available yet.",
                             style = MaterialTheme.typography.bodySmall,
                             color = HelpBark
                         )
