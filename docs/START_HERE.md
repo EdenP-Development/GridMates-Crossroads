@@ -1,5 +1,5 @@
 # Start here — Crossroads foundation
-**Status:** PACE-05 QA1051 Android build and real QA1044→1051 emulator upgrade passed, with local statistics preserved. Cozy/Brisk pacing and expanded three-way crossroads selection await owner-phone acceptance. LAN is not implemented.
+**Status:** CAM-06 QA1057 built and verified updating over QA1051 with saved statistics preserved on an Android emulator. Dynamic camera Follow/Overview and manual zoom/pan await owner physical-phone approval. LAN is not yet implemented.
 
 0. [Current Status](CURRENT_STATUS.md) — exact implementation/checkpoint and blockers.
 1. [Game Bible](GAME_BIBLE.md) — authoritative product vision and decided-vs-proposed distinctions.

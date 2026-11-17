@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.6.0 dynamic camera QA1057] — November 16/17, 2026
+- Initial in-match board **Follow** view magnifies the active traveling piece; junctions automatically widen to frame immediate exits. At turn boundaries the camera holds on the previous mover until their travel finishes, including prank targets.
+- **Overview / Follow** control, ± zoom buttons, gesture-centroid-anchored pinch-to-zoom (1–3x), drag-to-pan, and translation bounds that prevent losing the board offscreen.
+- Existing **Inspect map** now uses the same gesture-aware canvas, starting in the overview view.
+- Camera is clip-bounded to the board; Roll, route selections and Leave controls are not scaled or moved. Presentation-only, with **no** rule RNG, events, route topology or save-key changes.
+- Added pure Kotlin camera math and mover-follow unit tests. [Rules/JVM QA passed](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44013942279), [board QA passed](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44013937468).
+- [**Signed Android QA1057 APK passed**](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44013937297), [APK ZIP artifact](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44013937297/artifacts/14298072589).
+- [**Real Android15 emulator QA1051→1057 install-over passed**](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44014581112); seeded statistics retained exactly; [camera screenshot evidence](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44014581112/artifacts/14297388959) shows Follow, Overview and Zoom In.
+- Real-phone pinch/drag smoothness, 3-option choice handling, long-match camera fatigue and performance require owner QA. [Receipt](docs/QA_RECEIPT_CAMERA_1057_2026_11_16.md).
+
+
 ## [0.5.0 perceived pacing / full crossroads QA1051] — November 16/17, 2026
 - Owner QA1044: **3 wins / 5 completed matches** after a three-seat AI1 victory; three-way Old Forest Junction third route (Cedar Bridge) was partly obscured; the user reported matches felt overly fast.
 - Added **Pace: Cozy / Brisk** control and separate per-node movement/landing/encounter timing. UI now waits for the traveled route to finish before accepting human input or advancing the next bot action.

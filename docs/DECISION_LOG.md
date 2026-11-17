@@ -29,3 +29,8 @@
 - Exact landing at Finish unnecessary; crossing it wins.
 - Short 2-space mischief setback and one-use shield; no chained attack events.
 - Plain drawable paths and colored tokens before decorative art.
+
+## APPROVED DIRECTION / CAM-06 — November 16, 2026
+- User requested mobile-board-game-style **zooming and board camera exploration** and explicitly asked to continue building it. 2D dynamic camera is in scope while keeping core race rules unchanged.
+- Implemented QA candidate: follow a moving piece, wider crossroads framing, Overview, pinch zoom, pan and recenter. Zoom defaults and gesture response remain **OPEN for phone playtest**, not locked production decisions.
+- [Draft camera PR #12](https://github.com/PlayerEden/GridMates-Crossroads/pull/12) and [QA handoff](CAM_06_QA_HANDOFF.md).

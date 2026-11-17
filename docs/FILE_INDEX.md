@@ -43,3 +43,6 @@
 
 - `docs/PACE_05_QA_HANDOFF.md` — Cozy/Brisk presentation timings, three-way chooser behavior and owner QA checklist.
 - `docs/QA_RECEIPT_1051_2026_11_16.md` — exact QA1051 APK, build hash, tests and 1044→1051 emulator install-over proof.
+
+- `docs/CAM_06_QA_HANDOFF.md` — camera modes, zoom/pan/recenter gestures, physical-device acceptance checklist.
+- `docs/QA_RECEIPT_CAMERA_1057_2026_11_16.md` — signed CAM-06 APK and 1051→1057 emulator install-over evidence.

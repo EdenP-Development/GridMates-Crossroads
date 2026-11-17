@@ -104,6 +104,13 @@ A playable prototype must handle a complete AI race, explain every crossroads, a
 
 Not a Monopoly GO clone, not The Game of Life, and not a full life simulator. No property acquisition, persistent city, combat system, account requirement, server economy, gacha, massive collectible burden, forced notifications, or cross-app progression service. Avoid scope creep until the basic game is proven fun.
 
+## Camera and board legibility (implemented QA experiment, November 16/17, 2026)
+To make the fixed map feel like a little traveling world, the prototype now has a 2D camera:
+- Follow the moving piece; widen around a crossroads; allow overview.
+- Allow direct pinch zoom, drag to pan, ± controls and a deliberate return to Follow, while keeping the fixed turn/action area unchanged.
+- Camera behavior is **presentation only** and must never affect the die, event odds, board graph, user choice or result.
+- An Android QA1057 implementation exists in Draft PR #12; actual device gesture feel and final zoom defaults are **not yet owner-approved**. Artwork can use this camera foundation later.
+
 ## 13. Development rule
 
 **A plain prototype must already be fun.** Test the basic board with colored circles before commissioning more images. Every new feature must improve player decisions, social play, usability or replayability enough to justify code, QA, and maintenance cost.
