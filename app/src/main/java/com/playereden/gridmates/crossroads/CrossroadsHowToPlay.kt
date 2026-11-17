@@ -98,7 +98,7 @@ internal fun CrossroadsHowToPlayDialog(onDismiss: () -> Unit) {
                         )
                         GuideStep(
                             "5", "Use the risk clues",
-                            "High, medium, and low risk describe each trail's character, not guaranteed rewards or fixed odds. Your AI rivals choose their own routes."
+                            "High, medium, and low risk describe each trail, not guaranteed outcomes. In Solo, AI chooses its own paths; in Pass & Play, each person decides."
                         )
                         HorizontalDivider(color = HelpBark.copy(alpha = 0.22f))
                         Text("Explore the board",
