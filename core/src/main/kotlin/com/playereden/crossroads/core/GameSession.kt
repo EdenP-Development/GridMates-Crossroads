@@ -63,8 +63,14 @@ class GameSession(
         require(board.start != board.finish)
         require(board.nodes.map { it.id }.toSet().size == board.nodes.size)
         require(board.nodes.any { it.id == board.start } && board.nodes.any { it.id == board.finish })
-        players = (0 until seats).map {
-            Player(if (it in humanIndices) "You" else "AI $it", it !in humanIndices, board.start, mutableListOf(board.start))
+        players = (0 until seats).map { seat ->
+            val isBot = seat !in humanIndices
+            val name = when {
+                isBot -> "AI $seat"
+                humanIndices.size == 1 -> "You"
+                else -> "Player ${seat + 1}"
+            }
+            Player(name, isBot, board.start, mutableListOf(board.start))
         }
     }
 
