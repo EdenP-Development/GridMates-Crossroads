@@ -56,6 +56,7 @@ object GameData {
 }
 
 /** A short, display-ready memory of an actual encountered event. */
+@Serializable
 data class EncounterNote(
     val turn: Int,
     val actor: String,
@@ -63,7 +64,9 @@ data class EncounterNote(
     val outcome: String,
     val kind: String
 )
+@Serializable
 enum class Phase { ROLL, ROUTE, TARGET, FINISHED }
+@Serializable
 data class Player(
     val name: String,
     val isBot: Boolean,
@@ -71,6 +74,7 @@ data class Player(
     val traversed: MutableList<String>,
     var shield: Boolean = false
 )
+@Serializable
 data class Snapshot(
     val revision: Int,
     val phase: Phase,
