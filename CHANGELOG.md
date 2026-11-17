@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.4.0 board motion QA 1044] — November 16/17, 2026
+- QA1040 owner screenshots showed **2 wins / 3 completed games** before a new four-seat game, AI3 and human shields, a human three-space advance, and a new human victory. No post-win updated counter was shown. [Owner QA summary](docs/QA_OWNER_PHONE_1040_FULL_WIN.md).
+- Added **visual-only route-following movement** over every newly traversed graph node, including reversed steps when a setback/prank moves a token back. Authoritative engine/RNG unaffected.
+- Slightly enlarged numbered player pieces and active highlight, plus a read-only **Inspect map** overlay. Match-scoped animation resets on rematch.
+- Added pure-Kotlin movement-frame unit tests (forward, backward, unchanged, reset), verified in [JVM QA](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44007580050).
+- [Signed QA 1044 Android build PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44007530364). [Download artifact](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44007530364/artifacts/14295396752).
+- [**Real Android 15 emulator 1040→1044 install-over PASS**](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44008186807) preserving test statistics and launching a game; [screenshots](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44008186807/artifacts/14294789619).
+- Owner phone motion/inspector test still pending. [QA1044 receipt](docs/QA_RECEIPT_1044_2026_11_16.md).
+
+
 ## [0.3.2 tabletop-feedback QA 1040] — November 16/17, 2026
 - Owner QA1037 showed **1 win / 2 completed matches**, AI3 briar setback, and AI1 pranking the human back 2 spaces; the history and negative-event/Mischief cards rendered properly.
 - Added a brief ~360ms visual-only dice-face animation before the **single authoritative Kotlin rules-engine roll** (no RNG or probability changes).
