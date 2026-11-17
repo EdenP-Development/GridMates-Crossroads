@@ -1,5 +1,5 @@
 # Start here — Crossroads foundation
-**Status:** Woven Trail v0.2 Android QA 1020 built and verified for 1018→1020 emulator install-over, including a captured board screenshot. Physical QA 1020 playtest pending; LAN is not implemented.
+**Status:** Woven Trail first complete owner phone win recorded; Turn Flow v0.3 QA1026 build and emulator update passed. Phone QA1026 still pending. LAN is not implemented.
 
 0. [Current Status](CURRENT_STATUS.md) — exact implementation/checkpoint and blockers.
 1. [Game Bible](GAME_BIBLE.md) — authoritative product vision and decided-vs-proposed distinctions.
