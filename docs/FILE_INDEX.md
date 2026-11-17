@@ -40,3 +40,6 @@
 - `docs/QA_RECEIPT_1044_2026_11_16.md` — route-motion build 1044, source/checksum and real Android emulator update.
 
 - `docs/RESEARCH_MOBILE_BOARD_GAME_PACING_AND_FEEL_2026_11.md` — researched competitor mechanics, measured current graph length, UX/game-juice proposals and staged pacing experiment acceptance gates.
+
+- `docs/PACE_05_QA_HANDOFF.md` — Cozy/Brisk presentation timings, three-way chooser behavior and owner QA checklist.
+- `docs/QA_RECEIPT_1051_2026_11_16.md` — exact QA1051 APK, build hash, tests and 1044→1051 emulator install-over proof.

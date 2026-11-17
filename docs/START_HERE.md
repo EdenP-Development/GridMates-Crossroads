@@ -1,5 +1,5 @@
 # Start here — Crossroads foundation
-**Status:** Woven Trail first complete owner phone win recorded; Turn Flow v0.3 QA1026 build and emulator update passed. Phone QA1026 still pending. LAN is not implemented.
+**Status:** PACE-05 QA1051 Android build and real QA1044→1051 emulator upgrade passed, with local statistics preserved. Cozy/Brisk pacing and expanded three-way crossroads selection await owner-phone acceptance. LAN is not implemented.
 
 0. [Current Status](CURRENT_STATUS.md) — exact implementation/checkpoint and blockers.
 1. [Game Bible](GAME_BIBLE.md) — authoritative product vision and decided-vs-proposed distinctions.
