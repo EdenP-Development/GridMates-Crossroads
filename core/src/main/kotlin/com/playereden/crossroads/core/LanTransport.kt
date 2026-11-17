@@ -152,9 +152,12 @@ class CrossroadsLanGuest(
     private val writer = Executors.newSingleThreadExecutor(lanThread("crossroads-guest-write"))
     @Volatile private var socket: Socket? = null
     @Volatile private var running = true
-    @Volatile var roomId: String = ""; private set
-    @Volatile var rejoinToken: String = ""; private set
-    @Volatile var connected: Boolean = false; private set
+    @Volatile var roomId: String = ""
+        private set
+    @Volatile var rejoinToken: String = ""
+        private set
+    @Volatile var connected: Boolean = false
+        private set
 
     fun connect(host: String, port: Int, code: String = "", resumeToken: String = "") {
         require(host.isNotBlank() && port in 1..65535) { "Invalid host address" }
