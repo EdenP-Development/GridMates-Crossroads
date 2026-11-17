@@ -42,7 +42,7 @@ class GameSession(
         require(board.nodes.map { it.id }.toSet().size == board.nodes.size)
         require(board.nodes.any { it.id == board.start } && board.nodes.any { it.id == board.finish })
         players = (0 until seats).map {
-            Player("Player ${it + 1}", it !in humanIndices, board.start, mutableListOf(board.start))
+            Player(if (it in humanIndices) "You" else "AI $it", it !in humanIndices, board.start, mutableListOf(board.start))
         }
     }
 
