@@ -346,35 +346,20 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             label = "encounter-reveal"
                         ) { note ->
                             if (note != null) {
-                                val revealTint = when (note.kind) {
-                                    "setback" -> Color(0xFFF0E0C8)
-                                    "mischief" -> Color(0xFFE9DEED)
-                                    else -> Color(0xFFE1E9D7)
-                                }
-                                val mark = when (note.kind) {
-                                    "setback" -> "⚠"
-                                    "mischief" -> "🎭"
-                                    else -> "🍀"
-                                }
-                                Surface(color = revealTint, shape = MaterialTheme.shapes.medium) {
-                                    Column(
-                                        modifier = Modifier.fillMaxWidth().padding(10.dp),
-                                        verticalArrangement = Arrangement.spacedBy(3.dp)
-                                    ) {
-                                        Text("$mark  ${note.actor} · ${note.title}",
-                                            fontWeight = FontWeight.SemiBold,
-                                            style = MaterialTheme.typography.bodyMedium)
-                                        Text(note.outcome, style = MaterialTheme.typography.bodySmall)
-                                    }
-                                }
+                                EncounterRibbon(note)
                             }
                         }
                     }
                     if (state.die != null && state.phase != Phase.FINISHED) {
-                        Text(
-                            "🎲 ${state.die}  ·  ${state.remainingSteps} ${if (state.remainingSteps == 1) "step" else "steps"} remaining",
-                            style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            DieFace(state.die, modifier = Modifier.size(34.dp))
+                            Text(
+                                "${state.remainingSteps} ${if (state.remainingSteps == 1) "step" else "steps"} remaining",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
                     }
                     if (state.phase == Phase.ROUTE && state.playerIndex == 0 &&
                         game.availableRoutes().size > 2) {
@@ -417,14 +402,22 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                                     enabled = !rollingDie && turnReady,
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text(if (rollingDie) "🎲 $rollingFace  Rolling…" else "🎲 Roll the die")
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        DieFace(if (rollingDie) rollingFace else 1,
+                                            modifier = Modifier.size(34.dp))
+                                        Text(if (rollingDie) "Rolling…" else "Roll the die",
+                                            fontWeight = FontWeight.SemiBold)
+                                    }
                                 }
                             }
                             Phase.ROUTE -> {
                                 val fork = board.forkAt(state.players[0].position)
                                 Text(fork?.title ?: "Choose your route", fontWeight = FontWeight.SemiBold, color = Forest)
                                 if (fork != null) {
-                                    Text("Choose a path • routes have different risks and rewards",
+                                    Text("Check each trail’s risk before choosing.",
                                         style = MaterialTheme.typography.bodySmall)
                                 }
                                 if (game.availableRoutes().size > 2) {
@@ -442,11 +435,11 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                                             modifier = Modifier.fillMaxWidth(),
                                             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                                         ) {
-                                            Column(modifier = Modifier.fillMaxWidth()) {
-                                                Text(choice?.label ?: route.id, fontWeight = FontWeight.SemiBold)
-                                                Text(choice?.description ?: "Follow this trail",
-                                                    style = MaterialTheme.typography.bodySmall)
-                                            }
+                                            RouteChoiceSummary(
+                                                label = choice?.label ?: route.id,
+                                                description = choice?.description ?: "Follow this trail",
+                                                risk = choice?.risk
+                                            )
                                         }
                                     }
                                 }
@@ -488,27 +481,16 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             style = MaterialTheme.typography.bodySmall, color = Bark)
                         game.availableRoutes().forEach { route ->
                             val choice = junction?.choices?.firstOrNull { it.to == route.id }
-                            val routeTint = when (choice?.risk) {
-                                "high" -> Color(0xFFAC854B)
-                                "medium" -> Color(0xFF9A79A5)
-                                else -> Forest
-                            }
                             OutlinedButton(
                                 onClick = { update { game.chooseRoute(route.id) } },
                                 modifier = Modifier.fillMaxWidth(),
                                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp)
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    Box(Modifier.size(12.dp).background(routeTint,
-                                        androidx.compose.foundation.shape.CircleShape))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(choice?.label ?: route.id,
-                                            fontWeight = FontWeight.SemiBold)
-                                        Text(choice?.description ?: "Follow this trail",
-                                            style = MaterialTheme.typography.bodySmall)
-                                    }
-                                }
+                                RouteChoiceSummary(
+                                    label = choice?.label ?: route.id,
+                                    description = choice?.description ?: "Follow this trail",
+                                    risk = choice?.risk
+                                )
                             }
                         }
                     }
