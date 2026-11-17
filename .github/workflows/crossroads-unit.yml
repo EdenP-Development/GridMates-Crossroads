@@ -1,0 +1,48 @@
+name: Crossroads rules and design tests
+on:
+  push:
+    branches: ["main", "design/**", "feature/**", "fix/**"]
+    paths:
+      - "core/**"
+      - "data/**"
+      - "scripts/**"
+      - "package.json"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - ".github/workflows/crossroads-unit.yml"
+  pull_request:
+    paths:
+      - "core/**"
+      - "data/**"
+      - "scripts/**"
+      - "package.json"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - ".github/workflows/crossroads-unit.yml"
+permissions:
+  contents: read
+concurrency:
+  group: crossroads-unit-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify design fixtures
+        run: npm test && npm run validate
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.11.1"
+      - name: Run JVM rules tests
+        run: gradle --no-daemon :core:test --console=plain

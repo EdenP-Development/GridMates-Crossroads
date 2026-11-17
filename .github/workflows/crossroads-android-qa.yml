@@ -1,0 +1,117 @@
+name: Crossroads Android QA APK
+on:
+  workflow_dispatch:
+  push:
+    branches: ["design/**", "feature/**"]
+    paths:
+      - "app/**"
+      - "core/**"
+      - "data/**"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - ".github/workflows/crossroads-android-qa.yml"
+  pull_request:
+    paths:
+      - "app/**"
+      - "core/**"
+      - "data/**"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - ".github/workflows/crossroads-android-qa.yml"
+permissions:
+  contents: read
+concurrency:
+  group: crossroads-android-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  qa-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.11.1"
+      - name: Restore immutable sibling QA-only signing key
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p qa-signing
+          curl --fail --location --silent --show-error --retry 3             "https://raw.githubusercontent.com/PlayerEden/GridMates-Word-Search/183b8845b247a0ca40541f06e517999961600bc9/qa-signing/wordsearch-qa.p12"             --output qa-signing/wordsearch-qa.p12
+          echo "cbe50b2b4a34f3a8433e28ddc0efd5307a1adf9aa91e324ca757f40c6aec91ee  qa-signing/wordsearch-qa.p12" | sha256sum --check
+      - name: Set unique QA version
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_RUN_ATTEMPT" == "1" ]] || { echo "Rerun rejected: obtain a new run number."; exit 1; }
+          code=$((1000 + GITHUB_RUN_NUMBER))
+          echo "QA_CODE=$code" >> "$GITHUB_ENV"
+          echo "Source: $(git rev-parse HEAD) | QA versionCode $code" >> "$GITHUB_STEP_SUMMARY"
+      - name: Install Android SDK tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdkmanager_bin="$(command -v sdkmanager || true)"
+          if [[ -z "$sdkmanager_bin" && -n "${ANDROID_HOME:-}" ]]; then
+            sdkmanager_bin="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager -print -quit || true)"
+          fi
+          [[ -n "$sdkmanager_bin" ]] || { echo "Android SDK cmdline tools unavailable"; exit 1; }
+          "$sdkmanager_bin" 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Build, unit test and lint
+        shell: bash
+        run: |
+          gradle --no-daemon :core:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug             "-PcrossroadsQaVersionCode=$QA_CODE" --console=plain
+      - name: Verify signed APK identity and assemble receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          TOOLS="$ANDROID_HOME/build-tools/35.0.0"
+          test -s "$APK"
+          "$TOOLS/apksigner" verify --print-certs "$APK" | tee /tmp/crossroads-certs.txt
+          grep -iF '75cc3c896247d71fbd51f7a3ed41f90c8218a8a5a70df8c0f6b494b5cc23d419' /tmp/crossroads-certs.txt
+          "$TOOLS/aapt" dump badging "$APK" | grep -F "name='com.playereden.gridmates.crossroads.qa' versionCode='$QA_CODE'"
+          cp "$APK" "GridMates-Crossroads-QA-$QA_CODE.apk"
+          sha256sum "GridMates-Crossroads-QA-$QA_CODE.apk" > "GridMates-Crossroads-QA-$QA_CODE.apk.sha256"
+          python3 - <<'PY'
+          import hashlib, json, os, subprocess
+          code=os.environ["QA_CODE"]
+          name=f"GridMates-Crossroads-QA-{code}.apk"
+          data={
+            "channel":"public-test-only-qa",
+            "application_id":"com.playereden.gridmates.crossroads.qa",
+            "version_code":int(code),
+            "sha256":hashlib.sha256(open(name,"rb").read()).hexdigest(),
+            "source_commit":subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip(),
+            "signer_cert_sha256":"75cc3c896247d71fbd51f7a3ed41f90c8218a8a5a70df8c0f6b494b5cc23d419",
+            "install_over_tested":False,
+            "save_preservation_tested":False,
+            "physical_device_tested":False
+          }
+          open("GridMates-Crossroads-QA-receipt.json","w").write(json.dumps(data,indent=2)+"\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-Android-QA-${{ env.QA_CODE }}-${{ github.sha }}
+          path: |
+            GridMates-Crossroads-QA-*.apk
+            GridMates-Crossroads-QA-*.apk.sha256
+            GridMates-Crossroads-QA-receipt.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-Android-failure-${{ github.run_id }}
+          path: |
+            app/build/reports/**
+            core/build/reports/**
+          if-no-files-found: ignore
+          retention-days: 5

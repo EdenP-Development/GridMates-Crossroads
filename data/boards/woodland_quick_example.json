@@ -1,0 +1,475 @@
+{
+  "id": "woodland_quick_example",
+  "version": 1,
+  "status": "PROPOSED_FIXTURE_NOT_GAMEPLAY",
+  "name": "Woodland Crossing — Quick path example",
+  "start": "START",
+  "finish": "FINISH",
+  "regions": [
+    {
+      "id": "meadow",
+      "label": "Meadow",
+      "risk": "low"
+    },
+    {
+      "id": "forest",
+      "label": "Forest",
+      "risk": "high"
+    },
+    {
+      "id": "village",
+      "label": "Village",
+      "risk": "medium"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "START",
+      "region": "meadow",
+      "kind": "start",
+      "next": [
+        "W1"
+      ],
+      "x": 0.018,
+      "y": 0.5
+    },
+    {
+      "id": "W1",
+      "region": "meadow",
+      "kind": "plain",
+      "next": [
+        "W2"
+      ],
+      "x": 0.05,
+      "y": 0.5
+    },
+    {
+      "id": "W2",
+      "region": "meadow",
+      "kind": "plain",
+      "next": [
+        "F1"
+      ],
+      "x": 0.078,
+      "y": 0.5
+    },
+    {
+      "id": "F1",
+      "region": "meadow",
+      "kind": "fork",
+      "next": [
+        "U1_1",
+        "L1_1"
+      ],
+      "x": 0.115,
+      "y": 0.5
+    },
+    {
+      "id": "U1_1",
+      "region": "meadow",
+      "kind": "plain",
+      "next": [
+        "U1_2"
+      ],
+      "x": 0.149,
+      "y": 0.38
+    },
+    {
+      "id": "U1_2",
+      "region": "meadow",
+      "kind": "event",
+      "next": [
+        "U1_3"
+      ],
+      "x": 0.183,
+      "y": 0.27
+    },
+    {
+      "id": "U1_3",
+      "region": "meadow",
+      "kind": "plain",
+      "next": [
+        "U1_4"
+      ],
+      "x": 0.217,
+      "y": 0.27
+    },
+    {
+      "id": "U1_4",
+      "region": "meadow",
+      "kind": "event",
+      "next": [
+        "M1"
+      ],
+      "x": 0.251,
+      "y": 0.38
+    },
+    {
+      "id": "L1_1",
+      "region": "meadow",
+      "kind": "plain",
+      "next": [
+        "L1_2"
+      ],
+      "x": 0.143,
+      "y": 0.61
+    },
+    {
+      "id": "L1_2",
+      "region": "meadow",
+      "kind": "event",
+      "next": [
+        "L1_3"
+      ],
+      "x": 0.171,
+      "y": 0.71
+    },
+    {
+      "id": "L1_3",
+      "region": "meadow",
+      "kind": "plain",
+      "next": [
+        "L1_4"
+      ],
+      "x": 0.199,
+      "y": 0.76
+    },
+    {
+      "id": "L1_4",
+      "region": "meadow",
+      "kind": "event",
+      "next": [
+        "L1_5"
+      ],
+      "x": 0.227,
+      "y": 0.71
+    },
+    {
+      "id": "L1_5",
+      "region": "meadow",
+      "kind": "plain",
+      "next": [
+        "M1"
+      ],
+      "x": 0.255,
+      "y": 0.61
+    },
+    {
+      "id": "M1",
+      "region": "meadow",
+      "kind": "merge",
+      "next": [
+        "C1"
+      ],
+      "x": 0.295,
+      "y": 0.5
+    },
+    {
+      "id": "C1",
+      "region": "meadow",
+      "kind": "plain",
+      "next": [
+        "F2"
+      ],
+      "x": 0.33,
+      "y": 0.5
+    },
+    {
+      "id": "F2",
+      "region": "forest",
+      "kind": "fork",
+      "next": [
+        "U2_1",
+        "L2_1"
+      ],
+      "x": 0.405,
+      "y": 0.5
+    },
+    {
+      "id": "U2_1",
+      "region": "forest",
+      "kind": "plain",
+      "next": [
+        "U2_2"
+      ],
+      "x": 0.439,
+      "y": 0.38
+    },
+    {
+      "id": "U2_2",
+      "region": "forest",
+      "kind": "event",
+      "next": [
+        "U2_3"
+      ],
+      "x": 0.473,
+      "y": 0.27
+    },
+    {
+      "id": "U2_3",
+      "region": "forest",
+      "kind": "plain",
+      "next": [
+        "U2_4"
+      ],
+      "x": 0.507,
+      "y": 0.27
+    },
+    {
+      "id": "U2_4",
+      "region": "forest",
+      "kind": "event",
+      "next": [
+        "M2"
+      ],
+      "x": 0.541,
+      "y": 0.38
+    },
+    {
+      "id": "L2_1",
+      "region": "forest",
+      "kind": "plain",
+      "next": [
+        "L2_2"
+      ],
+      "x": 0.433,
+      "y": 0.61
+    },
+    {
+      "id": "L2_2",
+      "region": "forest",
+      "kind": "event",
+      "next": [
+        "L2_3"
+      ],
+      "x": 0.461,
+      "y": 0.71
+    },
+    {
+      "id": "L2_3",
+      "region": "forest",
+      "kind": "plain",
+      "next": [
+        "L2_4"
+      ],
+      "x": 0.489,
+      "y": 0.76
+    },
+    {
+      "id": "L2_4",
+      "region": "forest",
+      "kind": "event",
+      "next": [
+        "L2_5"
+      ],
+      "x": 0.517,
+      "y": 0.71
+    },
+    {
+      "id": "L2_5",
+      "region": "forest",
+      "kind": "plain",
+      "next": [
+        "M2"
+      ],
+      "x": 0.545,
+      "y": 0.61
+    },
+    {
+      "id": "M2",
+      "region": "forest",
+      "kind": "merge",
+      "next": [
+        "C2"
+      ],
+      "x": 0.585,
+      "y": 0.5
+    },
+    {
+      "id": "C2",
+      "region": "forest",
+      "kind": "plain",
+      "next": [
+        "F3"
+      ],
+      "x": 0.62,
+      "y": 0.5
+    },
+    {
+      "id": "F3",
+      "region": "village",
+      "kind": "fork",
+      "next": [
+        "U3_1",
+        "L3_1"
+      ],
+      "x": 0.695,
+      "y": 0.5
+    },
+    {
+      "id": "U3_1",
+      "region": "village",
+      "kind": "plain",
+      "next": [
+        "U3_2"
+      ],
+      "x": 0.729,
+      "y": 0.38
+    },
+    {
+      "id": "U3_2",
+      "region": "village",
+      "kind": "event",
+      "next": [
+        "U3_3"
+      ],
+      "x": 0.763,
+      "y": 0.27
+    },
+    {
+      "id": "U3_3",
+      "region": "village",
+      "kind": "plain",
+      "next": [
+        "U3_4"
+      ],
+      "x": 0.797,
+      "y": 0.27
+    },
+    {
+      "id": "U3_4",
+      "region": "village",
+      "kind": "event",
+      "next": [
+        "M3"
+      ],
+      "x": 0.831,
+      "y": 0.38
+    },
+    {
+      "id": "L3_1",
+      "region": "village",
+      "kind": "plain",
+      "next": [
+        "L3_2"
+      ],
+      "x": 0.723,
+      "y": 0.61
+    },
+    {
+      "id": "L3_2",
+      "region": "village",
+      "kind": "event",
+      "next": [
+        "L3_3"
+      ],
+      "x": 0.751,
+      "y": 0.71
+    },
+    {
+      "id": "L3_3",
+      "region": "village",
+      "kind": "plain",
+      "next": [
+        "L3_4"
+      ],
+      "x": 0.779,
+      "y": 0.76
+    },
+    {
+      "id": "L3_4",
+      "region": "village",
+      "kind": "event",
+      "next": [
+        "L3_5"
+      ],
+      "x": 0.807,
+      "y": 0.71
+    },
+    {
+      "id": "L3_5",
+      "region": "village",
+      "kind": "plain",
+      "next": [
+        "M3"
+      ],
+      "x": 0.835,
+      "y": 0.61
+    },
+    {
+      "id": "M3",
+      "region": "village",
+      "kind": "merge",
+      "next": [
+        "C3"
+      ],
+      "x": 0.875,
+      "y": 0.5
+    },
+    {
+      "id": "C3",
+      "region": "village",
+      "kind": "plain",
+      "next": [
+        "FINISH"
+      ],
+      "x": 0.91,
+      "y": 0.5
+    },
+    {
+      "id": "FINISH",
+      "region": "village",
+      "kind": "finish",
+      "next": [],
+      "x": 0.983,
+      "y": 0.5
+    }
+  ],
+  "forks": [
+    {
+      "id": "F1",
+      "choices": [
+        {
+          "to": "U1_1",
+          "label": "Upper meadow path",
+          "risk": "high"
+        },
+        {
+          "to": "L1_1",
+          "label": "Scenic meadow path",
+          "risk": "low"
+        }
+      ]
+    },
+    {
+      "id": "F2",
+      "choices": [
+        {
+          "to": "U2_1",
+          "label": "Forest shortcut",
+          "risk": "high"
+        },
+        {
+          "to": "L2_1",
+          "label": "Forest edge",
+          "risk": "low"
+        }
+      ]
+    },
+    {
+      "id": "F3",
+      "choices": [
+        {
+          "to": "U3_1",
+          "label": "Village lane",
+          "risk": "high"
+        },
+        {
+          "to": "L3_1",
+          "label": "Riverside route",
+          "risk": "low"
+        }
+      ]
+    }
+  ]
+}

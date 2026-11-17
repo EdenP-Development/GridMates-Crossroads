@@ -1,0 +1,188 @@
+{
+  "version": 1,
+  "status": "PROPOSED_FIXTURE_NOT_BALANCED",
+  "events": [
+    {
+      "id": "meadow_breeze",
+      "regions": [
+        "meadow"
+      ],
+      "category": "benefit",
+      "effect": {
+        "type": "advance",
+        "spaces": 1
+      },
+      "weight": 4,
+      "description": "breeze"
+    },
+    {
+      "id": "meadow_gift",
+      "regions": [
+        "meadow"
+      ],
+      "category": "benefit",
+      "effect": {
+        "type": "advance",
+        "spaces": 2
+      },
+      "weight": 2,
+      "description": "gift"
+    },
+    {
+      "id": "meadow_puddle",
+      "regions": [
+        "meadow"
+      ],
+      "category": "setback",
+      "effect": {
+        "type": "retreat",
+        "spaces": 1
+      },
+      "weight": 2,
+      "description": "puddle"
+    },
+    {
+      "id": "meadow_shield",
+      "regions": [
+        "meadow"
+      ],
+      "category": "benefit",
+      "effect": {
+        "type": "shield",
+        "spaces": 0
+      },
+      "weight": 2,
+      "description": "shield"
+    },
+    {
+      "id": "meadow_banter",
+      "regions": [
+        "meadow"
+      ],
+      "category": "mischief",
+      "effect": {
+        "type": "prank",
+        "spaces": 1
+      },
+      "weight": 1,
+      "description": "banter"
+    },
+    {
+      "id": "forest_shortcut",
+      "regions": [
+        "forest"
+      ],
+      "category": "benefit",
+      "effect": {
+        "type": "advance",
+        "spaces": 3
+      },
+      "weight": 2,
+      "description": "shortcut"
+    },
+    {
+      "id": "forest_wrong_turn",
+      "regions": [
+        "forest"
+      ],
+      "category": "setback",
+      "effect": {
+        "type": "retreat",
+        "spaces": 2
+      },
+      "weight": 3,
+      "description": "wrong turn"
+    },
+    {
+      "id": "forest_mushrooms",
+      "regions": [
+        "forest"
+      ],
+      "category": "benefit",
+      "effect": {
+        "type": "shield",
+        "spaces": 0
+      },
+      "weight": 2,
+      "description": "mushrooms"
+    },
+    {
+      "id": "forest_prank",
+      "regions": [
+        "forest"
+      ],
+      "category": "mischief",
+      "effect": {
+        "type": "prank",
+        "spaces": 2
+      },
+      "weight": 3,
+      "description": "prank"
+    },
+    {
+      "id": "forest_lucky_find",
+      "regions": [
+        "forest"
+      ],
+      "category": "benefit",
+      "effect": {
+        "type": "advance",
+        "spaces": 1
+      },
+      "weight": 2,
+      "description": "lucky find"
+    },
+    {
+      "id": "village_help",
+      "regions": [
+        "village"
+      ],
+      "category": "benefit",
+      "effect": {
+        "type": "advance",
+        "spaces": 2
+      },
+      "weight": 3,
+      "description": "help"
+    },
+    {
+      "id": "village_prank",
+      "regions": [
+        "village"
+      ],
+      "category": "mischief",
+      "effect": {
+        "type": "prank",
+        "spaces": 2
+      },
+      "weight": 2,
+      "description": "prank"
+    },
+    {
+      "id": "village_cobbles",
+      "regions": [
+        "village"
+      ],
+      "category": "setback",
+      "effect": {
+        "type": "retreat",
+        "spaces": 1
+      },
+      "weight": 2,
+      "description": "cobbles"
+    },
+    {
+      "id": "village_protection",
+      "regions": [
+        "village"
+      ],
+      "category": "benefit",
+      "effect": {
+        "type": "shield",
+        "spaces": 0
+      },
+      "weight": 2,
+      "description": "protection"
+    }
+  ]
+}
