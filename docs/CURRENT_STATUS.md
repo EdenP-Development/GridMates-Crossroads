@@ -1,3 +1,11 @@
+# FEEL-10 — Adaptive board and tactile movement (Nov 17, 2026)
+
+**Source candidate; new Android and owner-phone verification pending.** On `feature/gamefeel-v1.0`, the board viewport adapts to available portrait space (220–520dp), the ordinary in-match page avoids stealing pan gestures, the active seat and turn heading follow the piece currently traveling, and the original layered tokens are clustered using actual animated positions. Fork entrances are highlighted only after travel completes. [FEEL-10 QA handoff](FEEL_10_ADAPTIVE_MOTION_QA_HANDOFF.md).
+
+**Last verified baseline:** UX-09 signed QA1074, [GitHub Android run 44121090828](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44121090828), [APK artifact 14346106131](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44121090828/artifacts/14346106131). Compiled, unit-tested, linted and signer-checked successfully. Physical camera/pan, install-over and dynamic layout acceptance are still **not** verified for the new candidate. No merge to `main`.
+
+---
+
 # UX-09 — Dice, fork-choice and encounter UI candidate (Nov 17, 2026)
 
 **Source implemented, phone acceptance pending.** [UX-09 handoff](UX_09_TURN_PRESENTATION_QA_HANDOFF.md). This stacked branch `feature/turn-presentation-v0.9` adds an original six-sided pip-die presentation (preview animation and actual authoritative result separated), shared named-risk route choice cards for both two- and three-way crossroads, and a compact transient encounter result. **Gameplay, chance, turn flow, movement, board graph, saved profile and signers are untouched.** Android CI status must be checked on the exact latest head before claiming a new test APK.
