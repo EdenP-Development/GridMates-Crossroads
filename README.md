@@ -1,6 +1,6 @@
 # GridMates: Crossroads
 
-**Status:** Woven Trail QA **1020** built, tested, and installed over **1018** on an Android 15 emulator with local stats preserved. **QA 1020 owner-phone review pending.** Current feature source: `feature/woven-trail-v0.2` ([Draft PR #7](https://github.com/PlayerEden/GridMates-Crossroads/pull/7)) stacked on the earlier design foundation PR #1. LAN is not implemented.  
+**Status:** First full Woven Trail human victory observed on phone; turn-flow QA **1026** signed and emulator update **1020→1026 passed**, saved stats preserved in automated test. **QA1026 owner phone review pending.** Current draft source: `feature/turn-flow-v0.3` ([PR #8](https://github.com/PlayerEden/GridMates-Crossroads/pull/8)), built upon [PR #7](https://github.com/PlayerEden/GridMates-Crossroads/pull/7). LAN not implemented.  
 **Design baseline:** 0.1.0 · 2026-11-16  
 **Owner:** PlayerEden  
 **Name:** *GridMates: Crossroads* is the current preferred **working** name; app-store/trademark clearance has not been performed.
@@ -35,7 +35,7 @@
 | Quick / Classic / Long length options **as design targets** | Pay-to-win, energy/time gates, forced daily chores |
 | Token cosmetics, theme possibilities, local achievements | Cross-app unlock sync |
 
-> **Current implementation candidate:** Kotlin/JVM deterministic race engine with bots + Android Compose board/UI, 2–4 total seats, dice and crossroads choice. It also includes proposed region-specific events, a QA build workflow and locally saved win counts. **This is not yet a tested physical APK, local Wi-Fi, finished graphics, or release-ready software.** See [Prototype status](docs/PROTOTYPE_V0_1_ANDROID.md) and [Current Status](docs/CURRENT_STATUS.md).
+> **Current implementation candidate:** Kotlin/JVM deterministic race engine with bots + Android Compose board/UI, 2–4 total seats, dice and crossroads choice. It also includes proposed region-specific events, a QA build workflow and locally saved win counts. **Owner confirmed an earlier full Woven Trail match on a physical phone; new QA1026 screen still needs owner testing. LAN, final visuals and release readiness remain unfinished.** See [Prototype status](docs/PROTOTYPE_V0_1_ANDROID.md) and [Current Status](docs/CURRENT_STATUS.md).
 
 ## Validation for included *design data*
 
