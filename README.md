@@ -1,6 +1,6 @@
 # GridMates: Crossroads
 
-**Status:** First playable Android experiment source is on `design/foundation-v0.1`; APK/build/device QA results are tracked separately. LAN is not implemented.  
+**Status:** Android QA **1008** built and signature/package verified, and the 1008→1009 install-over test passed on an Android 15 emulator. **Owner physical-phone QA pending.** Source remains on draft branch `design/foundation-v0.1`; LAN is not implemented.  
 **Design baseline:** 0.1.0 · 2026-11-16  
 **Owner:** PlayerEden  
 **Name:** *GridMates: Crossroads* is the current preferred **working** name; app-store/trademark clearance has not been performed.
@@ -14,7 +14,7 @@
 2. Read the [Game Bible](docs/GAME_BIBLE.md) for the accepted vision and explicit proposals.
 3. Read [Decision Log](docs/DECISION_LOG.md) before changing rules.
 4. Read the [Research Notes](docs/RESEARCH_GAMEPLAY.md) and [Platform Research](docs/RESEARCH_TECH_AND_ACCESSIBILITY.md) for evidence and references.
-5. See [Roadmap](docs/ROADMAP.md), [Prototype](docs/PROTOTYPE_V0_1_ANDROID.md), [Current Status](docs/CURRENT_STATUS.md), and [Playtest/QA](docs/QA_AND_PLAYTEST.md) for build/testing gates.
+5. See [Roadmap](docs/ROADMAP.md), [Prototype](docs/PROTOTYPE_V0_1_ANDROID.md), [Verified QA Receipt](docs/QA_RECEIPT_V0_1_2026_11_16.md), [Current Status](docs/CURRENT_STATUS.md), and [Playtest/QA](docs/QA_AND_PLAYTEST.md) for build/testing gates.
 
 ## Core pillars
 

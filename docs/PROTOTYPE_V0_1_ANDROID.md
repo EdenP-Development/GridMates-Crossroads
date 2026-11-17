@@ -1,5 +1,5 @@
 # Crossroads Android Playable Experiment v0.1
-**Status:** first implementation candidate, owner device QA not yet performed.
+**Status:** source + build verified, real 1008→1009 update passed on Android API35 emulator; owner physical-device/gameplay QA pending.
 
 ## Implemented in this experiment
 - Small fixed 40-node, three-crossroads course from `data/boards/woodland_quick_example.json`.
@@ -11,7 +11,7 @@
 
 ## Not included yet
 - Nearby Wi-Fi, multiple human players or pass-and-play.
-- Persistent active match resume, cosmetic characters, new themes, alternate board shapes, deep balancing, or actual QA upgrade test between two delivered APKs.
+- Persistent active match resume, cosmetic characters, new themes, alternate board shapes or deep gameplay balancing. An actual two-APK QA stats-preservation update **has now passed on an emulator**, but full save-schema migration is not yet tested.
 - Released/public production app or production signing.
 - Full accessibility and actual phone visual QA.
 
@@ -22,13 +22,13 @@ The *debug/QA test APK* uses Word Search's existing, intentionally **public test
 This public key is **not secure for production distribution**. The Crossroads QA package is `com.playereden.gridmates.crossroads.qa`, independent from Word Search's package and saves. Production signing and a separately signed production package are later tasks.
 
 ## Owner QA checklist
-- [ ] APK can be downloaded and installed on Android.
+- [x] Signed QA APK downloaded and installed/launched on Android **emulator**, not yet the owner's physical phone.
 - [ ] Main menu launches; choose 2, 3 and 4 players.
 - [ ] Dice movement, crossroads choices, visible token updates, and random event text.
 - [ ] AI turns auto advance, shield and prank behave as shown.
 - [ ] First token to finish wins; rematch and return work.
 - [ ] Completed stats remain after app restart.
-- [ ] On a *subsequent* build with same QA signer and increasing code, install over previous QA without deleting local stats.
+- [x] Two exact separately built QA APKs (1008→1009) installed over one another on Android 15 emulator, preserving seeded stats file byte-for-byte. [Evidence](QA_RECEIPT_V0_1_2026_11_16.md). Physical handset and future save schema cases remain unchecked.
 
 ## Known issues / design limitations
 The route balance and event frequency have not been tuned with human playtests. Compact mobile board might need pinch/zoom or adaptive node presentation. Work from this experiment rather than importing a large art package before gameplay validation.

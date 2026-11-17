@@ -1,29 +1,26 @@
-# Current Crossroads Status
-**Latest development branch:** `design/foundation-v0.1` (draft [PR #1](https://github.com/PlayerEden/GridMates-Crossroads/pull/1)). The branch is the current WIP source, while `main` is documentation-only until owner-approved integration.
+# Current Crossroads Status — QA prototype
+**Last reviewed:** 2026-11-16 (US Central) / early 2026-11-17 UTC.
 
-## What exists
-- Game Bible, decision log, scoped research and QA policies.
-- Proposed 40-node board / 14-event fixture with deterministic Node validation.
-- Android-independent Kotlin game session engine with bots, turns, dice, crossroads, region events, shields, bumps and first-to-finish logic.
-- Native Android Compose board and menu for one human vs 1–3 AI, with local wins/completions and no new illustration assets.
-- Consolidated unit and Android QA workflows. QA signing uses the **existing publicly known test-only Word Search key** pinned by SHA (not a private production identity).
+**Current development branch:** `design/foundation-v0.1` — [Draft PR #1](https://github.com/PlayerEden/GridMates-Crossroads/pull/1). `main` remains unchanged until owner approval.
 
-## Status categories
-- **SOURCE PRESENT:** yes (prototype implementation).
-- **NODE DESIGN TESTS:** previously passed; recheck the latest commit/workflows.
-- **JVM UNIT TESTS:** see exact GitHub Actions result; do not infer green from source.
-- **ANDROID QA BUILD:** see [Android workflow](https://github.com/PlayerEden/GridMates-Crossroads/actions/workflows/crossroads-android-qa.yml); no automatic claim of APK availability.
-- **OWNER PHONE REVIEW:** pending.
-- **SAME-WIFI MULTIPLAYER:** not implemented.
-- **CROSSROADS COSMETICS / THEMES:** not implemented.
-- **IN-PLACE QA APK UPDATE:** not tested until a second separately built APK exists and baseline is preserved.
+## What is genuinely verified
+- Source includes pure Kotlin engine, 40-node three-crossroads board, 14 region event definitions, bot action support, and native Compose single-human/AI gameplay UI.
+- JS board/event integrity checks passed.
+- Kotlin unit + simulator tests passed ([rules run](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/43995157738)).
+- **Signed QA APK 1008** built and identity/preflight verified ([Android run](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/43995150638)); 1009 also built separately ([Android run](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/43995157650)).
+- The **actual two distinct QA APKs** were installed 1008→1009 on an API35 Android emulator with `adb install -r`. The seeded profile save XML containing 7 completed games and 3 wins was byte-for-byte unchanged. The upgraded app launched and stayed running. [Successful regression run](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/43996214349).
+- One test APK SHA-256: 1008 `6cb6e89128d7f3a5ed123f38ebd5878f2775e200898f6ee8a4379dbbdf01354d`. [Full receipt](QA_RECEIPT_V0_1_2026_11_16.md).
 
-## What to do next
-1. Inspect the latest test and Android workflow logs, repair compilation or runtime issues.
-2. Produce a source-matched downloadable QA APK with package/signature/version/hash receipt.
-3. Perform owner handset UI/turn-loop review, assess board legibility and AI pacing.
-4. Save accepted baseline APK. Test *real older APK → newer APK* install-over and retention on an emulator and phone.
-5. Improve meaningful route tradeoffs, playtest balance, then discuss existing GridMates token art.
-6. Only then expand toward local Wi-Fi and themed boards.
+## Not verified / not built
+- **No owner phone install or match-play acceptance**, no screenshot layout audit, no measured game balance.
+- **No real Wi-Fi multiplayer**, second human, pass-and-play or cloud.
+- No cosmetic collection, unlocks, profile customization, active-match save/resume, themed boards or alternative match durations.
+- Update regression verifies the current *statistics file* only: not future schema migrations, unfinished match saves, or paid/free cosmetics.
+- Production build and signing not configured. QA signer is an existing publicly known **test-only** key from the Word Search project, pinned by SHA; never use it for a public production release.
 
-**DO NOT** replace the public QA key with a newly generated one in an existing QA update channel, merge unfinished source to main, or claim an Android build passed merely because design validation succeeded.
+## Next actions
+1. Owner installs QA1008 on Android, runs full 2/3/4-seat matches, reports screenshots and gameplay issues.
+2. Tune distinct risk levels of the upper/lower paths, match lengths and mischief, using test evidence.
+3. Protect owner QA progression with backup/export before new save-schema changes; test another **actual older→newer** APK for each accepted milestone.
+4. Add local Wi-Fi 2–4 human seats after solo gameplay acceptance; then reuse approved GridMates artwork as simple token pieces.
+5. Keep evidence in this repo, not only in conversations.

@@ -21,3 +21,4 @@
 - `docs/PROTOTYPE_V0_1_ANDROID.md` — first Android/AI source capabilities and honest testing limits.
 - `docs/CURRENT_STATUS.md` — live implementation checkpoint and next QA action.
 - `AGENTS.md` — short instructions to prevent context and signing/asset mistakes.
+- `docs/QA_RECEIPT_V0_1_2026_11_16.md` — immutable APK build IDs, hashes, emulator update proof and QA limits.
