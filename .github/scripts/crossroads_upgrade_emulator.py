@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Verify *two exact separate GitHub-built APKs* install-over without losing profile records."""
+import base64
 import hashlib
 import pathlib
 import re
@@ -45,7 +46,9 @@ xml = """<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
 </map>
 """
 adb("shell", "run-as", PKG, "mkdir", "-p", "shared_prefs")
-adb("shell", "run-as", PKG, "sh", "-c", "cat > " + PROFILE, stdin=xml)
+# A single quoted remote shell command keeps the redirection under the app UID.
+encoded = base64.b64encode(xml.encode("utf-8")).decode("ascii")
+adb("shell", f"run-as {PKG} sh -c 'echo {encoded} | base64 -d > {PROFILE}'")
 old = adb("shell", "run-as", PKG, "cat", PROFILE)
 assert "<int name=\"completed\" value=\"7\" />" in old, repr(old)
 assert "<int name=\"wins\" value=\"3\" />" in old, repr(old)
