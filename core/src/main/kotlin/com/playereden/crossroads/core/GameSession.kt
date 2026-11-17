@@ -36,6 +36,7 @@ class GameSession(
     private var eventTriggeredThisTurn = false
     private var pendingPrank = 0
     private var pendingPrankName = ""
+    private fun spacesText(count: Int): String = "$count ${if (count == 1) "space" else "spaces"}"
     private val encounterLog = mutableListOf<EncounterNote>()
     private fun recordEncounter(title: String, outcome: String, kind: String) {
         encounterLog.add(EncounterNote(turn, players[currentIndex].name, title, outcome, kind))
@@ -189,14 +190,14 @@ class GameSession(
         when (effect.type) {
             "advance" -> {
                 lastMessage = "${players[currentIndex].name}: $encounterTitle! Move +${effect.spaces}."
-                recordEncounter(encounterTitle, "Moved ahead ${effect.spaces} spaces", "benefit")
+                recordEncounter(encounterTitle, "Moved ahead ${spacesText(effect.spaces)}", "benefit")
                 remainingSteps = effect.spaces
                 if (remainingSteps > 0) progress() else finishTurn()
             }
             "retreat" -> {
                 moveBack(players[currentIndex], effect.spaces)
                 lastMessage = "${players[currentIndex].name}: $encounterTitle! Back ${effect.spaces}."
-                recordEncounter(encounterTitle, "Moved back ${effect.spaces} spaces", "setback")
+                recordEncounter(encounterTitle, "Moved back ${spacesText(effect.spaces)}", "setback")
                 finishTurn()
             }
             "shield" -> {
@@ -213,7 +214,7 @@ class GameSession(
                     pendingPrank = effect.spaces
                     pendingPrankName = encounterTitle
                     phase = Phase.TARGET
-                    lastMessage = "Mischief! Choose someone to send back ${effect.spaces}."
+                    lastMessage = "Mischief! Choose someone to send back ${spacesText(effect.spaces)}."
                 }
             }
             else -> error("Unsupported event effect ${effect.type}")
