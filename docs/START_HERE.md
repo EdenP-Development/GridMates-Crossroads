@@ -8,6 +8,7 @@
 5. [Gameplay Research](RESEARCH_GAMEPLAY.md) / [Android Research](RESEARCH_TECH_AND_ACCESSIBILITY.md).
 6. [Roadmap](ROADMAP.md) / [QA](QA_AND_PLAYTEST.md) — milestones and proof required.
 7. [Asset Reuse](ASSET_REUSE.md) — independent unlocks, shared visuals.
+8. [Sibling Repo/APK Audit](GRIDMATES_SIBLING_REPO_APK_AUDIT_2026-11-16.md) / [APK Update Policy](APK_UPDATE_POLICY.md) — tested precedents and proposed install-over safety rules.
 
 The sample data under `data/` and Node validation scripts test design integrity, not gameplay. Preserve all accepted decisions; write proposed changes to the decision log; build on separate branches; seek owner approval before merging or releasing.
 
