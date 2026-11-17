@@ -1,3 +1,11 @@
+# TURN-19 — Simple shared-phone handoff and frozen results (Nov 17, 2026)
+
+**Source and new Android-side regression tests committed; exact-head CI and phone testing pending.** Pass & Play now shows a small “Pass the phone to Player N” cue only when the incoming person is ready to roll; no blocking handoff screen. Finished matches now atomically retain the completion timestamp alongside their checkpoint and record, so reopening cannot inflate elapsed time. Tests cover repeated completed Solo/Pass & Play restore, no double-counting, and a legacy QA checkpoint missing finish timestamp. [TURN-19 QA handoff](TURN_19_HANDOFF_TIMER_QA.md).
+
+**Exact prior Android pass:** UI-18 signed **QA1138** [run 44169477488](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44169477488), [artifact 14366228562](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44169477488/artifacts/14366228562), plus passing rules and design-data runs. Physical screenshots remain of QA1130 only; full 2–4 human Pass & Play and resumed finish time are not yet device-proven.
+
+---
+
 # UI-18 — Woodland popup consistency from owner QA1130 screenshots (Nov 17, 2026)
 
 **Source committed; new exact-head Android/owner-phone validation pending.** Owner phone screenshots show the new Solo/Pass & Play home setup, 2-human Pass & Play at Round 2 with a real 2-way route prompt, and a complete 3-player Solo result whose encounter details are now readable. They also show **lavender** selected chips and 3-way Old Forest `AlertDialog` against the otherwise warm cream/green game. UI-18 makes the Old Forest popup responsive and cream with pinned View board, themes other secondary dialogs to cream, colors selected home chips sage, and corrects Solo-only language in the shared help. [UI-18 screenshot audit and phone acceptance checklist](UI_18_PHONE_PRESENTATION_QA_HANDOFF.md).
