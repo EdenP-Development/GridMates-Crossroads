@@ -55,6 +55,25 @@ class PresentationPacingTest {
         assertEquals(0L, PresentationPacing.waitForMovement(a, a, PresentationSpeed.COZY))
     }
 
+    @Test fun cozyDiePreviewIsHumanReadableAndSlowsAsItSettles() {
+        val cozy = PresentationSpeed.COZY
+        val brisk = PresentationSpeed.BRISK
+
+        assertEquals(11, cozy.dieFrames)
+        assertEquals(1375L, cozy.diePreviewDurationMillis())
+        assertEquals(8, brisk.dieFrames)
+        assertEquals(680L, brisk.diePreviewDurationMillis())
+        assertTrue(brisk.diePreviewDurationMillis() < cozy.diePreviewDurationMillis())
+        assertTrue(cozy.diePreviewDurationMillis() > 1000L)
+        for (pace in PresentationSpeed.values()) {
+            val frames = (0 until pace.dieFrames).map(pace::dieFrameDelayMillis)
+            assertTrue(frames.all { it > 0L })
+            assertEquals(pace.diePreviewDurationMillis(), frames.sum())
+            assertTrue(frames.zipWithNext().all { (a, b) -> b > a })
+            assertTrue(frames.last() > frames.first() * 2L)
+        }
+    }
+
     @Test fun briskModeIsFasterButCannotChangeRoutesOrEvents() {
         val before = state(listOf("S", "A"))
         val note = EncounterNote(1, "You", "Shortcut", "Moved ahead 2 spaces", "benefit")
