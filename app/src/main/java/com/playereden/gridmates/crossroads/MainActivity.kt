@@ -209,21 +209,31 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
 
     LaunchedEffect(game, revision) {
         if (game != null && state != null) {
-            // Let the animated piece reach its authoritative destination before
-            // continuing the next turn or accepting a new crossroads choice.
+            // Finish the visual movement even if the player opens a menu.
+            // Turn readiness is independent of the optional reading surfaces.
             if (transitionDelay > 0L) delay(transitionDelay)
-            cameraTrackIndex = state.playerIndex // hand over focus after movement is visible
+            cameraTrackIndex = state.playerIndex
+            transitionDelay = 0L
             turnReady = true
-            if (state.phase != Phase.FINISHED && state.players[state.playerIndex].isBot) {
-                delay(speed.aiBreathMillis)
-                val before = game.snapshot()
-                game.botStep()
-                persistGame(game)
-                cameraTrackIndex = PresentationPacing.mover(before, game.snapshot())
-                transitionDelay = PresentationPacing.waitForMovement(before, game.snapshot(), speed)
-                turnReady = false
-                revision++
-            }
+        }
+    }
+    // Pausing for instructions, board overview, the journal or match options
+    // should also pause the AI. Splitting this from the movement effect prevents
+    // a dismissed menu from replaying the last movement delay or skipping a turn.
+    val readingOrMenuOpen = showGuide || showJournal || inspectBoard ||
+        confirmExit || showMatchOptions || showResults
+    LaunchedEffect(game, revision, turnReady, readingOrMenuOpen) {
+        if (game != null &&
+            TurnFlowGate.mayAdvanceAi(state, turnReady, readingOrMenuOpen)
+        ) {
+            delay(speed.aiBreathMillis)
+            val before = game.snapshot()
+            game.botStep()
+            persistGame(game)
+            cameraTrackIndex = PresentationPacing.mover(before, game.snapshot())
+            transitionDelay = PresentationPacing.waitForMovement(before, game.snapshot(), speed)
+            turnReady = false
+            revision++
         }
     }
     // Completion stats are written once in the *same committed transaction* as
