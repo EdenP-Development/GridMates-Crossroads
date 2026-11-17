@@ -1,3 +1,11 @@
+# TURN-20 — AI pauses while reading (November 17, 2026)
+
+**Committed source and three explicit UI-turn gating unit tests; exact Android CI and phone acceptance pending.** The previous combined animation/bot continuation effect could advance AI while someone was inspecting board overview, reading How to Play or reviewing the Journey Journal. Now movement completion and AI action are distinct effects; the latter pauses when any existing reading/menu/leave/results surface opens and resumes after its normal breath. Human turns remain manual in Solo and Pass & Play. No game rules, RNG, local save schema, board art or network changes. [TURN-20 regression and phone QA](TURN_20_AI_READING_PAUSE_QA.md).
+
+**Verified baseline before these changes:** TURN-19 signed **QA1146**, [Android CI run 44171258124](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44171258124), [artifact 14368585938](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44171258124/artifacts/14368585938), with passing rules and design-data workflows. Real owner-phone AI overlay pause, full Pass & Play and force-stop recovery remain unverified.
+
+---
+
 # TURN-19 — Simple shared-phone handoff and frozen results (Nov 17, 2026)
 
 **Source and new Android-side regression tests committed; exact-head CI and phone testing pending.** Pass & Play now shows a small “Pass the phone to Player N” cue only when the incoming person is ready to roll; no blocking handoff screen. Finished matches now atomically retain the completion timestamp alongside their checkpoint and record, so reopening cannot inflate elapsed time. Tests cover repeated completed Solo/Pass & Play restore, no double-counting, and a legacy QA checkpoint missing finish timestamp. [TURN-19 QA handoff](TURN_19_HANDOFF_TIMER_QA.md).
