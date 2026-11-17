@@ -76,7 +76,7 @@ internal fun CrossroadsResultsContent(
                 Text("✦", fontSize = 27.sp, color = Evergreen)
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        if (winnerIndex == 0) "You reached the finish!" else "$winnerName wins!",
+                        if (winnerName == "You") "You reached the finish!" else "$winnerName wins!",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Evergreen
