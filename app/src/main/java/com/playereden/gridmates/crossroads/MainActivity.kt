@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -33,6 +34,8 @@ private val PlayerColors = listOf(Color(0xFFC75C49), Color(0xFF3D729F), Color(0x
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = true
         val board = GameData.board(assets.open("boards/woodland_quick_example.json").bufferedReader().use { it.readText() })
         val catalogue = GameData.events(assets.open("events/core_events_proposed.json").bufferedReader().use { it.readText() })
         setContent {
@@ -83,7 +86,10 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(Cream).verticalScroll(rememberScrollState()).padding(16.dp),
+        modifier = Modifier.fillMaxSize().background(Cream)
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text("GRIDMATES", style = MaterialTheme.typography.labelLarge, color = Forest)
@@ -118,6 +124,10 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                     }
                 }
             }
+            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text("Woodland Crossing", fontWeight = FontWeight.SemiBold, color = Forest)
+                Text("Three crossroads • Same finish, different journeys", style = MaterialTheme.typography.bodySmall, color = Bark)
+            }
             BoardCanvas(board, state)
             Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAE1CA))) {
                 Column(Modifier.padding(12.dp)) {
@@ -140,10 +150,11 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                     Phase.ROLL -> Button(onClick = { update { game.roll() } }, modifier = Modifier.fillMaxWidth()) { Text("Roll the die 🎲") }
                     Phase.ROUTE -> {
                         Text("Crossroads! Choose your path.", fontWeight = FontWeight.Bold, color = Forest)
+                        Text("Amber = shorter route • Green = longer route", style = MaterialTheme.typography.bodySmall, color = Bark)
                         game.availableRoutes().forEach { route ->
                             val fast = route.id.startsWith("U")
                             OutlinedButton(onClick = { update { game.chooseRoute(route.id) } }, modifier = Modifier.fillMaxWidth()) {
-                                Text("${if (fast) "Upper shortcut" else "Lower scenic trail"} · ${if (fast) "Faster / riskier" else "Longer / gentler"}")
+                                Text("${if (fast) "Upper shortcut" else "Lower scenic trail"} • ${if (fast) "shorter / uncertain" else "longer / more event spaces"}")
                             }
                         }
                     }
@@ -167,14 +178,15 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
 @Composable
 private fun BoardCanvas(board: BoardDefinition, state: Snapshot) {
     Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEDE4D0))) {
-        Canvas(modifier = Modifier.fillMaxWidth().height(290.dp).padding(8.dp)) {
+        Canvas(modifier = Modifier.fillMaxWidth().height(246.dp).padding(8.dp)) {
             val left = 18f
             val top = 18f
             val drawWidth = size.width - left * 2
             val drawHeight = size.height - top * 2
             fun position(id: String): Offset {
                 val node = board.node(id)
-                return Offset(left + node.x * drawWidth, top + node.y * drawHeight)
+                val expandedY = ((node.y - 0.5f) * 1.68f + 0.5f).coerceIn(0.06f, 0.94f)
+                return Offset(left + node.x * drawWidth, top + expandedY * drawHeight)
             }
             // Shared board geography never changes with the event seed.
             board.nodes.forEach { node ->
