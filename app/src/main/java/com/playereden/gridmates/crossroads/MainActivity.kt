@@ -32,7 +32,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
@@ -669,6 +671,7 @@ private fun BoardCanvas(
     val liveTranslation by rememberUpdatedState(actualTranslation)
 
     // Touching the focused piece or double-tapping resumes cinematic following.
+    val liveViewportSize by rememberUpdatedState(canvasDimensions)
     val livePieceLocation by rememberUpdatedState(
         Offset(
             boardPadding + active.x * (viewportWidth - 2f * boardPadding).coerceAtLeast(0f),
@@ -682,25 +685,47 @@ private fun BoardCanvas(
     Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEDE4D0))) {
         Box(
             modifier = Modifier.fillMaxWidth().height(height).clipToBounds()
+                .semantics {
+                    contentDescription = "Interactive board. Pinch to zoom, drag to explore."
+                    customActions = listOf(
+                        CustomAccessibilityAction("Recenter board") {
+                            cameraMode = if (animateTokens) BoardCameraMode.FOLLOW else BoardCameraMode.MANUAL
+                            manualZoom = 1f
+                            manualTranslation = Offset.Zero
+                            true
+                        },
+                        CustomAccessibilityAction("Show whole board") {
+                            cameraMode = BoardCameraMode.MANUAL
+                            manualZoom = 1f
+                            manualTranslation = Offset.Zero
+                            true
+                        }
+                    )
+                }
                 .pointerInput(matchKey, animateTokens) {
                     detectTapGestures(
                         onDoubleTap = {
-                            cameraMode = BoardCameraMode.FOLLOW
+                            cameraMode = if (animateTokens) BoardCameraMode.FOLLOW else BoardCameraMode.MANUAL
+                            manualZoom = 1f
                             manualTranslation = Offset.Zero
                         },
                         onTap = { tap ->
-                            // Convert the token's canvas coordinates through the visual transform.
-                            val renderedPiece = Offset(
-                                insetPx + viewportWidth / 2f +
-                                    (livePieceLocation.x - viewportWidth / 2f) * liveZoom +
-                                    liveTranslation.x,
-                                insetPx + viewportHeight / 2f +
-                                    (livePieceLocation.y - viewportHeight / 2f) * liveZoom +
-                                    liveTranslation.y
-                            )
-                            if ((tap - renderedPiece).getDistance() <= pieceTapRadiusPx) {
-                                cameraMode = BoardCameraMode.FOLLOW
-                                manualTranslation = Offset.Zero
+                            if (animateTokens) {
+                                // Convert the token's canvas coordinates through the visual transform.
+                                val width = liveViewportSize.width.toFloat()
+                                val height = liveViewportSize.height.toFloat()
+                                val renderedPiece = Offset(
+                                    insetPx + width / 2f +
+                                        (livePieceLocation.x - width / 2f) * liveZoom +
+                                        liveTranslation.x,
+                                    insetPx + height / 2f +
+                                        (livePieceLocation.y - height / 2f) * liveZoom +
+                                        liveTranslation.y
+                                )
+                                if ((tap - renderedPiece).getDistance() <= pieceTapRadiusPx) {
+                                    cameraMode = BoardCameraMode.FOLLOW
+                                    manualTranslation = Offset.Zero
+                                }
                             }
                         }
                     )
