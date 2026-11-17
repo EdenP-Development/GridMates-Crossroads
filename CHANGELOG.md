@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.0 turn-flow QA 1026] — November 16/17, 2026
+- Owner screenshots show a complete three-player Woven Trail match ending with **You won!**.
+- Compact match header and player badges; independent scrolling map with persistent accessible lower action panel. Long fork choices stay inside a bounded scrollable panel.
+- Bounded encounter history (latest event + optional journey journal) survives subsequent players' turns; deterministic and history-cap unit tests added.
+- Unsaved match exit now requires confirmation. Victory shows Rematch and Back to menu without a duplicate Leave action.
+- First crossroads route description clarified; Woven Trail topology, QA signer and private save keys unchanged.
+- [Kotlin tests PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44001688525), [signed APK1026 PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44001688534), [1020→1026 emulator install-over/save retention PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44002151297).
+- Phone QA1026 and human win-record retention remain open.
+
+
 ## [0.2.0 woven trail QA candidate] — November 16/17, 2026
 - Replaced three isolated symmetric diamonds with a handcrafted **38-node maze-like board** containing five crossroads, including a three-way junction and a cross-connector.
 - Added 20 proposed weighted encounters organized by region and **hazard/shelter/mischief** spaces. Choices now meaningfully change the eligible events, though match balance still needs human playtests.
