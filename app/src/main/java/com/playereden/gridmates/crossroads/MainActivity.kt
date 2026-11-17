@@ -334,6 +334,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         }
     }
     fun start(seats: Int, passAndPlay: Boolean) {
+        if (lanRole != LanRole.OFFLINE) leaveGame()
         val humans = if (passAndPlay) (0 until seats).toSet() else setOf(0)
         val newGame = GameSession(board, catalogue, seats = seats,
             seed = java.util.Random().nextInt(), humanIndices = humans)
@@ -354,6 +355,218 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             turnReady = false
         }
         revision++
+    }
+
+
+    fun startLanHost(requireCode: Boolean) {
+        if (!nearby.hasWifi()) {
+            lanMessage = "Connect both phones to the same Wi-Fi before hosting."
+            return
+        }
+        lanBusy = true
+        lanMessage = null
+        val roomGame = GameSession(
+            board, catalogue, seats = 2, seed = java.util.Random().nextInt(),
+            humanIndices = setOf(0, 1)
+        )
+        val roomId = java.util.UUID.randomUUID().toString()
+        val started = System.currentTimeMillis()
+        lanRole = LanRole.HOST
+        activeMatchId = roomId
+        matchStartedAtEpochMillis = started
+        startedFromCheckpoint = false
+        // Bind a socket off the UI thread; the host never edits state from a
+        // socket worker. Every guest command is forwarded to Android's main queue.
+        Thread({
+            try {
+                val server = CrossroadsLanHost(
+                    initial = roomGame.checkpoint(roomId, started),
+                    requiresCode = requireCode,
+                    onAction = { action ->
+                        mainHandler.post {
+                            if (lanRole == LanRole.HOST && session === roomGame) {
+                                if (!appInForeground) {
+                                    lanHost?.message("Host is away. Try again when they return.")
+                                } else {
+                                    val before = roomGame.snapshot()
+                                    runCatching {
+                                        LanTurnAuthority.apply(roomGame, 1, action)
+                                    }.onSuccess {
+                                        lanHost?.publish(roomGame.checkpoint(roomId, started))
+                                        cameraTrackIndex = PresentationPacing.mover(before, roomGame.snapshot())
+                                        transitionDelay = PresentationPacing.waitForMovement(
+                                            before, roomGame.snapshot(), speed
+                                        )
+                                        turnReady = false
+                                        revision++
+                                    }.onFailure { error ->
+                                        lanHost?.message(error.message ?: "Invalid turn")
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    onPresence = { joined, detail ->
+                        mainHandler.post {
+                            if (lanRole == LanRole.HOST && activeMatchId == roomId) {
+                                lanConnected = joined
+                                lanBusy = false
+                                if (joined) {
+                                    lanMessage = null
+                                    lanScreen = LanScreen.NONE
+                                } else {
+                                    lanMessage = detail ?: "Player 2 disconnected. Rejoin to continue."
+                                }
+                            }
+                        }
+                    }
+                )
+                mainHandler.post {
+                    if (lanRole == LanRole.HOST && activeMatchId == roomId) {
+                        lanHost = server
+                        session = roomGame
+                        revision++
+                        lanBusy = false
+                        lanScreen = LanScreen.HOST_WAIT
+                    } else {
+                        server.close()
+                    }
+                }
+            } catch (e: Exception) {
+                mainHandler.post {
+                    if (lanRole == LanRole.HOST && activeMatchId == roomId) {
+                        lanBusy = false
+                        lanRole = LanRole.OFFLINE
+                        lanMessage = e.message ?: "Couldn't open a local room."
+                    }
+                }
+            }
+        }, "crossroads-start-lan").apply { isDaemon = true }.start()
+    }
+
+    fun joinLan(host: String, port: Int, code: String, resume: Boolean = false) {
+        if (!nearby.hasWifi()) {
+            lanMessage = "Connect both phones to the same Wi-Fi before joining."
+            return
+        }
+        lanLastHost = host
+        lanLastPort = port
+        lanLastCode = code
+        lanRole = LanRole.GUEST
+        lanScreen = LanScreen.JOIN
+        lanBusy = true
+        lanMessage = null
+        if (!resume || lanGuest == null) {
+            lanGuest?.close()
+            lanGuest = CrossroadsLanGuest(
+                socketFactory = { nearby.wifiSocket() },
+                onState = { checkpoint ->
+                    mainHandler.post {
+                        if (lanRole == LanRole.GUEST) {
+                            runCatching {
+                                GameSession.restore(board, catalogue, checkpoint)
+                            }.onSuccess { restored ->
+                                if (restored.players.size != 2 ||
+                                    restored.players.any { it.isBot }
+                                ) {
+                                    lanMessage = "The host has an incompatible match."
+                                    lanBusy = false
+                                } else {
+                                    activeMatchId = checkpoint.matchId
+                                    matchStartedAtEpochMillis = checkpoint.startedAtEpochMillis
+                                    session = restored
+                                    startedFromCheckpoint = true
+                                    lanPendingAction = false
+                                    lanBusy = false
+                                    lanScreen = LanScreen.NONE
+                                    revision++
+                                }
+                            }.onFailure {
+                                lanMessage = "Couldn't verify the host game. Use the same QA build."
+                                lanBusy = false
+                            }
+                        }
+                    }
+                },
+                onConnection = { connected, note ->
+                    mainHandler.post {
+                        if (lanRole == LanRole.GUEST) {
+                            lanConnected = connected
+                            lanBusy = false
+                            if (!connected) {
+                                lanScreen = LanScreen.JOIN
+                                lanPendingAction = false
+                                lanMessage = note ?: "Disconnected. Rejoin the room."
+                            } else if (!note.isNullOrBlank()) {
+                                lanMessage = note
+                            }
+                        }
+                    }
+                }
+            )
+        }
+        val token = if (resume) lanGuest?.rejoinToken.orEmpty() else ""
+        runCatching { lanGuest?.connect(host, port, code, token) }.onFailure {
+            lanBusy = false
+            lanMessage = it.message ?: "Unable to connect."
+        }
+    }
+
+    fun localAction(action: LanAction) {
+        val current = session ?: return
+        if (lanRole == LanRole.GUEST) {
+            if (!lanConnected || lanPendingAction || current.currentIndex != 1) return
+            runCatching {
+                lanGuest?.submit(action)
+            }.onSuccess { lanPendingAction = true }
+                .onFailure { lanMessage = it.message ?: "Reconnect to play." }
+            return
+        }
+        if (lanRole == LanRole.HOST &&
+            (!lanConnected || current.currentIndex != 0)
+        ) return
+        val before = current.snapshot()
+        val result = runCatching {
+            if (lanRole == LanRole.HOST) {
+                LanTurnAuthority.apply(current, 0, action)
+            } else {
+                when (action.type) {
+                    LanActionType.ROLL -> current.roll()
+                    LanActionType.ROUTE -> current.chooseRoute(requireNotNull(action.route))
+                    LanActionType.TARGET -> current.chooseTarget(requireNotNull(action.target))
+                }
+            }
+        }
+        if (result.isFailure) {
+            lanMessage = result.exceptionOrNull()?.message ?: "Unavailable move"
+            return
+        }
+        if (lanRole == LanRole.HOST) {
+            lanHost?.publish(current.checkpoint(activeMatchId, matchStartedAtEpochMillis))
+        } else {
+            persistGame(current)
+        }
+        cameraTrackIndex = PresentationPacing.mover(before, current.snapshot())
+        transitionDelay = PresentationPacing.waitForMovement(before, current.snapshot(), speed)
+        turnReady = false
+        revision++
+    }
+
+    fun rematch() {
+        val current = session ?: return
+        if (lanRole == LanRole.HOST) {
+            if (!lanConnected) return
+            val next = GameSession(board, catalogue, seats = 2,
+                seed = java.util.Random().nextInt(), humanIndices = setOf(0, 1))
+            activeMatchId = java.util.UUID.randomUUID().toString()
+            matchStartedAtEpochMillis = System.currentTimeMillis()
+            startedFromCheckpoint = false
+            session = next
+            lanHost?.publish(next.checkpoint(activeMatchId, matchStartedAtEpochMillis))
+            revision++
+        } else if (lanRole == LanRole.OFFLINE) {
+            start(current.players.size, current.players.count { !it.isBot } > 1)
+        }
     }
 
     // The OS Back action follows the same protection as Leave Match. Dialogs
