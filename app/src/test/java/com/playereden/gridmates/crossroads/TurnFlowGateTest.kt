@@ -32,20 +32,20 @@ class TurnFlowGateTest {
 
     @Test fun aiOnlyMovesWhenReadyAndNoReaderIsOpen() {
         val ai = state()
-        assertTrue(TurnFlowGate.mayAdvanceAi(ai, turnReady = true, readingOrMenuOpen = false))
-        assertFalse(TurnFlowGate.mayAdvanceAi(ai, turnReady = false, readingOrMenuOpen = false))
-        assertFalse(TurnFlowGate.mayAdvanceAi(ai, turnReady = true, readingOrMenuOpen = true))
-        assertFalse(TurnFlowGate.mayAdvanceAi(null, turnReady = true, readingOrMenuOpen = false))
+        assertTrue(TurnFlowGate.mayAdvanceAi(ai, turnReady = true, readingOrMenuOpen = false, appInForeground = true))
+        assertFalse(TurnFlowGate.mayAdvanceAi(ai, turnReady = false, readingOrMenuOpen = false, appInForeground = true))
+        assertFalse(TurnFlowGate.mayAdvanceAi(ai, turnReady = true, readingOrMenuOpen = true, appInForeground = true))
+        assertFalse(TurnFlowGate.mayAdvanceAi(null, turnReady = true, readingOrMenuOpen = false, appInForeground = true))
     }
 
     @Test fun humansNeverAdvanceAutomaticallyIncludingPassAndPlay() {
         val human = state(index = 0)
-        assertFalse(TurnFlowGate.mayAdvanceAi(human, turnReady = true, readingOrMenuOpen = false))
+        assertFalse(TurnFlowGate.mayAdvanceAi(human, turnReady = true, readingOrMenuOpen = false, appInForeground = true))
         val local = state(index = 1, players = seats.mapIndexed { i, player ->
             player.copy(name = "Player ${i + 1}", isBot = false)
         })
-        assertFalse(TurnFlowGate.mayAdvanceAi(local, turnReady = true, readingOrMenuOpen = false))
-        assertFalse(TurnFlowGate.mayAdvanceAi(local, turnReady = true, readingOrMenuOpen = true))
+        assertFalse(TurnFlowGate.mayAdvanceAi(local, turnReady = true, readingOrMenuOpen = false, appInForeground = true))
+        assertFalse(TurnFlowGate.mayAdvanceAi(local, turnReady = true, readingOrMenuOpen = true, appInForeground = true))
     }
 
     @Test fun finishedMatchesNeverAdvanceAndOpenRouteIsStillAnAiDecision() {
@@ -66,4 +66,26 @@ class TurnFlowGateTest {
             )
         )
     }
+    @Test fun backgroundAppSuspendsAiWithoutChangingItsTurn() {
+        val pendingBot = state(index = 1)
+        assertTrue(TurnFlowGate.mayAdvanceAi(
+            pendingBot, turnReady = true, readingOrMenuOpen = false,
+            appInForeground = true
+        ))
+        assertFalse(TurnFlowGate.mayAdvanceAi(
+            pendingBot, turnReady = true, readingOrMenuOpen = false,
+            appInForeground = false
+        ))
+        // Foreground return is allowed to resume the same pending bot command.
+        assertTrue(TurnFlowGate.mayAdvanceAi(
+            pendingBot, turnReady = true, readingOrMenuOpen = false,
+            appInForeground = true
+        ))
+        // A reopened reading screen still wins over foreground status.
+        assertFalse(TurnFlowGate.mayAdvanceAi(
+            pendingBot, turnReady = true, readingOrMenuOpen = true,
+            appInForeground = true
+        ))
+    }
+
 }
