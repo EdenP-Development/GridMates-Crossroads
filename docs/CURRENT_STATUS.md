@@ -1,3 +1,11 @@
+# UI-07 — Match screen refinement (stacked draft candidate)
+
+**Automated acceptance pending.** On `feature/match-ui-v0.7` over CAM-06B, the screen now gives the main board more vertical space, removes the duplicative event card and journal below the board, and places board overview, journal, and leave confirmation behind Match options. The fixed action sheet labels the previous action separately from the current player's turn. See [UI-07 phone QA handoff](UI_07_MATCH_SCREEN_QA_HANDOFF.md) and [mobile board UI research](RESEARCH_MOBILE_BOARD_GAME_UI_2026_11.md).
+
+**CAM-06B verified automated:** Signed QA1065 build at [workflow run](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44025552664), plus passing rules/design and board-data checks. User's earlier screenshots were of **QA1057**, which confirmed on-phone visual rendering but did not fully verify gesture behavior. **Owner-phone QA1065 and UI-07 remain pending; no main merge, no production release.**
+
+---
+
 > **CAM-06B source update (Nov 16–17, 2026):** Owner's QA1057 phone screenshots confirmed initial board, follow-style close view, 1× overview and bot-turn screen. Owner chose gesture-first navigation; permanent camera controls are unwanted. On the current draft camera branch, CAM-06B now removes the floating camera bar, adds double-tap / focused-piece recentering, a saved one-time gesture hint and semantic accessibility recenter/whole-board actions. Existing pinch, drag, 1×–3× clamp and automatic following remain. A comparative UI study is in [RESEARCH_MOBILE_BOARD_GAME_UI_2026_11.md](RESEARCH_MOBILE_BOARD_GAME_UI_2026_11.md). **Source committed; new Android QA and owner's gesture acceptance pending. Prior QA1057 evidence applies only to the previous build.** No merge into main.
 
 # GridMates: Crossroads — current status: CAM-06 / QA1057
@@ -31,4 +39,4 @@
 4. Match length, event-game juice, 2–4 seat balance, original woodland illustration and future Classic/Long match courses still remain.
 5. LAN, pass-and-play, user accounts, server economy, production signing and real unfinished-match saves are not part of this milestone.
 
-**No physical QA1057 phone playtest has yet been provided**. Keep Draft PR #12 until owner review.
+**The owner supplied QA1057 screenshots**, which verify screen presentation and AI-turn UI, but not physical pinch/pan/camera fluidity. CAM-06B QA1065 and UI-07 require gesture and gameplay acceptance. Keep draft PRs until owner review.
