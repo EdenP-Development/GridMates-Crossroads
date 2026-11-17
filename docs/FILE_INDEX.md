@@ -29,3 +29,6 @@
 - `docs/QA_RECEIPT_WOVEN_V02_2026_11_16.md` — exact build and 1018→1020 emulator upgrade/screenshot receipt.
 
 - `docs/QA_PHONE_WOVEN_TRAIL_COMPLETE_MATCH.md` — source-grounded first complete human three-seat match and outstanding QA observations.
+
+- `docs/QA_OWNER_PHONE_FOUR_PLAYER_TURN_FLOW.md` — 4-player AI victory, journal observation and initial 1026 phone feedback.
+- `docs/QA_RECEIPT_1037_2026_11_16.md` — exact signed APK and 1026→1037 emulator update proof.

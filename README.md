@@ -1,6 +1,6 @@
 # GridMates: Crossroads
 
-**Status:** First full Woven Trail human victory observed on phone; turn-flow QA **1026** signed and emulator update **1020→1026 passed**, saved stats preserved in automated test. **QA1026 owner phone review pending.** Current draft source: `feature/turn-flow-v0.3` ([PR #8](https://github.com/PlayerEden/GridMates-Crossroads/pull/8)), built upon [PR #7](https://github.com/PlayerEden/GridMates-Crossroads/pull/7). LAN not implemented.  
+**Status:** Crossroads **QA 1037** built and verified updating over QA 1026 on an Android emulator with local records intact. Owner phone screenshots confirmed a prior 3-player human win and a subsequent 4-player AI win; QA1037 fixes copy and action-panel scrolling. **Owner review of QA1037 pending**. Current source: `feature/turn-flow-v0.3` ([Draft PR #8](https://github.com/PlayerEden/GridMates-Crossroads/pull/8)). LAN not implemented.
 **Design baseline:** 0.1.0 · 2026-11-16  
 **Owner:** PlayerEden  
 **Name:** *GridMates: Crossroads* is the current preferred **working** name; app-store/trademark clearance has not been performed.
@@ -14,7 +14,7 @@
 2. Read the [Game Bible](docs/GAME_BIBLE.md) for the accepted vision and explicit proposals.
 3. Read [Decision Log](docs/DECISION_LOG.md) before changing rules.
 4. Read the [Research Notes](docs/RESEARCH_GAMEPLAY.md) and [Platform Research](docs/RESEARCH_TECH_AND_ACCESSIBILITY.md) for evidence and references.
-5. See [Roadmap](docs/ROADMAP.md), [Woven Trail v0.2](docs/BOARD_WOVEN_TRAIL_V02.md), [Verified v0.2 QA Receipt](docs/QA_RECEIPT_WOVEN_V02_2026_11_16.md), [Current Status](docs/CURRENT_STATUS.md), and [Playtest/QA](docs/QA_AND_PLAYTEST.md) for build/testing gates.
+5. See [Roadmap](docs/ROADMAP.md), [Current Status](docs/CURRENT_STATUS.md), [QA1037 receipt](docs/QA_RECEIPT_1037_2026_11_16.md), and [Playtest/QA](docs/QA_AND_PLAYTEST.md) for build and testing evidence.
 
 ## Core pillars
 

@@ -1,27 +1,32 @@
-# Current Crossroads Status — Turn Flow v0.3 (QA 1026)
-**Recorded:** November 16, 2026 local / November 17 UTC.
+# Current Crossroads Status — Phone Polish v0.3.1 (QA 1037)
 
-## Active development
-- Source: [`feature/turn-flow-v0.3`](https://github.com/PlayerEden/GridMates-Crossroads/tree/feature/turn-flow-v0.3), [Draft PR #8](https://github.com/PlayerEden/GridMates-Crossroads/pull/8), stacked on [Woven Trail PR #7](https://github.com/PlayerEden/GridMates-Crossroads/pull/7) and [Foundation PR #1](https://github.com/PlayerEden/GridMates-Crossroads/pull/1). `main` has not been merged; no public release.
-- One human vs 1–3 AI; one shared Start/Finish, 38 nodes and 5 crossroads; fixed map/curated random event pools.
+**Last verified:** November 16, 2026 (America/Kentucky/Louisville); GitHub CI completed November 17 UTC.
 
-## Evidence and working features
-- **A complete three-player human victory was shown in owner-supplied phone screenshots** of Woven Trail. This establishes actual full-game flow, but not exact APK code or final stats persisted after relaunch. [Phone QA note](QA_PHONE_WOVEN_TRAIL_COMPLETE_MATCH.md).
-- QA1026 introduces a compact header/player strip, independent scrollable board, **pinned bottom action controls**, latest-encounter panel, expandable journal and an exit confirmation for unsaved matches. End screen no longer has duplicate exit actions.
-- Encounter history belongs to the Kotlin engine (bounded to 16, deterministic replay), so events can remain visible through subsequent AI and human rolls.
-- [Design data validation PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44001664904); [JVM game and history tests PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44001688525).
-- [Signed APK QA1026 PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44001688534), `com.playereden.gridmates.crossroads.qa`, QA signer unchanged. [Download direct GitHub artifact](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44001688534/artifacts/14292043894). APK SHA-256: `8afa05795a0f00e4259d6d2d85e7a5f4b20a0e04df3160bc7899daceac8c4704`.
-- [Actual QA1020→1026 emulator install-over PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44002151297): SHA-pinned previous and candidate APKs, Android 15, seeded 7 completed matches and 3 wins preserved byte-for-byte; upgraded app launched, 2-player match opened and first roll progressed. [Source-matched emulator screenshots](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44002151297/artifacts/14293056657).
+## Repository state
+- Active: [`feature/turn-flow-v0.3`](https://github.com/PlayerEden/GridMates-Crossroads/tree/feature/turn-flow-v0.3), [Draft PR #8](https://github.com/PlayerEden/GridMates-Crossroads/pull/8), stacked on Woven Trail Draft PR #7 and Foundation Draft PR #1. No merge to `main` or public beta release.
+- Stable gameplay prototype: one human against 1–3 local AI on a fixed 38-node Woven Trail board, five crossroads, regional hazard/shelter/mischief event pools, dice, winners, local win/completed statistics, bounded event history and a scrollable map with pinned action controls.
+
+## Real owner-phone evidence
+- Earlier screenshot set confirmed one **three-seat human victory**.
+- Latest owner screenshot set confirms the main menu reading **1 win and 1 completed match**, consistent with the previous victory surviving the user's install-over. It also shows a **four-seat AI3 victory**, visible route choices, ongoing AI movement, recent events and an expanded journey journal.
+- The screenshots revealed the literal copy defects “You's turn”, “1 wins”, “1 completed matches” and “1 steps remaining”. They also revealed that the action panel could open with its heading partly scrolled away.
+- Full details: [Owner four-player QA](QA_OWNER_PHONE_FOUR_PLAYER_TURN_FLOW.md). Owner screenshots are not published in this public repository.
+- The four-seat game appeared to span roughly 8:27 to 8:29 PM in screenshot timestamps. This is **not** reliable timed measurement; formal Quick/Classic/Long pacing remains untested.
+
+## QA 1037 implemented and independently verified
+- User-turn heading reads “Your turn”; win/match and steps/encounter text pluralization correct.
+- Match action heading, dice summary and multi-path hint stay visible above the separately scrollable lower choice list.
+- Action list scroll resets after every game revision, including different intersections within the same turn.
+- Latest event cards subtly distinguish benefit, setback and mischief by background color.
+- [Design data QA PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44003804575); [Kotlin/JVM QA PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44003810169).
+- [**Signed QA 1037 build PASS**](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44003804869), [APK artifact](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44003804869/artifacts/14292919347). APK source SHA `47e158e1e8f29435a2d44815754a6360d84a15fa`, SHA-256 `1dd8e270cbc14823f91432d3635e4f87529f19b7c6b7f377be4ce9b5db9bc0c9`.
+- [**1026→1037 real Android 15 emulator install-over PASS**](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44004288480): both real SHA-pinned APKs; seeded profile completed=7 and wins=3 preserved byte-for-byte; updated app launched and interacted with a crossroads. [Emulator screenshots](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44004288480/artifacts/14293642513) confirm “Round 1 · Your turn”, “1 step remaining”, and visible path choices.
+- Independent QA package `com.playereden.gridmates.crossroads.qa`, same **public test-only QA key** as prior builds; not suitable for production signing.
 
 ## Still open
-- Owner's **physical-phone** QA1026 visual/turn-flow/3-way route choice and actual install-over experience remain untested.
-- The first real human victory **does not yet establish** that stats increment once or persist after phone restart.
-- Emulator visual review suggests minor future copy polish: `You's turn` should be `Your turn`. No mandatory code change before owner testing.
-- Future screen-size/large-text checks, event appeal, measured lengths/balance, AI fairness, character tokens, active-match persistence, pass-and-play and LAN are not yet complete.
-- QA signer is deliberately public test-only, never for production.
+1. **Owner phone review of QA 1037** on top of 1026; test three-way Old Forest Junction, action panel small-screen scrolling, dismissible Leave dialog, and complete a full match.
+2. After the four-player AI loss, menu should show the previous 1 win **and 2 completed matches** if the record update happened once; check and then restart app. The last screenshots ended at the loss screen, so this outcome wasn't verified.
+3. Token/event marker legibility, accessibility and board zoom/inspection; full game-balance measurements and actual match-length modes.
+4. More satisfying dice/space movement and event reveals, optional audio, approved GridMates animal art, active-match saving, LAN and multiplayer modes; no automatic expansion of scope without owner review.
 
-## Next
-1. Install 1026 **over** previous Crossroads QA build. Don't uninstall unless explicitly backing up and migrating progress.
-2. Check that dice/crossroads/prank controls stay visible as you scroll the board. Check the three-route forest choice on your device and the event journal after AI turns.
-3. Complete one match, return to menu and relaunch to verify counters and no duplicate victory recording.
-4. Use owner playtest feedback for additional UI motion, events, balancing and modest visual identity. Avoid mass artwork until mechanics are satisfying.
+**No further code changes are required merely to document this receipt.** The owner should test the exact signed QA1037 artifact from the link above. Do not mistake later documentation-only CI builds for accepted updated APKs.

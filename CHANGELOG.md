@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.1 owner-screen polish QA 1037] — November 16/17, 2026
+- Confirmed four-player AI3 victory, functioning journal, and earlier saved 1 win/1 match in owner screenshots.
+- Fixed “Your turn”, singular match/win/step/encounter grammar and lower action-panel heading clipping. Actions reset to top after every game revision; route choice lists remain scrollable.
+- Added subtle event-card benefit/hazard/mischief color treatment without altering the fixed board, events, dice, saved-stats keys, or signing identity.
+- [Board checks PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44003804575); [JVM tests PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44003810169); [signed Android QA 1037 PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44003804869).
+- [Real emulator QA1026→1037 update PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44004288480), seeded stats preserved and new route-choice UI captured.
+- QA1037 owner phone review remains pending. [Full receipt](docs/QA_RECEIPT_1037_2026_11_16.md).
+
+
 ## [0.3.0 turn-flow QA 1026] — November 16/17, 2026
 - Owner screenshots show a complete three-player Woven Trail match ending with **You won!**.
 - Compact match header and player badges; independent scrolling map with persistent accessible lower action panel. Long fork choices stay inside a bounded scrollable panel.
