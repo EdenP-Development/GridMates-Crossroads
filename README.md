@@ -1,6 +1,6 @@
 # GridMates: Crossroads
 
-**Status:** PACE-05 **QA1051** Android build/tests and **actual QA1044→1051 install-over passed**, preserving seeded statistics. New Cozy/Brisk pacing and a scrollable three-choice crossroads dialog are implemented; **owner phone acceptance remains pending**. Current source: `feature/pace-gamefeel-v0.5` ([Draft PR #11](https://github.com/PlayerEden/GridMates-Crossroads/pull/11)) stacked on previous drafts; no LAN or public release.
+**Status:** CAM-06 **QA1057** signed Android build and **actual QA1051→1057 install-over PASSED** on emulator with test statistics preserved. Animated Follow camera, overview, pinch zoom, pan and map inspection are implemented; **owner phone gesture/feel review pending**. Source: `feature/dynamic-camera-v0.6` ([Draft PR #12](https://github.com/PlayerEden/GridMates-Crossroads/pull/12)), stacked on earlier drafts. LAN not yet implemented.
 **Design baseline:** 0.1.0 · 2026-11-16  
 **Owner:** PlayerEden  
 **Name:** *GridMates: Crossroads* is the current preferred **working** name; app-store/trademark clearance has not been performed.

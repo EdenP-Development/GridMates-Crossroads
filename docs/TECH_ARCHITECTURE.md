@@ -27,3 +27,6 @@ Independent app ID and keys; versioned atomic saves. Preserve local achievements
 
 ### Source reference
 Sudoku's architecture guidance is at https://github.com/PlayerEden/SudokuTogether/blob/main/docs/REUSABLE_ANDROID_PUZZLE_FOUNDATION.md — verify stable branch and don't assume modules are already generalized.
+
+### Camera implementation checkpoint (CAM-06 QA1057)
+The current Android prototype includes pure 2D camera math in `core/CameraGeometry.kt` (zoom, bounds, pinch anchor and fork focus) plus UI-only Compose gesture and `graphicsLayer` transforms in `MainActivity.kt`. Follow mode tracks **visually animating** pieces, using snapshot movement to avoid jumping ahead at turn changes. The Canvas is clipped to the game board, and action buttons remain outside the transform. Visual-only camera state resets per GameSession; it is not serialized into rules or multiplayer messages. [Camera PR #12](https://github.com/PlayerEden/GridMates-Crossroads/pull/12). Physical device gesture testing remains open.

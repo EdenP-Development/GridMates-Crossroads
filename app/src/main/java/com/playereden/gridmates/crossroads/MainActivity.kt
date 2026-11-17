@@ -5,6 +5,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateOffsetAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.Crossfade
@@ -13,6 +17,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -22,14 +28,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.playereden.crossroads.core.*
@@ -39,6 +55,7 @@ private val Forest = Color(0xFF48684D)
 private val Cream = Color(0xFFF7F0DE)
 private val Bark = Color(0xFF80664B)
 private val PlayerColors = listOf(Color(0xFFC75C49), Color(0xFF3D729F), Color(0xFF729B60), Color(0xFFB48A36))
+private enum class BoardCameraMode { FOLLOW, MANUAL }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,10 +92,12 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     var showJournal by remember(game) { mutableStateOf(false) }
     var confirmExit by remember(game) { mutableStateOf(false) }
     var inspectBoard by remember(game) { mutableStateOf(false) }
+    var showBoardGestureHint by remember { mutableStateOf(!prefs.getBoolean("board_gesture_hint_seen_v1", false)) }
     var rollingDie by remember(game) { mutableStateOf(false) }
     var speed by remember { mutableStateOf(PresentationSpeed.COZY) }
     var transitionDelay by remember(game) { mutableLongStateOf(0L) }
     var turnReady by remember(game) { mutableStateOf(true) }
+    var cameraTrackIndex by remember(game) { mutableIntStateOf(0) }
     var routeDialogDismissed by remember(game) { mutableStateOf(false) }
     LaunchedEffect(game, state?.revision) { routeDialogDismissed = false }
     var rollingFace by remember(game) { mutableIntStateOf(1) }
@@ -102,6 +121,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             if (game.phase == Phase.ROLL && !game.players[game.currentIndex].isBot) {
                 val before = game.snapshot()
                 game.roll() // Exactly one real engine roll; visual faces use no RNG.
+                cameraTrackIndex = PresentationPacing.mover(before, game.snapshot())
                 transitionDelay = PresentationPacing.waitForMovement(before, game.snapshot(), speed)
                 turnReady = false
                 revision++
@@ -122,11 +142,13 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             // Let the animated piece reach its authoritative destination before
             // continuing the next turn or accepting a new crossroads choice.
             if (transitionDelay > 0L) delay(transitionDelay)
+            cameraTrackIndex = state.playerIndex // hand over focus after movement is visible
             turnReady = true
             if (state.phase != Phase.FINISHED && state.players[state.playerIndex].isBot) {
                 delay(speed.aiBreathMillis)
                 val before = game.snapshot()
                 game.botStep()
+                cameraTrackIndex = PresentationPacing.mover(before, game.snapshot())
                 transitionDelay = PresentationPacing.waitForMovement(before, game.snapshot(), speed)
                 turnReady = false
                 revision++
@@ -148,6 +170,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         val before = game?.snapshot()
         block()
         if (before != null && game != null) {
+            cameraTrackIndex = PresentationPacing.mover(before, game.snapshot())
             transitionDelay = PresentationPacing.waitForMovement(before, game.snapshot(), speed)
             turnReady = false
         }
@@ -239,7 +262,31 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         Text("Inspect map", style = MaterialTheme.typography.labelMedium)
                     }
                 }
-                BoardCanvas(board, state, matchKey = game, stepMillis = speed.stepMillis)
+                if (showBoardGestureHint) {
+                    Surface(
+                        color = Color(0xFFE6E9D6),
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(start = 12.dp, top = 5.dp, bottom = 5.dp, end = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text("Explore the board", fontWeight = FontWeight.SemiBold,
+                                    style = MaterialTheme.typography.labelMedium, color = Forest)
+                                Text("Pinch to zoom · Drag to explore · Double-tap to follow",
+                                    style = MaterialTheme.typography.bodySmall, color = Bark)
+                            }
+                            TextButton(onClick = {
+                                showBoardGestureHint = false
+                                prefs.edit().putBoolean("board_gesture_hint_seen_v1", true).apply()
+                            }) { Text("Got it") }
+                        }
+                    }
+                }
+                BoardCanvas(board, state, matchKey = game, stepMillis = speed.stepMillis,
+                    focusPlayerIndex = cameraTrackIndex)
                 if (state.encounters.isNotEmpty()) {
                     val latest = state.encounters.last()
                     val symbol = when (latest.kind) {
@@ -522,7 +569,8 @@ private fun BoardCanvas(
     tokenScale: Float = 1f,
     animateTokens: Boolean = true,
     matchKey: Any? = null,
-    stepMillis: Int = PresentationSpeed.COZY.stepMillis
+    stepMillis: Int = PresentationSpeed.COZY.stepMillis,
+    focusPlayerIndex: Int = state.playerIndex
 ) {
     // The new GameSession object resets visual positions after Rematch.
     val motion = remember(matchKey, board.id, state.players.size, animateTokens) {
@@ -562,8 +610,163 @@ private fun BoardCanvas(
         }
         motion[i].value
     }
+    // Camera is purely visual and match-scoped. Moving it cannot move a piece,
+    // change the route graph, or affect the authoritative game snapshot.
+    var cameraMode by remember(matchKey, board.id, animateTokens) {
+        mutableStateOf(if (animateTokens) BoardCameraMode.FOLLOW else BoardCameraMode.MANUAL)
+    }
+    var manualZoom by remember(matchKey, board.id, animateTokens) { mutableFloatStateOf(1f) }
+    var manualTranslation by remember(matchKey, board.id, animateTokens) {
+        mutableStateOf(Offset.Zero)
+    }
+    var canvasDimensions by remember(matchKey, board.id, animateTokens) {
+        mutableStateOf(IntSize.Zero)
+    }
+    val cameraSubject = focusPlayerIndex.coerceIn(displayed.indices)
+    val active = displayed[cameraSubject]
+    val cameraTarget = if (state.phase == Phase.ROUTE &&
+        focusPlayerIndex == state.playerIndex) {
+        val node = board.node(state.players[state.playerIndex].position)
+        val fork = CameraGeometry.forkFocus(
+            node.x, node.y, node.next.map { board.node(it).x to board.node(it).y }
+        )
+        Offset(fork.first, fork.second)
+    } else active
+    val followedFocus by animateOffsetAsState(
+        targetValue = cameraTarget,
+        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        label = "follow-board-position"
+    )
+    val autoZoom by animateFloatAsState(
+        targetValue = when (cameraMode) {
+            BoardCameraMode.FOLLOW -> if (state.phase == Phase.ROUTE) 1.4f else 1.7f
+            BoardCameraMode.MANUAL -> manualZoom
+        },
+        animationSpec = tween(durationMillis = 330),
+        label = "board-camera-zoom"
+    )
+    val cameraZoom = if (cameraMode == BoardCameraMode.MANUAL) manualZoom else autoZoom
+    val viewportWidth = canvasDimensions.width.toFloat()
+    val viewportHeight = canvasDimensions.height.toFloat()
+    val boardPadding = 18f
+    val focusPx = Offset(
+        boardPadding + followedFocus.x * (viewportWidth - 2f * boardPadding).coerceAtLeast(0f),
+        boardPadding + followedFocus.y * (viewportHeight - 2f * boardPadding).coerceAtLeast(0f)
+    )
+    val desiredTranslation = when (cameraMode) {
+        BoardCameraMode.FOLLOW -> Offset(
+            CameraGeometry.centerTranslation(viewportWidth / 2f, focusPx.x, cameraZoom),
+            CameraGeometry.centerTranslation(viewportHeight / 2f, focusPx.y, cameraZoom)
+        )
+        BoardCameraMode.MANUAL -> manualTranslation
+    }
+    val actualTranslation = Offset(
+        CameraGeometry.boundTranslation(desiredTranslation.x, viewportWidth,
+            boardPadding, viewportWidth - boardPadding, cameraZoom),
+        CameraGeometry.boundTranslation(desiredTranslation.y, viewportHeight,
+            boardPadding, viewportHeight - boardPadding, cameraZoom)
+    )
+    // Keep the pointer handler stable while receiving the newest following pose.
+    val liveZoom by rememberUpdatedState(cameraZoom)
+    val liveTranslation by rememberUpdatedState(actualTranslation)
+
+    // Touching the focused piece or double-tapping resumes cinematic following.
+    val liveViewportSize by rememberUpdatedState(canvasDimensions)
+    val livePieceLocation by rememberUpdatedState(
+        Offset(
+            boardPadding + active.x * (viewportWidth - 2f * boardPadding).coerceAtLeast(0f),
+            boardPadding + active.y * (viewportHeight - 2f * boardPadding).coerceAtLeast(0f)
+        )
+    )
+    val density = LocalDensity.current
+    val insetPx = with(density) { 8.dp.toPx() }
+    val pieceTapRadiusPx = with(density) { 32.dp.toPx() }
+
     Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEDE4D0))) {
-        Canvas(modifier = Modifier.fillMaxWidth().height(height).padding(8.dp)) {
+        Box(
+            modifier = Modifier.fillMaxWidth().height(height).clipToBounds()
+                .semantics {
+                    contentDescription = "Interactive board. Pinch to zoom, drag to explore."
+                    customActions = listOf(
+                        CustomAccessibilityAction("Recenter board") {
+                            cameraMode = if (animateTokens) BoardCameraMode.FOLLOW else BoardCameraMode.MANUAL
+                            manualZoom = 1f
+                            manualTranslation = Offset.Zero
+                            true
+                        },
+                        CustomAccessibilityAction("Show whole board") {
+                            cameraMode = BoardCameraMode.MANUAL
+                            manualZoom = 1f
+                            manualTranslation = Offset.Zero
+                            true
+                        }
+                    )
+                }
+                .pointerInput(matchKey, animateTokens) {
+                    detectTapGestures(
+                        onDoubleTap = {
+                            cameraMode = if (animateTokens) BoardCameraMode.FOLLOW else BoardCameraMode.MANUAL
+                            manualZoom = 1f
+                            manualTranslation = Offset.Zero
+                        },
+                        onTap = { tap ->
+                            if (animateTokens) {
+                                // Convert the token's canvas coordinates through the visual transform.
+                                val width = liveViewportSize.width.toFloat()
+                                val height = liveViewportSize.height.toFloat()
+                                val renderedPiece = Offset(
+                                    insetPx + width / 2f +
+                                        (livePieceLocation.x - width / 2f) * liveZoom +
+                                        liveTranslation.x,
+                                    insetPx + height / 2f +
+                                        (livePieceLocation.y - height / 2f) * liveZoom +
+                                        liveTranslation.y
+                                )
+                                if ((tap - renderedPiece).getDistance() <= pieceTapRadiusPx) {
+                                    cameraMode = BoardCameraMode.FOLLOW
+                                    manualTranslation = Offset.Zero
+                                }
+                            }
+                        }
+                    )
+                }
+                .pointerInput(matchKey, animateTokens) {
+                    detectTransformGestures(panZoomLock = true) { centroid, pan, gestureZoom, _ ->
+                        val wasManual = cameraMode == BoardCameraMode.MANUAL
+                        val fromZoom = if (wasManual) manualZoom else liveZoom
+                        val fromTranslation = if (wasManual) manualTranslation else liveTranslation
+                        val nextZoom = CameraGeometry.zoom(fromZoom * gestureZoom)
+                        val nextTranslation = Offset(
+                            CameraGeometry.zoomAt(
+                                fromTranslation.x, centroid.x - (size.width - canvasDimensions.width) / 2f,
+                                canvasDimensions.width / 2f, fromZoom, nextZoom, pan.x
+                            ),
+                            CameraGeometry.zoomAt(
+                                fromTranslation.y, centroid.y - (size.height - canvasDimensions.height) / 2f,
+                                canvasDimensions.height / 2f, fromZoom, nextZoom, pan.y
+                            )
+                        )
+                        manualZoom = nextZoom
+                        manualTranslation = Offset(
+                            CameraGeometry.boundTranslation(nextTranslation.x, canvasDimensions.width.toFloat(),
+                                boardPadding, canvasDimensions.width.toFloat() - boardPadding, nextZoom),
+                            CameraGeometry.boundTranslation(nextTranslation.y, canvasDimensions.height.toFloat(),
+                                boardPadding, canvasDimensions.height.toFloat() - boardPadding, nextZoom)
+                        )
+                        cameraMode = BoardCameraMode.MANUAL
+                    }
+                }
+        ) {
+            Canvas(
+                modifier = Modifier.fillMaxSize().padding(8.dp)
+                    .onSizeChanged { canvasDimensions = it }
+                    .graphicsLayer {
+                        scaleX = cameraZoom
+                        scaleY = cameraZoom
+                        translationX = actualTranslation.x
+                        translationY = actualTranslation.y
+                    }
+            ) {
             val left = 18f
             val top = 18f
             val drawWidth = size.width - left * 2
@@ -714,6 +917,8 @@ private fun BoardCanvas(
                     canvas.nativeCanvas.drawText("${i + 1}", marker.x, marker.y + 4f * tokenScale, paint)
                 }
             }
+            }
+
         }
     }
 }

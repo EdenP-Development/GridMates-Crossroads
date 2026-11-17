@@ -29,3 +29,14 @@
 - Exact landing at Finish unnecessary; crossing it wins.
 - Short 2-space mischief setback and one-use shield; no chained attack events.
 - Plain drawable paths and colored tokens before decorative art.
+
+## APPROVED DIRECTION / CAM-06 — November 16, 2026
+- User requested mobile-board-game-style **zooming and board camera exploration** and explicitly asked to continue building it. 2D dynamic camera is in scope while keeping core race rules unchanged.
+- Implemented QA candidate: follow a moving piece, wider crossroads framing, Overview, pinch zoom, pan and recenter. Zoom defaults and gesture response remain **OPEN for phone playtest**, not locked production decisions.
+- [Draft camera PR #12](https://github.com/PlayerEden/GridMates-Crossroads/pull/12) and [QA handoff](CAM_06_QA_HANDOFF.md).
+
+## APPROVED DIRECTION / CAM-06B — November 16–17, 2026
+- **No permanent in-match camera buttons**: owner explicitly prefers gesture-first map manipulation to the previous visible `− / + / Overview / Follow` strip, similar to a natural mobile board-game interaction.
+- Use pinch-to-zoom, drag-to-pan, and intentional double-tap/tap-focused-piece recentering; preserve automatic following unless manually exploring. Keep an unobtrusive first-match hint rather than a standing camera toolbar.
+- Research comparable mobile board-game user-facing UI before refining broader layouts. See [mobile board-game UI study](RESEARCH_MOBILE_BOARD_GAME_UI_2026_11.md). The Game of Life 2 is a stronger structural reference than a rolling reward-economy app; do not copy third-party IP or overbuild a metagame.
+- CAM-06B gesture-first code has been committed on camera Draft PR #12. **QA confirmation, tap/gesture response, accessibility and physical phone acceptance remain OPEN.** No game logic change, production release or main merge.

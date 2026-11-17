@@ -12,6 +12,27 @@ class PresentationPacingTest {
             turn = 1, lastEventId = events.lastOrNull()?.title, encounters = events
         )
 
+    @Test fun cameraTracksPreviousTurnMoverNotNewActivePlayer() {
+        val before = state(listOf("S", "A")).copy(
+            players = listOf(
+                Player("You", false, "A", mutableListOf("S", "A")),
+                Player("Bot", true, "S", mutableListOf("S"))
+            ), playerIndex = 0
+        )
+        val after = before.copy(
+            players = listOf(
+                Player("You", false, "B", mutableListOf("S", "A", "B")),
+                Player("Bot", true, "S", mutableListOf("S"))
+            ), playerIndex = 1
+        )
+        assertEquals(0, PresentationPacing.mover(before, after))
+        assertEquals(1, PresentationPacing.mover(after,
+            after.copy(players = listOf(
+                after.players[0],
+                Player("Bot", true, "C", mutableListOf("S", "C"))
+            ))))
+    }
+
     @Test fun movementIsTimedPerActualNodeNotTheRolledNumber() {
         val first = state(listOf("S"))
         val last = state(listOf("S", "A", "B", "C"))

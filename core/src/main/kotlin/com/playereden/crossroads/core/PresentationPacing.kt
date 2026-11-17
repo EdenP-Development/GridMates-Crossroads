@@ -18,6 +18,15 @@ enum class PresentationSpeed(
 
 /** Shared timing math keeps the animated board and turn gating in sync. */
 object PresentationPacing {
+    /** Keep the camera on the person who just moved, even if their turn ended. */
+    fun mover(before: Snapshot, after: Snapshot): Int =
+        before.players.indices.maxByOrNull { index ->
+            MoveTrail.steps(before.players[index].traversed,
+                after.players[index].traversed).size
+        }?.takeIf { index ->
+            before.players[index].traversed != after.players[index].traversed
+        } ?: before.playerIndex
+
     fun stepsMoved(before: Snapshot, after: Snapshot): Int =
         before.players.indices.maxOfOrNull { index ->
             MoveTrail.steps(before.players[index].traversed, after.players[index].traversed).size
