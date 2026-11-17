@@ -66,7 +66,7 @@ internal class MatchRecoveryStore(
         ) {
             editor.putInt("completed", prefs.getInt("completed", 0) + 1)
             editor.putInt("wins", prefs.getInt("wins", 0) +
-                if (game.winnerIndex == 0) 1 else 0)
+                if (game.winnerIndex == 0 && game.players.count { !it.isBot } == 1) 1 else 0)
             editor.putString(LAST_COMPLETED_ID, matchId)
         }
         return editor.commit()
