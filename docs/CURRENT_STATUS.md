@@ -1,3 +1,13 @@
+# QA-15 — Reliability and accessibility audit (November 17, 2026)
+
+**Source and new targeted JVM tests committed; new Android CI and physical TalkBack verification pending.** The audit found Android Back could bypass the in-game Leave confirmation; now active unfinished games use that confirmation, completed games return to the menu, and open modal surfaces own their own Back. Player strip and board descriptions now communicate current/moving player, shield, focused region and camera mode to accessibility services, while the animated pre-roll die no longer announces a false die value. The active turn text uses polite accessibility updates; match-options touch target is 48dp. Three core regression tests check snapshot isolation, wrong-phase action rejection and terminal winner immutability. [QA-15 detailed audit and phone test plan](QA_15_RELIABILITY_ACCESSIBILITY_HANDOFF.md).
+
+**Known important OPEN issue:** the in-progress GameSession is stored only in Compose `remember`; active-match recovery from Android recreation/process death **is not implemented**. Do not call this audit a persistence fix. Keep it as a separate, explicitly tested milestone.
+
+**Prior verified APK:** GUIDE-14 signed [QA1107](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44151632306), [artifact 14359886192](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44151632306/artifacts/14359886192). No evidence of physical QA1107 TalkBack or install-over; no main merge, production release or LAN claims.
+
+---
+
 # GUIDE-14 — Optional How to Play (November 17, 2026)
 
 **Source committed; exact CI and new handset acceptance pending.** The rules guide now appears as an optional secondary action on the home screen and inside Match Options, without mandatory onboarding or extra persistent match UI. The woodland-colored scrollable guide explains Start/Finish, real dice, crossroads with remaining steps, helpful/hazard/mischief encounters, shields, risk clues, AI, map gestures and Cozy/Brisk pacing—grounded in the current code. [GUIDE-14 phone QA handoff](GUIDE_14_HOW_TO_PLAY_QA_HANDOFF.md). It is included in Draft PR #18 to limit branch churn.
