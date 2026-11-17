@@ -172,5 +172,7 @@ internal class CrossroadsNearby(
         if (multicast.isHeld) runCatching { multicast.release() }
     }
 
-    override fun close() = stop()
+    override fun close() {
+        stop()
+    }
 }
