@@ -1,6 +1,8 @@
 package com.playereden.gridmates.crossroads
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.compose.BackHandler
@@ -64,6 +66,7 @@ private val Cream = Color(0xFFF7F0DE)
 private val Bark = Color(0xFF80664B)
 private val PlayerColors = listOf(Color(0xFFC75C49), Color(0xFF3D729F), Color(0xFF729B60), Color(0xFFB48A36))
 private enum class BoardCameraMode { FOLLOW, MANUAL }
+private enum class LanRole { OFFLINE, HOST, GUEST }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -131,6 +134,42 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         )
     }
     var revision by remember { mutableIntStateOf(0) }
+    // Nearby is independent from offline local saves. Only the host changes
+    // the LAN GameSession; guests reconstruct the host's verified checkpoint.
+    val mainHandler = remember { Handler(Looper.getMainLooper()) }
+    var lanRole by remember { mutableStateOf(LanRole.OFFLINE) }
+    var lanScreen by remember { mutableStateOf(LanScreen.NONE) }
+    var lanHost by remember { mutableStateOf<CrossroadsLanHost?>(null) }
+    var lanGuest by remember { mutableStateOf<CrossroadsLanGuest?>(null) }
+    var lanConnected by remember { mutableStateOf(false) }
+    var lanBusy by remember { mutableStateOf(false) }
+    var lanMessage by remember { mutableStateOf<String?>(null) }
+    var lanRooms by remember { mutableStateOf<List<NearbyCrossroads>>(emptyList()) }
+    var lanPendingAction by remember { mutableStateOf(false) }
+    var lanLastHost by remember { mutableStateOf("") }
+    var lanLastPort by remember { mutableIntStateOf(0) }
+    var lanLastCode by remember { mutableStateOf("") }
+    val nearby = remember(context) {
+        CrossroadsNearby(context) { error ->
+            mainHandler.post { lanMessage = error }
+        }
+    }
+    LaunchedEffect(lanScreen, lanHost) {
+        when (lanScreen) {
+            LanScreen.JOIN -> nearby.discover { lanRooms = it }
+            LanScreen.HOST_WAIT -> lanHost?.let {
+                nearby.advertise(it.port, it.code.isNotEmpty())
+            }
+            else -> nearby.stop()
+        }
+    }
+    DisposableEffect(nearby) {
+        onDispose {
+            lanHost?.close()
+            lanGuest?.close()
+            nearby.close()
+        }
+    }
     val game = session
     val state = remember(game, revision) { game?.snapshot() }
     // QA wall-clock timer intentionally continues while away from the app.
@@ -158,6 +197,9 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     var routeDialogDismissed by remember(game) { mutableStateOf(false) }
     LaunchedEffect(game, state?.revision) { routeDialogDismissed = false }
     fun persistGame(current: GameSession) {
+        // Nearby QA does not convert a remote match into an offline
+        // pass-the-phone recovery save or change the user's solo record.
+        if (lanRole != LanRole.OFFLINE) return
         val saved = runCatching {
             recoveryStore.persist(current, activeMatchId, matchStartedAtEpochMillis)
         }.getOrDefault(false)
@@ -170,7 +212,19 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         }
     }
     fun leaveGame() {
-        val cleared = recoveryStore.discard()
+        lanHost?.close()
+        lanGuest?.close()
+        nearby.stop()
+        lanHost = null
+        lanGuest = null
+        lanScreen = LanScreen.NONE
+        lanConnected = false
+        lanBusy = false
+        lanPendingAction = false
+        val previousRole = lanRole
+        lanRole = LanRole.OFFLINE
+        val cleared = if (previousRole == LanRole.OFFLINE)
+            recoveryStore.discard() else true
         if (!cleared) {
             recoveryWarning = "The saved journey couldn't be cleared; it may reopen on restart."
         }
