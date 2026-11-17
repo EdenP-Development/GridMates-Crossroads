@@ -13,6 +13,8 @@
 - `docs/QA_AND_PLAYTEST.md` — testing gates.
 - `docs/OPEN_QUESTIONS.md` — undecided matters.
 - `docs/REPO_SETUP.md` — repository work rules.
+- `docs/GRIDMATES_SIBLING_REPO_APK_AUDIT_2026-11-16.md` — source-backed Sudoku and Word Search repository/update audit.
+- `docs/APK_UPDATE_POLICY.md` — proposed stable QA signing, version and install-over contract.
 - `data/boards/woodland_quick_example.json` — prototype course.
 - `data/events/core_events_proposed.json` — proposed event data.
 - `scripts/validate_design.mjs`, `scripts/tests/design.test.mjs` — design checks only.
