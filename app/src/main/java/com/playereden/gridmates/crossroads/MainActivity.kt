@@ -17,6 +17,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -38,6 +39,7 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -51,7 +53,7 @@ private val Forest = Color(0xFF48684D)
 private val Cream = Color(0xFFF7F0DE)
 private val Bark = Color(0xFF80664B)
 private val PlayerColors = listOf(Color(0xFFC75C49), Color(0xFF3D729F), Color(0xFF729B60), Color(0xFFB48A36))
-private enum class BoardCameraMode { OVERVIEW, FOLLOW, MANUAL }
+private enum class BoardCameraMode { FOLLOW, MANUAL }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,6 +90,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     var showJournal by remember(game) { mutableStateOf(false) }
     var confirmExit by remember(game) { mutableStateOf(false) }
     var inspectBoard by remember(game) { mutableStateOf(false) }
+    var showBoardGestureHint by remember { mutableStateOf(!prefs.getBoolean("board_gesture_hint_seen_v1", false)) }
     var rollingDie by remember(game) { mutableStateOf(false) }
     var speed by remember { mutableStateOf(PresentationSpeed.COZY) }
     var transitionDelay by remember(game) { mutableLongStateOf(0L) }
@@ -255,6 +258,29 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
                     ) {
                         Text("Inspect map", style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+                if (showBoardGestureHint) {
+                    Surface(
+                        color = Color(0xFFE6E9D6),
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(start = 12.dp, top = 5.dp, bottom = 5.dp, end = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text("Explore the board", fontWeight = FontWeight.SemiBold,
+                                    style = MaterialTheme.typography.labelMedium, color = Forest)
+                                Text("Pinch to zoom · Drag to explore · Double-tap to follow",
+                                    style = MaterialTheme.typography.bodySmall, color = Bark)
+                            }
+                            TextButton(onClick = {
+                                showBoardGestureHint = false
+                                prefs.edit().putBoolean("board_gesture_hint_seen_v1", true).apply()
+                            }) { Text("Got it") }
+                        }
                     }
                 }
                 BoardCanvas(board, state, matchKey = game, stepMillis = speed.stepMillis,
@@ -585,7 +611,7 @@ private fun BoardCanvas(
     // Camera is purely visual and match-scoped. Moving it cannot move a piece,
     // change the route graph, or affect the authoritative game snapshot.
     var cameraMode by remember(matchKey, board.id, animateTokens) {
-        mutableStateOf(if (animateTokens) BoardCameraMode.FOLLOW else BoardCameraMode.OVERVIEW)
+        mutableStateOf(if (animateTokens) BoardCameraMode.FOLLOW else BoardCameraMode.MANUAL)
     }
     var manualZoom by remember(matchKey, board.id, animateTokens) { mutableFloatStateOf(1f) }
     var manualTranslation by remember(matchKey, board.id, animateTokens) {
@@ -611,7 +637,6 @@ private fun BoardCanvas(
     )
     val autoZoom by animateFloatAsState(
         targetValue = when (cameraMode) {
-            BoardCameraMode.OVERVIEW -> 1f
             BoardCameraMode.FOLLOW -> if (state.phase == Phase.ROUTE) 1.4f else 1.7f
             BoardCameraMode.MANUAL -> manualZoom
         },
@@ -627,7 +652,6 @@ private fun BoardCanvas(
         boardPadding + followedFocus.y * (viewportHeight - 2f * boardPadding).coerceAtLeast(0f)
     )
     val desiredTranslation = when (cameraMode) {
-        BoardCameraMode.OVERVIEW -> Offset.Zero
         BoardCameraMode.FOLLOW -> Offset(
             CameraGeometry.centerTranslation(viewportWidth / 2f, focusPx.x, cameraZoom),
             CameraGeometry.centerTranslation(viewportHeight / 2f, focusPx.y, cameraZoom)
@@ -644,30 +668,43 @@ private fun BoardCanvas(
     val liveZoom by rememberUpdatedState(cameraZoom)
     val liveTranslation by rememberUpdatedState(actualTranslation)
 
-    fun manualZoomBy(factor: Float) {
-        val currentZoom = if (cameraMode == BoardCameraMode.MANUAL) manualZoom else cameraZoom
-        val oldTranslation = if (cameraMode == BoardCameraMode.MANUAL)
-            manualTranslation else actualTranslation
-        val updatedZoom = CameraGeometry.zoom(currentZoom * factor)
-        manualZoom = updatedZoom
-        manualTranslation = Offset(
-            CameraGeometry.boundTranslation(
-                CameraGeometry.zoomAt(oldTranslation.x, viewportWidth / 2f,
-                    viewportWidth / 2f, currentZoom, updatedZoom, 0f),
-                viewportWidth, boardPadding, viewportWidth - boardPadding, updatedZoom
-            ),
-            CameraGeometry.boundTranslation(
-                CameraGeometry.zoomAt(oldTranslation.y, viewportHeight / 2f,
-                    viewportHeight / 2f, currentZoom, updatedZoom, 0f),
-                viewportHeight, boardPadding, viewportHeight - boardPadding, updatedZoom
-            )
+    // Touching the focused piece or double-tapping resumes cinematic following.
+    val livePieceLocation by rememberUpdatedState(
+        Offset(
+            boardPadding + active.x * (viewportWidth - 2f * boardPadding).coerceAtLeast(0f),
+            boardPadding + active.y * (viewportHeight - 2f * boardPadding).coerceAtLeast(0f)
         )
-        cameraMode = BoardCameraMode.MANUAL
-    }
+    )
+    val density = LocalDensity.current
+    val insetPx = with(density) { 8.dp.toPx() }
+    val pieceTapRadiusPx = with(density) { 32.dp.toPx() }
 
     Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEDE4D0))) {
         Box(
             modifier = Modifier.fillMaxWidth().height(height).clipToBounds()
+                .pointerInput(matchKey, animateTokens) {
+                    detectTapGestures(
+                        onDoubleTap = {
+                            cameraMode = BoardCameraMode.FOLLOW
+                            manualTranslation = Offset.Zero
+                        },
+                        onTap = { tap ->
+                            // Convert the token's canvas coordinates through the visual transform.
+                            val renderedPiece = Offset(
+                                insetPx + viewportWidth / 2f +
+                                    (livePieceLocation.x - viewportWidth / 2f) * liveZoom +
+                                    liveTranslation.x,
+                                insetPx + viewportHeight / 2f +
+                                    (livePieceLocation.y - viewportHeight / 2f) * liveZoom +
+                                    liveTranslation.y
+                            )
+                            if ((tap - renderedPiece).getDistance() <= pieceTapRadiusPx) {
+                                cameraMode = BoardCameraMode.FOLLOW
+                                manualTranslation = Offset.Zero
+                            }
+                        }
+                    )
+                }
                 .pointerInput(matchKey, animateTokens) {
                     detectTransformGestures(panZoomLock = true) { centroid, pan, gestureZoom, _ ->
                         val wasManual = cameraMode == BoardCameraMode.MANUAL
@@ -856,37 +893,7 @@ private fun BoardCanvas(
                 }
             }
             }
-            // Zoom and recenter controls operate only on the board viewport.
-            // They never intercept the dice/choice/Leave match actions below.
-            Row(
-                modifier = Modifier.align(Alignment.BottomEnd)
-                    .padding(7.dp)
-                    .background(Cream.copy(alpha = 0.94f), MaterialTheme.shapes.medium),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(0.dp)
-            ) {
-                IconButton(
-                    onClick = { manualZoomBy(1f / 1.25f) },
-                    modifier = Modifier.size(38.dp)
-                        .semantics { contentDescription = "Zoom out board" }
-                ) { Text("−", fontSize = 22.sp, color = Forest) }
-                IconButton(
-                    onClick = { manualZoomBy(1.25f) },
-                    modifier = Modifier.size(38.dp)
-                        .semantics { contentDescription = "Zoom in board" }
-                ) { Text("+", fontSize = 22.sp, color = Forest) }
-                TextButton(
-                    onClick = {
-                        cameraMode = if (cameraMode == BoardCameraMode.FOLLOW)
-                            BoardCameraMode.OVERVIEW else BoardCameraMode.FOLLOW
-                        manualTranslation = Offset.Zero
-                    },
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
-                ) {
-                    Text(if (cameraMode == BoardCameraMode.FOLLOW) "Overview" else "Follow",
-                        style = MaterialTheme.typography.labelMedium)
-                }
-            }
+
         }
     }
 }
