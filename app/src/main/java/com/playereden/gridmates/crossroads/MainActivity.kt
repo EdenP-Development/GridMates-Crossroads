@@ -36,8 +36,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = true
-        val board = GameData.board(assets.open("boards/woodland_quick_example.json").bufferedReader().use { it.readText() })
-        val catalogue = GameData.events(assets.open("events/core_events_proposed.json").bufferedReader().use { it.readText() })
+        val board = GameData.board(assets.open("boards/woodland_woven_trail.json").bufferedReader().use { it.readText() })
+        val catalogue = GameData.events(assets.open("events/woven_events_v02.json").bufferedReader().use { it.readText() })
         setContent {
             MaterialTheme(
                 colorScheme = lightColorScheme(
@@ -96,7 +96,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         Text("Crossroads", fontSize = 29.sp, fontWeight = FontWeight.Bold, color = Forest)
         if (game == null || state == null) {
             Text("Every path is a choice.", fontSize = 18.sp)
-            Text("A cozy little board-game race. Roll the die, choose your route, and get to the finish before the others.")
+            Text("Winding woodland roads, real route choices, and surprises along the way. First to the finish wins.")
             HorizontalDivider()
             Text("Play against AI", fontWeight = FontWeight.SemiBold)
             Text("Choose total players (including you).", style = MaterialTheme.typography.bodySmall)
@@ -126,7 +126,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             }
             Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text("Woodland Crossing", fontWeight = FontWeight.SemiBold, color = Forest)
-                Text("Three crossroads • Same finish, different journeys", style = MaterialTheme.typography.bodySmall, color = Bark)
+                Text("Five connected crossroads • Different routes, one finish", style = MaterialTheme.typography.bodySmall, color = Bark)
             }
             BoardCanvas(board, state)
             Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAE1CA))) {
@@ -149,12 +149,19 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                 when (state.phase) {
                     Phase.ROLL -> Button(onClick = { update { game.roll() } }, modifier = Modifier.fillMaxWidth()) { Text("Roll the die 🎲") }
                     Phase.ROUTE -> {
-                        Text("Crossroads! Choose your path.", fontWeight = FontWeight.Bold, color = Forest)
-                        Text("Amber = shorter route • Green = longer route", style = MaterialTheme.typography.bodySmall, color = Bark)
+                        val fork = board.forkAt(state.players[state.playerIndex].position)
+                        Text(fork?.title ?: "Crossroads! Choose your path.", fontWeight = FontWeight.Bold, color = Forest)
+                        Text("Amber: hazards  •  Green: shelter  •  Purple: mischief", style = MaterialTheme.typography.bodySmall, color = Bark)
                         game.availableRoutes().forEach { route ->
-                            val fast = route.id.startsWith("U")
-                            OutlinedButton(onClick = { update { game.chooseRoute(route.id) } }, modifier = Modifier.fillMaxWidth()) {
-                                Text("${if (fast) "Upper shortcut" else "Lower scenic trail"} • ${if (fast) "shorter / uncertain" else "longer / more event spaces"}")
+                            val choice = fork?.choices?.firstOrNull { it.to == route.id }
+                            OutlinedButton(
+                                onClick = { update { game.chooseRoute(route.id) } },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp)) {
+                                    Text(choice?.label ?: route.id, fontWeight = FontWeight.SemiBold)
+                                    Text(choice?.description ?: "Follow this trail", style = MaterialTheme.typography.bodySmall)
+                                }
                             }
                         }
                     }
@@ -178,16 +185,34 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
 @Composable
 private fun BoardCanvas(board: BoardDefinition, state: Snapshot) {
     Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEDE4D0))) {
-        Canvas(modifier = Modifier.fillMaxWidth().height(246.dp).padding(8.dp)) {
+        Canvas(modifier = Modifier.fillMaxWidth().height(315.dp).padding(8.dp)) {
             val left = 18f
             val top = 18f
             val drawWidth = size.width - left * 2
             val drawHeight = size.height - top * 2
             fun position(id: String): Offset {
                 val node = board.node(id)
-                val expandedY = ((node.y - 0.5f) * 1.68f + 0.5f).coerceIn(0.06f, 0.94f)
-                return Offset(left + node.x * drawWidth, top + expandedY * drawHeight)
+                return Offset(left + node.x * drawWidth, top + node.y * drawHeight)
             }
+            // Very light thematic paper washes preserve path readability without external art.
+            drawRoundRect(
+                color = Color(0xFFABC99B).copy(alpha = 0.12f),
+                topLeft = Offset(left, top + drawHeight * 0.12f),
+                size = androidx.compose.ui.geometry.Size(drawWidth * 0.35f, drawHeight * 0.76f),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(20f, 20f)
+            )
+            drawRoundRect(
+                color = Color(0xFF799B81).copy(alpha = 0.10f),
+                topLeft = Offset(left + drawWidth * 0.34f, top + drawHeight * 0.05f),
+                size = androidx.compose.ui.geometry.Size(drawWidth * 0.37f, drawHeight * 0.90f),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(20f, 20f)
+            )
+            drawRoundRect(
+                color = Color(0xFFD3AE7B).copy(alpha = 0.12f),
+                topLeft = Offset(left + drawWidth * 0.69f, top + drawHeight * 0.06f),
+                size = androidx.compose.ui.geometry.Size(drawWidth * 0.31f, drawHeight * 0.89f),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(20f, 20f)
+            )
             // Region names make the fixed course easier to learn between matches.
             drawIntoCanvas { canvas ->
                 val labelPaint = android.graphics.Paint().apply {
@@ -205,10 +230,16 @@ private fun BoardCanvas(board: BoardDefinition, state: Snapshot) {
             board.nodes.forEach { node ->
                 val from = position(node.id)
                 node.next.forEach { dest ->
-                    val laneColor = when {
-                        node.id.startsWith("U") || dest.startsWith("U") -> Color(0xFFC89A60)
-                        node.id.startsWith("L") || dest.startsWith("L") -> Color(0xFF88A386)
-                        else -> Color(0xFFD9C6A5)
+                    val route = when {
+                        board.node(dest).route != "neutral" -> board.node(dest).route
+                        node.route != "neutral" -> node.route
+                        else -> "neutral"
+                    }
+                    val laneColor = when (route) {
+                        "risky" -> Color(0xFFC29450)
+                        "safe" -> Color(0xFF83A181)
+                        "mischief" -> Color(0xFFA18BB1)
+                        else -> Color(0xFFD4C3A3)
                     }
                     drawLine(laneColor, from, position(dest), strokeWidth = 11f, cap = StrokeCap.Round)
                     drawLine(Color(0xFFFCF8ED), from, position(dest), strokeWidth = 3f, cap = StrokeCap.Round)
@@ -218,7 +249,12 @@ private fun BoardCanvas(board: BoardDefinition, state: Snapshot) {
                 val center = position(node.id)
                 val color = when (node.kind) {
                     "fork" -> Color(0xFFD7AB50)
-                    "event" -> Color(0xFF8B9F7B)
+                    "event" -> when (node.eventPool) {
+                        "hazard" -> Color(0xFFC28D43)
+                        "shelter" -> Color(0xFF709973)
+                        "mischief" -> Color(0xFF9B80AB)
+                        else -> Color(0xFF8B9F7B)
+                    }
                     "start" -> Forest
                     "finish" -> Color(0xFFB47E40)
                     else -> Color(0xFFFDF8E9)
@@ -240,11 +276,22 @@ private fun BoardCanvas(board: BoardDefinition, state: Snapshot) {
                     }
                 }
             }
+            // Quietly trace each player's actual chosen journey.
+            state.players.forEachIndexed { playerIndex, player ->
+                val trail = PlayerColors[playerIndex].copy(alpha = 0.50f)
+                player.traversed.zipWithNext().forEach { (from, to) ->
+                    drawLine(trail, position(from), position(to), strokeWidth = 3f, cap = StrokeCap.Round)
+                }
+            }
             // Highlight the active piece and both available route entrances.
             if (state.phase == Phase.ROUTE) {
                 val fork = board.node(state.players[state.playerIndex].position)
                 fork.next.forEach { candidate ->
-                    val ring = if (candidate.startsWith("U")) Color(0xFFAE773B) else Forest
+                    val ring = when (board.node(candidate).route) {
+                        "risky" -> Color(0xFFAE773B)
+                        "mischief" -> Color(0xFF8A6D9B)
+                        else -> Forest
+                    }
                     drawCircle(ring, radius = 14f, center = position(candidate),
                         style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f))
                 }

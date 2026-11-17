@@ -98,17 +98,6 @@
       "x": 0.27,
       "y": 0.24,
       "next": [
-        "R4"
-      ],
-      "route": "risky"
-    },
-    {
-      "id": "R4",
-      "region": "meadow",
-      "kind": "plain",
-      "x": 0.35,
-      "y": 0.29,
-      "next": [
         "F2"
       ],
       "route": "risky"
