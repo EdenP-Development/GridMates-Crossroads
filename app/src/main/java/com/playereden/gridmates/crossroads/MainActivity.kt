@@ -239,9 +239,10 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             showResults = true
         }
     }
-    fun start(seats: Int) {
+    fun start(seats: Int, passAndPlay: Boolean) {
+        val humans = if (passAndPlay) (0 until seats).toSet() else setOf(0)
         val newGame = GameSession(board, catalogue, seats = seats,
-            seed = java.util.Random().nextInt(), humanIndices = setOf(0))
+            seed = java.util.Random().nextInt(), humanIndices = humans)
         activeMatchId = java.util.UUID.randomUUID().toString()
         matchStartedAtEpochMillis = System.currentTimeMillis()
         startedFromCheckpoint = false
@@ -264,7 +265,8 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     // The OS Back action follows the same protection as Leave Match. Dialogs
     // (including the 3-way junction) own Back while they are visible.
     val threeWayDialogVisible = game != null && state?.phase == Phase.ROUTE &&
-        state.playerIndex == 0 && game.availableRoutes().size > 2 && turnReady &&
+        !state.players[state.playerIndex].isBot &&
+        game.availableRoutes().size > 2 && turnReady &&
         !routeDialogDismissed && !inspectBoard && !confirmExit && !showGuide
     BackHandler(
         enabled = game != null && state != null &&
@@ -282,7 +284,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         CrossroadsHomeScreen(
             wins = wins,
             completed = matches,
-            onStart = { seats -> start(seats) },
+            onStart = { seats, localPlayers -> start(seats, localPlayers) },
             recoveryWarning = recoveryWarning
         )
     } else {
@@ -441,10 +443,11 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         if (state.phase == Phase.FINISHED && !turnReady) "Approaching the finish…"
                         else if (state.phase == Phase.FINISHED) "Journey complete!"
                         else if (!turnReady && !rollingDie) {
-                            if (cameraTrackIndex == 0) "You're on the move…"
+                            if (state.players[cameraTrackIndex.coerceIn(state.players.indices)].name == "You")
+                                "You're on the move…"
                             else "$trackedName is on the move…"
                         }
-                        else if (state.playerIndex == 0) "Round $round · Your turn"
+                        else if (currentName == "You") "Round $round · Your turn"
                         else "Round $round · $currentName's turn",
                         fontWeight = FontWeight.Bold, color = Forest, fontSize = 16.sp,
                         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
@@ -486,7 +489,8 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             )
                         }
                     }
-                    if (state.phase == Phase.ROUTE && state.playerIndex == 0 &&
+                    if (state.phase == Phase.ROUTE &&
+                        !state.players[state.playerIndex].isBot &&
                         game.availableRoutes().size > 2) {
                         Text("Three paths ahead · choose in the expanded route panel",
                             style = MaterialTheme.typography.labelSmall, color = Bark)
@@ -503,13 +507,13 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                     } else if (state.phase == Phase.FINISHED) {
                         val winner = state.winnerIndex?.let { state.players.getOrNull(it)?.name }
                             ?: "A traveler"
-                        Text(if (state.winnerIndex == 0) "You reached the finish!"
+                        Text(if (winner == "You") "You reached the finish!"
                             else "$winner reached the finish!",
                             fontWeight = FontWeight.SemiBold, color = Forest)
                         Button(onClick = { showResults = true }, modifier = Modifier.fillMaxWidth()) {
                             Text("View match results")
                         }
-                    } else if (state.playerIndex != 0) {
+                    } else if (state.players[state.playerIndex].isBot) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         Text("Playing automatically…",
                             style = MaterialTheme.typography.bodySmall, color = Bark)
@@ -538,7 +542,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                                 }
                             }
                             Phase.ROUTE -> {
-                                val fork = board.forkAt(state.players[0].position)
+                                val fork = board.forkAt(state.players[state.playerIndex].position)
                                 Text(fork?.title ?: "Choose your route", fontWeight = FontWeight.SemiBold, color = Forest)
                                 if (fork != null) {
                                     Text("Check each trail’s risk before choosing.",
@@ -587,10 +591,11 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         }
         // A dedicated scrollable chooser avoids the third option being hidden
         // under the fixed action pane on smaller handsets.
-        if (state.phase == Phase.ROUTE && state.playerIndex == 0 &&
+        if (state.phase == Phase.ROUTE &&
+            !state.players[state.playerIndex].isBot &&
             game.availableRoutes().size > 2 && turnReady &&
             !routeDialogDismissed && !inspectBoard && !confirmExit && !showGuide) {
-            val junction = board.forkAt(state.players[0].position)
+            val junction = board.forkAt(state.players[state.playerIndex].position)
             AlertDialog(
                 onDismissRequest = { routeDialogDismissed = true },
                 title = { Text(junction?.title ?: "Choose your path", color = Forest) },
@@ -703,7 +708,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                                 modifier = Modifier.weight(1f, fill = false)
                             )
                             Button(
-                                onClick = { start(state.players.size) },
+                                onClick = { start(state.players.size, state.players.count { !it.isBot } > 1) },
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                             ) {
                                 Text("Rematch")
