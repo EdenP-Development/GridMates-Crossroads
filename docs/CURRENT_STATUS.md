@@ -1,3 +1,11 @@
+# CLASSIC-17 — GridMates as easy-to-play, easy-to-build classics (Nov 17, 2026)
+
+**Source + three unit regression tests committed; exact Android/owner-phone acceptance pending.** The new [GridMates Classic Games Charter](GRIDMATES_CLASSIC_GAMES_CHARTER.md) and [lean roadmap](ROADMAP.md) establish clear limits on feature complexity. Crossroads now offers **Solo vs AI** (unchanged default) and **2–4 person Pass & Play on one device** (all human seats). Human players 2–4 can roll, choose forks, resolve mischief, finish, rematch and resume; only Solo increases the personal wins count. No Wi-Fi/networking, account or economy was added. [CLASSIC-17 phone QA handoff](CLASSIC_17_PASS_AND_PLAY_QA_HANDOFF.md).
+
+**Last verified before this candidate:** SAVE-16 signed QA1121 [Android run 44163403210](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44163403210) and [artifact 14364641860](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44163403210/artifacts/14364641860) passed JVM, build, lint, signer and design-data checks. Actual device recovery, Pass & Play and install-over remain unverified pending owner testing. Keep changes stacked in DRAFT; nothing merged to `main`.
+
+---
+
 # SAVE-16 — Resumable local matches (November 17, 2026)
 
 **Source + deterministic replay tests committed; Android CI and real-device recovery acceptance pending.** In `feature/active-match-recovery-v1.4`, every completed authoritative roll/route/target/bot action is checkpointed locally as a versioned action log + original seed, with a full snapshot/fingerprint witness. Reopening the app reconstructs the engine by exact action replay, then verifies the recovered state; incompatible/corrupt saves are rejected with a visible warning instead of silently continuing. Finished wins/match counts and checkpoint are written atomically in one idempotent transaction. The display starts recovered pieces at their current nodes, without replaying historical movement; manual camera pose and transient animations are intentionally not persisted. [SAVE-16 phone QA handoff](SAVE_16_MATCH_RECOVERY_QA_HANDOFF.md).
