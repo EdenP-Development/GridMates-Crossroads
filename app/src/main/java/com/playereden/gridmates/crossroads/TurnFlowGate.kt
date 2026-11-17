@@ -5,17 +5,19 @@ import com.playereden.crossroads.core.Snapshot
 
 /**
  * UI-only turn pacing policy. The rules engine remains authoritative.
- * Reading/inspection surfaces pause AI without blocking a human's pending
- * fork, or introducing a new turn-confirmation button.
+ * Reading/inspection screens and backgrounded app lifecycle pause AI without
+ * blocking a human's pending fork or adding a new turn-confirmation button.
  */
 internal object TurnFlowGate {
     fun mayAdvanceAi(
         state: Snapshot?,
         turnReady: Boolean,
-        readingOrMenuOpen: Boolean
+        readingOrMenuOpen: Boolean,
+        appInForeground: Boolean
     ): Boolean =
         state != null &&
             turnReady &&
+            appInForeground &&
             !readingOrMenuOpen &&
             state.phase != Phase.FINISHED &&
             state.players[state.playerIndex].isBot
