@@ -61,18 +61,21 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     var revision by remember { mutableIntStateOf(0) }
     val game = session
     val state = remember(game, revision) { game?.snapshot() }
+    var showJournal by remember(game) { mutableStateOf(false) }
+    var confirmExit by remember(game) { mutableStateOf(false) }
 
     LaunchedEffect(game, revision) {
-        if (game != null && state != null && state.phase != Phase.FINISHED && state.players[state.playerIndex].isBot) {
-            delay(320)
+        if (game != null && state != null && state.phase != Phase.FINISHED &&
+            state.players[state.playerIndex].isBot) {
+            delay(440)
             game.botStep()
             revision++
         }
     }
     LaunchedEffect(game, state?.phase) {
         if (game != null && state?.phase == Phase.FINISHED) {
-            matches += 1
-            if (state.winnerIndex == 0) wins += 1
+            matches++
+            if (state.winnerIndex == 0) wins++
             prefs.edit().putInt("completed", matches).putInt("wins", wins).apply()
         }
     }
@@ -85,99 +88,200 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         revision++
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize().background(Cream)
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text("GRIDMATES", style = MaterialTheme.typography.labelLarge, color = Forest)
-        Text("Crossroads", fontSize = 29.sp, fontWeight = FontWeight.Bold, color = Forest)
-        if (game == null || state == null) {
-            Text("Every path is a choice.", fontSize = 18.sp)
-            Text("Winding woodland roads, real route choices, and surprises along the way. First to the finish wins.")
+    if (game == null || state == null) {
+        Column(
+            modifier = Modifier.fillMaxSize().background(Cream)
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text("GRIDMATES", style = MaterialTheme.typography.labelLarge, color = Forest)
+            Text("Crossroads", fontSize = 31.sp, fontWeight = FontWeight.Bold, color = Forest)
+            Text("Every path is a choice.", fontSize = 19.sp)
+            Text("Follow winding woodland roads, choose your route, and see what the journey brings. First to the finish wins.")
             HorizontalDivider()
-            Text("Play against AI", fontWeight = FontWeight.SemiBold)
-            Text("Choose total players (including you).", style = MaterialTheme.typography.bodySmall)
+            Text("Play against AI", fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
+            Text("Choose the total number of players, including you.", style = MaterialTheme.typography.bodyMedium)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 for (seats in 2..4) {
-                    Button(onClick = { start(seats) }, modifier = Modifier.weight(1f)) {
-                        Text("$seats players")
+                    Button(onClick = { start(seats) }, modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 12.dp)) {
+                        Text("$seats players", textAlign = TextAlign.Center)
                     }
                 }
             }
-            Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAE1CA))) {
-                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("Your local record", fontWeight = FontWeight.SemiBold)
-                    Text("$wins wins in $matches completed matches")
-                    Text("QA prototype: one small board, no Wi-Fi or cosmetics yet.", style = MaterialTheme.typography.bodySmall)
+            Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAE1CA)),
+                modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text("Your local record", fontWeight = FontWeight.Bold)
+                    Text("$wins wins • $matches completed matches")
                 }
             }
-        } else {
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                for (i in state.players.indices) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
-                        Box(Modifier.size(18.dp).background(PlayerColors[i]))
-                        Text(if (i == 0) "You" else "AI $i", fontSize = 12.sp, fontWeight = if (i == state.playerIndex) FontWeight.Bold else FontWeight.Normal)
-                        if (state.players[i].shield) Text("Shield", fontSize = 10.sp)
+            Text("QA playtest • Solo vs AI • One handcrafted board", style = MaterialTheme.typography.bodySmall, color = Bark)
+        }
+    } else {
+        Column(
+            modifier = Modifier.fillMaxSize().background(Cream)
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("GRIDMATES · CROSSROADS", style = MaterialTheme.typography.labelLarge, color = Forest)
+                Text("QA PLAYTEST", style = MaterialTheme.typography.labelSmall, color = Bark)
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                state.players.forEachIndexed { i, player ->
+                    Surface(
+                        modifier = Modifier.weight(1f),
+                        color = if (i == state.playerIndex && state.phase != Phase.FINISHED)
+                            Color(0xFFE6E9D6) else Color(0xFFF0E9D9),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Row(modifier = Modifier.padding(horizontal = 7.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.size(12.dp).background(PlayerColors[i], androidx.compose.foundation.shape.CircleShape))
+                            Spacer(Modifier.width(5.dp))
+                            Text(player.name, fontSize = 12.sp, fontWeight =
+                                if (i == state.playerIndex) FontWeight.Bold else FontWeight.Normal)
+                            if (player.shield) Text(" 🛡", fontSize = 11.sp)
+                        }
                     }
                 }
             }
-            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text("Woodland Crossing", fontWeight = FontWeight.SemiBold, color = Forest)
-                Text("Five connected crossroads • Different routes, one finish", style = MaterialTheme.typography.bodySmall, color = Bark)
+            Column(
+                modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Text("Woodland Crossing", fontWeight = FontWeight.Bold, color = Forest)
+                    Text("Woven Trail · 5 forks", style = MaterialTheme.typography.labelSmall, color = Bark)
+                }
+                BoardCanvas(board, state)
+                if (state.encounters.isNotEmpty()) {
+                    val latest = state.encounters.last()
+                    val symbol = when (latest.kind) {
+                        "setback" -> "⚠️"
+                        "mischief" -> "🎭"
+                        else -> "🍀"
+                    }
+                    Card(modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFEAE1CA))) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                            Text("$symbol  LATEST ENCOUNTER", style = MaterialTheme.typography.labelSmall, color = Forest)
+                            Text("${latest.actor} · ${latest.title}", fontWeight = FontWeight.SemiBold)
+                            Text(latest.outcome, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                    TextButton(onClick = { showJournal = !showJournal }) {
+                        Text(if (showJournal) "Hide journey journal" else "See journey journal (${state.encounters.size})")
+                    }
+                    if (showJournal) {
+                        state.encounters.asReversed().take(8).forEach { note ->
+                            Text("Turn ${note.turn} · ${note.actor}: ${note.title} — ${note.outcome}",
+                                style = MaterialTheme.typography.bodySmall, color = Bark)
+                        }
+                    }
+                } else {
+                    Text("Amber: hazards   •   Green: shelter   •   Purple: mischief",
+                        style = MaterialTheme.typography.bodySmall, color = Bark)
+                }
             }
-            BoardCanvas(board, state)
-            Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAE1CA))) {
-                Column(Modifier.padding(12.dp)) {
-                    Text(if (state.phase == Phase.FINISHED) "Journey complete!" else "Turn ${state.turn} • ${if (state.playerIndex == 0) "Your turn" else "AI ${state.playerIndex}'s turn"}", fontWeight = FontWeight.Bold)
+            Surface(color = Color(0xFFECE3CE), tonalElevation = 2.dp, shadowElevation = 5.dp,
+                modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.heightIn(max = 310.dp).verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(7.dp)
+                ) {
+                    val round = (state.turn - 1) / state.players.size + 1
+                    Text(if (state.phase == Phase.FINISHED) "Journey complete!"
+                         else "Round $round · ${state.players[state.playerIndex].name}'s turn",
+                         fontWeight = FontWeight.Bold, color = Forest, fontSize = 16.sp)
                     Text(state.lastMessage, style = MaterialTheme.typography.bodyMedium)
                     if (state.die != null && state.phase != Phase.FINISHED) {
-                        Text("🎲 ${state.die}  •  ${state.remainingSteps} steps left")
+                        Text("🎲 ${state.die}  ·  ${state.remainingSteps} steps remaining",
+                            style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                     }
-                }
-            }
-            if (state.phase == Phase.FINISHED) {
-                Text(if (state.winnerIndex == 0) "You won! 🏆" else "AI ${state.winnerIndex} won!", fontSize = 23.sp, fontWeight = FontWeight.Bold, color = Forest)
-                Button(onClick = { start(state.players.size) }, modifier = Modifier.fillMaxWidth()) { Text("Rematch") }
-                OutlinedButton(onClick = { session = null }, modifier = Modifier.fillMaxWidth()) { Text("Back to menu") }
-            } else if (state.playerIndex != 0) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                Text("Your opponent is taking a turn…", style = MaterialTheme.typography.bodySmall)
-            } else {
-                when (state.phase) {
-                    Phase.ROLL -> Button(onClick = { update { game.roll() } }, modifier = Modifier.fillMaxWidth()) { Text("Roll the die 🎲") }
-                    Phase.ROUTE -> {
-                        val fork = board.forkAt(state.players[state.playerIndex].position)
-                        Text(fork?.title ?: "Crossroads! Choose your path.", fontWeight = FontWeight.Bold, color = Forest)
-                        Text("Amber: hazards  •  Green: shelter  •  Purple: mischief", style = MaterialTheme.typography.bodySmall, color = Bark)
-                        game.availableRoutes().forEach { route ->
-                            val choice = fork?.choices?.firstOrNull { it.to == route.id }
-                            OutlinedButton(
-                                onClick = { update { game.chooseRoute(route.id) } },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp)) {
-                                    Text(choice?.label ?: route.id, fontWeight = FontWeight.SemiBold)
-                                    Text(choice?.description ?: "Follow this trail", style = MaterialTheme.typography.bodySmall)
+                    if (state.phase == Phase.FINISHED) {
+                        Text(if (state.winnerIndex == 0) "You won! 🏆" else "${state.players[state.winnerIndex!!].name} won!",
+                            fontWeight = FontWeight.Bold, fontSize = 19.sp, color = Forest)
+                        Button(onClick = { start(state.players.size) }, modifier = Modifier.fillMaxWidth()) {
+                            Text("Rematch")
+                        }
+                        OutlinedButton(onClick = { session = null }, modifier = Modifier.fillMaxWidth()) {
+                            Text("Back to menu")
+                        }
+                    } else if (state.playerIndex != 0) {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        Text("Your opponents are taking their turns…",
+                            style = MaterialTheme.typography.bodySmall, color = Bark)
+                    } else {
+                        when (state.phase) {
+                            Phase.ROLL -> {
+                                Button(onClick = { update { game.roll() } }, modifier = Modifier.fillMaxWidth()) {
+                                    Text("🎲 Roll the die")
                                 }
                             }
-                        }
-                    }
-                    Phase.TARGET -> {
-                        Text("Mischief! Choose your opponent.", fontWeight = FontWeight.Bold)
-                        game.availableTargets().forEach { target ->
-                            OutlinedButton(onClick = { update { game.chooseTarget(target) } }, modifier = Modifier.fillMaxWidth()) {
-                                Text("Prank AI $target ${if (state.players[target].shield) "· shielded" else ""}")
+                            Phase.ROUTE -> {
+                                val fork = board.forkAt(state.players[0].position)
+                                Text(fork?.title ?: "Choose your route", fontWeight = FontWeight.SemiBold, color = Forest)
+                                fork?.choices?.let { choices ->
+                                    Text("Choose a path • routes have different risks and rewards",
+                                        style = MaterialTheme.typography.bodySmall)
+                                }
+                                game.availableRoutes().forEach { route ->
+                                    val choice = fork?.choices?.firstOrNull { it.to == route.id }
+                                    OutlinedButton(onClick = { update { game.chooseRoute(route.id) } },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)) {
+                                        Column(modifier = Modifier.fillMaxWidth()) {
+                                            Text(choice?.label ?: route.id, fontWeight = FontWeight.SemiBold)
+                                            Text(choice?.description ?: "Follow this trail",
+                                                style = MaterialTheme.typography.bodySmall)
+                                        }
+                                    }
+                                }
                             }
+                            Phase.TARGET -> {
+                                Text("Mischief! Choose an opponent.", fontWeight = FontWeight.SemiBold, color = Forest)
+                                game.availableTargets().forEach { target ->
+                                    OutlinedButton(onClick = { update { game.chooseTarget(target) } },
+                                        modifier = Modifier.fillMaxWidth()) {
+                                        Text("Target ${state.players[target].name}${if (state.players[target].shield) " · shielded" else ""}")
+                                    }
+                                }
+                            }
+                            Phase.FINISHED -> Unit
                         }
                     }
-                    Phase.FINISHED -> Unit
+                    if (state.phase != Phase.FINISHED) {
+                        TextButton(onClick = { confirmExit = true }, modifier = Modifier.align(Alignment.End)) {
+                            Text("Leave match", color = Bark)
+                        }
+                    }
                 }
             }
-            OutlinedButton(onClick = { session = null }, modifier = Modifier.fillMaxWidth()) { Text("Leave this match") }
-            Text("Prototype • Single device + AI • Fixed course with region-based random events", fontSize = 11.sp, color = Bark)
+        }
+        if (confirmExit) {
+            AlertDialog(
+                onDismissRequest = { confirmExit = false },
+                title = { Text("Leave this match?") },
+                text = { Text("This match is not saved yet. Your completed-match record will be kept.") },
+                confirmButton = {
+                    TextButton(onClick = { session = null; confirmExit = false }) { Text("Leave") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { confirmExit = false }) { Text("Keep playing") }
+                }
+            )
         }
     }
 }

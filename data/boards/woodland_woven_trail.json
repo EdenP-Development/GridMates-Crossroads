@@ -469,13 +469,13 @@
           "to": "R1",
           "label": "High Ridge",
           "risk": "high",
-          "description": "Shorter crossing · hazard encounters"
+          "description": "Upper ridge • hazard encounters"
         },
         {
           "to": "L1",
           "label": "Creekside Walk",
           "risk": "low",
-          "description": "Longer, shelter encounters"
+          "description": "Creekside trail • helpful encounters"
         }
       ]
     },

@@ -101,5 +101,44 @@ class GameSessionTest {
         }
     }
 
+    @Test fun encountersAreRetainedAfterOtherPlayersRoll() {
+        for (seed in 1..250) {
+            val g = GameSession(board, events, seats = 3, seed = seed, humanIndices = emptySet())
+            var steps = 0
+            while (g.snapshot().encounters.isEmpty() && g.phase != Phase.FINISHED && steps++ < 500) g.botStep()
+            if (g.snapshot().encounters.isEmpty()) continue
+            val encounter = g.snapshot().encounters.last()
+            repeat(12) {
+                if (g.phase != Phase.FINISHED) g.botStep()
+            }
+            assertTrue("Lost event history seed $seed", g.snapshot().encounters.contains(encounter))
+            assertTrue(encounter.title.isNotBlank())
+            assertTrue(encounter.actor.isNotBlank())
+            return
+        }
+        fail("No encounter in 250 seeded games")
+    }
+
+    @Test fun encounterHistoryHasBoundedSize() {
+        for (seed in 1..50) {
+            val g = GameSession(board, events, 4, seed, humanIndices = emptySet())
+            var actions = 0
+            while (g.phase != Phase.FINISHED && actions++ < 1000) {
+                g.botStep()
+                assertTrue(g.snapshot().encounters.size <= 16)
+            }
+        }
+    }
+
+    @Test fun seedReplayIncludesIdenticalEncounterLog() {
+        fun simulate(): Pair<Int?, List<EncounterNote>> {
+            val g = GameSession(board, events, 4, 48294, humanIndices = emptySet())
+            repeat(1000) { if(g.phase != Phase.FINISHED) g.botStep() }
+            assertEquals(Phase.FINISHED,g.phase)
+            return g.winnerIndex to g.snapshot().encounters
+        }
+        assertEquals(simulate(), simulate())
+    }
+
 }
 

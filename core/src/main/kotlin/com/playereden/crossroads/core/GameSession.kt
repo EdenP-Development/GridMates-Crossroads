@@ -35,6 +35,12 @@ class GameSession(
         private set
     private var eventTriggeredThisTurn = false
     private var pendingPrank = 0
+    private var pendingPrankName = ""
+    private val encounterLog = mutableListOf<EncounterNote>()
+    private fun recordEncounter(title: String, outcome: String, kind: String) {
+        encounterLog.add(EncounterNote(turn, players[currentIndex].name, title, outcome, kind))
+        if (encounterLog.size > 16) encounterLog.removeAt(0)
+    }
 
     init {
         require(seats in 2..4)
@@ -49,7 +55,8 @@ class GameSession(
     fun snapshot(): Snapshot = Snapshot(
         revision, phase, currentIndex,
         players.map { it.copy(traversed = it.traversed.toMutableList()) },
-        remainingSteps, die, lastMessage, winnerIndex, turn, lastEventId
+        remainingSteps, die, lastMessage, winnerIndex, turn, lastEventId,
+        encounterLog.toList()
     )
 
     fun roll() {
@@ -93,7 +100,9 @@ class GameSession(
             moveBack(target, pendingPrank)
             lastMessage = "${players[currentIndex].name} pranked ${target.name}: back $pendingPrank!"
         }
+        recordEncounter(pendingPrankName.ifBlank { "Woodland Mischief" }, lastMessage, "mischief")
         pendingPrank = 0
+        pendingPrankName = ""
         finishTurn()
         revision++
     }
@@ -175,21 +184,25 @@ class GameSession(
         var ticket = random.nextInt(total)
         val event = pool.first { e -> ticket -= e.weight; ticket < 0 }
         lastEventId = event.id
+        val encounterTitle = event.description.ifBlank { event.id.replace('_', ' ') }
         val effect = event.effect
         when (effect.type) {
             "advance" -> {
-                lastMessage = "${players[currentIndex].name}: ${event.description.ifBlank { event.id.replace('_', ' ') }}! Move +${effect.spaces}."
+                lastMessage = "${players[currentIndex].name}: $encounterTitle! Move +${effect.spaces}."
+                recordEncounter(encounterTitle, "Moved ahead ${effect.spaces} spaces", "benefit")
                 remainingSteps = effect.spaces
                 if (remainingSteps > 0) progress() else finishTurn()
             }
             "retreat" -> {
                 moveBack(players[currentIndex], effect.spaces)
-                lastMessage = "${players[currentIndex].name}: ${event.description.ifBlank { event.id.replace('_', ' ') }}! Back ${effect.spaces}."
+                lastMessage = "${players[currentIndex].name}: $encounterTitle! Back ${effect.spaces}."
+                recordEncounter(encounterTitle, "Moved back ${effect.spaces} spaces", "setback")
                 finishTurn()
             }
             "shield" -> {
                 players[currentIndex].shield = true
                 lastMessage = "${players[currentIndex].name} found a shield!"
+                recordEncounter(encounterTitle, "Gained protection from one prank", "benefit")
                 finishTurn()
             }
             "prank" -> {
@@ -198,6 +211,7 @@ class GameSession(
                     finishTurn()
                 } else {
                     pendingPrank = effect.spaces
+                    pendingPrankName = encounterTitle
                     phase = Phase.TARGET
                     lastMessage = "Mischief! Choose someone to send back ${effect.spaces}."
                 }
@@ -228,6 +242,7 @@ class GameSession(
         turn++
         eventTriggeredThisTurn = false
         pendingPrank = 0
+        pendingPrankName = ""
     }
 
     private fun distanceToFinish(id: String, seen: Set<String> = emptySet()): Int {
