@@ -13,23 +13,40 @@ import kotlinx.serialization.json.Json
     val kind: String,
     val next: List<String> = emptyList(),
     val x: Float,
-    val y: Float
+    val y: Float,
+    val route: String = "neutral",
+    val eventPool: String = "all"
+)
+@Serializable data class ForkChoice(
+    val to: String,
+    val label: String,
+    val risk: String,
+    val description: String = ""
+)
+@Serializable data class ForkDefinition(
+    val id: String,
+    val title: String = "Crossroads",
+    val choices: List<ForkChoice> = emptyList()
 )
 @Serializable data class BoardDefinition(
     val id: String,
     val start: String,
     val finish: String,
-    val nodes: List<BoardNode>
+    val nodes: List<BoardNode>,
+    val forks: List<ForkDefinition> = emptyList()
 ) {
     val index: Map<String, BoardNode> by lazy { nodes.associateBy { it.id } }
     fun node(id: String): BoardNode = requireNotNull(index[id]) { "Unknown board node $id" }
+    fun forkAt(id: String): ForkDefinition? = forks.firstOrNull { it.id == id }
 }
 @Serializable data class EventEffect(val type: String, val spaces: Int)
 @Serializable data class EventDefinition(
     val id: String,
     val regions: List<String>,
     val weight: Int,
-    val effect: EventEffect
+    val effect: EventEffect,
+    val pools: List<String> = listOf("all"),
+    val description: String = ""
 )
 @Serializable data class EventCatalogue(val events: List<EventDefinition>)
 object GameData {

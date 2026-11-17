@@ -22,3 +22,8 @@
 - `docs/CURRENT_STATUS.md` — live implementation checkpoint and next QA action.
 - `AGENTS.md` — short instructions to prevent context and signing/asset mistakes.
 - `docs/QA_RECEIPT_V0_1_2026_11_16.md` — immutable APK build IDs, hashes, emulator update proof and QA limits.
+
+- `data/boards/woodland_woven_trail.json` — handcrafted v0.2 graph with five crossroads.
+- `data/events/woven_events_v02.json` — twenty region-and-route-limited encounters.
+- `docs/BOARD_WOVEN_TRAIL_V02.md` — course design, risk behavior and playtest gates.
+- `docs/QA_RECEIPT_WOVEN_V02_2026_11_16.md` — exact build and 1018→1020 emulator upgrade/screenshot receipt.

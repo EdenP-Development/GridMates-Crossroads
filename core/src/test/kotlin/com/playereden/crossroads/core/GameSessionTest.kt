@@ -6,15 +6,15 @@ import java.io.File
 
 class GameSessionTest {
     private val root = File(System.getProperty("crossroads.repoDir"))
-    private val board = GameData.board(File(root, "data/boards/woodland_quick_example.json").readText())
-    private val events = GameData.events(File(root, "data/events/core_events_proposed.json").readText())
+    private val board = GameData.board(File(root, "data/boards/woodland_woven_trail.json").readText())
+    private val events = GameData.events(File(root, "data/events/woven_events_v02.json").readText())
 
     @Test fun fixtureHasForksAndFinish() {
         assertEquals("START", board.start)
         assertEquals("FINISH", board.finish)
-        assertEquals(40, board.nodes.size)
-        assertEquals(3, board.nodes.count { it.kind == "fork" })
-        assertEquals(14, events.events.size)
+        assertEquals(38, board.nodes.size)
+        assertEquals(5, board.nodes.count { it.kind == "fork" })
+        assertEquals(20, events.events.size)
     }
 
     @Test fun onlyLegalRouteCanBeChosen() {
@@ -71,4 +71,35 @@ class GameSessionTest {
         }
         assertTrue(game.revision >= 1)
     }
+    @Test fun routePoolsAreDistinctAndCurated() {
+        val spaces = board.nodes.filter { it.kind == "event" }
+        assertTrue(spaces.any { it.eventPool == "hazard" })
+        assertTrue(spaces.any { it.eventPool == "shelter" })
+        assertTrue(spaces.any { it.eventPool == "mischief" })
+        spaces.forEach { space ->
+            assertTrue("Missing eligible events at ${space.id}",
+                events.events.count { space.region in it.regions && space.eventPool in it.pools } >= 2)
+        }
+        assertTrue(events.events.any { it.pools.contains("hazard") && it.effect.type == "retreat" })
+        assertFalse(events.events.any { it.pools.contains("shelter") && it.effect.type == "retreat" })
+    }
+
+    @Test fun forksHaveDifferentRoutesAndNoFakeChoiceLabels() {
+        assertEquals(5, board.forks.size)
+        board.forks.forEach { fork ->
+            assertEquals(board.node(fork.id).next.toSet(), fork.choices.map { it.to }.toSet())
+            assertEquals(fork.choices.size, fork.choices.map { it.label }.toSet().size)
+            fork.choices.forEach {
+                assertTrue(it.description.isNotBlank())
+                assertEquals(it.risk, when (board.node(it.to).route) {
+                    "risky" -> "high"
+                    "safe" -> "low"
+                    "mischief" -> "medium"
+                    else -> "invalid"
+                })
+            }
+        }
+    }
+
 }
+

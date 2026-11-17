@@ -58,14 +58,40 @@ export function validateDesign(board, catalogue) {
     if (!["advance","retreat","shield","prank"].includes(effect.type)) errors.push("unsupported effect "+event.id);
     if (!Number.isInteger(effect.spaces) || effect.spaces<0 || effect.spaces>3 || (effect.type==="retreat" && effect.spaces>2)) errors.push("effect out of bounds "+event.id);
   }
-  for (const node of board.nodes.filter(n=>n.kind==="event")) if (!catalogue.events.some(e=>e.regions.includes(node.region))) errors.push("no events eligible for "+node.id);
+  const pools=new Set(["all","hazard","shelter","mischief"]);
+  for (const node of board.nodes) {
+    const route=node.route??"neutral";
+    if (!["neutral","risky","safe","mischief"].includes(route)) errors.push("invalid route classification on "+node.id);
+    const pool=node.eventPool??"all";
+    if (!pools.has(pool)) errors.push("invalid event pool on "+node.id);
+  }
+  for (const node of board.nodes.filter(n=>n.kind==="event")) {
+    const pool=node.eventPool??"all";
+    const eligible=catalogue.events.filter(e=>e.regions.includes(node.region)&&(e.pools??["all"]).includes(pool));
+    if(eligible.length<1)errors.push("no events eligible for "+node.id);
+    if(pool!=="all" && eligible.length<2)errors.push("too few events in pool for "+node.id);
+  }
+  for (const e of catalogue.events) {
+    if((e.pools??["all"]).some(pool=>!pools.has(pool))) errors.push("unknown event pool "+e.id);
+  }
+  for(const fork of board.forks??[]) {
+    const n=nodes.get(fork.id);
+    if(!n)continue;
+    for(const c of fork.choices??[]) {
+      const target=nodes.get(c.to);
+      if(!target)continue;
+      const expected={"high":"risky","low":"safe","medium":"mischief"}[c.risk];
+      if(target.route && target.route!=="neutral" && target.route!==expected)errors.push("risk label does not match route "+fork.id+" => "+c.to);
+      if(!c.description)errors.push("missing route explanation "+fork.id+" => "+c.to);
+    }
+  }
   return [...new Set(errors)];
 }
 
 const invoked=process.argv[1] && path.resolve(process.argv[1])===fileURLToPath(import.meta.url);
 if(invoked) {
-  const board=JSON.parse(fs.readFileSync(new URL("../data/boards/woodland_quick_example.json",import.meta.url),"utf8"));
-  const catalogue=JSON.parse(fs.readFileSync(new URL("../data/events/core_events_proposed.json",import.meta.url),"utf8"));
+  const board=JSON.parse(fs.readFileSync(new URL("../data/boards/woodland_woven_trail.json",import.meta.url),"utf8"));
+  const catalogue=JSON.parse(fs.readFileSync(new URL("../data/events/woven_events_v02.json",import.meta.url),"utf8"));
   const errors=validateDesign(board,catalogue);
   if(errors.length){console.error(errors.join("\n"));process.exitCode=1;}
   else console.log("Design data checks passed: "+board.nodes.length+" nodes, "+catalogue.events.length+" events.");

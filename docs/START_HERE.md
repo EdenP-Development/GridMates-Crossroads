@@ -1,5 +1,5 @@
 # Start here — Crossroads foundation
-**Status:** first Android + JVM rules implementation candidate exists on the current branch. Build success, owner device acceptance, and install-over compatibility are independent pending evidence gates; LAN is not implemented.
+**Status:** Woven Trail v0.2 Android QA 1020 built and verified for 1018→1020 emulator install-over, including a captured board screenshot. Physical QA 1020 playtest pending; LAN is not implemented.
 
 0. [Current Status](CURRENT_STATUS.md) — exact implementation/checkpoint and blockers.
 1. [Game Bible](GAME_BIBLE.md) — authoritative product vision and decided-vs-proposed distinctions.
@@ -9,7 +9,7 @@
 5. [Gameplay Research](RESEARCH_GAMEPLAY.md) / [Android Research](RESEARCH_TECH_AND_ACCESSIBILITY.md).
 6. [Roadmap](ROADMAP.md) / [QA](QA_AND_PLAYTEST.md) — milestones and proof required.
 7. [Asset Reuse](ASSET_REUSE.md) — independent unlocks, shared visuals.
-8. [Prototype Android](PROTOTYPE_V0_1_ANDROID.md) — current game engine and limits.
+8. [Prototype Android](PROTOTYPE_V0_1_ANDROID.md) — first engine history. [Woven Trail v0.2](BOARD_WOVEN_TRAIL_V02.md) and [Verified QA Receipt](QA_RECEIPT_WOVEN_V02_2026_11_16.md) — current source and evidence.
 9. [Sibling Repo/APK Audit](GRIDMATES_SIBLING_REPO_APK_AUDIT_2026-11-16.md) / [APK Update Policy](APK_UPDATE_POLICY.md) — tested precedents and proposed install-over safety rules.
 
 The sample data under `data/` and Node validation scripts test design integrity, not gameplay. Preserve all accepted decisions; write proposed changes to the decision log; build on separate branches; seek owner approval before merging or releasing.

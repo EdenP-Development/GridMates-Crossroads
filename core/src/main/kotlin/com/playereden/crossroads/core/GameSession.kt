@@ -71,7 +71,9 @@ class GameSession(
         require(id in board.node(players[currentIndex].position).next) { "Invalid route" }
         stepForward(id)
         remainingSteps--
-        lastMessage = "${players[currentIndex].name} chose the ${board.node(id).region} path."
+        val label = board.forkAt(players[currentIndex].traversed[players[currentIndex].traversed.lastIndex - 1])
+            ?.choices?.firstOrNull { it.to == id }?.label ?: board.node(id).region
+        lastMessage = "${players[currentIndex].name} chose $label."
         progress()
         revision++
     }
@@ -103,10 +105,22 @@ class GameSession(
             Phase.ROLL -> roll()
             Phase.ROUTE -> {
                 val routes = availableRoutes()
-                val chosen = if (routes.size > 1 && random.nextInt(100) < 25) {
-                    routes[random.nextInt(routes.size)]
-                } else {
-                    routes.minBy { distanceToFinish(it.id) + if (it.region == "forest") 1 else 0 }
+                val fork = board.forkAt(players[currentIndex].position)
+                val myDistance = distanceToFinish(players[currentIndex].position)
+                val closestOpponent = players.indices.filter { it != currentIndex }
+                    .minOfOrNull { distanceToFinish(players[it].position) } ?: myDistance
+                val leading = myDistance < closestOpponent
+                // Bots use visible route lengths and advertised risk, never hidden event outcomes.
+                // A leader values shelter; a trailing bot takes more calculated gambles.
+                val chosen = routes.minBy { route ->
+                    val risk = fork?.choices?.firstOrNull { it.to == route.id }?.risk
+                    val riskCost = when (risk) {
+                        "high" -> if (leading) 2.1 else 0.55
+                        "medium" -> if (leading) 0.8 else 0.35
+                        "low" -> if (leading) -1.6 else -0.35
+                        else -> 0.0
+                    }
+                    distanceToFinish(route.id).toDouble() + riskCost + random.nextDouble(0.0, 1.3)
                 }
                 chooseRoute(chosen.id)
             }
@@ -147,8 +161,11 @@ class GameSession(
             return
         }
         eventTriggeredThisTurn = true
-        val region = board.node(players[currentIndex].position).region
-        val pool = catalogue.events.filter { region in it.regions && it.weight > 0 }
+        val space = board.node(players[currentIndex].position)
+        val region = space.region
+        val pool = catalogue.events.filter { event ->
+            region in event.regions && space.eventPool in event.pools && event.weight > 0
+        }
         if (pool.isEmpty()) {
             lastMessage = "Quiet stretch of road."
             finishTurn()
@@ -161,13 +178,13 @@ class GameSession(
         val effect = event.effect
         when (effect.type) {
             "advance" -> {
-                lastMessage = "${players[currentIndex].name}: ${event.id.replace('_', ' ')}! Move +${effect.spaces}."
+                lastMessage = "${players[currentIndex].name}: ${event.description.ifBlank { event.id.replace('_', ' ') }}! Move +${effect.spaces}."
                 remainingSteps = effect.spaces
                 if (remainingSteps > 0) progress() else finishTurn()
             }
             "retreat" -> {
                 moveBack(players[currentIndex], effect.spaces)
-                lastMessage = "${players[currentIndex].name}: ${event.id.replace('_', ' ')}! Back ${effect.spaces}."
+                lastMessage = "${players[currentIndex].name}: ${event.description.ifBlank { event.id.replace('_', ' ') }}! Back ${effect.spaces}."
                 finishTurn()
             }
             "shield" -> {

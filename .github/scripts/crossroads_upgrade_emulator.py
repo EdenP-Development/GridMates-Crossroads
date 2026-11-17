@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Verify *two exact separate GitHub-built APKs* install-over without losing profile records."""
 import base64
+import os
 import hashlib
 import pathlib
 import re
@@ -8,8 +9,10 @@ import subprocess
 import time
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-BEFORE = ROOT / "qa-archives/v1008/GridMates-Crossroads-QA-1008.apk"
-AFTER = ROOT / "qa-archives/v1009/GridMates-Crossroads-QA-1009.apk"
+BASE_CODE = int(os.environ.get("BASE_CODE", "1018"))
+NEXT_CODE = int(os.environ.get("NEXT_CODE", "1020"))
+BEFORE = ROOT / f"qa-archives/base/GridMates-Crossroads-QA-{BASE_CODE}.apk"
+AFTER = ROOT / f"qa-archives/next/GridMates-Crossroads-QA-{NEXT_CODE}.apk"
 PKG = "com.playereden.gridmates.crossroads.qa"
 ACTIVITY = PKG + "/com.playereden.gridmates.crossroads.MainActivity"
 PROFILE = "shared_prefs/crossroads_qa_profile_v1.xml"
@@ -30,8 +33,8 @@ def checksum(path):
             h.update(chunk)
     return h.hexdigest()
 
-assert checksum(BEFORE) == "6cb6e89128d7f3a5ed123f38ebd5878f2775e200898f6ee8a4379dbbdf01354d"
-assert checksum(AFTER) == "78ed337d05b9c6ea0d01f00d464ecf9eba6c164557a6b7e7e9b2cad2ada21d3b"
+assert checksum(BEFORE) == os.environ.get("BASE_SHA", "5b70cca909d6154bb5fa5cd227df6abf7a8480424da6e45cdf4776813c395d2d")
+assert checksum(AFTER) == os.environ.get("NEXT_SHA", "f528d0b722363e3df8043faa4344427afad506ec29b79b212231813499dcad40")
 
 assert "Success" in adb("install", str(BEFORE))
 adb("shell", "am", "start", "-W", "-n", ACTIVITY)
@@ -58,9 +61,44 @@ assert "Success" in adb("install", "-r", str(AFTER))
 new = adb("shell", "run-as", PKG, "cat", PROFILE)
 assert old.strip() == new.strip(), "Profile bytes changed during APK install-over"
 metadata = adb("shell", "dumpsys", "package", PKG)
-assert re.search(r"versionCode=1009\b", metadata), "Expected upgraded versionCode 1009"
+assert re.search(rf"versionCode={NEXT_CODE}\b", metadata), f"Expected upgraded versionCode {NEXT_CODE}"
 adb("shell", "am", "start", "-W", "-n", ACTIVITY)
 time.sleep(3)
 pid = adb("shell", "pidof", PKG).strip()
 assert pid and pid.isdigit(), "Updated app failed to remain running"
-print("PASS: exact SHA-pinned 1008 -> 1009 in-place upgrade, preserved QA stats file, new app launched.")
+print(f"PASS: exact SHA-pinned {BASE_CODE} -> {NEXT_CODE} in-place upgrade, preserved QA stats file, new app launched.")
+
+# Collect screenshot evidence for UI review (not a full layout acceptance test).
+evidence = ROOT / "qa-evidence"
+evidence.mkdir(exist_ok=True)
+def screenshot(name):
+    subprocess.run(["adb", "exec-out", "screencap", "-p"],
+                   check=True, timeout=60, stdout=(evidence / name).open("wb"))
+screenshot(f"crossroads-{NEXT_CODE}-menu.png")
+try:
+    # Android UIAutomator exposes merged Compose button labels; tap the 2-player button.
+    import xml.etree.ElementTree as ET
+    def dump_ui():
+        adb("shell", "uiautomator", "dump", "/sdcard/crossroads-window.xml")
+        xml = adb("shell", "cat", "/sdcard/crossroads-window.xml")
+        return ET.fromstring(xml)
+    def tap_text(label):
+        tree = dump_ui()
+        for node in tree.iter("node"):
+            if label in (node.attrib.get("text", "") + " " + node.attrib.get("content-desc", "")):
+                m = re.search(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]", node.attrib.get("bounds", ""))
+                if m:
+                    x1,y1,x2,y2=map(int,m.groups())
+                    adb("shell","input","tap",str((x1+x2)//2),str((y1+y2)//2))
+                    return True
+        return False
+    if tap_text("2 players"):
+        time.sleep(2)
+        screenshot(f"crossroads-{NEXT_CODE}-board.png")
+        if tap_text("Roll the die"):
+            time.sleep(2)
+            screenshot(f"crossroads-{NEXT_CODE}-first-roll.png")
+    else:
+        print("INFO: Could not match Compose button in UIAutomator; main-menu screenshot is still available.")
+except Exception as exc:
+    print("INFO: Non-gating screenshot interaction unavailable:", repr(exc))

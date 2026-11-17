@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.0 woven trail QA candidate] — November 16/17, 2026
+- Replaced three isolated symmetric diamonds with a handcrafted **38-node maze-like board** containing five crossroads, including a three-way junction and a cross-connector.
+- Added 20 proposed weighted encounters organized by region and **hazard/shelter/mischief** spaces. Choices now meaningfully change the eligible events, though match balance still needs human playtests.
+- Route-specific labels, AI risk-aware routing, regional background washes, colored trail network and visible traversed paths; original v0.1 fixture retained.
+- JS data validation, JVM bot/rules suite and signed QA 1020 APK build passed. The real 1018→1020 Android 15 emulator install-over preserved seeded local stats and the updated app launched.
+- Captured emulator screenshots of menu/board/first roll; no owner physical-phone QA for v0.2, no full-match emulator interaction verified, no LAN or cosmetics.
+- [Exact v0.2 receipt](docs/QA_RECEIPT_WOVEN_V02_2026_11_16.md).
+
+
 ## [0.1.1 prototype QA] — 2026-11-16/17 — First playable Android candidate
 
 - Added Kotlin/JVM race engine, bot opponents, branch decisions and regional random events.
