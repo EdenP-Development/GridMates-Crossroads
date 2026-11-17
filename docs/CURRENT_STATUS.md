@@ -1,6 +1,14 @@
+# ART-08 — Woodland board scenery (draft candidate)
+
+**Source implemented; new Android compilation and owner visual acceptance pending.** The Woven Trail board now paints original low-contrast Meadow flowers/grass, Forest evergreens/stream, and Village cottages/orchard/fence, while the paths, events, forks, tokens and input remain on top. This work is in `feature/woodland-art-v0.8`, stacked onto [UI-07 Draft PR #13](https://github.com/PlayerEden/GridMates-Crossroads/pull/13) and the camera drafts. [ART-08 handoff](ART_08_WOODLAND_IDENTITY_QA_HANDOFF.md).
+
+**Latest independently verified Android candidate before ART-08:** UI-07 signed **QA 1067**, passing build, unit tests, lint and APK signer check at [GitHub run 44026935750](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44026935750) ([artifact 14303582124](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44026935750/artifacts/14303582124)). Physical phone acceptance, exact update/install-over QA and UI fluidity are still pending. No main merge, production release or LAN claims.
+
+---
+
 # UI-07 — Match screen refinement (stacked draft candidate)
 
-**Automated acceptance pending.** On `feature/match-ui-v0.7` over CAM-06B, the screen now gives the main board more vertical space, removes the duplicative event card and journal below the board, and places board overview, journal, and leave confirmation behind Match options. The fixed action sheet labels the previous action separately from the current player's turn. See [UI-07 phone QA handoff](UI_07_MATCH_SCREEN_QA_HANDOFF.md) and [mobile board UI research](RESEARCH_MOBILE_BOARD_GAME_UI_2026_11.md).
+**Automated Android QA passed (QA1067); phone acceptance pending.** On `feature/match-ui-v0.7` over CAM-06B, the screen now gives the main board more vertical space, removes the duplicative event card and journal below the board, and places board overview, journal, and leave confirmation behind Match options. The fixed action sheet labels the previous action separately from the current player's turn. See [UI-07 phone QA handoff](UI_07_MATCH_SCREEN_QA_HANDOFF.md) and [mobile board UI research](RESEARCH_MOBILE_BOARD_GAME_UI_2026_11.md).
 
 **CAM-06B verified automated:** Signed QA1065 build at [workflow run](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44025552664), plus passing rules/design and board-data checks. User's earlier screenshots were of **QA1057**, which confirmed on-phone visual rendering but did not fully verify gesture behavior. **Owner-phone QA1065 and UI-07 remain pending; no main merge, no production release.**
 
