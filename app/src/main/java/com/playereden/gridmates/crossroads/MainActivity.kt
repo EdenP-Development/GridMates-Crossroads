@@ -201,7 +201,7 @@ private fun BoardCanvas(board: BoardDefinition, state: Snapshot) {
                         val label = when (node.kind) { "fork" -> "?"; "start" -> "S"; else -> "F" }
                         val paint = android.graphics.Paint().apply {
                             isAntiAlias = true
-                            color = android.graphics.Color.WHITE
+                            this.color = android.graphics.Color.WHITE
                             textSize = 11f
                             textAlign = android.graphics.Paint.Align.CENTER
                             isFakeBoldText = true
@@ -220,7 +220,7 @@ private fun BoardCanvas(board: BoardDefinition, state: Snapshot) {
                 drawCircle(Color.White, 9f, Offset(center.x + dx, center.y + dy), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f))
                 drawIntoCanvas { canvas ->
                     val paint = android.graphics.Paint().apply {
-                        color = android.graphics.Color.WHITE
+                        this.color = android.graphics.Color.WHITE
                         textSize = 10f
                         isAntiAlias = true
                         isFakeBoldText = true
