@@ -35,3 +35,8 @@
 
 - `docs/QA_OWNER_PHONE_1037_EVENTS.md` — phone evidence of 1 win / 2 matches, setback and AI→human Mischief.
 - `docs/QA_RECEIPT_1040_2026_11_16.md` — exact APK, source, SHA and real 1037→1040 emulator update.
+
+- `docs/QA_OWNER_PHONE_1040_FULL_WIN.md` — owner QA1040 screenshots, new 4-seat win, shield and journal observations.
+- `docs/QA_RECEIPT_1044_2026_11_16.md` — route-motion build 1044, source/checksum and real Android emulator update.
+
+- `docs/RESEARCH_MOBILE_BOARD_GAME_PACING_AND_FEEL_2026_11.md` — researched competitor mechanics, measured current graph length, UX/game-juice proposals and staged pacing experiment acceptance gates.

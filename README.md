@@ -1,6 +1,6 @@
 # GridMates: Crossroads
 
-**Status:** Cozy tabletop-feedback QA **1040** built and passed Android 15 emulator install-over from QA 1037, preserving local win/completed-match stats. Owner screenshots show a real four-player Mischief attack and prior completed-match persistence. **Owner phone review of QA 1040 pending.** Current source is `feature/turn-flow-v0.3` ([Draft PR #8](https://github.com/PlayerEden/GridMates-Crossroads/pull/8)); LAN is not implemented.
+**Status:** Board Motion QA **1044** signed and confirmed updating over QA1040 on Android 15 emulator with saved statistics preserved. Owner screenshots confirmed a four-seat QA1040 human victory, shields and encounter history. **QA1044 phone visual-motion feedback pending.** Source is `feature/board-motion-v0.4` ([Draft PR #9](https://github.com/PlayerEden/GridMates-Crossroads/pull/9)) atop previous draft PRs; LAN not implemented.
 **Design baseline:** 0.1.0 · 2026-11-16  
 **Owner:** PlayerEden  
 **Name:** *GridMates: Crossroads* is the current preferred **working** name; app-store/trademark clearance has not been performed.
