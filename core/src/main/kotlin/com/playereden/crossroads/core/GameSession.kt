@@ -14,6 +14,21 @@ class GameSession(
     humanIndices: Set<Int> = setOf(0)
 ) {
     private val random = Random(seed)
+    private val initialSeed = seed
+    private val originalHumanIndices = humanIndices.toSortedSet()
+    private val acceptedActions = mutableListOf<MatchAction>()
+    // A bot turn executes one nested legal roll/route/target internally; the
+    // checkpoint records only the public bot command, so replay consumes the
+    // exact same random draws.
+    private var insideBotCommand = false
+    private fun record(action: MatchAction) {
+        if (!insideBotCommand) {
+            check(acceptedActions.size < MatchCheckpointCodec.MAX_ACTIONS) {
+                "Match exceeded supported checkpoint action count"
+            }
+            acceptedActions.add(action)
+        }
+    }
     val players: List<Player>
     var phase: Phase = Phase.ROLL
         private set
@@ -53,6 +68,82 @@ class GameSession(
         }
     }
 
+    /**
+     * Produce a verified replay checkpoint. UI timing/camera and completed-match
+     * statistics are deliberately not part of rules state.
+     */
+    fun checkpoint(matchId: String, startedAtEpochMillis: Long): MatchCheckpoint {
+        require(matchId.isNotBlank() && matchId.length <= 100)
+        require(startedAtEpochMillis > 0)
+        return MatchCheckpoint(
+            formatVersion = MatchCheckpointCodec.FORMAT_VERSION,
+            matchId = matchId,
+            startedAtEpochMillis = startedAtEpochMillis,
+            boardId = board.id,
+            contentFingerprint = MatchCheckpointCodec.fingerprint(board, catalogue),
+            seed = initialSeed,
+            seats = players.size,
+            humanIndices = originalHumanIndices.toList(),
+            actions = acceptedActions.toList(),
+            expected = snapshot()
+        )
+    }
+
+    companion object {
+        /** Rejects corrupted or incompatible local saves instead of partial restores. */
+        fun restore(
+            board: BoardDefinition,
+            catalogue: EventCatalogue,
+            checkpoint: MatchCheckpoint
+        ): GameSession {
+            require(checkpoint.formatVersion == MatchCheckpointCodec.FORMAT_VERSION) {
+                "Unsupported match checkpoint version"
+            }
+            require(checkpoint.matchId.isNotBlank() && checkpoint.matchId.length <= 100)
+            require(checkpoint.startedAtEpochMillis > 0)
+            require(checkpoint.boardId == board.id)
+            require(checkpoint.contentFingerprint == MatchCheckpointCodec.fingerprint(board, catalogue)) {
+                "Board or event definitions changed"
+            }
+            require(checkpoint.seats in 2..4)
+            require(checkpoint.humanIndices.distinct().size == checkpoint.humanIndices.size)
+            require(checkpoint.humanIndices.all { it in 0 until checkpoint.seats })
+            require(checkpoint.actions.size <= MatchCheckpointCodec.MAX_ACTIONS)
+
+            val game = GameSession(
+                board, catalogue, checkpoint.seats, checkpoint.seed,
+                humanIndices = checkpoint.humanIndices.toSet()
+            )
+            checkpoint.actions.forEach { action ->
+                when (action.kind) {
+                    MatchActionKind.ROLL -> {
+                        require(action.routeId == null && action.targetIndex == null)
+                        game.roll()
+                    }
+                    MatchActionKind.ROUTE -> {
+                        require(action.routeId != null && action.targetIndex == null)
+                        game.chooseRoute(action.routeId)
+                    }
+                    MatchActionKind.TARGET -> {
+                        require(action.routeId == null && action.targetIndex != null)
+                        game.chooseTarget(action.targetIndex)
+                    }
+                    MatchActionKind.BOT -> {
+                        require(action.routeId == null && action.targetIndex == null)
+                        game.botStep()
+                    }
+                }
+            }
+            require(game.acceptedActions == checkpoint.actions) {
+                "Action replay was incomplete"
+            }
+            require(game.snapshot() == checkpoint.expected) {
+                "Recovered rules state differs from the saved match"
+            }
+            return game
+        }
+    }
+
     fun snapshot(): Snapshot = Snapshot(
         revision, phase, currentIndex,
         players.map { it.copy(traversed = it.traversed.toMutableList()) },
@@ -68,6 +159,7 @@ class GameSession(
         lastMessage = "${players[currentIndex].name} rolled $die."
         progress()
         revision++
+        record(MatchAction(MatchActionKind.ROLL))
     }
 
     fun availableRoutes(): List<BoardNode> =
@@ -84,6 +176,7 @@ class GameSession(
         lastMessage = "${players[currentIndex].name} chose $label."
         progress()
         revision++
+        record(MatchAction(MatchActionKind.ROUTE, routeId = id))
     }
 
     fun availableTargets(): List<Int> =
@@ -106,11 +199,14 @@ class GameSession(
         pendingPrankName = ""
         finishTurn()
         revision++
+        record(MatchAction(MatchActionKind.TARGET, targetIndex = index))
     }
 
     /** Bot submits exactly one regular legal action. UI may animate between actions. */
     fun botStep() {
         require(players[currentIndex].isBot && phase != Phase.FINISHED)
+        insideBotCommand = true
+        try {
         when (phase) {
             Phase.ROLL -> roll()
             Phase.ROUTE -> {
@@ -141,6 +237,10 @@ class GameSession(
             }
             Phase.FINISHED -> Unit
         }
+        } finally {
+            insideBotCommand = false
+        }
+        record(MatchAction(MatchActionKind.BOT))
     }
 
     private fun progress() {

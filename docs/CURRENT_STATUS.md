@@ -1,3 +1,13 @@
+# SAVE-16 — Resumable local matches (November 17, 2026)
+
+**Source + deterministic replay tests committed; Android CI and real-device recovery acceptance pending.** In `feature/active-match-recovery-v1.4`, every completed authoritative roll/route/target/bot action is checkpointed locally as a versioned action log + original seed, with a full snapshot/fingerprint witness. Reopening the app reconstructs the engine by exact action replay, then verifies the recovered state; incompatible/corrupt saves are rejected with a visible warning instead of silently continuing. Finished wins/match counts and checkpoint are written atomically in one idempotent transaction. The display starts recovered pieces at their current nodes, without replaying historical movement; manual camera pose and transient animations are intentionally not persisted. [SAVE-16 phone QA handoff](SAVE_16_MATCH_RECOVERY_QA_HANDOFF.md).
+
+**Next validation:** exact JVM/Android CI and a real three-/four-player force-stop/reopen test at an unresolved fork, target choice and finish, including stats count only once. Synchronous SharedPreferences writes may need performance observation before release. All results remain draft. **No live LAN, cross-device sync or main merge.**
+
+**Previous exact CI baseline:** QA-15 signed [QA1112](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44156394059), [artifact 14360983228](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44156394059/artifacts/14360983228). QA1112 did **not** save in-progress matches; it is not evidence of SAVE-16 recovery. Do not claim physical Android success from pure JVM tests.
+
+---
+
 # QA-15 — Reliability and accessibility audit (November 17, 2026)
 
 **Source and new targeted JVM tests committed; new Android CI and physical TalkBack verification pending.** The audit found Android Back could bypass the in-game Leave confirmation; now active unfinished games use that confirmation, completed games return to the menu, and open modal surfaces own their own Back. Player strip and board descriptions now communicate current/moving player, shield, focused region and camera mode to accessibility services, while the animated pre-roll die no longer announces a false die value. The active turn text uses polite accessibility updates; match-options touch target is 48dp. Three core regression tests check snapshot isolation, wrong-phase action rejection and terminal winner immutability. [QA-15 detailed audit and phone test plan](QA_15_RELIABILITY_ACCESSIBILITY_HANDOFF.md).

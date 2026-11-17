@@ -81,7 +81,8 @@ private fun HomeTrailIllustration() {
 internal fun CrossroadsHomeScreen(
     wins: Int,
     completed: Int,
-    onStart: (Int) -> Unit
+    onStart: (Int) -> Unit,
+    recoveryWarning: String? = null
 ) {
     // The first run is a single tap: 1 human + 1 bot. No room codes or setup screens.
     var seats by remember { mutableIntStateOf(2) }
@@ -104,6 +105,15 @@ internal fun CrossroadsHomeScreen(
             "Wander through the meadow, forest, and village. Choose your trails, take a chance, and reach the finish first.",
             style = MaterialTheme.typography.bodyMedium, color = Ink
         )
+        if (recoveryWarning != null) {
+            Surface(color = Color(0xFFF1E0CF), shape = MaterialTheme.shapes.medium) {
+                Text(
+                    recoveryWarning,
+                    modifier = Modifier.padding(12.dp),
+                    style = MaterialTheme.typography.bodySmall, color = Muted
+                )
+            }
+        }
         HorizontalDivider(color = Muted.copy(alpha = 0.24f))
         Text("Ready to play?", style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold, color = Ink)
