@@ -4,6 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -26,6 +29,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.playereden.crossroads.core.*
@@ -68,6 +72,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     val state = remember(game, revision) { game?.snapshot() }
     var showJournal by remember(game) { mutableStateOf(false) }
     var confirmExit by remember(game) { mutableStateOf(false) }
+    var inspectBoard by remember(game) { mutableStateOf(false) }
     var rollingDie by remember(game) { mutableStateOf(false) }
     var rollingFace by remember(game) { mutableIntStateOf(1) }
     var recentReveal by remember(game) { mutableStateOf<EncounterNote?>(null) }
@@ -200,7 +205,12 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically) {
                     Text("Woodland Crossing", fontWeight = FontWeight.Bold, color = Forest)
-                    Text("Woven Trail · 5 forks", style = MaterialTheme.typography.labelSmall, color = Bark)
+                    TextButton(
+                        onClick = { inspectBoard = true },
+                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
+                    ) {
+                        Text("Inspect map", style = MaterialTheme.typography.labelMedium)
+                    }
                 }
                 BoardCanvas(board, state)
                 if (state.encounters.isNotEmpty()) {
@@ -365,6 +375,25 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                 }
             }
         }
+        if (inspectBoard) {
+            AlertDialog(
+                onDismissRequest = { inspectBoard = false },
+                title = { Text("Woodland Crossing · Route map", color = Forest) },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        BoardCanvas(board, state, height = 385.dp, tokenScale = 1.35f,
+                            animateTokens = false)
+                        Text("Amber: hazard  •  Green: shelter  •  Purple: mischief",
+                            style = MaterialTheme.typography.bodySmall, color = Bark)
+                        Text("This map is for inspection; close it to make your next move.",
+                            style = MaterialTheme.typography.bodySmall)
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { inspectBoard = false }) { Text("Back to game") }
+                }
+            )
+        }
         if (confirmExit) {
             AlertDialog(
                 onDismissRequest = { confirmExit = false },
@@ -382,9 +411,45 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
 }
 
 @Composable
-private fun BoardCanvas(board: BoardDefinition, state: Snapshot) {
+private fun BoardCanvas(
+    board: BoardDefinition,
+    state: Snapshot,
+    height: Dp = 315.dp,
+    tokenScale: Float = 1f,
+    animateTokens: Boolean = true
+) {
+    val motion = remember(board.id, state.players.size, animateTokens) {
+        List(state.players.size) {
+            val start = board.node(board.start)
+            Animatable(Offset(start.x, start.y), Offset.VectorConverter)
+        }
+    }
+    val displayed = state.players.mapIndexed { i, player ->
+        val path = player.traversed.toList()
+        // The animation observes the rendered route history, never changes the rules engine.
+        var previous by remember(board.id, i, animateTokens) {
+            mutableStateOf(if (animateTokens) listOf(board.start) else path)
+        }
+        LaunchedEffect(board.id, path, animateTokens) {
+            if (!animateTokens) {
+                motion[i].snapTo(Offset(board.node(player.position).x, board.node(player.position).y))
+            } else {
+                val nodes = MoveTrail.steps(previous, path)
+                previous = path
+                // Use brief segments along the exact route, including backwards pranks.
+                for (id in nodes) {
+                    val target = board.node(id)
+                    motion[i].animateTo(
+                        Offset(target.x, target.y),
+                        animationSpec = tween(durationMillis = 115)
+                    )
+                }
+            }
+        }
+        motion[i].value
+    }
     Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEDE4D0))) {
-        Canvas(modifier = Modifier.fillMaxWidth().height(315.dp).padding(8.dp)) {
+        Canvas(modifier = Modifier.fillMaxWidth().height(height).padding(8.dp)) {
             val left = 18f
             val top = 18f
             val drawWidth = size.width - left * 2
@@ -495,28 +560,31 @@ private fun BoardCanvas(board: BoardDefinition, state: Snapshot) {
                         style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f))
                 }
             }
-            drawCircle(Forest.copy(alpha = 0.7f), radius = 16f,
-                center = position(state.players[state.playerIndex].position),
+            drawCircle(Forest.copy(alpha = 0.7f), radius = 17f * tokenScale,
+                center = Offset(left + displayed[state.playerIndex].x * drawWidth,
+                    top + displayed[state.playerIndex].y * drawHeight),
                 style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.3f))
             state.players.forEachIndexed { i, player ->
                 val common = state.players.count { it.position == player.position }
                 val rank = state.players.take(i).count { it.position == player.position }
                 val center = position(player.position)
-                val dx = if (common == 1) 0f else (rank - (common - 1) / 2f) * 14f
-                val dy = if (common == 1) -12f else -14f
-                val tokenRadius = if (i == state.playerIndex) 10.5f else 9f
-                drawCircle(PlayerColors[i], tokenRadius, Offset(center.x + dx, center.y + dy))
-                drawCircle(Color.White, tokenRadius, Offset(center.x + dx, center.y + dy),
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f))
+                val dx = if (common == 1) 0f else (rank - (common - 1) / 2f) * 18f * tokenScale
+                val dy = if (common == 1) -14f * tokenScale else -17f * tokenScale
+                val marker = Offset(left + displayed[i].x * drawWidth + dx,
+                    top + displayed[i].y * drawHeight + dy)
+                val tokenRadius = (if (i == state.playerIndex) 12.5f else 11f) * tokenScale
+                drawCircle(PlayerColors[i], tokenRadius, marker)
+                drawCircle(Color.White, tokenRadius, marker,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.3f))
                 drawIntoCanvas { canvas ->
                     val paint = android.graphics.Paint().apply {
                         this.color = android.graphics.Color.WHITE
-                        textSize = 11f
+                        textSize = 12f * tokenScale
                         isAntiAlias = true
                         isFakeBoldText = true
                         textAlign = android.graphics.Paint.Align.CENTER
                     }
-                    canvas.nativeCanvas.drawText("${i + 1}", center.x + dx, center.y + dy + 3.5f, paint)
+                    canvas.nativeCanvas.drawText("${i + 1}", marker.x, marker.y + 4f * tokenScale, paint)
                 }
             }
         }
