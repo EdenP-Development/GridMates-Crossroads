@@ -55,7 +55,14 @@ jobs:
           echo "Source: $(git rev-parse HEAD) | QA versionCode $code" >> "$GITHUB_STEP_SUMMARY"
       - name: Install Android SDK tools
         shell: bash
-        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+        run: |
+          set -euo pipefail
+          sdkmanager_bin="$(command -v sdkmanager || true)"
+          if [[ -z "$sdkmanager_bin" && -n "${ANDROID_HOME:-}" ]]; then
+            sdkmanager_bin="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager -print -quit || true)"
+          fi
+          [[ -n "$sdkmanager_bin" ]] || { echo "Android SDK cmdline tools unavailable"; exit 1; }
+          "$sdkmanager_bin" 'platforms;android-35' 'build-tools;35.0.0'
       - name: Build, unit test and lint
         shell: bash
         run: |
