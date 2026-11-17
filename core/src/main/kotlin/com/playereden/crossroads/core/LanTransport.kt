@@ -105,7 +105,8 @@ class CrossroadsLanHost(
                 when (frame.type) {
                     "action" -> {
                         val action = frame.action ?: throw IOException("Missing move")
-                        if (action.route?.length ?: 0 > 100) throw IOException("Invalid route")
+                        if ((action.route?.length ?: 0) > 100)
+                            throw IOException("Invalid route")
                         onAction(action)
                     }
                     "pong" -> Unit
@@ -179,14 +180,17 @@ class CrossroadsLanGuest(
                 onState(welcome.checkpoint)
                 onConnection(true, null)
                 var lastRevision = welcome.checkpoint.expected.revision
+                var lastMatchId = welcome.checkpoint.matchId
                 while (running && !link.isClosed) {
                     val frame = LanWire.read(link.getInputStream())
                     if (frame.roomId != roomId) throw IOException("Wrong room")
                     when (frame.type) {
                         "state" -> {
                             val state = frame.checkpoint ?: throw IOException("Missing game state")
-                            if (state.expected.revision < lastRevision)
-                                throw IOException("Out-of-order game state")
+                            if (state.matchId == lastMatchId &&
+                                state.expected.revision < lastRevision
+                            ) throw IOException("Out-of-order game state")
+                            lastMatchId = state.matchId
                             lastRevision = state.expected.revision
                             onState(state)
                         }
