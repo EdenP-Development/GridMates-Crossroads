@@ -1,3 +1,11 @@
+# UX-09 — Dice, fork-choice and encounter UI candidate (Nov 17, 2026)
+
+**Source implemented, phone acceptance pending.** [UX-09 handoff](UX_09_TURN_PRESENTATION_QA_HANDOFF.md). This stacked branch `feature/turn-presentation-v0.9` adds an original six-sided pip-die presentation (preview animation and actual authoritative result separated), shared named-risk route choice cards for both two- and three-way crossroads, and a compact transient encounter result. **Gameplay, chance, turn flow, movement, board graph, saved profile and signers are untouched.** Android CI status must be checked on the exact latest head before claiming a new test APK.
+
+**Previous verified visual baseline:** ART-08 signed **QA 1070** [Android run 44117682344](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44117682344), [artifact 14342409552](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44117682344/artifacts/14342409552). It compiled, unit-tested, linted and signed successfully; owner phone camera/game-feel evaluation and install-over regression still require observation.
+
+---
+
 # ART-08 — Woodland board scenery (draft candidate)
 
 **Source implemented; new Android compilation and owner visual acceptance pending.** The Woven Trail board now paints original low-contrast Meadow flowers/grass, Forest evergreens/stream, and Village cottages/orchard/fence, while the paths, events, forks, tokens and input remain on top. This work is in `feature/woodland-art-v0.8`, stacked onto [UI-07 Draft PR #13](https://github.com/PlayerEden/GridMates-Crossroads/pull/13) and the camera drafts. [ART-08 handoff](ART_08_WOODLAND_IDENTITY_QA_HANDOFF.md).
