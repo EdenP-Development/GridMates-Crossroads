@@ -140,5 +140,75 @@ class GameSessionTest {
         assertEquals(simulate(), simulate())
     }
 
+    @Test fun snapshotIsDefensiveAndCannotMoveAuthoritativePieces() {
+        val game = GameSession(board, events, seats = 4, seed = 771, humanIndices = setOf(0))
+        val saved = game.snapshot()
+        saved.players[0].position = "FAKE_SPACE"
+        saved.players[0].traversed.add("FAKE_SPACE")
+        saved.players[1].shield = true
+
+        val actual = game.snapshot()
+        assertEquals(board.start, actual.players[0].position)
+        assertEquals(listOf(board.start), actual.players[0].traversed)
+        assertFalse(actual.players[1].shield)
+        assertEquals(0, actual.revision)
+    }
+
+    @Test fun rejectedWrongPhaseActionsDoNotChangeCurrentGame() {
+        val game = GameSession(board, events, seats = 3, seed = 251, humanIndices = setOf(0))
+        val before = game.snapshot()
+
+        try {
+            game.chooseRoute("NOT_A_ROUTE")
+            fail("Allowed a route before rolling")
+        } catch (_: IllegalArgumentException) {
+            // Phase ROUTE was never entered.
+        }
+        try {
+            game.chooseTarget(1)
+            fail("Allowed a prank target without a pending prank")
+        } catch (_: IllegalArgumentException) {
+            // Phase TARGET was never entered.
+        }
+        try {
+            game.botStep()
+            fail("Bot was allowed to move during the human turn")
+        } catch (_: IllegalArgumentException) {
+            // Bot actions cannot take a human turn.
+        }
+        assertEquals(before, game.snapshot())
+    }
+
+    @Test fun finalWinnerAndStateRemainLockedAfterRace() {
+        for (seats in 2..4) {
+            val game = GameSession(board, events, seats, seed = 197 + seats,
+                humanIndices = emptySet())
+            var actions = 0
+            while (game.phase != Phase.FINISHED && actions++ < 1500) game.botStep()
+            assertEquals(Phase.FINISHED, game.phase)
+            val finished = game.snapshot()
+            assertEquals(board.finish, finished.players[finished.winnerIndex!!].position)
+
+            try {
+                game.roll()
+                fail("Accepted a roll after the match ended")
+            } catch (_: IllegalArgumentException) { }
+            try {
+                game.chooseRoute(board.start)
+                fail("Accepted a route after the match ended")
+            } catch (_: IllegalArgumentException) { }
+            try {
+                game.chooseTarget(0)
+                fail("Accepted a target after the match ended")
+            } catch (_: IllegalArgumentException) { }
+            try {
+                game.botStep()
+                fail("Accepted a bot action after the match ended")
+            } catch (_: IllegalArgumentException) { }
+
+            assertEquals("Terminal snapshot mutated for $seats seats", finished, game.snapshot())
+        }
+    }
+
 }
 
