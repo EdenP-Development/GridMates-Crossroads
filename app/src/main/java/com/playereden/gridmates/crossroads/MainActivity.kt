@@ -90,6 +90,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     // QA only: wall-clock timing includes reading, map inspection and background pauses.
     val matchStartedAt = remember(game) { android.os.SystemClock.elapsedRealtime() }
     var showJournal by remember(game) { mutableStateOf(false) }
+    var showMatchOptions by remember(game) { mutableStateOf(false) }
     var confirmExit by remember(game) { mutableStateOf(false) }
     var inspectBoard by remember(game) { mutableStateOf(false) }
     var showBoardGestureHint by remember { mutableStateOf(!prefs.getBoolean("board_gesture_hint_seen_v1", false)) }
@@ -254,12 +255,34 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically) {
-                    Text("Woodland Crossing", fontWeight = FontWeight.Bold, color = Forest)
-                    TextButton(
-                        onClick = { inspectBoard = true },
-                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
-                    ) {
-                        Text("Inspect map", style = MaterialTheme.typography.labelMedium)
+                    Text("Woodland Crossing", fontWeight = FontWeight.Bold, color = Forest,
+                        style = MaterialTheme.typography.titleMedium)
+                    Box {
+                        IconButton(
+                            onClick = { showMatchOptions = true },
+                            modifier = Modifier.size(40.dp).semantics {
+                                contentDescription = "Match options"
+                            }
+                        ) { Text("⋯", fontSize = 25.sp, color = Forest) }
+                        DropdownMenu(
+                            expanded = showMatchOptions,
+                            onDismissRequest = { showMatchOptions = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Board overview") },
+                                onClick = { showMatchOptions = false; inspectBoard = true }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Journey journal (${state.encounters.size})") },
+                                enabled = state.encounters.isNotEmpty(),
+                                onClick = { showMatchOptions = false; showJournal = true }
+                            )
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { Text("Leave match", color = Bark) },
+                                onClick = { showMatchOptions = false; confirmExit = true }
+                            )
+                        }
                     }
                 }
                 if (showBoardGestureHint) {
@@ -285,41 +308,10 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         }
                     }
                 }
-                BoardCanvas(board, state, matchKey = game, stepMillis = speed.stepMillis,
-                    focusPlayerIndex = cameraTrackIndex)
-                if (state.encounters.isNotEmpty()) {
-                    val latest = state.encounters.last()
-                    val symbol = when (latest.kind) {
-                        "setback" -> "⚠️"
-                        "mischief" -> "🎭"
-                        else -> "🍀"
-                    }
-                    val encounterTint = when (latest.kind) {
-                        "setback" -> Color(0xFFF0E0C8)
-                        "mischief" -> Color(0xFFE9DEED)
-                        else -> Color(0xFFE1E9D7)
-                    }
-                    Card(modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = encounterTint)) {
-                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                            Text("$symbol  LATEST ENCOUNTER", style = MaterialTheme.typography.labelSmall, color = Forest)
-                            Text("${latest.actor} · ${latest.title}", fontWeight = FontWeight.SemiBold)
-                            Text(latest.outcome, style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-                    TextButton(onClick = { showJournal = !showJournal }) {
-                        Text(if (showJournal) "Hide journey journal" else "See journey journal (${state.encounters.size})")
-                    }
-                    if (showJournal) {
-                        state.encounters.asReversed().take(8).forEach { note ->
-                            Text("Turn ${note.turn} · ${note.actor}: ${note.title} — ${note.outcome}",
-                                style = MaterialTheme.typography.bodySmall, color = Bark)
-                        }
-                    }
-                } else {
-                    Text("Amber: hazards   •   Green: shelter   •   Purple: mischief",
-                        style = MaterialTheme.typography.bodySmall, color = Bark)
-                }
+                // The event reveal already appears in the fixed action pane.
+                // Keep the complete playable board visible, with history in Match options.
+                BoardCanvas(board, state, height = 340.dp, matchKey = game,
+                    stepMillis = speed.stepMillis, focusPlayerIndex = cameraTrackIndex)
             }
             Surface(color = Color(0xFFECE3CE), tonalElevation = 2.dp, shadowElevation = 5.dp,
                 modifier = Modifier.fillMaxWidth()) {
@@ -335,7 +327,14 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         else "Round $round · $currentName's turn",
                         fontWeight = FontWeight.Bold, color = Forest, fontSize = 16.sp
                     )
-                    Text(state.lastMessage, style = MaterialTheme.typography.bodyMedium)
+                    val initialInstructions = state.turn == 1 &&
+                        state.phase == Phase.ROLL && state.die == null &&
+                        state.encounters.isEmpty()
+                    Text(
+                        if (initialInstructions) "Roll the die to begin your journey."
+                        else "Latest action · ${state.lastMessage}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                     if (!turnReady && state.phase != Phase.FINISHED && !rollingDie) {
                         Text("Following the trail…", style = MaterialTheme.typography.labelSmall,
                             color = Bark)
@@ -408,7 +407,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         }
                     } else if (state.playerIndex != 0) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                        Text("Your opponents are taking their turns…",
+                        Text("Playing automatically…",
                             style = MaterialTheme.typography.bodySmall, color = Bark)
                     } else {
                         when (state.phase) {
@@ -466,11 +465,6 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         }
                     }
                     }
-                    if (state.phase != Phase.FINISHED) {
-                        TextButton(onClick = { confirmExit = true }, modifier = Modifier.align(Alignment.End)) {
-                            Text("Leave match", color = Bark)
-                        }
-                    }
                 }
             }
         }
@@ -523,6 +517,28 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                     TextButton(onClick = { routeDialogDismissed = true }) {
                         Text("View board")
                     }
+                }
+            )
+        }
+        if (showJournal) {
+            AlertDialog(
+                onDismissRequest = { showJournal = false },
+                title = { Text("Journey journal", color = Forest) },
+                text = {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().heightIn(max = 370.dp)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        state.encounters.asReversed().forEach { note ->
+                            Text("Turn ${note.turn} · ${note.actor}: ${note.title}",
+                                fontWeight = FontWeight.SemiBold)
+                            Text(note.outcome, style = MaterialTheme.typography.bodySmall, color = Bark)
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showJournal = false }) { Text("Back to game") }
                 }
             )
         }
