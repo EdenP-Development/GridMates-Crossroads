@@ -343,9 +343,11 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     // must not make the match duration continue growing.
     LaunchedEffect(game, state?.phase, turnReady) {
         if (game != null && state?.phase == Phase.FINISHED && turnReady && !resultsPresented) {
-            finishedElapsedSeconds = recoveryStore.completedElapsedSeconds(
-                activeMatchId, matchStartedAtEpochMillis
-            )
+            finishedElapsedSeconds = if (lanRole == LanRole.OFFLINE) {
+                recoveryStore.completedElapsedSeconds(activeMatchId, matchStartedAtEpochMillis)
+            } else {
+                ((System.currentTimeMillis() - matchStartedAtEpochMillis).coerceAtLeast(0L) / 1000L)
+            }
             resultsPresented = true
             showResults = true
         }
@@ -498,6 +500,9 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         if (lanRole == LanRole.GUEST) {
                             lanConnected = connected
                             lanBusy = false
+                            if (connected && !note.isNullOrBlank()) {
+                                lanPendingAction = false
+                            }
                             if (!connected) {
                                 lanScreen = LanScreen.JOIN
                                 lanPendingAction = false
@@ -783,6 +788,18 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalArrangement = Arrangement.spacedBy(7.dp)
                 ) {
+                    if (lanRole != LanRole.OFFLINE) {
+                        Text(
+                            if (lanRole == LanRole.HOST) "Nearby game · You are Player 1"
+                            else "Nearby game · You are Player 2",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Forest
+                        )
+                    }
+                    if (lanRole != LanRole.OFFLINE && !lanMessage.isNullOrBlank()) {
+                        Text(lanMessage!!, style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF955B33))
+                    }
                     val round = (state.turn - 1) / state.players.size + 1
                     val currentName = state.players[state.playerIndex].name
                     val trackedName = state.players[
@@ -875,11 +892,12 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             Text("View match results")
                         }
                     } else if (lanRole != LanRole.OFFLINE &&
-                        (!lanConnected || state.playerIndex !=
-                            if (lanRole == LanRole.HOST) 0 else 1)
+                        (!lanConnected || lanPendingAction ||
+                            state.playerIndex != (if (lanRole == LanRole.HOST) 0 else 1))
                     ) {
                         Text(
                             if (!lanConnected) "Waiting for your partner to reconnect…"
+                            else if (lanPendingAction) "Waiting for the host to confirm your move…"
                             else "Waiting for ${state.players[state.playerIndex].name} to play…",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Bark
@@ -1126,10 +1144,13 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                                 modifier = Modifier.weight(1f, fill = false)
                             )
                             Button(
-                                onClick = { start(state.players.size, state.players.count { !it.isBot } > 1) },
+                                onClick = { rematch() },
+                                enabled = lanRole != LanRole.GUEST &&
+                                    (lanRole != LanRole.HOST || lanConnected),
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                             ) {
-                                Text("Rematch")
+                                Text(if (lanRole == LanRole.GUEST) "Host starts next match"
+                                    else "Rematch")
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
