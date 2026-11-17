@@ -233,8 +233,9 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     // must not make the match duration continue growing.
     LaunchedEffect(game, state?.phase, turnReady) {
         if (game != null && state?.phase == Phase.FINISHED && turnReady && !resultsPresented) {
-            finishedElapsedSeconds = ((System.currentTimeMillis() -
-                matchStartedAtEpochMillis) / 1000L).coerceAtLeast(0L)
+            finishedElapsedSeconds = recoveryStore.completedElapsedSeconds(
+                activeMatchId, matchStartedAtEpochMillis
+            )
             resultsPresented = true
             showResults = true
         }
@@ -452,6 +453,17 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         fontWeight = FontWeight.Bold, color = Forest, fontSize = 16.sp,
                         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
                     )
+                    // A single helpful cue replaces any extra Pass & Play
+                    // handoff dialog: next player can roll immediately.
+                    if (state.players.all { !it.isBot } && state.turn > 1 &&
+                        state.phase == Phase.ROLL && turnReady && !rollingDie
+                    ) {
+                        Text(
+                            "Pass the phone to $currentName",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Bark
+                        )
+                    }
                     val initialInstructions = state.turn == 1 &&
                         state.phase == Phase.ROLL && state.die == null &&
                         state.encounters.isEmpty()
