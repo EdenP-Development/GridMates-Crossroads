@@ -268,13 +268,30 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                 return@LaunchedEffect
             }
             if (game.phase == Phase.ROLL && !game.players[game.currentIndex].isBot) {
-                val before = game.snapshot()
-                game.roll() // Exactly one real engine roll; visual faces use no RNG.
-                persistGame(game)
-                cameraTrackIndex = PresentationPacing.mover(before, game.snapshot())
-                transitionDelay = PresentationPacing.waitForMovement(before, game.snapshot(), speed)
-                turnReady = false
-                revision++
+                val localSeat = if (lanRole == LanRole.GUEST) 1 else 0
+                if (lanRole == LanRole.OFFLINE || (
+                    lanConnected && game.currentIndex == localSeat && !lanPendingAction
+                )) {
+                    if (lanRole == LanRole.GUEST) {
+                        runCatching {
+                            lanGuest?.submit(LanAction(LanActionType.ROLL))
+                        }.onSuccess { lanPendingAction = true }
+                            .onFailure { lanMessage = "Reconnect before rolling." }
+                    } else {
+                        val before = game.snapshot()
+                        if (lanRole == LanRole.HOST) {
+                            LanTurnAuthority.apply(game, 0, LanAction(LanActionType.ROLL))
+                            lanHost?.publish(game.checkpoint(activeMatchId, matchStartedAtEpochMillis))
+                        } else {
+                            game.roll() // Exactly one real roll, never during preview.
+                            persistGame(game)
+                        }
+                        cameraTrackIndex = PresentationPacing.mover(before, game.snapshot())
+                        transitionDelay = PresentationPacing.waitForMovement(before, game.snapshot(), speed)
+                        turnReady = false
+                        revision++
+                    }
+                }
             }
             rollingDie = false
         }
@@ -345,18 +362,6 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         session = newGame
         revision++
     }
-    fun update(block: () -> Unit) {
-        val before = game?.snapshot()
-        block()
-        if (before != null && game != null) {
-            persistGame(game)
-            cameraTrackIndex = PresentationPacing.mover(before, game.snapshot())
-            transitionDelay = PresentationPacing.waitForMovement(before, game.snapshot(), speed)
-            turnReady = false
-        }
-        revision++
-    }
-
 
     fun startLanHost(requireCode: Boolean) {
         if (!nearby.hasWifi()) {
@@ -761,7 +766,8 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                     )
                     // A single helpful cue replaces any extra Pass & Play
                     // handoff dialog: next player can roll immediately.
-                    if (state.players.all { !it.isBot } && state.turn > 1 &&
+                    if (lanRole == LanRole.OFFLINE &&
+                        state.players.all { !it.isBot } && state.turn > 1 &&
                         state.phase == Phase.ROLL && turnReady && !rollingDie
                     ) {
                         Text(
@@ -831,6 +837,16 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         Button(onClick = { showResults = true }, modifier = Modifier.fillMaxWidth()) {
                             Text("View match results")
                         }
+                    } else if (lanRole != LanRole.OFFLINE &&
+                        (!lanConnected || state.playerIndex !=
+                            if (lanRole == LanRole.HOST) 0 else 1)
+                    ) {
+                        Text(
+                            if (!lanConnected) "Waiting for your partner to reconnect…"
+                            else "Waiting for ${state.players[state.playerIndex].name} to play…",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Bark
+                        )
                     } else if (state.players[state.playerIndex].isBot) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         Text("Playing automatically…",
@@ -840,7 +856,9 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             Phase.ROLL -> {
                                 Button(
                                     onClick = { rollingDie = true },
-                                    enabled = !rollingDie && turnReady,
+                                    enabled = !rollingDie && turnReady &&
+                                         (lanRole == LanRole.OFFLINE ||
+                                             (lanConnected && !lanPendingAction)),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Row(
@@ -876,7 +894,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                                     game.availableRoutes().forEach { route ->
                                         val choice = fork?.choices?.firstOrNull { it.to == route.id }
                                         OutlinedButton(
-                                            onClick = { update { game.chooseRoute(route.id) } },
+                                            onClick = { localAction(LanAction(LanActionType.ROUTE, route = route.id)) },
                                             enabled = turnReady,
                                             modifier = Modifier.fillMaxWidth(),
                                             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
@@ -893,7 +911,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             Phase.TARGET -> {
                                 Text("Mischief! Choose an opponent.", fontWeight = FontWeight.SemiBold, color = Forest)
                                 game.availableTargets().forEach { target ->
-                                    OutlinedButton(onClick = { update { game.chooseTarget(target) } },
+                                    OutlinedButton(onClick = { localAction(LanAction(LanActionType.TARGET, target = target)) },
                                         enabled = turnReady,
                                         modifier = Modifier.fillMaxWidth()) {
                                         Text("Target ${state.players[target].name}${if (state.players[target].shield) " · shielded" else ""}")
@@ -958,7 +976,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                                 game.availableRoutes().forEach { route ->
                                     val choice = junction?.choices?.firstOrNull { it.to == route.id }
                                     OutlinedButton(
-                                        onClick = { update { game.chooseRoute(route.id) } },
+                                        onClick = { localAction(LanAction(LanActionType.ROUTE, route = route.id)) },
                                         modifier = Modifier.fillMaxWidth().heightIn(min = 68.dp),
                                         colors = ButtonDefaults.outlinedButtonColors(
                                             contentColor = Forest
