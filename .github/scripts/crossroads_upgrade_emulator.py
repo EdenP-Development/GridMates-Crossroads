@@ -55,7 +55,7 @@ assert "Success" in adb("install", "-r", str(AFTER))
 new = adb("shell", "run-as", PKG, "cat", PROFILE)
 assert old.strip() == new.strip(), "Profile bytes changed during APK install-over"
 metadata = adb("shell", "dumpsys", "package", PKG)
-assert re.search(r"versionCode=1009\\b", metadata), "Expected upgraded versionCode 1009"
+assert re.search(r"versionCode=1009\b", metadata), "Expected upgraded versionCode 1009"
 adb("shell", "am", "start", "-W", "-n", ACTIVITY)
 time.sleep(3)
 pid = adb("shell", "pidof", PKG).strip()
