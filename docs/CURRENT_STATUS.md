@@ -1,3 +1,5 @@
+> **CAM-06B source update (Nov 16–17, 2026):** Owner's QA1057 phone screenshots confirmed initial board, follow-style close view, 1× overview and bot-turn screen. Owner chose gesture-first navigation; permanent camera controls are unwanted. On the current draft camera branch, CAM-06B now removes the floating camera bar, adds double-tap / focused-piece recentering, a saved one-time gesture hint and semantic accessibility recenter/whole-board actions. Existing pinch, drag, 1×–3× clamp and automatic following remain. A comparative UI study is in [RESEARCH_MOBILE_BOARD_GAME_UI_2026_11.md](RESEARCH_MOBILE_BOARD_GAME_UI_2026_11.md). **Source committed; new Android QA and owner's gesture acceptance pending. Prior QA1057 evidence applies only to the previous build.** No merge into main.
+
 # GridMates: Crossroads — current status: CAM-06 / QA1057
 
 **Verified:** Nov 16, 2026 local / Nov 17 UTC.
