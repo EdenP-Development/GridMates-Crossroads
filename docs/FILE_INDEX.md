@@ -27,3 +27,5 @@
 - `data/events/woven_events_v02.json` — twenty region-and-route-limited encounters.
 - `docs/BOARD_WOVEN_TRAIL_V02.md` — course design, risk behavior and playtest gates.
 - `docs/QA_RECEIPT_WOVEN_V02_2026_11_16.md` — exact build and 1018→1020 emulator upgrade/screenshot receipt.
+
+- `docs/QA_PHONE_WOVEN_TRAIL_COMPLETE_MATCH.md` — source-grounded first complete human three-seat match and outstanding QA observations.
