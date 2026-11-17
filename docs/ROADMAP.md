@@ -26,4 +26,4 @@ Milestone-based, not date-promised. No frequent tiny APK drops in place of usefu
 12. RELEASE-01: release audit and owner approval.
 13. ANDROID-APK-01: stable QA signing, monotonic APK codes and install-over-save tests **before** first shared owner APK ([issue #5](https://github.com/PlayerEden/GridMates-Crossroads/issues/5)).
 
-**No Android implementation, release build or LAN check is claimed here.**
+**Current:** Android and JVM rules prototype source exists; do not imply passing APK/device tests, real install-over safety, or LAN implementation without the relevant workflow and phone evidence.

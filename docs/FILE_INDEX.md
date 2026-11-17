@@ -18,3 +18,6 @@
 - `data/boards/woodland_quick_example.json` — prototype course.
 - `data/events/core_events_proposed.json` — proposed event data.
 - `scripts/validate_design.mjs`, `scripts/tests/design.test.mjs` — design checks only.
+- `docs/PROTOTYPE_V0_1_ANDROID.md` — first Android/AI source capabilities and honest testing limits.
+- `docs/CURRENT_STATUS.md` — live implementation checkpoint and next QA action.
+- `AGENTS.md` — short instructions to prevent context and signing/asset mistakes.

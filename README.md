@@ -1,6 +1,6 @@
 # GridMates: Crossroads
 
-**Status:** Pre-production design foundation — no playable Android build or completed LAN implementation.  
+**Status:** First playable Android experiment source is on `design/foundation-v0.1`; APK/build/device QA results are tracked separately. LAN is not implemented.  
 **Design baseline:** 0.1.0 · 2026-11-16  
 **Owner:** PlayerEden  
 **Name:** *GridMates: Crossroads* is the current preferred **working** name; app-store/trademark clearance has not been performed.
@@ -14,7 +14,7 @@
 2. Read the [Game Bible](docs/GAME_BIBLE.md) for the accepted vision and explicit proposals.
 3. Read [Decision Log](docs/DECISION_LOG.md) before changing rules.
 4. Read the [Research Notes](docs/RESEARCH_GAMEPLAY.md) and [Platform Research](docs/RESEARCH_TECH_AND_ACCESSIBILITY.md) for evidence and references.
-5. See [Roadmap](docs/ROADMAP.md) and [Playtest/QA](docs/QA_AND_PLAYTEST.md) for the next development gates.
+5. See [Roadmap](docs/ROADMAP.md), [Prototype](docs/PROTOTYPE_V0_1_ANDROID.md), [Current Status](docs/CURRENT_STATUS.md), and [Playtest/QA](docs/QA_AND_PLAYTEST.md) for build/testing gates.
 
 ## Core pillars
 
@@ -35,7 +35,7 @@
 | Quick / Classic / Long length options **as design targets** | Pay-to-win, energy/time gates, forced daily chores |
 | Token cosmetics, theme possibilities, local achievements | Cross-app unlock sync |
 
-> **Do not confuse planned with built.** This starter includes documentation, sample data, and validation checks only. It does NOT include game runtime, APK, tested AI, or real LAN play.
+> **Current implementation candidate:** Kotlin/JVM deterministic race engine with bots + Android Compose board/UI, 2–4 total seats, dice and crossroads choice. It also includes proposed region-specific events, a QA build workflow and locally saved win counts. **This is not yet a tested physical APK, local Wi-Fi, finished graphics, or release-ready software.** See [Prototype status](docs/PROTOTYPE_V0_1_ANDROID.md) and [Current Status](docs/CURRENT_STATUS.md).
 
 ## Validation for included *design data*
 
@@ -46,7 +46,7 @@ npm test
 npm run validate
 ```
 
-These checks validate proposed sample board/event data; they are **not gameplay or Android tests**.
+These Node checks validate proposed board/event data only. JVM game tests run through `gradle :core:test`; an Android QA workflow is available separately.
 
 ## Source projects to review before implementation
 
