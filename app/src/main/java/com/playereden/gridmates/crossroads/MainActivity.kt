@@ -87,14 +87,34 @@ class MainActivity : ComponentActivity() {
 private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("crossroads_qa_profile_v1", 0) }
+    val recoveryStore = remember(prefs, board, catalogue) {
+        MatchRecoveryStore(prefs, board, catalogue)
+    }
+    // A restarted Activity gets its entire authoritative match from the saved
+    // seed + accepted actions; incompatible/corrupt saves never half-restore.
+    val initialRecovery = remember(recoveryStore) { recoveryStore.load() }
     var matches by remember { mutableIntStateOf(prefs.getInt("completed", 0)) }
     var wins by remember { mutableIntStateOf(prefs.getInt("wins", 0)) }
-    var session by remember { mutableStateOf<GameSession?>(null) }
+    var session by remember { mutableStateOf(initialRecovery.match?.game) }
+    var activeMatchId by remember { mutableStateOf(initialRecovery.match?.matchId ?: "") }
+    var matchStartedAtEpochMillis by remember {
+        mutableLongStateOf(initialRecovery.match?.startedAtEpochMillis ?: 0L)
+    }
+    var startedFromCheckpoint by remember {
+        mutableStateOf(initialRecovery.match != null)
+    }
+    var recoveryWarning by remember {
+        mutableStateOf(
+            if (initialRecovery.invalidSavedMatch)
+                "The previous journey couldn't be restored. Starting a new one will replace that save."
+            else null
+        )
+    }
     var revision by remember { mutableIntStateOf(0) }
     val game = session
     val state = remember(game, revision) { game?.snapshot() }
-    // QA only: wall-clock timing includes reading, map inspection and background pauses.
-    val matchStartedAt = remember(game) { android.os.SystemClock.elapsedRealtime() }
+    // QA wall-clock timer intentionally continues while away from the app.
+    // The start timestamp is persisted, unlike elapsedRealtime().
     var showJournal by remember(game) { mutableStateOf(false) }
     var showMatchOptions by remember(game) { mutableStateOf(false) }
     var showGuide by remember(game) { mutableStateOf(false) }
@@ -105,12 +125,37 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     var inspectBoard by remember(game) { mutableStateOf(false) }
     var showBoardGestureHint by remember { mutableStateOf(!prefs.getBoolean("board_gesture_hint_seen_v1", false)) }
     var rollingDie by remember(game) { mutableStateOf(false) }
-    var speed by remember { mutableStateOf(PresentationSpeed.COZY) }
+    var speed by remember {
+        mutableStateOf(
+            runCatching {
+                PresentationSpeed.valueOf(prefs.getString("match_pace_v1", "COZY") ?: "COZY")
+            }.getOrDefault(PresentationSpeed.COZY)
+        )
+    }
     var transitionDelay by remember(game) { mutableLongStateOf(0L) }
     var turnReady by remember(game) { mutableStateOf(true) }
-    var cameraTrackIndex by remember(game) { mutableIntStateOf(0) }
+    var cameraTrackIndex by remember(game) { mutableIntStateOf(game?.currentIndex ?: 0) }
     var routeDialogDismissed by remember(game) { mutableStateOf(false) }
     LaunchedEffect(game, state?.revision) { routeDialogDismissed = false }
+    fun persistGame(current: GameSession) {
+        val saved = runCatching {
+            recoveryStore.persist(current, activeMatchId, matchStartedAtEpochMillis)
+        }.getOrDefault(false)
+        if (!saved) {
+            recoveryWarning = "Progress couldn't be saved on this device. Please check storage before leaving."
+        } else {
+            matches = prefs.getInt("completed", 0)
+            wins = prefs.getInt("wins", 0)
+            recoveryWarning = null
+        }
+    }
+    fun leaveGame() {
+        val cleared = recoveryStore.discard()
+        if (!cleared) {
+            recoveryWarning = "The saved journey couldn't be cleared; it may reopen on restart."
+        }
+        session = null
+    }
     var rollingFace by remember(game) { mutableIntStateOf(1) }
     val rollingTilt by animateFloatAsState(
         targetValue = if (rollingDie) {
@@ -122,7 +167,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     var recentReveal by remember(game) { mutableStateOf<EncounterNote?>(null) }
     val latestNote = state?.encounters?.lastOrNull()
     LaunchedEffect(game, latestNote) {
-        if (latestNote != null) {
+        if (latestNote != null && !(startedFromCheckpoint && revision == 0)) {
             recentReveal = latestNote
             delay(2100)
             recentReveal = null
@@ -145,6 +190,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             if (game.phase == Phase.ROLL && !game.players[game.currentIndex].isBot) {
                 val before = game.snapshot()
                 game.roll() // Exactly one real engine roll; visual faces use no RNG.
+                persistGame(game)
                 cameraTrackIndex = PresentationPacing.mover(before, game.snapshot())
                 transitionDelay = PresentationPacing.waitForMovement(before, game.snapshot(), speed)
                 turnReady = false
@@ -172,6 +218,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                 delay(speed.aiBreathMillis)
                 val before = game.snapshot()
                 game.botStep()
+                persistGame(game)
                 cameraTrackIndex = PresentationPacing.mover(before, game.snapshot())
                 transitionDelay = PresentationPacing.waitForMovement(before, game.snapshot(), speed)
                 turnReady = false
@@ -179,31 +226,34 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             }
         }
     }
-    LaunchedEffect(game, state?.phase) {
-        if (game != null && state?.phase == Phase.FINISHED) {
-            matches++
-            if (state.winnerIndex == 0) wins++
-            prefs.edit().putInt("completed", matches).putInt("wins", wins).apply()
-        }
-    }
+    // Completion stats are written once in the *same committed transaction* as
+    // the final action by MatchRecoveryStore. Recomposition/recovery cannot
+    // double-count a finished match.
     // Freeze elapsed time when final movement has settled: reopening the results
     // must not make the match duration continue growing.
     LaunchedEffect(game, state?.phase, turnReady) {
         if (game != null && state?.phase == Phase.FINISHED && turnReady && !resultsPresented) {
-            finishedElapsedSeconds = ((android.os.SystemClock.elapsedRealtime() -
-                matchStartedAt) / 1000L).coerceAtLeast(0L)
+            finishedElapsedSeconds = ((System.currentTimeMillis() -
+                matchStartedAtEpochMillis) / 1000L).coerceAtLeast(0L)
             resultsPresented = true
             showResults = true
         }
     }
     fun start(seats: Int) {
-        session = GameSession(board, catalogue, seats = seats, seed = java.util.Random().nextInt(), humanIndices = setOf(0))
+        val newGame = GameSession(board, catalogue, seats = seats,
+            seed = java.util.Random().nextInt(), humanIndices = setOf(0))
+        activeMatchId = java.util.UUID.randomUUID().toString()
+        matchStartedAtEpochMillis = System.currentTimeMillis()
+        startedFromCheckpoint = false
+        persistGame(newGame)
+        session = newGame
         revision++
     }
     fun update(block: () -> Unit) {
         val before = game?.snapshot()
         block()
         if (before != null && game != null) {
+            persistGame(game)
             cameraTrackIndex = PresentationPacing.mover(before, game.snapshot())
             transitionDelay = PresentationPacing.waitForMovement(before, game.snapshot(), speed)
             turnReady = false
@@ -222,7 +272,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             !showResults && !inspectBoard && !confirmExit && !showMatchOptions
     ) {
         if (state?.phase == Phase.FINISHED) {
-            session = null
+            leaveGame()
         } else {
             confirmExit = true
         }
@@ -244,8 +294,11 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                 horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("CROSSROADS · QA", style = MaterialTheme.typography.labelLarge, color = Forest)
-                TextButton(onClick = { speed = if (speed == PresentationSpeed.COZY)
-                    PresentationSpeed.BRISK else PresentationSpeed.COZY }) {
+                TextButton(onClick = {
+                    speed = if (speed == PresentationSpeed.COZY)
+                        PresentationSpeed.BRISK else PresentationSpeed.COZY
+                    prefs.edit().putString("match_pace_v1", speed.name).apply()
+                }) {
                     Text(if (speed == PresentationSpeed.COZY) "Pace: Cozy" else "Pace: Brisk",
                         style = MaterialTheme.typography.labelMedium)
                 }
@@ -334,7 +387,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                                 },
                                 onClick = {
                                     showMatchOptions = false
-                                    if (state.phase == Phase.FINISHED) session = null
+                                    if (state.phase == Phase.FINISHED) leaveGame()
                                     else confirmExit = true
                                 }
                             )
@@ -368,7 +421,8 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                 // Keep the complete playable board visible, with history in Match options.
                 BoardCanvas(board, state, height = fittedBoardHeight, matchKey = game,
                     stepMillis = speed.stepMillis, focusPlayerIndex = cameraTrackIndex,
-                    isTurnTransitioning = !turnReady)
+                    isTurnTransitioning = !turnReady,
+                    startAtCurrent = startedFromCheckpoint)
                 }
             }
             Surface(color = Color(0xFFECE3CE), tonalElevation = 2.dp, shadowElevation = 5.dp,
@@ -661,7 +715,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                                     Text("View board")
                                 }
                                 TextButton(
-                                    onClick = { session = null },
+                                    onClick = { leaveGame() },
                                     modifier = Modifier.weight(1f),
                                     contentPadding = PaddingValues(horizontal = 6.dp)
                                 ) {
@@ -677,9 +731,9 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             AlertDialog(
                 onDismissRequest = { confirmExit = false },
                 title = { Text("Leave this match?") },
-                text = { Text("This match is not saved yet. Your completed-match record will be kept.") },
+                text = { Text("Leave and discard this journey? Your completed-match record will be kept.") },
                 confirmButton = {
-                    TextButton(onClick = { session = null; confirmExit = false }) { Text("Leave") }
+                    TextButton(onClick = { leaveGame(); confirmExit = false }) { Text("Leave") }
                 },
                 dismissButton = {
                     TextButton(onClick = { confirmExit = false }) { Text("Keep playing") }
@@ -699,12 +753,15 @@ private fun BoardCanvas(
     matchKey: Any? = null,
     stepMillis: Int = PresentationSpeed.COZY.stepMillis,
     focusPlayerIndex: Int = state.playerIndex,
-    isTurnTransitioning: Boolean = false
+    isTurnTransitioning: Boolean = false,
+    startAtCurrent: Boolean = false
 ) {
     // The new GameSession object resets visual positions after Rematch.
-    val motion = remember(matchKey, board.id, state.players.size, animateTokens) {
+    val motion = remember(matchKey, board.id, state.players.size, animateTokens, startAtCurrent) {
         List(state.players.size) { i ->
-            val node = board.node(if (animateTokens) board.start else state.players[i].position)
+            val node = board.node(
+                if (animateTokens && !startAtCurrent) board.start else state.players[i].position
+            )
             Animatable(Offset(node.x, node.y), Offset.VectorConverter)
         }
     }
@@ -714,8 +771,8 @@ private fun BoardCanvas(
     val displayed = state.players.mapIndexed { i, player ->
         val path = player.traversed.toList()
         // The animation observes the rendered route history, never changes the rules engine.
-        var previous by remember(matchKey, board.id, i, animateTokens) {
-            mutableStateOf(if (animateTokens) listOf(board.start) else path)
+        var previous by remember(matchKey, board.id, i, animateTokens, startAtCurrent) {
+            mutableStateOf(if (animateTokens && !startAtCurrent) listOf(board.start) else path)
         }
         LaunchedEffect(matchKey, board.id, path, animateTokens) {
             if (!animateTokens) {
