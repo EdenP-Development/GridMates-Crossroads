@@ -105,7 +105,7 @@ internal fun CrossroadsHowToPlayDialog(onDismiss: () -> Unit) {
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold, color = HelpForest)
                         Text(
-                            "Pinch to zoom, drag to explore, and double-tap to follow the action again. Board overview and the journey journal are in Match options (⋯).",
+                            "Pinch to zoom, drag to explore, and double-tap to follow the action again. Cozy and Brisk change only the animation speed, not the odds. Board overview and the journey journal are in Match options (⋯).",
                             style = MaterialTheme.typography.bodyMedium,
                             color = HelpBark
                         )
