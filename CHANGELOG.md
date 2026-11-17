@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.5.0 perceived pacing / full crossroads QA1051] — November 16/17, 2026
+- Owner QA1044: **3 wins / 5 completed matches** after a three-seat AI1 victory; three-way Old Forest Junction third route (Cedar Bridge) was partly obscured; the user reported matches felt overly fast.
+- Added **Pace: Cozy / Brisk** control and separate per-node movement/landing/encounter timing. UI now waits for the traveled route to finish before accepting human input or advancing the next bot action.
+- Added a small landing ripple and adjusted visual-only dice face duration. No changes to dice RNG, route graph, event weights, shield/prank mechanics, or win determination.
+- Three-way route forks display a dedicated scrollable choice dialog with named routes and descriptions. User can dismiss to view the board and reopen from the bottom action area. Two-way choices remain in the action pane.
+- Results now show **wall-clock match minutes/seconds and rounds** as simple playtest evidence (includes thinking/pauses; not an active-only stopwatch).
+- [Design QA passed](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44011268994); [JVM gameplay/timing tests passed](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44011277561); [signed Android QA1051 build passed](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44011268890).
+- [**Actual QA1044→1051 emulator install-over passed**](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44011821841), preserving saved stats and launching new first-turn route UI. [UI screenshot artifact](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44011821841/artifacts/14297176384).
+- **Owner phone pacing/3-route chooser approval pending.** [QA receipt](docs/QA_RECEIPT_1051_2026_11_16.md); [test handoff](docs/PACE_05_QA_HANDOFF.md).
+
+
 ## [0.4.0 board motion QA 1044] — November 16/17, 2026
 - QA1040 owner screenshots showed **2 wins / 3 completed games** before a new four-seat game, AI3 and human shields, a human three-space advance, and a new human victory. No post-win updated counter was shown. [Owner QA summary](docs/QA_OWNER_PHONE_1040_FULL_WIN.md).
 - Added **visual-only route-following movement** over every newly traversed graph node, including reversed steps when a setback/prank moves a token back. Authoritative engine/RNG unaffected.

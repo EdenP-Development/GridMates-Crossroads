@@ -1,6 +1,6 @@
 # GridMates: Crossroads
 
-**Status:** Board Motion QA **1044** signed and confirmed updating over QA1040 on Android 15 emulator with saved statistics preserved. Owner screenshots confirmed a four-seat QA1040 human victory, shields and encounter history. **QA1044 phone visual-motion feedback pending.** Source is `feature/board-motion-v0.4` ([Draft PR #9](https://github.com/PlayerEden/GridMates-Crossroads/pull/9)) atop previous draft PRs; LAN not implemented.
+**Status:** PACE-05 **QA1051** Android build/tests and **actual QA1044→1051 install-over passed**, preserving seeded statistics. New Cozy/Brisk pacing and a scrollable three-choice crossroads dialog are implemented; **owner phone acceptance remains pending**. Current source: `feature/pace-gamefeel-v0.5` ([Draft PR #11](https://github.com/PlayerEden/GridMates-Crossroads/pull/11)) stacked on previous drafts; no LAN or public release.
 **Design baseline:** 0.1.0 · 2026-11-16  
 **Owner:** PlayerEden  
 **Name:** *GridMates: Crossroads* is the current preferred **working** name; app-store/trademark clearance has not been performed.
@@ -14,7 +14,7 @@
 2. Read the [Game Bible](docs/GAME_BIBLE.md) for the accepted vision and explicit proposals.
 3. Read [Decision Log](docs/DECISION_LOG.md) before changing rules.
 4. Read the [Research Notes](docs/RESEARCH_GAMEPLAY.md) and [Platform Research](docs/RESEARCH_TECH_AND_ACCESSIBILITY.md) for evidence and references.
-5. See [Roadmap](docs/ROADMAP.md), [Current Status](docs/CURRENT_STATUS.md), [QA1037 receipt](docs/QA_RECEIPT_1037_2026_11_16.md), and [Playtest/QA](docs/QA_AND_PLAYTEST.md) for build and testing evidence.
+5. See [Roadmap](docs/ROADMAP.md), [Current Status](docs/CURRENT_STATUS.md), [QA1051 receipt](docs/QA_RECEIPT_1051_2026_11_16.md), and [Playtest/QA](docs/QA_AND_PLAYTEST.md) for build and testing evidence.
 
 ## Core pillars
 
