@@ -1,3 +1,11 @@
+# TURN-21 — Pause AI and dice when Crossroads loses Android focus (November 17, 2026)
+
+**Source + JVM gate test committed; exact-head Android CI and real-phone acceptance pending.** TURN-20 paused AI behind in-game reading/inspection screens, but did not pause it when Android backgrounded the Activity. TURN-21 observes Activity `ON_RESUME`/`ON_PAUSE`, cancels pending AI breath and decorative dice preview when not resumed, and checks actual Activity state before any authoritative roll or bot command. Returning to the app continues from the same turn with ordinary pacing, without a mandatory resume dialog or extra game systems. [TURN-21 device and regression checklist](TURN_21_BACKGROUND_PAUSE_QA.md). No engine, PRNG, saved data schema or signing changes.
+
+**Last verified QA baseline:** signed QA1154 [Android run 44175612318](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44175612318), [artifact 14369178664](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44175612318/artifacts/14369178664) with passing JVM rules and design-data checks. This older QA does **not** verify TURN-21 background behavior. Phone tests must distinguish simple foreground return from force-stop/process-death recovery.
+
+---
+
 # TURN-20 — AI pauses while reading (November 17, 2026)
 
 **Committed source and three explicit UI-turn gating unit tests; exact Android CI and phone acceptance pending.** The previous combined animation/bot continuation effect could advance AI while someone was inspecting board overview, reading How to Play or reviewing the Journey Journal. Now movement completion and AI action are distinct effects; the latter pauses when any existing reading/menu/leave/results surface opens and resumes after its normal breath. Human turns remain manual in Solo and Pass & Play. No game rules, RNG, local save schema, board art or network changes. [TURN-20 regression and phone QA](TURN_20_AI_READING_PAUSE_QA.md).
