@@ -350,10 +350,13 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             }
                         }
                     }
-                    if (state.die != null && state.phase != Phase.FINISHED) {
+                    // Snapshot is provided by the core module, so cache its nullable
+                    // die value locally for Kotlin's safe smart cast.
+                    val resolvedDie = state.die
+                    if (resolvedDie != null && state.phase != Phase.FINISHED) {
                         Row(verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            DieFace(state.die, modifier = Modifier.size(34.dp))
+                            DieFace(resolvedDie, modifier = Modifier.size(34.dp))
                             Text(
                                 "${state.remainingSteps} ${if (state.remainingSteps == 1) "step" else "steps"} remaining",
                                 style = MaterialTheme.typography.bodyMedium,
