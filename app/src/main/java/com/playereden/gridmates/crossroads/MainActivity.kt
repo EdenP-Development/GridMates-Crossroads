@@ -791,24 +791,11 @@ private fun BoardCanvas(
                 val node = board.node(id)
                 return Offset(left + node.x * drawWidth, top + node.y * drawHeight)
             }
-            // Very light thematic paper washes preserve path readability without external art.
-            drawRoundRect(
-                color = Color(0xFFABC99B).copy(alpha = 0.12f),
-                topLeft = Offset(left, top + drawHeight * 0.12f),
-                size = androidx.compose.ui.geometry.Size(drawWidth * 0.35f, drawHeight * 0.76f),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(20f, 20f)
-            )
-            drawRoundRect(
-                color = Color(0xFF799B81).copy(alpha = 0.10f),
-                topLeft = Offset(left + drawWidth * 0.34f, top + drawHeight * 0.05f),
-                size = androidx.compose.ui.geometry.Size(drawWidth * 0.37f, drawHeight * 0.90f),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(20f, 20f)
-            )
-            drawRoundRect(
-                color = Color(0xFFD3AE7B).copy(alpha = 0.12f),
-                topLeft = Offset(left + drawWidth * 0.69f, top + drawHeight * 0.06f),
-                size = androidx.compose.ui.geometry.Size(drawWidth * 0.31f, drawHeight * 0.89f),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(20f, 20f)
+            // Original ART-08 region illustration is always BELOW navigable roads.
+            // It scales with the existing gesture-first 2D camera, never the game graph.
+            drawWoodlandBoardArt(
+                boardId = board.id,
+                left = left, top = top, width = drawWidth, height = drawHeight
             )
             // Region names make the fixed course easier to learn between matches.
             drawIntoCanvas { canvas ->
