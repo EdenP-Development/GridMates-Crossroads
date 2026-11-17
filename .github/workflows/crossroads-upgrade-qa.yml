@@ -6,6 +6,39 @@ on:
       - ".github/workflows/crossroads-upgrade-qa.yml"
       - ".github/scripts/crossroads_upgrade_emulator.py"
   workflow_dispatch:
+    inputs:
+      base_run:
+        description: "Previous QA run ID"
+        type: string
+        default: "43997729223"
+      base_name:
+        description: "Previous artifact name"
+        type: string
+        default: "Crossroads-Android-QA-1018-7b551924d4a83e59e5cca2e80a7cf5df897ae2e3"
+      base_code:
+        description: "Previous Android versionCode"
+        type: string
+        default: "1018"
+      base_sha:
+        description: "Previous exact APK SHA-256"
+        type: string
+        default: "5b70cca909d6154bb5fa5cd227df6abf7a8480424da6e45cdf4776813c395d2d"
+      next_run:
+        description: "Candidate QA run ID"
+        type: string
+        default: "43999320965"
+      next_name:
+        description: "Candidate artifact name"
+        type: string
+        default: "Crossroads-Android-QA-1020-9f12c6101bf50829e4935bc17ab55720969fba7a"
+      next_code:
+        description: "Candidate Android versionCode"
+        type: string
+        default: "1020"
+      next_sha:
+        description: "Candidate exact APK SHA-256"
+        type: string
+        default: "f528d0b722363e3df8043faa4344427afad506ec29b79b212231813499dcad40"
 permissions:
   contents: read
   actions: read
@@ -13,32 +46,41 @@ jobs:
   update-preserves-profile:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      BASE_CODE: ${{ inputs.base_code || '1018' }}
+      NEXT_CODE: ${{ inputs.next_code || '1020' }}
+      BASE_SHA: ${{ inputs.base_sha || '5b70cca909d6154bb5fa5cd227df6abf7a8480424da6e45cdf4776813c395d2d' }}
+      NEXT_SHA: ${{ inputs.next_sha || 'f528d0b722363e3df8043faa4344427afad506ec29b79b212231813499dcad40' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: Crossroads-Android-QA-1008-c189ca9efeb01ba1b2a27f98fce07fa780be3425
-          run-id: 43995150638
+          name: ${{ inputs.base_name || 'Crossroads-Android-QA-1018-7b551924d4a83e59e5cca2e80a7cf5df897ae2e3' }}
+          run-id: ${{ inputs.base_run || '43997729223' }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path: qa-archives/v1008
+          path: qa-archives/base
       - uses: actions/download-artifact@v4
         with:
-          name: Crossroads-Android-QA-1009-ad7e6acb9a4b8eb87337623fc6c72e888794129b
-          run-id: 43995157650
+          name: ${{ inputs.next_name || 'Crossroads-Android-QA-1020-9f12c6101bf50829e4935bc17ab55720969fba7a' }}
+          run-id: ${{ inputs.next_run || '43999320965' }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path: qa-archives/v1009
-      - name: Verify *actual* prior and candidate binaries
+          path: qa-archives/next
+      - name: Verify distinct prior and candidate APK identity/checksums
         shell: bash
         run: |
-          echo "6cb6e89128d7f3a5ed123f38ebd5878f2775e200898f6ee8a4379dbbdf01354d  qa-archives/v1008/GridMates-Crossroads-QA-1008.apk" | sha256sum -c
-          echo "78ed337d05b9c6ea0d01f00d464ecf9eba6c164557a6b7e7e9b2cad2ada21d3b  qa-archives/v1009/GridMates-Crossroads-QA-1009.apk" | sha256sum -c
-      - name: Enable KVM for Android emulator
+          set -euo pipefail
+          [[ "$BASE_CODE" =~ ^[0-9]+$ && "$NEXT_CODE" =~ ^[0-9]+$ ]] || exit 1
+          (( NEXT_CODE > BASE_CODE )) || { echo "Candidate must be a higher versionCode"; exit 1; }
+          [[ "$BASE_SHA" =~ ^[[:xdigit:]]{64}$ && "$NEXT_SHA" =~ ^[[:xdigit:]]{64}$ ]] || exit 1
+          echo "$BASE_SHA  qa-archives/base/GridMates-Crossroads-QA-$BASE_CODE.apk" | sha256sum -c
+          echo "$NEXT_SHA  qa-archives/next/GridMates-Crossroads-QA-$NEXT_CODE.apk" | sha256sum -c
+      - name: Enable KVM for emulator
         shell: bash
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Install 1008, seed profile, update to 1009, verify persistence
+      - name: Install previous APK, seed stats, update APK, capture Woven Trail
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -48,3 +90,11 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot
           script: python3 .github/scripts/crossroads_upgrade_emulator.py
+      - name: Upload source-matched emulator visuals
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-Upgrade-Emulator-${{ env.BASE_CODE }}-to-${{ env.NEXT_CODE }}-${{ github.sha }}
+          path: qa-evidence/*.png
+          if-no-files-found: ignore
+          retention-days: 14
