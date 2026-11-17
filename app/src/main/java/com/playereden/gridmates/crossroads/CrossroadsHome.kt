@@ -81,12 +81,20 @@ private fun HomeTrailIllustration() {
 internal fun CrossroadsHomeScreen(
     wins: Int,
     completed: Int,
-    onStart: (Int) -> Unit,
+    onStart: (Int, Boolean) -> Unit,
     recoveryWarning: String? = null
 ) {
     // The first run is a single tap: 1 human + 1 bot. No room codes or setup screens.
     var seats by remember { mutableIntStateOf(2) }
+    var passAndPlay by remember { mutableStateOf(false) }
     var showGuide by remember { mutableStateOf(false) }
+    // Keep both setup selectors in the Woodland palette; Material's default
+    // selected chip tint was lavender on actual Android QA1130 screenshots.
+    val choiceColors = FilterChipDefaults.filterChipColors(
+        selectedContainerColor = Color(0xFFE2EAD9),
+        selectedLabelColor = Ink,
+        labelColor = Muted
+    )
 
     Column(
         modifier = Modifier.fillMaxSize().background(Paper)
@@ -117,8 +125,30 @@ internal fun CrossroadsHomeScreen(
         HorizontalDivider(color = Muted.copy(alpha = 0.24f))
         Text("Ready to play?", style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold, color = Ink)
-        Text("You and ${seats - 1} ${if (seats == 2) "AI opponent" else "AI opponents"} · offline",
-            style = MaterialTheme.typography.bodySmall, color = Muted)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilterChip(
+                selected = !passAndPlay,
+                onClick = { passAndPlay = false },
+                label = { Text("Solo vs AI") },
+                colors = choiceColors,
+                modifier = Modifier.weight(1f)
+            )
+            FilterChip(
+                selected = passAndPlay,
+                onClick = { passAndPlay = true },
+                label = { Text("Pass & Play") },
+                colors = choiceColors,
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Text(
+            if (passAndPlay) "$seats people · take turns on this phone · offline"
+            else "You and ${seats - 1} ${if (seats == 2) "AI opponent" else "AI opponents"} · offline",
+            style = MaterialTheme.typography.bodySmall, color = Muted
+        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -128,12 +158,13 @@ internal fun CrossroadsHomeScreen(
                     selected = count == seats,
                     onClick = { seats = count },
                     label = { Text("$count players", textAlign = TextAlign.Center) },
+                   colors = choiceColors,
                     modifier = Modifier.weight(1f)
                 )
             }
         }
         Button(
-            onClick = { onStart(seats) },
+            onClick = { onStart(seats, passAndPlay) },
             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
             contentPadding = PaddingValues(vertical = 12.dp)
         ) {
@@ -158,7 +189,7 @@ internal fun CrossroadsHomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                     Column {
                         Text("$wins", fontWeight = FontWeight.Bold, fontSize = 22.sp, color = Ink)
-                        Text(if (wins == 1) "Win" else "Wins",
+                        Text(if (wins == 1) "Solo win" else "Solo wins",
                             style = MaterialTheme.typography.labelMedium, color = Muted)
                     }
                     Column {
@@ -169,7 +200,7 @@ internal fun CrossroadsHomeScreen(
                 }
             }
         }
-        Text("QA playtest · Solo vs AI · Woodland Crossing",
+        Text("QA playtest · Offline Solo / Pass & Play · Woodland Crossing",
             style = MaterialTheme.typography.labelSmall, color = Muted)
     }
     if (showGuide) {

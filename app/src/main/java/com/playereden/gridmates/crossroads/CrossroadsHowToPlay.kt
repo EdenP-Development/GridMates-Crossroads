@@ -98,7 +98,7 @@ internal fun CrossroadsHowToPlayDialog(onDismiss: () -> Unit) {
                         )
                         GuideStep(
                             "5", "Use the risk clues",
-                            "High, medium, and low risk describe each trail's character, not guaranteed rewards or fixed odds. Your AI rivals choose their own routes."
+                            "High, medium, and low risk describe each trail, not guaranteed outcomes. In Solo, AI chooses its own paths; in Pass & Play, each person decides."
                         )
                         HorizontalDivider(color = HelpBark.copy(alpha = 0.22f))
                         Text("Explore the board",
@@ -110,7 +110,7 @@ internal fun CrossroadsHowToPlayDialog(onDismiss: () -> Unit) {
                             color = HelpBark
                         )
                         Text(
-                            "Current test mode: offline solo play against 1–3 AI opponents.",
+                            "Offline choices: Solo against 1–3 AI opponents, or Pass & Play for 2–4 people taking turns on one phone. Same-Wi-Fi play is not available yet.",
                             style = MaterialTheme.typography.bodySmall,
                             color = HelpBark
                         )

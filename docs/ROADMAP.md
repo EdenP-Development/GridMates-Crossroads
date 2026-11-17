@@ -1,29 +1,36 @@
-# Development Roadmap
-Milestone-based, not date-promised. No frequent tiny APK drops in place of useful progress.
+# Crossroads — Lean Classic Game Roadmap
 
-| Stage | Goal | Deliverable | Proof before advancing |
-|---|---|---|---|
-| R0 Foundation | Resolve initial design baseline | Bible, research, sample data and validator | Documents consistent; fixture QA passes |
-| R1 Gameplay experiment | Prove choices are fun | Pure rules simulator, dice + fork + event + 2–4 bots | Complete race simulations; fairness/route metrics |
-| R2 Android solo | Play game on an actual phone | Native board, turn UI, AI, results, independent saves | Device playtest and lifecycle regression |
-| R3 Same-Wi-Fi | Nearby 2–4 seats | Host/join, authoritative state, reconnect design | Physical two-to-four-phone tests |
-| R4 Visual polish | Look/feel like GridMates | Clean theme, shared animal token art, profile unlocks | Small screen/accessibility + asset provenance check |
-| R5 Content/modes | Vary match duration and mischief | Quick/Classic/Long, additional handcrafted routes/areas | Real match lengths and balance evaluation |
-| R6 Release | Public V1 readiness | Signed builds, IP and policy review, published release notes | **Owner approval** |
+**November 17, 2026.** Player and developer simplicity are now first-class requirements. See [GridMates Classic Games Charter](GRIDMATES_CLASSIC_GAMES_CHARTER.md).
 
-## Suggested backlog
-1. ENGINE-01: deterministic rules state and invalid-action rejection.
-2. BOARD-01: rendered small fixed test course; legible branch selection.
-3. AI-01: simple, fair heuristic rival; no dice advantage.
-4. EVENTS-01: area-specific event pools and event-chain prevention.
-5. TEST-01: automated 1000-match simulation; no unreachable finish.
-6. ANDROID-01: choose stable Android/Compose patterns, unique app ID and storage.
-7. ANDROID-02: solo APK with one full match and results.
-8. LAN-01: host-authoritative 2–4 player session and real devices.
-9. ASSETS-01: inventory and review approved source art; flat token variants.
-10. UX-01: portrait/landscape accessibility and match length defaults.
-11. CONTENT-01: tune three length modes; only after core game is fun.
-12. RELEASE-01: release audit and owner approval.
-13. ANDROID-APK-01: stable QA signing, monotonic APK codes and install-over-save tests **before** first shared owner APK ([issue #5](https://github.com/PlayerEden/GridMates-Crossroads/issues/5)).
+## Actual current foundation
 
-**Current:** Android and JVM rules prototype source exists; do not imply passing APK/device tests, real install-over safety, or LAN implementation without the relevant workflow and phone evidence.
+- **Verified automated QA baseline:** signed [QA1121 Android run](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44163403210) and deterministic save-replay tests passed. Real owner-phone force-stop recovery and install-over are not yet proven.
+- **Implemented:** one Woven Trail woodland board, 2–4 player seats (one solo human plus AI), single die, crossroads, encounters, mischievous pranks/shields, camera gestures, results, home, How to Play and local match checkpoint.
+- **In this candidate:** optional **2–4 player Pass & Play on one phone** (all seats human). Source + tests must receive exact new Android CI receipt before calling it installable.
+- **Not implemented:** real same-Wi-Fi host/join, reconnect, full remote multiplayer, additional boards/match lengths, production app store release.
+
+## Small, verifiable stages
+
+| Priority | Stage | What we actually deliver | Gate |
+| --- | --- | --- | --- |
+| 1 | R2 finish solo and saved games | Current board/AI, complete matches, exact-save recovery on phone | QA install-over; force-stop/reopen mid-fork; statistics once; accessibility |
+| 2 | CLASSIC-17 local Pass & Play | Solo vs AI **or** 2–4 humans passing one phone, same unchanged rules | 2/3/4 human full-game tests, Android build, real device handoff and rematch |
+| 3 | R3 optional Nearby Play | Two phones on one Wi-Fi: Host, Join, play, reconnect | Host-authoritative rules and *real two-phone* match; no server account |
+| 4 | R4 presentation polish | Approved simple animal token art, gentle audio and legible game UI | Performance, art provenance, readability, phone screenshots |
+| 5 | R5 replayability content | Only meaningful new events or one more authored course/length | Measured 2–4 seat pace, route fairness and willingness to replay |
+| 6 | R6 release | Production signing, store/IP audit, accessibility, testing | Owner approval before merge/release |
+
+## What we explicitly do NOT build by default
+
+- Premium currency, XP grinding, battle passes, daily quests, loot boxes, paid advantages, battle royale modes, player economy, property management, server-required solo play, forced notifications, or complicated account/friend systems.
+- Three layers of profile/collection menus just to start a match.
+- Generic networking frameworks before a *simple working Host/Join* actually needs them.
+- Endless new features when one excellent, finished classic game is enough.
+
+## Constraints
+
+- No date promises or tiny APKs for every text change.
+- A rules or UI change must pass existing automated workflows **and** be verified on an actual device before being labeled phone-accepted.
+- Source stays on **draft PRs** until owner authorizes merge to main.
+- Sibling Sudoku and Word Search repos remain independent. Share approved art/design principles deliberately, not their entitlement ledgers or local saves.
+- Past unapproved rules hypotheses in the Game Bible/Open Questions stay open; this roadmap does not silently lock them.

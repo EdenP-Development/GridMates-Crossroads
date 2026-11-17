@@ -1,4 +1,12 @@
 # Decision log
+## APPROVED DIRECTION — GridMates classic simplicity (November 17, 2026)
+- Owner wants GridMates to resemble approachable newspaper, puzzle-book and familiar board games (Sudoku, Word Search, Minesweeper, easy tabletop), **not** an advanced board-game platform.
+- Equal priority: **easy for our tiny development team to build, test, finish and maintain**. One good gameplay loop and reusable visuals/QA are more valuable than complicated accounts, economies and feature trees.
+- Default to offline-first, short setup and self-contained apps. Optional local togetherness should be as low-friction as possible. No mandatory backend/account.
+- **Pass & Play** for 2–4 humans on a single device is an approved-practical development direction, complementary to the longer-term same-Wi-Fi plan. It is not actual LAN implementation.
+- More boards, characters, optional sound and lightweight achievements remain *opportunities*, not obligations. Extra unlock trees, currency and daily chore systems are not approved by this direction.
+- See [Classic Games Charter](GRIDMATES_CLASSIC_GAMES_CHARTER.md) and [lean roadmap](ROADMAP.md).
+
 **Status markers:** APPROVED = explicitly agreed in brainstorming. PROPOSED = work hypothesis. OPEN = playtest pending. Do not silently promote ideas to approvals.
 
 ## APPROVED — November 16, 2026

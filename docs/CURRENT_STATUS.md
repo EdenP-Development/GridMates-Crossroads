@@ -1,3 +1,43 @@
+# TURN-21 — Pause AI and dice when Crossroads loses Android focus (November 17, 2026)
+
+**Source + JVM gate test committed; exact-head Android CI and real-phone acceptance pending.** TURN-20 paused AI behind in-game reading/inspection screens, but did not pause it when Android backgrounded the Activity. TURN-21 observes Activity `ON_RESUME`/`ON_PAUSE`, cancels pending AI breath and decorative dice preview when not resumed, and checks actual Activity state before any authoritative roll or bot command. Returning to the app continues from the same turn with ordinary pacing, without a mandatory resume dialog or extra game systems. [TURN-21 device and regression checklist](TURN_21_BACKGROUND_PAUSE_QA.md). No engine, PRNG, saved data schema or signing changes.
+
+**Last verified QA baseline:** signed QA1154 [Android run 44175612318](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44175612318), [artifact 14369178664](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44175612318/artifacts/14369178664) with passing JVM rules and design-data checks. This older QA does **not** verify TURN-21 background behavior. Phone tests must distinguish simple foreground return from force-stop/process-death recovery.
+
+---
+
+# TURN-20 — AI pauses while reading (November 17, 2026)
+
+**Committed source and three explicit UI-turn gating unit tests; exact Android CI and phone acceptance pending.** The previous combined animation/bot continuation effect could advance AI while someone was inspecting board overview, reading How to Play or reviewing the Journey Journal. Now movement completion and AI action are distinct effects; the latter pauses when any existing reading/menu/leave/results surface opens and resumes after its normal breath. Human turns remain manual in Solo and Pass & Play. No game rules, RNG, local save schema, board art or network changes. [TURN-20 regression and phone QA](TURN_20_AI_READING_PAUSE_QA.md).
+
+**Verified baseline before these changes:** TURN-19 signed **QA1146**, [Android CI run 44171258124](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44171258124), [artifact 14368585938](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44171258124/artifacts/14368585938), with passing rules and design-data workflows. Real owner-phone AI overlay pause, full Pass & Play and force-stop recovery remain unverified.
+
+---
+
+# TURN-19 — Simple shared-phone handoff and frozen results (Nov 17, 2026)
+
+**Source and new Android-side regression tests committed; exact-head CI and phone testing pending.** Pass & Play now shows a small “Pass the phone to Player N” cue only when the incoming person is ready to roll; no blocking handoff screen. Finished matches now atomically retain the completion timestamp alongside their checkpoint and record, so reopening cannot inflate elapsed time. Tests cover repeated completed Solo/Pass & Play restore, no double-counting, and a legacy QA checkpoint missing finish timestamp. [TURN-19 QA handoff](TURN_19_HANDOFF_TIMER_QA.md).
+
+**Exact prior Android pass:** UI-18 signed **QA1138** [run 44169477488](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44169477488), [artifact 14366228562](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44169477488/artifacts/14366228562), plus passing rules and design-data runs. Physical screenshots remain of QA1130 only; full 2–4 human Pass & Play and resumed finish time are not yet device-proven.
+
+---
+
+# UI-18 — Woodland popup consistency from owner QA1130 screenshots (Nov 17, 2026)
+
+**Source committed; new exact-head Android/owner-phone validation pending.** Owner phone screenshots show the new Solo/Pass & Play home setup, 2-human Pass & Play at Round 2 with a real 2-way route prompt, and a complete 3-player Solo result whose encounter details are now readable. They also show **lavender** selected chips and 3-way Old Forest `AlertDialog` against the otherwise warm cream/green game. UI-18 makes the Old Forest popup responsive and cream with pinned View board, themes other secondary dialogs to cream, colors selected home chips sage, and corrects Solo-only language in the shared help. [UI-18 screenshot audit and phone acceptance checklist](UI_18_PHONE_PRESENTATION_QA_HANDOFF.md).
+
+**Evidence:** QA1130 was verified on the owner's phone at least for startup, 2-human seat display, Solo results and screen rendering. Not yet established: finished Pass & Play matches, 3-way choices by Player 2+, new UI-18 device rendering, same-Wi-Fi, process-death recovery or long-term save compatibility. Keep current stacked draft; no main merge.
+
+---
+
+# CLASSIC-17 — GridMates as easy-to-play, easy-to-build classics (Nov 17, 2026)
+
+**Source + three unit regression tests committed; exact Android/owner-phone acceptance pending.** The new [GridMates Classic Games Charter](GRIDMATES_CLASSIC_GAMES_CHARTER.md) and [lean roadmap](ROADMAP.md) establish clear limits on feature complexity. Crossroads now offers **Solo vs AI** (unchanged default) and **2–4 person Pass & Play on one device** (all human seats). Human players 2–4 can roll, choose forks, resolve mischief, finish, rematch and resume; only Solo increases the personal wins count. No Wi-Fi/networking, account or economy was added. [CLASSIC-17 phone QA handoff](CLASSIC_17_PASS_AND_PLAY_QA_HANDOFF.md).
+
+**Last verified before this candidate:** SAVE-16 signed QA1121 [Android run 44163403210](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44163403210) and [artifact 14364641860](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44163403210/artifacts/14364641860) passed JVM, build, lint, signer and design-data checks. Actual device recovery, Pass & Play and install-over remain unverified pending owner testing. Keep changes stacked in DRAFT; nothing merged to `main`.
+
+---
+
 # SAVE-16 — Resumable local matches (November 17, 2026)
 
 **Source + deterministic replay tests committed; Android CI and real-device recovery acceptance pending.** In `feature/active-match-recovery-v1.4`, every completed authoritative roll/route/target/bot action is checkpointed locally as a versioned action log + original seed, with a full snapshot/fingerprint witness. Reopening the app reconstructs the engine by exact action replay, then verifies the recovered state; incompatible/corrupt saves are rejected with a visible warning instead of silently continuing. Finished wins/match counts and checkpoint are written atomically in one idempotent transaction. The display starts recovered pieces at their current nodes, without replaying historical movement; manual camera pose and transient animations are intentionally not persisted. [SAVE-16 phone QA handoff](SAVE_16_MATCH_RECOVERY_QA_HANDOFF.md).

@@ -120,4 +120,50 @@ class MatchCheckpointTest {
             fail("Accepted invalid JSON")
         } catch (_: Exception) { }
     }
+    @Test fun passAndPlayCheckpointPreservesEveryHumanSeatAndDecision() {
+        for (seats in 2..4) {
+            val game = GameSession(board, catalogue, seats = seats, seed = 111 + seats,
+                humanIndices = (0 until seats).toSet())
+            var actions = 0
+            while (game.currentIndex == 0 && game.phase != Phase.FINISHED && actions++ < 200) {
+                when (game.phase) {
+                    Phase.ROLL -> game.roll()
+                    Phase.ROUTE -> game.chooseRoute(game.availableRoutes().first().id)
+                    Phase.TARGET -> game.chooseTarget(game.availableTargets().first())
+                    Phase.FINISHED -> Unit
+                }
+            }
+            assertEquals(1, game.currentIndex)
+            val recovered = GameSession.restore(board, catalogue, checkpoint(game))
+            assertEquals(game.snapshot(), recovered.snapshot())
+            assertTrue(recovered.players.none { it.isBot })
+            assertEquals((1..seats).map { "Player $it" },
+                recovered.players.map { it.name })
+
+            // All players continue from exactly the same point and future RNG.
+            var moveCount = 0
+            while (game.phase != Phase.FINISHED && moveCount++ < 1200) {
+                val before = game.snapshot()
+                when (game.phase) {
+                    Phase.ROLL -> { game.roll(); recovered.roll() }
+                    Phase.ROUTE -> {
+                        val route = game.availableRoutes().first().id
+                        game.chooseRoute(route)
+                        recovered.chooseRoute(route)
+                    }
+                    Phase.TARGET -> {
+                        val target = game.availableTargets().first()
+                        game.chooseTarget(target)
+                        recovered.chooseTarget(target)
+                    }
+                    Phase.FINISHED -> Unit
+                }
+                assertTrue(game.revision > before.revision)
+                assertEquals("Local game diverged at $seats seats, action $moveCount",
+                    game.snapshot(), recovered.snapshot())
+            }
+            assertEquals(Phase.FINISHED, game.phase)
+        }
+    }
+
 }

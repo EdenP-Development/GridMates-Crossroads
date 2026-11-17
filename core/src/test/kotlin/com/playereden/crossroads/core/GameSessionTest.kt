@@ -210,5 +210,41 @@ class GameSessionTest {
         }
     }
 
+    @Test fun passAndPlayHasDistinctHumanSeatsAndFullTurnFlow() {
+        for (seats in 2..4) {
+            val game = GameSession(board, events, seats = seats, seed = 2026 + seats,
+                humanIndices = (0 until seats).toSet())
+            assertEquals((1..seats).map { "Player $it" }, game.players.map { it.name })
+            assertTrue(game.players.none { it.isBot })
+            val seenTurns = mutableSetOf<Int>()
+            var actions = 0
+            while (game.phase != Phase.FINISHED && actions++ < 1500) {
+                seenTurns += game.currentIndex
+                when (game.phase) {
+                    Phase.ROLL -> game.roll()
+                    Phase.ROUTE -> game.chooseRoute(game.availableRoutes().first().id)
+                    Phase.TARGET -> game.chooseTarget(game.availableTargets().first())
+                    Phase.FINISHED -> Unit
+                }
+            }
+            assertEquals("Pass & Play did not finish with $seats seats",
+                Phase.FINISHED, game.phase)
+            assertEquals((0 until seats).toSet(), seenTurns)
+            assertEquals(board.finish, game.players[game.winnerIndex!!].position)
+        }
+    }
+
+    @Test fun soloSeatRemainsYouWithBots() {
+        for (seats in 2..4) {
+            val game = GameSession(board, events, seats = seats, seed = 40 + seats,
+                humanIndices = setOf(0))
+            assertEquals("You", game.players.first().name)
+            assertFalse(game.players.first().isBot)
+            assertTrue(game.players.drop(1).all { it.isBot })
+            assertEquals(listOf("You") + (1 until seats).map { "AI $it" },
+                game.players.map { it.name })
+        }
+    }
+
 }
 
