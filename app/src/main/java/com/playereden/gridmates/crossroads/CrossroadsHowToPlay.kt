@@ -119,7 +119,7 @@ internal fun CrossroadsHowToPlayDialog(onDismiss: () -> Unit) {
                         onClick = onDismiss,
                         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                     ) {
-                        Text("Back to game")
+                        Text("Got it")
                     }
                 }
             }
