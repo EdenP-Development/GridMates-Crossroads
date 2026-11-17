@@ -1,3 +1,19 @@
+# GUIDE-14 — Optional How to Play (November 17, 2026)
+
+**Source committed; exact CI and new handset acceptance pending.** The rules guide now appears as an optional secondary action on the home screen and inside Match Options, without mandatory onboarding or extra persistent match UI. The woodland-colored scrollable guide explains Start/Finish, real dice, crossroads with remaining steps, helpful/hazard/mischief encounters, shields, risk clues, AI, map gestures and Cozy/Brisk pacing—grounded in the current code. [GUIDE-14 phone QA handoff](GUIDE_14_HOW_TO_PLAY_QA_HANDOFF.md). It is included in Draft PR #18 to limit branch churn.
+
+**Verified source baseline before GUIDE-14:** RESULT-13 signed **QA1093** [Android run 44146471855](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44146471855), [artifact 14356548059](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44146471855/artifacts/14356548059). Automated Android/Gradle and design-data checks passed on that older head; physical QA1093 UI and install-over checks are unconfirmed. No engine/core, saved-profile, sibling repo or `main` merge changes in GUIDE-14.
+
+---
+
+# RESULT-13 — Compact match results (Nov 17, 2026)
+
+**Source committed; new Android and owner-phone verification pending.** The owner QA1082 results screenshot showed an oversized lavender panel and "Last recorded encounter" title separated from its scroll-hidden details. The new `feature/results-polish-v1.2` draft replaces only that results dialog with a cream-colored responsive surface, a compact summary, a complete earlier encounter card, and three fixed footer actions. It still uses exactly the same winner, rounds, elapsed time, player states and event records. [RESULT-13 QA handoff](RESULT_13_COMPACT_RESULTS_QA_HANDOFF.md).
+
+**Verified baseline before these changes:** DICE-12 signed QA1090 [Android CI run 44144297702](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44144297702), [artifact 14355119042](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44144297702/artifacts/14355119042) plus passing rules tests and design QA. New candidate test results must be separately checked; neither old screenshots nor CI constitute RESULT-13 physical phone acceptance. No engine, profile, signing, LAN or main merge.
+
+---
+
 # DICE-12 — Owner QA1082 phone feedback: roll too fast (Nov 17, 2026)
 
 **Source + focused unit tests committed; new Android QA and phone acceptance pending.** The owner supplied QA1082 physical-phone screenshots showing home, camera/board views, readable two-/three-way route choices, AI turns and results. Their explicit feedback: **"The dice 'rolls' really fast."** The old Cozy 450ms / Brisk 100ms flash is replaced by an eased **Cozy 1375ms / Brisk 680ms** preview with light visual tilt. The actual roll remains drawn once through the unchanged game engine, no new RNG or rule effects. [DICE-12 QA handoff](DICE_12_ROLL_PACING_QA_HANDOFF.md).

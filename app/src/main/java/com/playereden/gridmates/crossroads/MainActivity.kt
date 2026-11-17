@@ -48,6 +48,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.playereden.crossroads.core.*
 import kotlinx.coroutines.delay
 
@@ -91,6 +93,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     val matchStartedAt = remember(game) { android.os.SystemClock.elapsedRealtime() }
     var showJournal by remember(game) { mutableStateOf(false) }
     var showMatchOptions by remember(game) { mutableStateOf(false) }
+    var showGuide by remember(game) { mutableStateOf(false) }
     var showResults by remember(game) { mutableStateOf(false) }
     var resultsPresented by remember(game) { mutableStateOf(false) }
     var finishedElapsedSeconds by remember(game) { mutableLongStateOf(0L) }
@@ -279,6 +282,10 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             onDismissRequest = { showMatchOptions = false }
                         ) {
                             DropdownMenuItem(
+                                text = { Text("How to play") },
+                                onClick = { showMatchOptions = false; showGuide = true }
+                            )
+                            DropdownMenuItem(
                                 text = { Text("Board overview") },
                                 onClick = { showMatchOptions = false; inspectBoard = true }
                             )
@@ -289,8 +296,15 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             )
                             HorizontalDivider()
                             DropdownMenuItem(
-                                text = { Text("Leave match", color = Bark) },
-                                onClick = { showMatchOptions = false; confirmExit = true }
+                                text = {
+                                    Text(if (state.phase == Phase.FINISHED) "Main menu"
+                                        else "Leave match", color = Bark)
+                                },
+                                onClick = {
+                                    showMatchOptions = false
+                                    if (state.phase == Phase.FINISHED) session = null
+                                    else confirmExit = true
+                                }
                             )
                         }
                     }
@@ -482,7 +496,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         // under the fixed action pane on smaller handsets.
         if (state.phase == Phase.ROUTE && state.playerIndex == 0 &&
             game.availableRoutes().size > 2 && turnReady &&
-            !routeDialogDismissed && !inspectBoard && !confirmExit) {
+            !routeDialogDismissed && !inspectBoard && !confirmExit && !showGuide) {
             val junction = board.forkAt(state.players[0].position)
             AlertDialog(
                 onDismissRequest = { routeDialogDismissed = true },
@@ -518,6 +532,9 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                     }
                 }
             )
+        }
+        if (showGuide) {
+            CrossroadsHowToPlayDialog(onDismiss = { showGuide = false })
         }
         if (showJournal) {
             AlertDialog(
@@ -561,31 +578,66 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             )
         }
         if (showResults && state.phase == Phase.FINISHED && turnReady) {
-            AlertDialog(
+            // Standard AlertDialog gave the small-screen results an oversized
+            // lavender shell and pushed the encounter details below the fold.
+            // This tabletop-colored dialog keeps actions visible at all times.
+            Dialog(
                 onDismissRequest = { showResults = false },
-                title = { Text("Journey complete", color = Forest) },
-                text = {
-                    CrossroadsResultsContent(
-                        state = state,
-                        elapsedSeconds = finishedElapsedSeconds
-                    )
-                },
-                confirmButton = {
-                    Button(onClick = { start(state.players.size) }) {
-                        Text("Rematch")
-                    }
-                },
-                dismissButton = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        TextButton(onClick = { showResults = false }) {
-                            Text("View board")
-                        }
-                        TextButton(onClick = { session = null }) {
-                            Text("Main menu")
+                properties = DialogProperties(usePlatformDefaultWidth = false)
+            ) {
+                BoxWithConstraints(
+                    modifier = Modifier.fillMaxSize()
+                        .windowInsetsPadding(WindowInsets.safeDrawing),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(0.91f)
+                            .heightIn(max = (maxHeight - 24.dp).coerceAtLeast(1.dp)),
+                        shape = MaterialTheme.shapes.extraLarge,
+                        color = Cream,
+                        shadowElevation = 10.dp
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 17.dp, vertical = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text("Journey complete",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold, color = Forest)
+                            CrossroadsResultsContent(
+                                state = state,
+                                elapsedSeconds = finishedElapsedSeconds,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                            Button(
+                                onClick = { start(state.players.size) },
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                            ) {
+                                Text("Rematch")
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                OutlinedButton(
+                                    onClick = { showResults = false },
+                                    modifier = Modifier.weight(1f),
+                                    contentPadding = PaddingValues(horizontal = 6.dp)
+                                ) {
+                                    Text("View board")
+                                }
+                                TextButton(
+                                    onClick = { session = null },
+                                    modifier = Modifier.weight(1f),
+                                    contentPadding = PaddingValues(horizontal = 6.dp)
+                                ) {
+                                    Text("Main menu")
+                                }
+                            }
                         }
                     }
                 }
-            )
+            }
         }
         if (confirmExit) {
             AlertDialog(

@@ -85,6 +85,7 @@ internal fun CrossroadsHomeScreen(
 ) {
     // The first run is a single tap: 1 human + 1 bot. No room codes or setup screens.
     var seats by remember { mutableIntStateOf(2) }
+    var showGuide by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxSize().background(Paper)
@@ -128,6 +129,12 @@ internal fun CrossroadsHomeScreen(
         ) {
             Text("Start journey", style = MaterialTheme.typography.titleMedium)
         }
+        TextButton(
+            onClick = { showGuide = true },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text("How to play")
+        }
         Card(
             colors = CardDefaults.cardColors(containerColor = Color(0xFFEAE1CA)),
             modifier = Modifier.fillMaxWidth()
@@ -154,5 +161,8 @@ internal fun CrossroadsHomeScreen(
         }
         Text("QA playtest · Solo vs AI · Woodland Crossing",
             style = MaterialTheme.typography.labelSmall, color = Muted)
+    }
+    if (showGuide) {
+        CrossroadsHowToPlayDialog(onDismiss = { showGuide = false })
     }
 }

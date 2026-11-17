@@ -22,15 +22,36 @@ private val SeatColors = listOf(
     Color(0xFF729B60), Color(0xFFB48A36)
 )
 
+@Composable
+private fun ResultStat(label: String, value: String, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        color = Parchment,
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Column(Modifier.padding(horizontal = 10.dp, vertical = 9.dp),
+            verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Text(value, color = Evergreen, fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleMedium)
+            Text(label, color = Earth, style = MaterialTheme.typography.labelSmall)
+        }
+    }
+}
+
 /**
- * A finished match's actual facts. We only rank the first finisher;
- * other seats were still on the trail when the race ended.
- * No fabricated placement, reward, currency, or future result is displayed.
+ * Compact, scrollable match receipt. The outer dialog owns its header and
+ * permanently visible buttons, so the current phone can display every key
+ * outcome without the "Last recorded encounter" details disappearing behind
+ * a fixed footer. Short or large-font devices can scroll the full receipt.
+ *
+ * Never assign second/third/fourth positions: only the winner completed the
+ * route when the engine ended the race.
  */
 @Composable
 internal fun CrossroadsResultsContent(
     state: Snapshot,
-    elapsedSeconds: Long
+    elapsedSeconds: Long,
+    modifier: Modifier = Modifier
 ) {
     val winnerIndex = state.winnerIndex
     val winnerName = winnerIndex?.let { state.players.getOrNull(it)?.name } ?: "A player"
@@ -38,66 +59,79 @@ internal fun CrossroadsResultsContent(
     val lastEncounter = state.encounters.lastOrNull()
 
     Column(
-        modifier = Modifier.fillMaxWidth().heightIn(max = 430.dp)
+        modifier = modifier.fillMaxWidth()
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(13.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Surface(
             color = if (winnerIndex == 0) Color(0xFFE4EAD5) else Color(0xFFF0E5CF),
             shape = MaterialTheme.shapes.large,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Row(
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("✦", fontSize = 27.sp, color = Evergreen)
-                Text(
-                    if (winnerIndex == 0) "You reached the finish!" else "$winnerName wins!",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Evergreen
-                )
-                Text(
-                    "First to cross Woodland Crossing",
-                    color = Earth, style = MaterialTheme.typography.bodyMedium
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        if (winnerIndex == 0) "You reached the finish!" else "$winnerName wins!",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Evergreen
+                    )
+                    Text("First across Woodland Crossing",
+                        style = MaterialTheme.typography.bodySmall, color = Earth)
+                }
             }
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            @Composable fun Stat(label: String, value: String, modifier: Modifier = Modifier) {
-                Surface(
-                    modifier = modifier,
-                    color = Parchment,
-                    shape = MaterialTheme.shapes.medium
+            ResultStat("Rounds", "$roundCount", Modifier.weight(1f))
+            ResultStat("Time", "${elapsedSeconds / 60}m ${elapsedSeconds % 60}s",
+                Modifier.weight(1f))
+            ResultStat("Players", "${state.players.size}", Modifier.weight(1f))
+        }
+
+        // Show the *complete* last outcome before secondary traveler details,
+        // rather than a heading with its explanation hidden below the fold.
+        if (lastEncounter != null) {
+            Surface(
+                color = Color(0xFFECE7D9),
+                shape = MaterialTheme.shapes.medium,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Column(Modifier.padding(horizontal = 9.dp, vertical = 11.dp)) {
-                        Text(value, color = Evergreen, fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleMedium)
-                        Text(label, color = Earth,
-                            style = MaterialTheme.typography.labelSmall)
-                    }
+                    Text("Last encounter", style = MaterialTheme.typography.labelMedium,
+                        color = Evergreen, fontWeight = FontWeight.Bold)
+                    Text("${lastEncounter.actor} · ${lastEncounter.title}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold, color = Evergreen)
+                    Text(lastEncounter.outcome,
+                        style = MaterialTheme.typography.bodySmall, color = Earth)
                 }
             }
-            Stat("Rounds", "$roundCount", Modifier.weight(1f))
-            Stat("Elapsed", "${elapsedSeconds / 60}m ${elapsedSeconds % 60}s", Modifier.weight(1f))
-            Stat("Players", "${state.players.size}", Modifier.weight(1f))
         }
+
         Text("Travelers", style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold, color = Evergreen)
         state.players.forEachIndexed { index, player ->
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
+                    .padding(vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(9.dp)
             ) {
                 Box(
                     Modifier.size(13.dp)
-                        .background(SeatColors[index], androidx.compose.foundation.shape.CircleShape)
+                        .background(SeatColors[index % SeatColors.size],
+                            androidx.compose.foundation.shape.CircleShape)
                 )
                 Text(player.name, modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.bodyMedium)
@@ -110,19 +144,7 @@ internal fun CrossroadsResultsContent(
                 )
             }
         }
-        if (lastEncounter != null) {
-            HorizontalDivider(color = Earth.copy(alpha = 0.22f))
-            Text("Last recorded encounter", style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold, color = Evergreen)
-            Text("${lastEncounter.actor} · ${lastEncounter.title}",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold)
-            Text(lastEncounter.outcome, style = MaterialTheme.typography.bodySmall,
-                color = Earth)
-        }
-        Text(
-            "Elapsed time includes pauses and time spent viewing the board.",
-            style = MaterialTheme.typography.labelSmall, color = Earth
-        )
+        Text("Match time includes pauses and map inspection.",
+            style = MaterialTheme.typography.labelSmall, color = Earth)
     }
 }
