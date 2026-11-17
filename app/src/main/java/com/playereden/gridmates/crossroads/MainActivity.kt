@@ -91,6 +91,9 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     val matchStartedAt = remember(game) { android.os.SystemClock.elapsedRealtime() }
     var showJournal by remember(game) { mutableStateOf(false) }
     var showMatchOptions by remember(game) { mutableStateOf(false) }
+    var showResults by remember(game) { mutableStateOf(false) }
+    var resultsPresented by remember(game) { mutableStateOf(false) }
+    var finishedElapsedSeconds by remember(game) { mutableLongStateOf(0L) }
     var confirmExit by remember(game) { mutableStateOf(false) }
     var inspectBoard by remember(game) { mutableStateOf(false) }
     var showBoardGestureHint by remember { mutableStateOf(!prefs.getBoolean("board_gesture_hint_seen_v1", false)) }
@@ -102,6 +105,13 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     var routeDialogDismissed by remember(game) { mutableStateOf(false) }
     LaunchedEffect(game, state?.revision) { routeDialogDismissed = false }
     var rollingFace by remember(game) { mutableIntStateOf(1) }
+    val rollingTilt by animateFloatAsState(
+        targetValue = if (rollingDie) {
+            when (rollingFace % 4) { 0 -> -12f; 1 -> 9f; 2 -> 13f; else -> -8f }
+        } else 0f,
+        animationSpec = tween(durationMillis = 90),
+        label = "dice-wobble"
+    )
     var recentReveal by remember(game) { mutableStateOf<EncounterNote?>(null) }
     val latestNote = state?.encounters?.lastOrNull()
     LaunchedEffect(game, latestNote) {
@@ -115,9 +125,15 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         if (game != null && rollingDie) {
             // Visual dice cycling is presentation only: the rules engine draws the
             // real die exactly once after the animation; no new RNG affects matches.
-            repeat(speed.dieFrames) { step ->
-                rollingFace = (step * 5) % 6 + 1
-                delay(speed.dieFrameMillis)
+            // Capture the pace for the full animation, even if the user
+            // switches Cozy/Brisk while a roll is in progress.
+            val rollSpeed = speed
+            val previewFaces = intArrayOf(2, 5, 1, 6, 3, 4)
+            repeat(rollSpeed.dieFrames) { step ->
+                // These deterministic preview pips are decorative only; the
+                // authoritative result is drawn once by GameSession.roll().
+                rollingFace = previewFaces[step % previewFaces.size]
+                delay(rollSpeed.dieFrameDelayMillis(step))
             }
             if (game.phase == Phase.ROLL && !game.players[game.currentIndex].isBot) {
                 val before = game.snapshot()
@@ -163,6 +179,16 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             prefs.edit().putInt("completed", matches).putInt("wins", wins).apply()
         }
     }
+    // Freeze elapsed time when final movement has settled: reopening the results
+    // must not make the match duration continue growing.
+    LaunchedEffect(game, state?.phase, turnReady) {
+        if (game != null && state?.phase == Phase.FINISHED && turnReady && !resultsPresented) {
+            finishedElapsedSeconds = ((android.os.SystemClock.elapsedRealtime() -
+                matchStartedAt) / 1000L).coerceAtLeast(0L)
+            resultsPresented = true
+            showResults = true
+        }
+    }
     fun start(seats: Int) {
         session = GameSession(board, catalogue, seats = seats, seed = java.util.Random().nextInt(), humanIndices = setOf(0))
         revision++
@@ -179,37 +205,11 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     }
 
     if (game == null || state == null) {
-        Column(
-            modifier = Modifier.fillMaxSize().background(Cream)
-                .windowInsetsPadding(WindowInsets.safeDrawing)
-                .verticalScroll(rememberScrollState())
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text("GRIDMATES", style = MaterialTheme.typography.labelLarge, color = Forest)
-            Text("Crossroads", fontSize = 31.sp, fontWeight = FontWeight.Bold, color = Forest)
-            Text("Every path is a choice.", fontSize = 19.sp)
-            Text("Follow winding woodland roads, choose your route, and see what the journey brings. First to the finish wins.")
-            HorizontalDivider()
-            Text("Play against AI", fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
-            Text("Choose the total number of players, including you.", style = MaterialTheme.typography.bodyMedium)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                for (seats in 2..4) {
-                    Button(onClick = { start(seats) }, modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 12.dp)) {
-                        Text("$seats players", textAlign = TextAlign.Center)
-                    }
-                }
-            }
-            Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEAE1CA)),
-                modifier = Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Text("Your local record", fontWeight = FontWeight.Bold)
-                    Text("$wins ${if (wins == 1) "win" else "wins"} • $matches completed ${if (matches == 1) "match" else "matches"}")
-                }
-            }
-            Text("QA playtest • Solo vs AI • One handcrafted board", style = MaterialTheme.typography.bodySmall, color = Bark)
-        }
+        CrossroadsHomeScreen(
+            wins = wins,
+            completed = matches,
+            onStart = { seats -> start(seats) }
+        )
     } else {
         Column(
             modifier = Modifier.fillMaxSize().background(Cream)
@@ -395,19 +395,13 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         Text("Crossing the finish line…", color = Forest,
                             style = MaterialTheme.typography.bodyMedium)
                     } else if (state.phase == Phase.FINISHED) {
-                        Text(if (state.winnerIndex == 0) "You won! 🏆" else "${state.players[state.winnerIndex!!].name} won!",
-                            fontWeight = FontWeight.Bold, fontSize = 19.sp, color = Forest)
-                        val elapsedSeconds = ((android.os.SystemClock.elapsedRealtime() -
-                            matchStartedAt) / 1000L).coerceAtLeast(0L)
-                        Text(
-                            "Match time: ${elapsedSeconds / 60}m ${elapsedSeconds % 60}s · ${(state.turn - 1) / state.players.size + 1} rounds",
-                            style = MaterialTheme.typography.bodySmall, color = Bark
-                        )
-                        Button(onClick = { start(state.players.size) }, modifier = Modifier.fillMaxWidth()) {
-                            Text("Rematch")
-                        }
-                        OutlinedButton(onClick = { session = null }, modifier = Modifier.fillMaxWidth()) {
-                            Text("Back to menu")
+                        val winner = state.winnerIndex?.let { state.players.getOrNull(it)?.name }
+                            ?: "A traveler"
+                        Text(if (state.winnerIndex == 0) "You reached the finish!"
+                            else "$winner reached the finish!",
+                            fontWeight = FontWeight.SemiBold, color = Forest)
+                        Button(onClick = { showResults = true }, modifier = Modifier.fillMaxWidth()) {
+                            Text("View match results")
                         }
                     } else if (state.playerIndex != 0) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
@@ -426,7 +420,11 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                                     ) {
                                         DieFace(if (rollingDie) rollingFace else 1,
-                                            modifier = Modifier.size(34.dp))
+                                            modifier = Modifier.size(38.dp).graphicsLayer {
+                                                rotationZ = rollingTilt
+                                                scaleX = if (rollingDie) 0.96f else 1f
+                                                scaleY = if (rollingDie) 1.04f else 1f
+                                            })
                                         Text(if (rollingDie) "Rolling…" else "Roll the die",
                                             fontWeight = FontWeight.SemiBold)
                                     }
@@ -559,6 +557,33 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                 },
                 confirmButton = {
                     TextButton(onClick = { inspectBoard = false }) { Text("Back to game") }
+                }
+            )
+        }
+        if (showResults && state.phase == Phase.FINISHED && turnReady) {
+            AlertDialog(
+                onDismissRequest = { showResults = false },
+                title = { Text("Journey complete", color = Forest) },
+                text = {
+                    CrossroadsResultsContent(
+                        state = state,
+                        elapsedSeconds = finishedElapsedSeconds
+                    )
+                },
+                confirmButton = {
+                    Button(onClick = { start(state.players.size) }) {
+                        Text("Rematch")
+                    }
+                },
+                dismissButton = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        TextButton(onClick = { showResults = false }) {
+                            Text("View board")
+                        }
+                        TextButton(onClick = { session = null }) {
+                            Text("Main menu")
+                        }
+                    }
                 }
             )
         }
