@@ -3,6 +3,7 @@ package com.playereden.gridmates.crossroads
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
@@ -208,6 +209,23 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             turnReady = false
         }
         revision++
+    }
+
+    // The OS Back action follows the same protection as Leave Match. Dialogs
+    // (including the 3-way junction) own Back while they are visible.
+    val threeWayDialogVisible = game != null && state?.phase == Phase.ROUTE &&
+        state.playerIndex == 0 && game.availableRoutes().size > 2 && turnReady &&
+        !routeDialogDismissed && !inspectBoard && !confirmExit && !showGuide
+    BackHandler(
+        enabled = game != null && state != null &&
+            !threeWayDialogVisible && !showGuide && !showJournal &&
+            !showResults && !inspectBoard && !confirmExit && !showMatchOptions
+    ) {
+        if (state?.phase == Phase.FINISHED) {
+            session = null
+        } else {
+            confirmExit = true
+        }
     }
 
     if (game == null || state == null) {
