@@ -1,3 +1,13 @@
+# DICE-12 — Owner QA1082 phone feedback: roll too fast (Nov 17, 2026)
+
+**Source + focused unit tests committed; new Android QA and phone acceptance pending.** The owner supplied QA1082 physical-phone screenshots showing home, camera/board views, readable two-/three-way route choices, AI turns and results. Their explicit feedback: **"The dice 'rolls' really fast."** The old Cozy 450ms / Brisk 100ms flash is replaced by an eased **Cozy 1375ms / Brisk 680ms** preview with light visual tilt. The actual roll remains drawn once through the unchanged game engine, no new RNG or rule effects. [DICE-12 QA handoff](DICE_12_ROLL_PACING_QA_HANDOFF.md).
+
+**Additional screenshot issue for later:** the results dialog shows "Last recorded encounter" but its actual details appear below the visible scroll region; needs separate results compactness evaluation. The phone screenshots do not prove pinch/pan edge cases or install-over data retention.
+
+**Latest independently completed Android baseline before this change:** HOME-11 signed **QA1082** [run 44140391030](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44140391030), [artifact 14354102455](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44140391030/artifacts/14354102455). Keep PR #17 draft; no main merge, release, or gameplay changes.
+
+---
+
 # HOME-11 — Matching home and finish experience (Nov 17, 2026)
 
 **New source candidate; Android/phone verification pending on this branch.** In `feature/home-results-v1.1`, the main menu now uses a single Start journey action with 2/3/4 participant chips (1 human and 1–3 bots), a lightweight original woodland path motif and existing local stats. A completed match triggers a results dialog **after** final movement, showing only real winner/rounds/seats/elapsed/last encounter facts; the result timer is frozen once. Rematch, View board and Main menu remain available. [HOME-11 QA handoff](HOME_11_RESULTS_UX_QA_HANDOFF.md).
