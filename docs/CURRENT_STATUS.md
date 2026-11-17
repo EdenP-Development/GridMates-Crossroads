@@ -1,3 +1,11 @@
+# UI-18 — Woodland popup consistency from owner QA1130 screenshots (Nov 17, 2026)
+
+**Source committed; new exact-head Android/owner-phone validation pending.** Owner phone screenshots show the new Solo/Pass & Play home setup, 2-human Pass & Play at Round 2 with a real 2-way route prompt, and a complete 3-player Solo result whose encounter details are now readable. They also show **lavender** selected chips and 3-way Old Forest `AlertDialog` against the otherwise warm cream/green game. UI-18 makes the Old Forest popup responsive and cream with pinned View board, themes other secondary dialogs to cream, colors selected home chips sage, and corrects Solo-only language in the shared help. [UI-18 screenshot audit and phone acceptance checklist](UI_18_PHONE_PRESENTATION_QA_HANDOFF.md).
+
+**Evidence:** QA1130 was verified on the owner's phone at least for startup, 2-human seat display, Solo results and screen rendering. Not yet established: finished Pass & Play matches, 3-way choices by Player 2+, new UI-18 device rendering, same-Wi-Fi, process-death recovery or long-term save compatibility. Keep current stacked draft; no main merge.
+
+---
+
 # CLASSIC-17 — GridMates as easy-to-play, easy-to-build classics (Nov 17, 2026)
 
 **Source + three unit regression tests committed; exact Android/owner-phone acceptance pending.** The new [GridMates Classic Games Charter](GRIDMATES_CLASSIC_GAMES_CHARTER.md) and [lean roadmap](ROADMAP.md) establish clear limits on feature complexity. Crossroads now offers **Solo vs AI** (unchanged default) and **2–4 person Pass & Play on one device** (all human seats). Human players 2–4 can roll, choose forks, resolve mischief, finish, rematch and resume; only Solo increases the personal wins count. No Wi-Fi/networking, account or economy was added. [CLASSIC-17 phone QA handoff](CLASSIC_17_PASS_AND_PLAY_QA_HANDOFF.md).
