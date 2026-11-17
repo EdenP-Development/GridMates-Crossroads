@@ -89,7 +89,7 @@ class MainActivity : ComponentActivity() {
 private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     val context = LocalContext.current
     // Crossroads runs inside its own ComponentActivity. Explicitly observe the
-    // Activity lifecycle so no AI move happens while Android has stopped it.
+    // Activity lifecycle so no AI move happens while the app is paused.
     val lifecycle = (context as ComponentActivity).lifecycle
     var appInForeground by remember(lifecycle) {
         mutableStateOf(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
@@ -207,8 +207,13 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                 rollingFace = previewFaces[step % previewFaces.size]
                 delay(rollSpeed.dieFrameDelayMillis(step))
             }
-            if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) &&
-                game.phase == Phase.ROLL && !game.players[game.currentIndex].isBot) {
+            // If Android paused us just as the last decorative face finished,
+            // keep rollingDie pending rather than silently losing the tap.
+            // The foreground-keyed effect will replay the visual sequence on resume.
+            if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                return@LaunchedEffect
+            }
+            if (game.phase == Phase.ROLL && !game.players[game.currentIndex].isBot) {
                 val before = game.snapshot()
                 game.roll() // Exactly one real engine roll; visual faces use no RNG.
                 persistGame(game)
