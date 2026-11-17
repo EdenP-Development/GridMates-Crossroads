@@ -5,6 +5,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateOffsetAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.Crossfade
@@ -13,6 +17,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -22,6 +27,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
@@ -30,6 +41,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.playereden.crossroads.core.*
@@ -39,6 +51,7 @@ private val Forest = Color(0xFF48684D)
 private val Cream = Color(0xFFF7F0DE)
 private val Bark = Color(0xFF80664B)
 private val PlayerColors = listOf(Color(0xFFC75C49), Color(0xFF3D729F), Color(0xFF729B60), Color(0xFFB48A36))
+private enum class BoardCameraMode { OVERVIEW, FOLLOW, MANUAL }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -562,8 +575,127 @@ private fun BoardCanvas(
         }
         motion[i].value
     }
+    // Camera is purely visual and match-scoped. Moving it cannot move a piece,
+    // change the route graph, or affect the authoritative game snapshot.
+    var cameraMode by remember(matchKey, board.id, animateTokens) {
+        mutableStateOf(if (animateTokens) BoardCameraMode.FOLLOW else BoardCameraMode.OVERVIEW)
+    }
+    var manualZoom by remember(matchKey, board.id, animateTokens) { mutableFloatStateOf(1f) }
+    var manualTranslation by remember(matchKey, board.id, animateTokens) {
+        mutableStateOf(Offset.Zero)
+    }
+    var canvasDimensions by remember(matchKey, board.id, animateTokens) {
+        mutableStateOf(IntSize.Zero)
+    }
+    val active = displayed[state.playerIndex]
+    val cameraTarget = if (state.phase == Phase.ROUTE) {
+        val node = board.node(state.players[state.playerIndex].position)
+        val fork = CameraGeometry.forkFocus(
+            node.x, node.y, node.next.map { board.node(it).x to board.node(it).y }
+        )
+        Offset(fork.first, fork.second)
+    } else active
+    val followedFocus by animateOffsetAsState(
+        targetValue = cameraTarget,
+        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        label = "follow-board-position"
+    )
+    val autoZoom by animateFloatAsState(
+        targetValue = when (cameraMode) {
+            BoardCameraMode.OVERVIEW -> 1f
+            BoardCameraMode.FOLLOW -> if (state.phase == Phase.ROUTE) 1.4f else 1.7f
+            BoardCameraMode.MANUAL -> manualZoom
+        },
+        animationSpec = tween(durationMillis = 330),
+        label = "board-camera-zoom"
+    )
+    val cameraZoom = if (cameraMode == BoardCameraMode.MANUAL) manualZoom else autoZoom
+    val viewportWidth = canvasDimensions.width.toFloat()
+    val viewportHeight = canvasDimensions.height.toFloat()
+    val boardPadding = 18f
+    val focusPx = Offset(
+        boardPadding + followedFocus.x * (viewportWidth - 2f * boardPadding).coerceAtLeast(0f),
+        boardPadding + followedFocus.y * (viewportHeight - 2f * boardPadding).coerceAtLeast(0f)
+    )
+    val desiredTranslation = when (cameraMode) {
+        BoardCameraMode.OVERVIEW -> Offset.Zero
+        BoardCameraMode.FOLLOW -> Offset(
+            CameraGeometry.centerTranslation(viewportWidth / 2f, focusPx.x, cameraZoom),
+            CameraGeometry.centerTranslation(viewportHeight / 2f, focusPx.y, cameraZoom)
+        )
+        BoardCameraMode.MANUAL -> manualTranslation
+    }
+    val actualTranslation = Offset(
+        CameraGeometry.boundTranslation(desiredTranslation.x, viewportWidth,
+            boardPadding, viewportWidth - boardPadding, cameraZoom),
+        CameraGeometry.boundTranslation(desiredTranslation.y, viewportHeight,
+            boardPadding, viewportHeight - boardPadding, cameraZoom)
+    )
+    // Keep the pointer handler stable while receiving the newest following pose.
+    val liveZoom by rememberUpdatedState(cameraZoom)
+    val liveTranslation by rememberUpdatedState(actualTranslation)
+
+    fun manualZoomBy(factor: Float) {
+        val currentZoom = if (cameraMode == BoardCameraMode.MANUAL) manualZoom else cameraZoom
+        val oldTranslation = if (cameraMode == BoardCameraMode.MANUAL)
+            manualTranslation else actualTranslation
+        val updatedZoom = CameraGeometry.zoom(currentZoom * factor)
+        manualZoom = updatedZoom
+        manualTranslation = Offset(
+            CameraGeometry.boundTranslation(
+                CameraGeometry.zoomAt(oldTranslation.x, viewportWidth / 2f,
+                    viewportWidth / 2f, currentZoom, updatedZoom, 0f),
+                viewportWidth, boardPadding, viewportWidth - boardPadding, updatedZoom
+            ),
+            CameraGeometry.boundTranslation(
+                CameraGeometry.zoomAt(oldTranslation.y, viewportHeight / 2f,
+                    viewportHeight / 2f, currentZoom, updatedZoom, 0f),
+                viewportHeight, boardPadding, viewportHeight - boardPadding, updatedZoom
+            )
+        )
+        cameraMode = BoardCameraMode.MANUAL
+    }
+
     Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEDE4D0))) {
-        Canvas(modifier = Modifier.fillMaxWidth().height(height).padding(8.dp)) {
+        Box(
+            modifier = Modifier.fillMaxWidth().height(height).clipToBounds()
+                .pointerInput(matchKey, animateTokens) {
+                    detectTransformGestures(panZoomLock = true) { centroid, pan, gestureZoom, _ ->
+                        val wasManual = cameraMode == BoardCameraMode.MANUAL
+                        val fromZoom = if (wasManual) manualZoom else liveZoom
+                        val fromTranslation = if (wasManual) manualTranslation else liveTranslation
+                        val nextZoom = CameraGeometry.zoom(fromZoom * gestureZoom)
+                        val nextTranslation = Offset(
+                            CameraGeometry.zoomAt(
+                                fromTranslation.x, centroid.x - (size.width - canvasDimensions.width) / 2f,
+                                canvasDimensions.width / 2f, fromZoom, nextZoom, pan.x
+                            ),
+                            CameraGeometry.zoomAt(
+                                fromTranslation.y, centroid.y - (size.height - canvasDimensions.height) / 2f,
+                                canvasDimensions.height / 2f, fromZoom, nextZoom, pan.y
+                            )
+                        )
+                        manualZoom = nextZoom
+                        manualTranslation = Offset(
+                            CameraGeometry.boundTranslation(nextTranslation.x, canvasDimensions.width.toFloat(),
+                                boardPadding, canvasDimensions.width.toFloat() - boardPadding, nextZoom),
+                            CameraGeometry.boundTranslation(nextTranslation.y, canvasDimensions.height.toFloat(),
+                                boardPadding, canvasDimensions.height.toFloat() - boardPadding, nextZoom)
+                        )
+                        cameraMode = BoardCameraMode.MANUAL
+                    }
+                }
+        ) {
+            Canvas(
+                modifier = Modifier.fillMaxSize().padding(8.dp)
+                    .onSizeChanged { canvasDimensions = it }
+                    .graphicsLayer {
+                        scaleX = cameraZoom
+                        scaleY = cameraZoom
+                        translationX = actualTranslation.x
+                        translationY = actualTranslation.y
+                    }
+            ) {
             val left = 18f
             val top = 18f
             val drawWidth = size.width - left * 2
@@ -712,6 +844,38 @@ private fun BoardCanvas(
                         textAlign = android.graphics.Paint.Align.CENTER
                     }
                     canvas.nativeCanvas.drawText("${i + 1}", marker.x, marker.y + 4f * tokenScale, paint)
+                }
+            }
+            }
+            // Zoom and recenter controls operate only on the board viewport.
+            // They never intercept the dice/choice/Leave match actions below.
+            Row(
+                modifier = Modifier.align(Alignment.BottomEnd)
+                    .padding(7.dp)
+                    .background(Cream.copy(alpha = 0.94f), MaterialTheme.shapes.medium),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(0.dp)
+            ) {
+                IconButton(
+                    onClick = { manualZoomBy(1f / 1.25f) },
+                    modifier = Modifier.size(38.dp)
+                        .semantics { contentDescription = "Zoom out board" }
+                ) { Text("−", fontSize = 22.sp, color = Forest) }
+                IconButton(
+                    onClick = { manualZoomBy(1.25f) },
+                    modifier = Modifier.size(38.dp)
+                        .semantics { contentDescription = "Zoom in board" }
+                ) { Text("+", fontSize = 22.sp, color = Forest) }
+                TextButton(
+                    onClick = {
+                        cameraMode = if (cameraMode == BoardCameraMode.FOLLOW)
+                            BoardCameraMode.OVERVIEW else BoardCameraMode.FOLLOW
+                        manualTranslation = Offset.Zero
+                    },
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                ) {
+                    Text(if (cameraMode == BoardCameraMode.FOLLOW) "Overview" else "Follow",
+                        style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
