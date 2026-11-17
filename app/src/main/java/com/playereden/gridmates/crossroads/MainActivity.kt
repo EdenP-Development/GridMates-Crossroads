@@ -63,6 +63,12 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     val state = remember(game, revision) { game?.snapshot() }
     var showJournal by remember(game) { mutableStateOf(false) }
     var confirmExit by remember(game) { mutableStateOf(false) }
+    val actionScroll = rememberScrollState()
+    // The lower control pane changes height between roll, route choice and results.
+    // Reset its position on each new action so the title/options don't open half-clipped.
+    LaunchedEffect(game, state?.turn, state?.phase, state?.playerIndex) {
+        actionScroll.scrollTo(0)
+    }
 
     LaunchedEffect(game, revision) {
         if (game != null && state != null && state.phase != Phase.FINISHED &&
@@ -115,7 +121,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                 modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                     Text("Your local record", fontWeight = FontWeight.Bold)
-                    Text("$wins wins • $matches completed matches")
+                    Text("$wins ${if (wins == 1) "win" else "wins"} • $matches completed ${if (matches == 1) "match" else "matches"}")
                 }
             }
             Text("QA playtest • Solo vs AI • One handcrafted board", style = MaterialTheme.typography.bodySmall, color = Bark)
@@ -172,8 +178,13 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         "mischief" -> "🎭"
                         else -> "🍀"
                     }
+                    val encounterTint = when (latest.kind) {
+                        "setback" -> Color(0xFFF0E0C8)
+                        "mischief" -> Color(0xFFE9DEED)
+                        else -> Color(0xFFE1E9D7)
+                    }
                     Card(modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFEAE1CA))) {
+                        colors = CardDefaults.cardColors(containerColor = encounterTint)) {
                         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                             Text("$symbol  LATEST ENCOUNTER", style = MaterialTheme.typography.labelSmall, color = Forest)
                             Text("${latest.actor} · ${latest.title}", fontWeight = FontWeight.SemiBold)
@@ -197,19 +208,35 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             Surface(color = Color(0xFFECE3CE), tonalElevation = 2.dp, shadowElevation = 5.dp,
                 modifier = Modifier.fillMaxWidth()) {
                 Column(
-                    modifier = Modifier.heightIn(max = 310.dp).verticalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalArrangement = Arrangement.spacedBy(7.dp)
                 ) {
                     val round = (state.turn - 1) / state.players.size + 1
-                    Text(if (state.phase == Phase.FINISHED) "Journey complete!"
-                         else "Round $round · ${state.players[state.playerIndex].name}'s turn",
-                         fontWeight = FontWeight.Bold, color = Forest, fontSize = 16.sp)
+                    val currentName = state.players[state.playerIndex].name
+                    Text(
+                        if (state.phase == Phase.FINISHED) "Journey complete!"
+                        else if (state.playerIndex == 0) "Round $round · Your turn"
+                        else "Round $round · $currentName's turn",
+                        fontWeight = FontWeight.Bold, color = Forest, fontSize = 16.sp
+                    )
                     Text(state.lastMessage, style = MaterialTheme.typography.bodyMedium)
                     if (state.die != null && state.phase != Phase.FINISHED) {
-                        Text("🎲 ${state.die}  ·  ${state.remainingSteps} steps remaining",
-                            style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            "🎲 ${state.die}  ·  ${state.remainingSteps} ${if (state.remainingSteps == 1) "step" else "steps"} remaining",
+                            style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold
+                        )
                     }
+                    if (state.phase == Phase.ROUTE && state.playerIndex == 0 &&
+                        game.availableRoutes().size > 2) {
+                        Text("Three paths available · scroll choices below",
+                            style = MaterialTheme.typography.labelSmall, color = Bark)
+                    }
+                    // Keep the turn title and die visible while long choice lists scroll.
+                    Column(
+                        modifier = Modifier.fillMaxWidth().heightIn(max = 230.dp)
+                            .verticalScroll(actionScroll),
+                        verticalArrangement = Arrangement.spacedBy(7.dp)
+                    ) {
                     if (state.phase == Phase.FINISHED) {
                         Text(if (state.winnerIndex == 0) "You won! 🏆" else "${state.players[state.winnerIndex!!].name} won!",
                             fontWeight = FontWeight.Bold, fontSize = 19.sp, color = Forest)
@@ -233,7 +260,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             Phase.ROUTE -> {
                                 val fork = board.forkAt(state.players[0].position)
                                 Text(fork?.title ?: "Choose your route", fontWeight = FontWeight.SemiBold, color = Forest)
-                                fork?.choices?.let { choices ->
+                                if (fork != null) {
                                     Text("Choose a path • routes have different risks and rewards",
                                         style = MaterialTheme.typography.bodySmall)
                                 }
@@ -266,6 +293,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         TextButton(onClick = { confirmExit = true }, modifier = Modifier.align(Alignment.End)) {
                             Text("Leave match", color = Bark)
                         }
+                    }
                     }
                 }
             }
