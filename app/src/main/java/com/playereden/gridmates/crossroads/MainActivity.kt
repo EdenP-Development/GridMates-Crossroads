@@ -576,12 +576,17 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
 
     // The OS Back action follows the same protection as Leave Match. Dialogs
     // (including the 3-way junction) own Back while they are visible.
+    val localIsCurrentSeat = state != null && (
+        lanRole == LanRole.OFFLINE ||
+            (lanRole == LanRole.HOST && state.playerIndex == 0 && lanConnected) ||
+            (lanRole == LanRole.GUEST && state.playerIndex == 1 && lanConnected)
+    )
     val threeWayDialogVisible = game != null && state?.phase == Phase.ROUTE &&
-        !state.players[state.playerIndex].isBot &&
+        localIsCurrentSeat && !state.players[state.playerIndex].isBot &&
         game.availableRoutes().size > 2 && turnReady &&
         !routeDialogDismissed && !inspectBoard && !confirmExit && !showGuide
     BackHandler(
-        enabled = game != null && state != null &&
+        enabled = lanScreen == LanScreen.NONE && game != null && state != null &&
             !threeWayDialogVisible && !showGuide && !showJournal &&
             !showResults && !inspectBoard && !confirmExit && !showMatchOptions
     ) {
@@ -592,11 +597,43 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         }
     }
 
-    if (game == null || state == null) {
+    BackHandler(enabled = lanScreen != LanScreen.NONE) { leaveGame() }
+    if (lanScreen != LanScreen.NONE) {
+        CrossroadsLanLobby(
+            screen = lanScreen,
+            rooms = lanRooms,
+            hostAddress = nearby.address(),
+            hostPort = lanHost?.port ?: 0,
+            inviteCode = lanHost?.code.orEmpty(),
+            note = lanMessage,
+            busy = lanBusy,
+            onHost = { requireCode -> startLanHost(requireCode) },
+            onJoin = { host, port, code -> joinLan(host, port, code) },
+            onRefresh = { nearby.discover { lanRooms = it } },
+            onExit = { leaveGame() },
+            onRejoin = {
+                if (lanLastHost.isNotBlank() && lanLastPort in 1..65535) {
+                    joinLan(lanLastHost, lanLastPort, lanLastCode, resume = true)
+                }
+            },
+            hasRejoin = lanGuest?.rejoinToken?.isNotBlank() == true &&
+                lanLastHost.isNotBlank()
+        )
+    } else if (game == null || state == null) {
         CrossroadsHomeScreen(
             wins = wins,
             completed = matches,
             onStart = { seats, localPlayers -> start(seats, localPlayers) },
+            onNearbyHost = {
+                lanMessage = null
+                lanRole = LanRole.HOST
+                lanScreen = LanScreen.HOST_SETUP
+            },
+            onNearbyJoin = {
+                lanMessage = null
+                lanRole = LanRole.GUEST
+                lanScreen = LanScreen.JOIN
+            },
             recoveryWarning = recoveryWarning
         )
     } else {
@@ -813,7 +850,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             )
                         }
                     }
-                    if (state.phase == Phase.ROUTE &&
+                    if (state.phase == Phase.ROUTE && localIsCurrentSeat &&
                         !state.players[state.playerIndex].isBot &&
                         game.availableRoutes().size > 2) {
                         Text("Three paths ahead · choose in the expanded route panel",
@@ -927,7 +964,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         }
         // A dedicated scrollable chooser avoids the third option being hidden
         // under the fixed action pane on smaller handsets.
-        if (state.phase == Phase.ROUTE &&
+        if (state.phase == Phase.ROUTE && localIsCurrentSeat &&
             !state.players[state.playerIndex].isBot &&
             game.availableRoutes().size > 2 && turnReady &&
             !routeDialogDismissed && !inspectBoard && !confirmExit && !showGuide) {
