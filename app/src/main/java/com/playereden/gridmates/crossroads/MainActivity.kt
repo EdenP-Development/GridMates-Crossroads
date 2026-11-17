@@ -93,6 +93,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     val matchStartedAt = remember(game) { android.os.SystemClock.elapsedRealtime() }
     var showJournal by remember(game) { mutableStateOf(false) }
     var showMatchOptions by remember(game) { mutableStateOf(false) }
+    var showGuide by remember(game) { mutableStateOf(false) }
     var showResults by remember(game) { mutableStateOf(false) }
     var resultsPresented by remember(game) { mutableStateOf(false) }
     var finishedElapsedSeconds by remember(game) { mutableLongStateOf(0L) }
@@ -280,6 +281,10 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             expanded = showMatchOptions,
                             onDismissRequest = { showMatchOptions = false }
                         ) {
+                            DropdownMenuItem(
+                                text = { Text("How to play") },
+                                onClick = { showMatchOptions = false; showGuide = true }
+                            )
                             DropdownMenuItem(
                                 text = { Text("Board overview") },
                                 onClick = { showMatchOptions = false; inspectBoard = true }
@@ -484,7 +489,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         // under the fixed action pane on smaller handsets.
         if (state.phase == Phase.ROUTE && state.playerIndex == 0 &&
             game.availableRoutes().size > 2 && turnReady &&
-            !routeDialogDismissed && !inspectBoard && !confirmExit) {
+            !routeDialogDismissed && !inspectBoard && !confirmExit && !showGuide) {
             val junction = board.forkAt(state.players[0].position)
             AlertDialog(
                 onDismissRequest = { routeDialogDismissed = true },
@@ -520,6 +525,9 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                     }
                 }
             )
+        }
+        if (showGuide) {
+            CrossroadsHowToPlayDialog(onDismiss = { showGuide = false })
         }
         if (showJournal) {
             AlertDialog(
