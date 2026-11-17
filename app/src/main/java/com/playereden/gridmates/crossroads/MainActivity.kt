@@ -596,40 +596,83 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             game.availableRoutes().size > 2 && turnReady &&
             !routeDialogDismissed && !inspectBoard && !confirmExit && !showGuide) {
             val junction = board.forkAt(state.players[state.playerIndex].position)
-            AlertDialog(
+            // Keep all three route options readable, without an Android system
+            // purple/lavender dialog. Only the choices scroll on short phones;
+            // the title and View board action stay accessible.
+            Dialog(
                 onDismissRequest = { routeDialogDismissed = true },
-                title = { Text(junction?.title ?: "Choose your path", color = Forest) },
-                text = {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().heightIn(max = 380.dp)
-                            .verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                properties = DialogProperties(usePlatformDefaultWidth = false)
+            ) {
+                BoxWithConstraints(
+                    modifier = Modifier.fillMaxSize()
+                        .windowInsetsPadding(WindowInsets.safeDrawing),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(0.91f)
+                            .heightIn(max = (maxHeight - 24.dp).coerceAtLeast(1.dp)),
+                        shape = MaterialTheme.shapes.extraLarge,
+                        color = Cream,
+                        shadowElevation = 10.dp
                     ) {
-                        Text("Three routes available · ${state.remainingSteps} " +
-                            "${if (state.remainingSteps == 1) "step" else "steps"} to move",
-                            style = MaterialTheme.typography.bodySmall, color = Bark)
-                        game.availableRoutes().forEach { route ->
-                            val choice = junction?.choices?.firstOrNull { it.to == route.id }
-                            OutlinedButton(
-                                onClick = { update { game.chooseRoute(route.id) } },
-                                modifier = Modifier.fillMaxWidth(),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp)
+                        Column(
+                            modifier = Modifier.padding(horizontal = 17.dp, vertical = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(
+                                junction?.title ?: "Choose your path",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Forest
+                            )
+                            Text(
+                                "Three paths · ${state.remainingSteps} " +
+                                    "${if (state.remainingSteps == 1) "step" else "steps"} left",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Bark
+                            )
+                            Column(
+                                modifier = Modifier.fillMaxWidth()
+                                    .weight(1f, fill = false)
+                                    .verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(9.dp)
                             ) {
-                                RouteChoiceSummary(
-                                    label = choice?.label ?: route.id,
-                                    description = choice?.description ?: "Follow this trail",
-                                    risk = choice?.risk
+                                game.availableRoutes().forEach { route ->
+                                    val choice = junction?.choices?.firstOrNull { it.to == route.id }
+                                    OutlinedButton(
+                                        onClick = { update { game.chooseRoute(route.id) } },
+                                        modifier = Modifier.fillMaxWidth().heightIn(min = 68.dp),
+                                        colors = ButtonDefaults.outlinedButtonColors(
+                                            contentColor = Forest
+                                        ),
+                                        border = androidx.compose.foundation.BorderStroke(
+                                            1.dp, Color(0xFFB5A88F)
+                                        ),
+                                        contentPadding = PaddingValues(
+                                            horizontal = 11.dp, vertical = 11.dp
+                                        )
+                                    ) {
+                                        RouteChoiceSummary(
+                                            label = choice?.label ?: route.id,
+                                            description = choice?.description ?: "Follow this trail",
+                                            risk = choice?.risk
+                                        )
+                                    }
+                                }
+                            }
+                            OutlinedButton(
+                                onClick = { routeDialogDismissed = true },
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    1.dp, Color(0xFFB5A88F)
                                 )
+                            ) {
+                                Text("View board")
                             }
                         }
                     }
-                },
-                confirmButton = {
-                    TextButton(onClick = { routeDialogDismissed = true }) {
-                        Text("View board")
-                    }
                 }
-            )
+            }
         }
         if (showGuide) {
             CrossroadsHowToPlayDialog(onDismiss = { showGuide = false })
@@ -637,6 +680,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         if (showJournal) {
             AlertDialog(
                 onDismissRequest = { showJournal = false },
+                containerColor = Cream,
                 title = { Text("Journey journal", color = Forest) },
                 text = {
                     Column(
@@ -659,6 +703,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         if (inspectBoard) {
             AlertDialog(
                 onDismissRequest = { inspectBoard = false },
+                containerColor = Cream,
                 title = { Text("Woodland Crossing · Route map", color = Forest) },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -740,6 +785,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         if (confirmExit) {
             AlertDialog(
                 onDismissRequest = { confirmExit = false },
+                containerColor = Cream,
                 title = { Text("Leave this match?") },
                 text = { Text("Leave and discard this journey? Your completed-match record will be kept.") },
                 confirmButton = {
