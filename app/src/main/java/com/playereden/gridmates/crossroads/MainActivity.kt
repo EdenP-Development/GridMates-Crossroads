@@ -35,6 +35,9 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
@@ -229,15 +232,27 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         style = MaterialTheme.typography.labelMedium)
                 }
             }
+            val displayedSeat = (if (!turnReady) cameraTrackIndex else state.playerIndex)
+                .coerceIn(state.players.indices)
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 state.players.forEachIndexed { i, player ->
+                    val isFocused = i == displayedSeat && state.phase != Phase.FINISHED
+                    val seatStatus = when {
+                        state.phase == Phase.FINISHED && state.winnerIndex == i -> "finished first"
+                        state.phase == Phase.FINISHED -> "still on the trail"
+                        isFocused && !turnReady -> "currently moving"
+                        isFocused -> "current player"
+                        else -> "waiting"
+                    }
                     Surface(
-                        modifier = Modifier.weight(1f),
-                        color = if (i == (if (!turnReady) cameraTrackIndex else state.playerIndex) &&
-                            state.phase != Phase.FINISHED)
+                        modifier = Modifier.weight(1f).semantics(mergeDescendants = true) {
+                            contentDescription = "Player ${i + 1}, ${player.name}, $seatStatus" +
+                                if (player.shield) ", shielded" else ""
+                        },
+                        color = if (isFocused)
                             Color(0xFFE6E9D6) else Color(0xFFF0E9D9),
                         shape = MaterialTheme.shapes.medium
                     ) {
@@ -246,8 +261,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             Box(Modifier.size(12.dp).background(PlayerColors[i], androidx.compose.foundation.shape.CircleShape))
                             Spacer(Modifier.width(5.dp))
                             Text(player.name, fontSize = 12.sp, fontWeight =
-                                if (i == (if (!turnReady) cameraTrackIndex else state.playerIndex))
-                                    FontWeight.Bold else FontWeight.Normal)
+                                if (isFocused) FontWeight.Bold else FontWeight.Normal)
                             if (player.shield) Text(" 🛡", fontSize = 11.sp)
                         }
                     }
@@ -273,7 +287,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                     Box {
                         IconButton(
                             onClick = { showMatchOptions = true },
-                            modifier = Modifier.size(40.dp).semantics {
+                            modifier = Modifier.size(48.dp).semantics {
                                 contentDescription = "Match options"
                             }
                         ) { Text("⋯", fontSize = 25.sp, color = Forest) }
@@ -359,7 +373,8 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         }
                         else if (state.playerIndex == 0) "Round $round · Your turn"
                         else "Round $round · $currentName's turn",
-                        fontWeight = FontWeight.Bold, color = Forest, fontSize = 16.sp
+                        fontWeight = FontWeight.Bold, color = Forest, fontSize = 16.sp,
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
                     )
                     val initialInstructions = state.turn == 1 &&
                         state.phase == Phase.ROLL && state.die == null &&
@@ -438,7 +453,8 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                                                 rotationZ = rollingTilt
                                                 scaleX = if (rollingDie) 0.96f else 1f
                                                 scaleY = if (rollingDie) 1.04f else 1f
-                                            })
+                                            },
+                                            announceFace = false)
                                         Text(if (rollingDie) "Rolling…" else "Roll the die",
                                             fontWeight = FontWeight.SemiBold)
                                     }
@@ -718,6 +734,9 @@ private fun BoardCanvas(
         mutableStateOf(IntSize.Zero)
     }
     val cameraSubject = focusPlayerIndex.coerceIn(displayed.indices)
+    val focusPlayerName = state.players[cameraSubject].name
+    val focusRegion = board.node(state.players[cameraSubject].position).region
+    val cameraDescription = "Woodland Crossing board. $focusPlayerName in $focusRegion."
     // The snapshot may have advanced to the next player while a piece is still
     // visibly traveling. The highlighted token follows the actual presentation.
     val highlightedSeat = if (isTurnTransitioning && animateTokens)
@@ -794,7 +813,9 @@ private fun BoardCanvas(
         Box(
             modifier = Modifier.fillMaxWidth().height(height).clipToBounds()
                 .semantics {
-                    contentDescription = "Interactive board. Pinch to zoom, drag to explore."
+                    contentDescription = "$cameraDescription Pinch to zoom or drag to explore."
+                    stateDescription = if (cameraMode == BoardCameraMode.FOLLOW)
+                        "Following the action" else "Exploring manually"
                     customActions = listOf(
                         CustomAccessibilityAction("Recenter board") {
                             cameraMode = if (animateTokens) BoardCameraMode.FOLLOW else BoardCameraMode.MANUAL
