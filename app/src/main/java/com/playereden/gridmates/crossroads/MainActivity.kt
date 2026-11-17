@@ -44,6 +44,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -86,6 +88,24 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     val context = LocalContext.current
+    // Crossroads runs inside its own ComponentActivity. Explicitly observe the
+    // Activity lifecycle so no AI move happens while Android has stopped it.
+    val lifecycle = (context as ComponentActivity).lifecycle
+    var appInForeground by remember(lifecycle) {
+        mutableStateOf(lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED))
+    }
+    DisposableEffect(lifecycle) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> appInForeground = true
+                Lifecycle.Event.ON_STOP -> appInForeground = false
+                else -> Unit
+            }
+        }
+        lifecycle.addObserver(observer)
+        appInForeground = lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
+        onDispose { lifecycle.removeObserver(observer) }
+    }
     val prefs = remember { context.getSharedPreferences("crossroads_qa_profile_v1", 0) }
     val recoveryStore = remember(prefs, board, catalogue) {
         MatchRecoveryStore(prefs, board, catalogue)
@@ -173,8 +193,8 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             recentReveal = null
         }
     }
-    LaunchedEffect(game, rollingDie) {
-        if (game != null && rollingDie) {
+    LaunchedEffect(game, rollingDie, appInForeground) {
+        if (game != null && rollingDie && appInForeground) {
             // Visual dice cycling is presentation only: the rules engine draws the
             // real die exactly once after the animation; no new RNG affects matches.
             // Capture the pace for the full animation, even if the user
@@ -222,9 +242,9 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     // a dismissed menu from replaying the last movement delay or skipping a turn.
     val readingOrMenuOpen = showGuide || showJournal || inspectBoard ||
         confirmExit || showMatchOptions || showResults
-    LaunchedEffect(game, revision, turnReady, readingOrMenuOpen) {
+    LaunchedEffect(game, revision, turnReady, readingOrMenuOpen, appInForeground) {
         if (game != null &&
-            TurnFlowGate.mayAdvanceAi(state, turnReady, readingOrMenuOpen)
+            TurnFlowGate.mayAdvanceAi(state, turnReady, readingOrMenuOpen, appInForeground)
         ) {
             delay(speed.aiBreathMillis)
             val before = game.snapshot()
