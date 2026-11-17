@@ -296,8 +296,15 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             )
                             HorizontalDivider()
                             DropdownMenuItem(
-                                text = { Text("Leave match", color = Bark) },
-                                onClick = { showMatchOptions = false; confirmExit = true }
+                                text = {
+                                    Text(if (state.phase == Phase.FINISHED) "Main menu"
+                                        else "Leave match", color = Bark)
+                                },
+                                onClick = {
+                                    showMatchOptions = false
+                                    if (state.phase == Phase.FINISHED) session = null
+                                    else confirmExit = true
+                                }
                             )
                         }
                     }
