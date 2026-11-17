@@ -105,6 +105,13 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     var routeDialogDismissed by remember(game) { mutableStateOf(false) }
     LaunchedEffect(game, state?.revision) { routeDialogDismissed = false }
     var rollingFace by remember(game) { mutableIntStateOf(1) }
+    val rollingTilt by animateFloatAsState(
+        targetValue = if (rollingDie) {
+            when (rollingFace % 4) { 0 -> -12f; 1 -> 9f; 2 -> 13f; else -> -8f }
+        } else 0f,
+        animationSpec = tween(durationMillis = 90),
+        label = "dice-wobble"
+    )
     var recentReveal by remember(game) { mutableStateOf<EncounterNote?>(null) }
     val latestNote = state?.encounters?.lastOrNull()
     LaunchedEffect(game, latestNote) {
@@ -118,9 +125,15 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         if (game != null && rollingDie) {
             // Visual dice cycling is presentation only: the rules engine draws the
             // real die exactly once after the animation; no new RNG affects matches.
-            repeat(speed.dieFrames) { step ->
-                rollingFace = (step * 5) % 6 + 1
-                delay(speed.dieFrameMillis)
+            // Capture the pace for the full animation, even if the user
+            // switches Cozy/Brisk while a roll is in progress.
+            val rollSpeed = speed
+            val previewFaces = intArrayOf(2, 5, 1, 6, 3, 4)
+            repeat(rollSpeed.dieFrames) { step ->
+                // These deterministic preview pips are decorative only; the
+                // authoritative result is drawn once by GameSession.roll().
+                rollingFace = previewFaces[step % previewFaces.size]
+                delay(rollSpeed.dieFrameDelayMillis(step))
             }
             if (game.phase == Phase.ROLL && !game.players[game.currentIndex].isBot) {
                 val before = game.snapshot()
@@ -407,7 +420,11 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                                     ) {
                                         DieFace(if (rollingDie) rollingFace else 1,
-                                            modifier = Modifier.size(34.dp))
+                                            modifier = Modifier.size(38.dp).graphicsLayer {
+                                                rotationZ = rollingTilt
+                                                scaleX = if (rollingDie) 0.96f else 1f
+                                                scaleY = if (rollingDie) 1.04f else 1f
+                                            })
                                         Text(if (rollingDie) "Rolling…" else "Roll the die",
                                             fontWeight = FontWeight.SemiBold)
                                     }
