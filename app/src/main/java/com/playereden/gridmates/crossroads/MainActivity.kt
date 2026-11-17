@@ -188,11 +188,29 @@ private fun BoardCanvas(board: BoardDefinition, state: Snapshot) {
                 val expandedY = ((node.y - 0.5f) * 1.68f + 0.5f).coerceIn(0.06f, 0.94f)
                 return Offset(left + node.x * drawWidth, top + expandedY * drawHeight)
             }
+            // Region names make the fixed course easier to learn between matches.
+            drawIntoCanvas { canvas ->
+                val labelPaint = android.graphics.Paint().apply {
+                    isAntiAlias = true
+                    this.color = android.graphics.Color.rgb(110, 99, 79)
+                    textSize = 12f
+                    isFakeBoldText = true
+                    textAlign = android.graphics.Paint.Align.CENTER
+                }
+                listOf("MEADOW", "FOREST", "VILLAGE").forEachIndexed { index, label ->
+                    canvas.nativeCanvas.drawText(label, left + (0.2f + index * 0.29f) * drawWidth, top + 8f, labelPaint)
+                }
+            }
             // Shared board geography never changes with the event seed.
             board.nodes.forEach { node ->
                 val from = position(node.id)
                 node.next.forEach { dest ->
-                    drawLine(Color(0xFFD9C6A5), from, position(dest), strokeWidth = 11f, cap = StrokeCap.Round)
+                    val laneColor = when {
+                        node.id.startsWith("U") || dest.startsWith("U") -> Color(0xFFC89A60)
+                        node.id.startsWith("L") || dest.startsWith("L") -> Color(0xFF88A386)
+                        else -> Color(0xFFD9C6A5)
+                    }
+                    drawLine(laneColor, from, position(dest), strokeWidth = 11f, cap = StrokeCap.Round)
                     drawLine(Color(0xFFFCF8ED), from, position(dest), strokeWidth = 3f, cap = StrokeCap.Round)
                 }
             }
@@ -222,6 +240,18 @@ private fun BoardCanvas(board: BoardDefinition, state: Snapshot) {
                     }
                 }
             }
+            // Highlight the active piece and both available route entrances.
+            if (state.phase == Phase.ROUTE) {
+                val fork = board.node(state.players[state.playerIndex].position)
+                fork.next.forEach { candidate ->
+                    val ring = if (candidate.startsWith("U")) Color(0xFFAE773B) else Forest
+                    drawCircle(ring, radius = 14f, center = position(candidate),
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f))
+                }
+            }
+            drawCircle(Forest.copy(alpha = 0.7f), radius = 16f,
+                center = position(state.players[state.playerIndex].position),
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.3f))
             state.players.forEachIndexed { i, player ->
                 val common = state.players.count { it.position == player.position }
                 val rank = state.players.take(i).count { it.position == player.position }
