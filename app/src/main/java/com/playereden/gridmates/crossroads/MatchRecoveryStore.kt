@@ -24,6 +24,7 @@ internal class MatchRecoveryStore(
     companion object {
         private const val ACTIVE_KEY = "active_match_checkpoint_v1"
         private const val LAST_COMPLETED_ID = "last_completed_match_id_v1"
+        private const val LAST_FINISHED_AT = "last_completed_at_epoch_millis_v1"
     }
 
     data class Restored(
@@ -68,8 +69,33 @@ internal class MatchRecoveryStore(
             editor.putInt("wins", prefs.getInt("wins", 0) +
                 if (game.winnerIndex == 0 && game.players.count { !it.isBot } == 1) 1 else 0)
             editor.putString(LAST_COMPLETED_ID, matchId)
+            // Save the actual rules finish moment alongside the finished match
+            // and record. Reopening the completed game must not grow its timer.
+            editor.putLong(LAST_FINISHED_AT, System.currentTimeMillis())
         }
         return editor.commit()
+    }
+
+    /**
+     * Frozen elapsed time for the finished race, including time spent paused.
+     * Older QA finished saves have no completion timestamp; freeze their elapsed
+     * time on the first post-upgrade opening instead of letting it grow forever.
+     */
+    fun completedElapsedSeconds(matchId: String, startedAtEpochMillis: Long): Long {
+        require(startedAtEpochMillis > 0L)
+        val lastId = prefs.getString(LAST_COMPLETED_ID, null)
+        val savedFinish = if (lastId == matchId)
+            prefs.getLong(LAST_FINISHED_AT, 0L) else 0L
+        val finishedAt = if (savedFinish >= startedAtEpochMillis) {
+            savedFinish
+        } else {
+            val fallback = System.currentTimeMillis()
+            if (lastId == matchId) {
+                prefs.edit().putLong(LAST_FINISHED_AT, fallback).commit()
+            }
+            fallback
+        }
+        return ((finishedAt - startedAtEpochMillis).coerceAtLeast(0L) / 1000L)
     }
 
     /** Only intentional Leave/Main menu actions discard the saved race. */
