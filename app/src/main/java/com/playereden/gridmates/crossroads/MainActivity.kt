@@ -92,6 +92,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     var speed by remember { mutableStateOf(PresentationSpeed.COZY) }
     var transitionDelay by remember(game) { mutableLongStateOf(0L) }
     var turnReady by remember(game) { mutableStateOf(true) }
+    var cameraTrackIndex by remember(game) { mutableIntStateOf(0) }
     var routeDialogDismissed by remember(game) { mutableStateOf(false) }
     LaunchedEffect(game, state?.revision) { routeDialogDismissed = false }
     var rollingFace by remember(game) { mutableIntStateOf(1) }
@@ -115,6 +116,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             if (game.phase == Phase.ROLL && !game.players[game.currentIndex].isBot) {
                 val before = game.snapshot()
                 game.roll() // Exactly one real engine roll; visual faces use no RNG.
+                cameraTrackIndex = PresentationPacing.mover(before, game.snapshot())
                 transitionDelay = PresentationPacing.waitForMovement(before, game.snapshot(), speed)
                 turnReady = false
                 revision++
@@ -135,11 +137,13 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             // Let the animated piece reach its authoritative destination before
             // continuing the next turn or accepting a new crossroads choice.
             if (transitionDelay > 0L) delay(transitionDelay)
+            cameraTrackIndex = state.playerIndex // hand over focus after movement is visible
             turnReady = true
             if (state.phase != Phase.FINISHED && state.players[state.playerIndex].isBot) {
                 delay(speed.aiBreathMillis)
                 val before = game.snapshot()
                 game.botStep()
+                cameraTrackIndex = PresentationPacing.mover(before, game.snapshot())
                 transitionDelay = PresentationPacing.waitForMovement(before, game.snapshot(), speed)
                 turnReady = false
                 revision++
@@ -161,6 +165,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         val before = game?.snapshot()
         block()
         if (before != null && game != null) {
+            cameraTrackIndex = PresentationPacing.mover(before, game.snapshot())
             transitionDelay = PresentationPacing.waitForMovement(before, game.snapshot(), speed)
             turnReady = false
         }
@@ -252,7 +257,8 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         Text("Inspect map", style = MaterialTheme.typography.labelMedium)
                     }
                 }
-                BoardCanvas(board, state, matchKey = game, stepMillis = speed.stepMillis)
+                BoardCanvas(board, state, matchKey = game, stepMillis = speed.stepMillis,
+                    focusPlayerIndex = cameraTrackIndex)
                 if (state.encounters.isNotEmpty()) {
                     val latest = state.encounters.last()
                     val symbol = when (latest.kind) {
@@ -535,7 +541,8 @@ private fun BoardCanvas(
     tokenScale: Float = 1f,
     animateTokens: Boolean = true,
     matchKey: Any? = null,
-    stepMillis: Int = PresentationSpeed.COZY.stepMillis
+    stepMillis: Int = PresentationSpeed.COZY.stepMillis,
+    focusPlayerIndex: Int = state.playerIndex
 ) {
     // The new GameSession object resets visual positions after Rematch.
     val motion = remember(matchKey, board.id, state.players.size, animateTokens) {
@@ -587,8 +594,10 @@ private fun BoardCanvas(
     var canvasDimensions by remember(matchKey, board.id, animateTokens) {
         mutableStateOf(IntSize.Zero)
     }
-    val active = displayed[state.playerIndex]
-    val cameraTarget = if (state.phase == Phase.ROUTE) {
+    val cameraSubject = focusPlayerIndex.coerceIn(displayed.indices)
+    val active = displayed[cameraSubject]
+    val cameraTarget = if (state.phase == Phase.ROUTE &&
+        focusPlayerIndex == state.playerIndex) {
         val node = board.node(state.players[state.playerIndex].position)
         val fork = CameraGeometry.forkFocus(
             node.x, node.y, node.next.map { board.node(it).x to board.node(it).y }
