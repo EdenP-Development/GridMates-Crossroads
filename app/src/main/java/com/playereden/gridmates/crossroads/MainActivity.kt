@@ -70,6 +70,8 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     var revision by remember { mutableIntStateOf(0) }
     val game = session
     val state = remember(game, revision) { game?.snapshot() }
+    // QA only: wall-clock timing includes reading, map inspection and background pauses.
+    val matchStartedAt = remember(game) { android.os.SystemClock.elapsedRealtime() }
     var showJournal by remember(game) { mutableStateOf(false) }
     var confirmExit by remember(game) { mutableStateOf(false) }
     var inspectBoard by remember(game) { mutableStateOf(false) }
@@ -345,6 +347,12 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                     } else if (state.phase == Phase.FINISHED) {
                         Text(if (state.winnerIndex == 0) "You won! 🏆" else "${state.players[state.winnerIndex!!].name} won!",
                             fontWeight = FontWeight.Bold, fontSize = 19.sp, color = Forest)
+                        val elapsedSeconds = ((android.os.SystemClock.elapsedRealtime() -
+                            matchStartedAt) / 1000L).coerceAtLeast(0L)
+                        Text(
+                            "Match time: ${elapsedSeconds / 60}m ${elapsedSeconds % 60}s · ${(state.turn - 1) / state.players.size + 1} rounds",
+                            style = MaterialTheme.typography.bodySmall, color = Bark
+                        )
                         Button(onClick = { start(state.players.size) }, modifier = Modifier.fillMaxWidth()) {
                             Text("Rematch")
                         }
