@@ -282,7 +282,8 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         CrossroadsHomeScreen(
             wins = wins,
             completed = matches,
-            onStart = { seats -> start(seats) }
+            onStart = { seats -> start(seats) },
+            recoveryWarning = recoveryWarning
         )
     } else {
         Column(
@@ -456,6 +457,10 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         else "Latest action · ${state.lastMessage}",
                         style = MaterialTheme.typography.bodyMedium
                     )
+                    if (recoveryWarning != null) {
+                        Text(recoveryWarning!!, style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF955B33))
+                    }
                     if (state.phase != Phase.FINISHED) {
                         AnimatedContent(
                             targetState = recentReveal,
