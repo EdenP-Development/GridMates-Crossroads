@@ -12,8 +12,23 @@ enum class PresentationSpeed(
     val dieFrameMillis: Long,
     val dieFrames: Int
 ) {
-    COZY(205, 220, 480, 180L, 45L, 10),
-    BRISK(95, 80, 110, 90L, 25L, 4)
+    // Original preview was 450 ms (Cozy) and 100 ms (Brisk), too fast
+    // for someone to perceive a satisfying roll on an actual phone.
+    COZY(205, 220, 480, 180L, 55L, 11),
+    BRISK(95, 80, 110, 90L, 50L, 8);
+
+    /**
+     * A die starts briskly and visibly settles rather than flashing every
+     * frame at a constant rate. Total preview: Cozy 1375ms, Brisk 680ms.
+     * UI timing only; neither value nor delay touches GameSession's PRNG.
+     */
+    fun dieFrameDelayMillis(frame: Int): Long {
+        require(frame in 0 until dieFrames)
+        return dieFrameMillis + 2L * frame * frame
+    }
+
+    fun diePreviewDurationMillis(): Long =
+        (0 until dieFrames).sumOf(::dieFrameDelayMillis)
 }
 
 /** Shared timing math keeps the animated board and turn gating in sync. */
