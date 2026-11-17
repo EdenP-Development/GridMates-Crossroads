@@ -66,7 +66,8 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     val actionScroll = rememberScrollState()
     // The lower control pane changes height between roll, route choice and results.
     // Reset its position on each new action so the title/options don't open half-clipped.
-    LaunchedEffect(game, state?.turn, state?.phase, state?.playerIndex) {
+    LaunchedEffect(game, state?.revision) {
+        // Also resets when a die roll reaches a second fork in the same turn.
         actionScroll.scrollTo(0)
     }
 
