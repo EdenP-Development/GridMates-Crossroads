@@ -212,7 +212,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         Text("Inspect map", style = MaterialTheme.typography.labelMedium)
                     }
                 }
-                BoardCanvas(board, state)
+                BoardCanvas(board, state, matchKey = game)
                 if (state.encounters.isNotEmpty()) {
                     val latest = state.encounters.last()
                     val symbol = when (latest.kind) {
@@ -382,7 +382,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         BoardCanvas(board, state, height = 385.dp, tokenScale = 1.35f,
-                            animateTokens = false)
+                            animateTokens = false, matchKey = game)
                         Text("Amber: hazard  •  Green: shelter  •  Purple: mischief",
                             style = MaterialTheme.typography.bodySmall, color = Bark)
                         Text("This map is for inspection; close it to make your next move.",
@@ -416,21 +416,23 @@ private fun BoardCanvas(
     state: Snapshot,
     height: Dp = 315.dp,
     tokenScale: Float = 1f,
-    animateTokens: Boolean = true
+    animateTokens: Boolean = true,
+    matchKey: Any? = null
 ) {
-    val motion = remember(board.id, state.players.size, animateTokens) {
-        List(state.players.size) {
-            val start = board.node(board.start)
-            Animatable(Offset(start.x, start.y), Offset.VectorConverter)
+    // The new GameSession object resets visual positions after Rematch.
+    val motion = remember(matchKey, board.id, state.players.size, animateTokens) {
+        List(state.players.size) { i ->
+            val node = board.node(if (animateTokens) board.start else state.players[i].position)
+            Animatable(Offset(node.x, node.y), Offset.VectorConverter)
         }
     }
     val displayed = state.players.mapIndexed { i, player ->
         val path = player.traversed.toList()
         // The animation observes the rendered route history, never changes the rules engine.
-        var previous by remember(board.id, i, animateTokens) {
+        var previous by remember(matchKey, board.id, i, animateTokens) {
             mutableStateOf(if (animateTokens) listOf(board.start) else path)
         }
-        LaunchedEffect(board.id, path, animateTokens) {
+        LaunchedEffect(matchKey, board.id, path, animateTokens) {
             if (!animateTokens) {
                 motion[i].snapTo(Offset(board.node(player.position).x, board.node(player.position).y))
             } else {
