@@ -92,18 +92,18 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     // Activity lifecycle so no AI move happens while Android has stopped it.
     val lifecycle = (context as ComponentActivity).lifecycle
     var appInForeground by remember(lifecycle) {
-        mutableStateOf(lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED))
+        mutableStateOf(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
     }
     DisposableEffect(lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_START -> appInForeground = true
-                Lifecycle.Event.ON_STOP -> appInForeground = false
+                Lifecycle.Event.ON_RESUME -> appInForeground = true
+                Lifecycle.Event.ON_PAUSE -> appInForeground = false
                 else -> Unit
             }
         }
         lifecycle.addObserver(observer)
-        appInForeground = lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
+        appInForeground = lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
         onDispose { lifecycle.removeObserver(observer) }
     }
     val prefs = remember { context.getSharedPreferences("crossroads_qa_profile_v1", 0) }
@@ -207,7 +207,8 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                 rollingFace = previewFaces[step % previewFaces.size]
                 delay(rollSpeed.dieFrameDelayMillis(step))
             }
-            if (game.phase == Phase.ROLL && !game.players[game.currentIndex].isBot) {
+            if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) &&
+                game.phase == Phase.ROLL && !game.players[game.currentIndex].isBot) {
                 val before = game.snapshot()
                 game.roll() // Exactly one real engine roll; visual faces use no RNG.
                 persistGame(game)
@@ -247,6 +248,9 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             TurnFlowGate.mayAdvanceAi(state, turnReady, readingOrMenuOpen, appInForeground)
         ) {
             delay(speed.aiBreathMillis)
+            if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                return@LaunchedEffect
+            }
             val before = game.snapshot()
             game.botStep()
             persistGame(game)
