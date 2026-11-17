@@ -1,6 +1,8 @@
 package com.playereden.gridmates.crossroads
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.compose.BackHandler
@@ -64,6 +66,7 @@ private val Cream = Color(0xFFF7F0DE)
 private val Bark = Color(0xFF80664B)
 private val PlayerColors = listOf(Color(0xFFC75C49), Color(0xFF3D729F), Color(0xFF729B60), Color(0xFFB48A36))
 private enum class BoardCameraMode { FOLLOW, MANUAL }
+private enum class LanRole { OFFLINE, HOST, GUEST }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -131,6 +134,44 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         )
     }
     var revision by remember { mutableIntStateOf(0) }
+    // Nearby is independent from offline local saves. Only the host changes
+    // the LAN GameSession; guests reconstruct the host's verified checkpoint.
+    val mainHandler = remember { Handler(Looper.getMainLooper()) }
+    var lanRole by remember { mutableStateOf(LanRole.OFFLINE) }
+    var lanScreen by remember { mutableStateOf(LanScreen.NONE) }
+    var lanHost by remember { mutableStateOf<CrossroadsLanHost?>(null) }
+    var lanGuest by remember { mutableStateOf<CrossroadsLanGuest?>(null) }
+    var lanConnected by remember { mutableStateOf(false) }
+    var lanBusy by remember { mutableStateOf(false) }
+    var lanMessage by remember { mutableStateOf<String?>(null) }
+    var lanRooms by remember { mutableStateOf<List<NearbyCrossroads>>(emptyList()) }
+    var lanPendingAction by remember { mutableStateOf(false) }
+    var lanLastHost by remember { mutableStateOf("") }
+    var lanLastPort by remember { mutableIntStateOf(0) }
+    var lanLastCode by remember { mutableStateOf("") }
+    val nearby = remember(context) {
+        CrossroadsNearby(context) { error ->
+            mainHandler.post { lanMessage = error }
+        }
+    }
+    LaunchedEffect(lanScreen, lanHost, lanRole) {
+        when {
+            lanRole == LanRole.HOST && lanHost != null -> lanHost?.let {
+                // Keep the room advertised while the game is active so the
+                // same guest can discover it again after a Wi-Fi interruption.
+                nearby.advertise(it.port, it.code.isNotEmpty())
+            }
+            lanScreen == LanScreen.JOIN -> nearby.discover { lanRooms = it }
+            else -> nearby.stop()
+        }
+    }
+    DisposableEffect(nearby) {
+        onDispose {
+            lanHost?.close()
+            lanGuest?.close()
+            nearby.close()
+        }
+    }
     val game = session
     val state = remember(game, revision) { game?.snapshot() }
     // QA wall-clock timer intentionally continues while away from the app.
@@ -158,6 +199,9 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     var routeDialogDismissed by remember(game) { mutableStateOf(false) }
     LaunchedEffect(game, state?.revision) { routeDialogDismissed = false }
     fun persistGame(current: GameSession) {
+        // Nearby QA does not convert a remote match into an offline
+        // pass-the-phone recovery save or change the user's solo record.
+        if (lanRole != LanRole.OFFLINE) return
         val saved = runCatching {
             recoveryStore.persist(current, activeMatchId, matchStartedAtEpochMillis)
         }.getOrDefault(false)
@@ -170,7 +214,19 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         }
     }
     fun leaveGame() {
-        val cleared = recoveryStore.discard()
+        lanHost?.close()
+        lanGuest?.close()
+        nearby.stop()
+        lanHost = null
+        lanGuest = null
+        lanScreen = LanScreen.NONE
+        lanConnected = false
+        lanBusy = false
+        lanPendingAction = false
+        val previousRole = lanRole
+        lanRole = LanRole.OFFLINE
+        val cleared = if (previousRole == LanRole.OFFLINE)
+            recoveryStore.discard() else true
         if (!cleared) {
             recoveryWarning = "The saved journey couldn't be cleared; it may reopen on restart."
         }
@@ -214,13 +270,30 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                 return@LaunchedEffect
             }
             if (game.phase == Phase.ROLL && !game.players[game.currentIndex].isBot) {
-                val before = game.snapshot()
-                game.roll() // Exactly one real engine roll; visual faces use no RNG.
-                persistGame(game)
-                cameraTrackIndex = PresentationPacing.mover(before, game.snapshot())
-                transitionDelay = PresentationPacing.waitForMovement(before, game.snapshot(), speed)
-                turnReady = false
-                revision++
+                val localSeat = if (lanRole == LanRole.GUEST) 1 else 0
+                if (lanRole == LanRole.OFFLINE || (
+                    lanConnected && game.currentIndex == localSeat && !lanPendingAction
+                )) {
+                    if (lanRole == LanRole.GUEST) {
+                        runCatching {
+                            lanGuest?.submit(LanAction(LanActionType.ROLL))
+                        }.onSuccess { lanPendingAction = true }
+                            .onFailure { lanMessage = "Reconnect before rolling." }
+                    } else {
+                        val before = game.snapshot()
+                        if (lanRole == LanRole.HOST) {
+                            LanTurnAuthority.apply(game, 0, LanAction(LanActionType.ROLL))
+                            lanHost?.publish(game.checkpoint(activeMatchId, matchStartedAtEpochMillis))
+                        } else {
+                            game.roll() // Exactly one real roll, never during preview.
+                            persistGame(game)
+                        }
+                        cameraTrackIndex = PresentationPacing.mover(before, game.snapshot())
+                        transitionDelay = PresentationPacing.waitForMovement(before, game.snapshot(), speed)
+                        turnReady = false
+                        revision++
+                    }
+                }
             }
             rollingDie = false
         }
@@ -272,14 +345,17 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     // must not make the match duration continue growing.
     LaunchedEffect(game, state?.phase, turnReady) {
         if (game != null && state?.phase == Phase.FINISHED && turnReady && !resultsPresented) {
-            finishedElapsedSeconds = recoveryStore.completedElapsedSeconds(
-                activeMatchId, matchStartedAtEpochMillis
-            )
+            finishedElapsedSeconds = if (lanRole == LanRole.OFFLINE) {
+                recoveryStore.completedElapsedSeconds(activeMatchId, matchStartedAtEpochMillis)
+            } else {
+                ((System.currentTimeMillis() - matchStartedAtEpochMillis).coerceAtLeast(0L) / 1000L)
+            }
             resultsPresented = true
             showResults = true
         }
     }
     fun start(seats: Int, passAndPlay: Boolean) {
+        if (lanRole != LanRole.OFFLINE) leaveGame()
         val humans = if (passAndPlay) (0 until seats).toSet() else setOf(0)
         val newGame = GameSession(board, catalogue, seats = seats,
             seed = java.util.Random().nextInt(), humanIndices = humans)
@@ -290,26 +366,234 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         session = newGame
         revision++
     }
-    fun update(block: () -> Unit) {
-        val before = game?.snapshot()
-        block()
-        if (before != null && game != null) {
-            persistGame(game)
-            cameraTrackIndex = PresentationPacing.mover(before, game.snapshot())
-            transitionDelay = PresentationPacing.waitForMovement(before, game.snapshot(), speed)
-            turnReady = false
+
+    fun startLanHost(requireCode: Boolean) {
+        if (!nearby.hasWifi()) {
+            lanMessage = "Connect both phones to the same Wi-Fi before hosting."
+            return
         }
+        lanBusy = true
+        lanMessage = null
+        val roomGame = GameSession(
+            board, catalogue, seats = 2, seed = java.util.Random().nextInt(),
+            humanIndices = setOf(0, 1)
+        )
+        val roomId = java.util.UUID.randomUUID().toString()
+        val started = System.currentTimeMillis()
+        lanRole = LanRole.HOST
+        activeMatchId = roomId
+        matchStartedAtEpochMillis = started
+        startedFromCheckpoint = false
+        // Bind a socket off the UI thread; the host never edits state from a
+        // socket worker. Every guest command is forwarded to Android's main queue.
+        Thread({
+            try {
+                val server = CrossroadsLanHost(
+                    initial = roomGame.checkpoint(roomId, started),
+                    requiresCode = requireCode,
+                    onAction = { action ->
+                        mainHandler.post {
+                            if (lanRole == LanRole.HOST && session === roomGame) {
+                                if (!appInForeground) {
+                                    lanHost?.message("Host is away. Try again when they return.")
+                                } else {
+                                    val before = roomGame.snapshot()
+                                    runCatching {
+                                        LanTurnAuthority.apply(roomGame, 1, action)
+                                    }.onSuccess {
+                                        lanHost?.publish(roomGame.checkpoint(roomId, started))
+                                        cameraTrackIndex = PresentationPacing.mover(before, roomGame.snapshot())
+                                        transitionDelay = PresentationPacing.waitForMovement(
+                                            before, roomGame.snapshot(), speed
+                                        )
+                                        turnReady = false
+                                        revision++
+                                    }.onFailure { error ->
+                                        lanHost?.message(error.message ?: "Invalid turn")
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    onPresence = { joined, detail ->
+                        mainHandler.post {
+                            if (lanRole == LanRole.HOST && activeMatchId == roomId) {
+                                lanConnected = joined
+                                lanBusy = false
+                                if (joined) {
+                                    lanMessage = null
+                                    lanScreen = LanScreen.NONE
+                                } else {
+                                    lanMessage = detail ?: "Player 2 disconnected. Rejoin to continue."
+                                }
+                            }
+                        }
+                    }
+                )
+                mainHandler.post {
+                    if (lanRole == LanRole.HOST && activeMatchId == roomId) {
+                        lanHost = server
+                        session = roomGame
+                        revision++
+                        lanBusy = false
+                        lanScreen = LanScreen.HOST_WAIT
+                    } else {
+                        server.close()
+                    }
+                }
+            } catch (e: Exception) {
+                mainHandler.post {
+                    if (lanRole == LanRole.HOST && activeMatchId == roomId) {
+                        lanBusy = false
+                        lanRole = LanRole.OFFLINE
+                        lanMessage = e.message ?: "Couldn't open a local room."
+                    }
+                }
+            }
+        }, "crossroads-start-lan").apply { isDaemon = true }.start()
+    }
+
+    fun joinLan(host: String, port: Int, code: String, resume: Boolean = false) {
+        if (!nearby.hasWifi()) {
+            lanMessage = "Connect both phones to the same Wi-Fi before joining."
+            return
+        }
+        lanLastHost = host
+        lanLastPort = port
+        lanLastCode = code
+        lanRole = LanRole.GUEST
+        lanScreen = LanScreen.JOIN
+        lanBusy = true
+        lanMessage = null
+        if (!resume || lanGuest == null) {
+            lanGuest?.close()
+            lanGuest = CrossroadsLanGuest(
+                socketFactory = { nearby.wifiSocket() },
+                onState = { checkpoint ->
+                    mainHandler.post {
+                        if (lanRole == LanRole.GUEST) {
+                            runCatching {
+                                GameSession.restore(board, catalogue, checkpoint)
+                            }.onSuccess { restored ->
+                                if (restored.players.size != 2 ||
+                                    restored.players.any { it.isBot }
+                                ) {
+                                    lanMessage = "The host has an incompatible match."
+                                    lanBusy = false
+                                } else {
+                                    activeMatchId = checkpoint.matchId
+                                    matchStartedAtEpochMillis = checkpoint.startedAtEpochMillis
+                                    session = restored
+                                    startedFromCheckpoint = true
+                                    lanPendingAction = false
+                                    lanBusy = false
+                                    lanScreen = LanScreen.NONE
+                                    revision++
+                                }
+                            }.onFailure {
+                                lanMessage = "Couldn't verify the host game. Use the same QA build."
+                                lanBusy = false
+                            }
+                        }
+                    }
+                },
+                onConnection = { connected, note ->
+                    mainHandler.post {
+                        if (lanRole == LanRole.GUEST) {
+                            lanConnected = connected
+                            lanBusy = false
+                            if (connected && !note.isNullOrBlank()) {
+                                lanPendingAction = false
+                            }
+                            if (!connected) {
+                                lanScreen = LanScreen.JOIN
+                                lanPendingAction = false
+                                lanMessage = note ?: "Disconnected. Rejoin the room."
+                            } else if (!note.isNullOrBlank()) {
+                                lanMessage = note
+                            }
+                        }
+                    }
+                }
+            )
+        }
+        val token = if (resume) lanGuest?.rejoinToken.orEmpty() else ""
+        runCatching { lanGuest?.connect(host, port, code, token) }.onFailure {
+            lanBusy = false
+            lanMessage = it.message ?: "Unable to connect."
+        }
+    }
+
+    fun localAction(action: LanAction) {
+        val current = session ?: return
+        if (lanRole == LanRole.GUEST) {
+            if (!lanConnected || lanPendingAction || current.currentIndex != 1) return
+            runCatching {
+                lanGuest?.submit(action)
+            }.onSuccess { lanPendingAction = true }
+                .onFailure { lanMessage = it.message ?: "Reconnect to play." }
+            return
+        }
+        if (lanRole == LanRole.HOST &&
+            (!lanConnected || current.currentIndex != 0)
+        ) return
+        val before = current.snapshot()
+        val result = runCatching {
+            if (lanRole == LanRole.HOST) {
+                LanTurnAuthority.apply(current, 0, action)
+            } else {
+                when (action.type) {
+                    LanActionType.ROLL -> current.roll()
+                    LanActionType.ROUTE -> current.chooseRoute(requireNotNull(action.route))
+                    LanActionType.TARGET -> current.chooseTarget(requireNotNull(action.target))
+                }
+            }
+        }
+        if (result.isFailure) {
+            lanMessage = result.exceptionOrNull()?.message ?: "Unavailable move"
+            return
+        }
+        if (lanRole == LanRole.HOST) {
+            lanHost?.publish(current.checkpoint(activeMatchId, matchStartedAtEpochMillis))
+        } else {
+            persistGame(current)
+        }
+        cameraTrackIndex = PresentationPacing.mover(before, current.snapshot())
+        transitionDelay = PresentationPacing.waitForMovement(before, current.snapshot(), speed)
+        turnReady = false
         revision++
+    }
+
+    fun rematch() {
+        val current = session ?: return
+        if (lanRole == LanRole.HOST) {
+            if (!lanConnected) return
+            val next = GameSession(board, catalogue, seats = 2,
+                seed = java.util.Random().nextInt(), humanIndices = setOf(0, 1))
+            activeMatchId = java.util.UUID.randomUUID().toString()
+            matchStartedAtEpochMillis = System.currentTimeMillis()
+            startedFromCheckpoint = false
+            session = next
+            lanHost?.publish(next.checkpoint(activeMatchId, matchStartedAtEpochMillis))
+            revision++
+        } else if (lanRole == LanRole.OFFLINE) {
+            start(current.players.size, current.players.count { !it.isBot } > 1)
+        }
     }
 
     // The OS Back action follows the same protection as Leave Match. Dialogs
     // (including the 3-way junction) own Back while they are visible.
+    val localIsCurrentSeat = state != null && (
+        lanRole == LanRole.OFFLINE ||
+            (lanRole == LanRole.HOST && state.playerIndex == 0 && lanConnected) ||
+            (lanRole == LanRole.GUEST && state.playerIndex == 1 && lanConnected)
+    )
     val threeWayDialogVisible = game != null && state?.phase == Phase.ROUTE &&
-        !state.players[state.playerIndex].isBot &&
+        localIsCurrentSeat && !state.players[state.playerIndex].isBot &&
         game.availableRoutes().size > 2 && turnReady &&
         !routeDialogDismissed && !inspectBoard && !confirmExit && !showGuide
     BackHandler(
-        enabled = game != null && state != null &&
+        enabled = lanScreen == LanScreen.NONE && game != null && state != null &&
             !threeWayDialogVisible && !showGuide && !showJournal &&
             !showResults && !inspectBoard && !confirmExit && !showMatchOptions
     ) {
@@ -320,11 +604,43 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         }
     }
 
-    if (game == null || state == null) {
+    BackHandler(enabled = lanScreen != LanScreen.NONE) { leaveGame() }
+    if (lanScreen != LanScreen.NONE) {
+        CrossroadsLanLobby(
+            screen = lanScreen,
+            rooms = lanRooms,
+            hostAddress = nearby.address(),
+            hostPort = lanHost?.port ?: 0,
+            inviteCode = lanHost?.code.orEmpty(),
+            note = lanMessage,
+            busy = lanBusy,
+            onHost = { requireCode -> startLanHost(requireCode) },
+            onJoin = { host, port, code -> joinLan(host, port, code) },
+            onRefresh = { nearby.discover { lanRooms = it } },
+            onExit = { leaveGame() },
+            onRejoin = {
+                if (lanLastHost.isNotBlank() && lanLastPort in 1..65535) {
+                    joinLan(lanLastHost, lanLastPort, lanLastCode, resume = true)
+                }
+            },
+            hasRejoin = lanGuest?.rejoinToken?.isNotBlank() == true &&
+                lanLastHost.isNotBlank()
+        )
+    } else if (game == null || state == null) {
         CrossroadsHomeScreen(
             wins = wins,
             completed = matches,
             onStart = { seats, localPlayers -> start(seats, localPlayers) },
+            onNearbyHost = {
+                lanMessage = null
+                lanRole = LanRole.HOST
+                lanScreen = LanScreen.HOST_SETUP
+            },
+            onNearbyJoin = {
+                lanMessage = null
+                lanRole = LanRole.GUEST
+                lanScreen = LanScreen.JOIN
+            },
             recoveryWarning = recoveryWarning
         )
     } else {
@@ -474,6 +790,18 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalArrangement = Arrangement.spacedBy(7.dp)
                 ) {
+                    if (lanRole != LanRole.OFFLINE) {
+                        Text(
+                            if (lanRole == LanRole.HOST) "Nearby game · You are Player 1"
+                            else "Nearby game · You are Player 2",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Forest
+                        )
+                    }
+                    if (lanRole != LanRole.OFFLINE && !lanMessage.isNullOrBlank()) {
+                        Text(lanMessage!!, style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF955B33))
+                    }
                     val round = (state.turn - 1) / state.players.size + 1
                     val currentName = state.players[state.playerIndex].name
                     val trackedName = state.players[
@@ -494,7 +822,8 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                     )
                     // A single helpful cue replaces any extra Pass & Play
                     // handoff dialog: next player can roll immediately.
-                    if (state.players.all { !it.isBot } && state.turn > 1 &&
+                    if (lanRole == LanRole.OFFLINE &&
+                        state.players.all { !it.isBot } && state.turn > 1 &&
                         state.phase == Phase.ROLL && turnReady && !rollingDie
                     ) {
                         Text(
@@ -540,7 +869,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             )
                         }
                     }
-                    if (state.phase == Phase.ROUTE &&
+                    if (state.phase == Phase.ROUTE && localIsCurrentSeat &&
                         !state.players[state.playerIndex].isBot &&
                         game.availableRoutes().size > 2) {
                         Text("Three paths ahead · choose in the expanded route panel",
@@ -564,6 +893,17 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         Button(onClick = { showResults = true }, modifier = Modifier.fillMaxWidth()) {
                             Text("View match results")
                         }
+                    } else if (lanRole != LanRole.OFFLINE &&
+                        (!lanConnected || lanPendingAction ||
+                            state.playerIndex != (if (lanRole == LanRole.HOST) 0 else 1))
+                    ) {
+                        Text(
+                            if (!lanConnected) "Waiting for your partner to reconnect…"
+                            else if (lanPendingAction) "Waiting for the host to confirm your move…"
+                            else "Waiting for ${state.players[state.playerIndex].name} to play…",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Bark
+                        )
                     } else if (state.players[state.playerIndex].isBot) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         Text("Playing automatically…",
@@ -573,7 +913,9 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             Phase.ROLL -> {
                                 Button(
                                     onClick = { rollingDie = true },
-                                    enabled = !rollingDie && turnReady,
+                                    enabled = !rollingDie && turnReady &&
+                                         (lanRole == LanRole.OFFLINE ||
+                                             (lanConnected && !lanPendingAction)),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Row(
@@ -609,7 +951,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                                     game.availableRoutes().forEach { route ->
                                         val choice = fork?.choices?.firstOrNull { it.to == route.id }
                                         OutlinedButton(
-                                            onClick = { update { game.chooseRoute(route.id) } },
+                                            onClick = { localAction(LanAction(LanActionType.ROUTE, route = route.id)) },
                                             enabled = turnReady,
                                             modifier = Modifier.fillMaxWidth(),
                                             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
@@ -626,7 +968,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             Phase.TARGET -> {
                                 Text("Mischief! Choose an opponent.", fontWeight = FontWeight.SemiBold, color = Forest)
                                 game.availableTargets().forEach { target ->
-                                    OutlinedButton(onClick = { update { game.chooseTarget(target) } },
+                                    OutlinedButton(onClick = { localAction(LanAction(LanActionType.TARGET, target = target)) },
                                         enabled = turnReady,
                                         modifier = Modifier.fillMaxWidth()) {
                                         Text("Target ${state.players[target].name}${if (state.players[target].shield) " · shielded" else ""}")
@@ -642,7 +984,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         }
         // A dedicated scrollable chooser avoids the third option being hidden
         // under the fixed action pane on smaller handsets.
-        if (state.phase == Phase.ROUTE &&
+        if (state.phase == Phase.ROUTE && localIsCurrentSeat &&
             !state.players[state.playerIndex].isBot &&
             game.availableRoutes().size > 2 && turnReady &&
             !routeDialogDismissed && !inspectBoard && !confirmExit && !showGuide) {
@@ -691,7 +1033,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                                 game.availableRoutes().forEach { route ->
                                     val choice = junction?.choices?.firstOrNull { it.to == route.id }
                                     OutlinedButton(
-                                        onClick = { update { game.chooseRoute(route.id) } },
+                                        onClick = { localAction(LanAction(LanActionType.ROUTE, route = route.id)) },
                                         modifier = Modifier.fillMaxWidth().heightIn(min = 68.dp),
                                         colors = ButtonDefaults.outlinedButtonColors(
                                             contentColor = Forest
@@ -804,10 +1146,13 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                                 modifier = Modifier.weight(1f, fill = false)
                             )
                             Button(
-                                onClick = { start(state.players.size, state.players.count { !it.isBot } > 1) },
+                                onClick = { rematch() },
+                                enabled = lanRole != LanRole.GUEST &&
+                                    (lanRole != LanRole.HOST || lanConnected),
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                             ) {
-                                Text("Rematch")
+                                Text(if (lanRole == LanRole.GUEST) "Host starts next match"
+                                    else "Rematch")
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),

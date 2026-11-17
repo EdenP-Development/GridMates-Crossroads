@@ -1,5 +1,11 @@
 # Crossroads — Lean Classic Game Roadmap
 
+## Immediate implementation priority — LAN-22 (Nov 17, 2026)
+
+Owner redirected development from repeated fine tuning to **missing core features**. The first LAN milestone implements two actual Android devices: Host Nearby, Join Nearby (NSD with manual IP fallback), one host-authoritative 2-human Woodland match, shared legal turns/routes/pranks, host rematch, and in-memory seat rejoin. Source and loopback tests are a test candidate; real two-device gameplay must be verified before declaring LAN ready. [LAN-22 two-phone QA](LAN_22_TWO_PHONE_VERTICAL_SLICE_QA.md).
+
+Next after this test: prove first complete two-phone match and fix blocking connectivity/turn bugs; then support 3–4 remote seats, robust resume, and broader content/boards. Avoid another string of cosmetic micro-milestones until major planned functions work. Do not assume unverified LAN room discovery or use public networks for the unencrypted QA protocol.
+
 **November 17, 2026.** Player and developer simplicity are now first-class requirements. See [GridMates Classic Games Charter](GRIDMATES_CLASSIC_GAMES_CHARTER.md).
 
 ## Actual current foundation

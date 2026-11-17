@@ -1,3 +1,13 @@
+# LAN-22 — Major feature pivot: two-phone Nearby Play (November 17, 2026)
+
+**Source implementation + socket-level JVM tests committed; Android build, two-device real-Wi-Fi acceptance and production-hardening pending.** The owner requested that we stop overprioritizing minor UI polish and build planned features like LAN multiplayer. The new [LAN-22 feature and two-phone QA handoff](LAN_22_TWO_PHONE_VERTICAL_SLICE_QA.md) implements a minimal **Host nearby / Join nearby** flow on two Android phones using NSD room discovery, manual IP fallback, optional room code and one host-owned race. The host authorizes seat 0 and checks remote seat 1 ROLL/ROUTE/TARGET against the same core `GameSession`; guests verify each versioned host snapshot. The host controls rematch, and a dropped guest can attempt same-process token-based rejoin. No public matchmaking, accounts or mandatory cloud.
+
+**Deliberately limited:** Exactly two separate human phones in this first test candidate; real-device Wi-Fi connection is *not* established by source/loopback tests. LAN matches aren't persisted as Solo/Pass & Play offline saves and don't alter Solo statistics. Host process-death recovery, guest token persistence, TLS/security hardening, and 3–4-phone networking remain later milestones. The test-only protocol transmits replay seed and must not be treated as secure for hostile networks.
+
+**Last verified signed offline baseline:** QA1167 [Android CI 44188399333](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44188399333), [artifact 14376011672](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44188399333/artifacts/14376011672), at exact prior branch SHA `4028df1c282abd6415d9be3b628cc38febbee36b`. The new LAN candidate requires its own exact-head rules/Android/data CI receipt. Keep this new PR DRAFT; no merges into `main`.
+
+---
+
 # TURN-21 — Pause AI and dice when Crossroads loses Android focus (November 17, 2026)
 
 **Source + JVM gate test committed; exact-head Android CI and real-phone acceptance pending.** TURN-20 paused AI behind in-game reading/inspection screens, but did not pause it when Android backgrounded the Activity. TURN-21 observes Activity `ON_RESUME`/`ON_PAUSE`, cancels pending AI breath and decorative dice preview when not resumed, and checks actual Activity state before any authoritative roll or bot command. Returning to the app continues from the same turn with ordinary pacing, without a mandatory resume dialog or extra game systems. [TURN-21 device and regression checklist](TURN_21_BACKGROUND_PAUSE_QA.md). No engine, PRNG, saved data schema or signing changes.

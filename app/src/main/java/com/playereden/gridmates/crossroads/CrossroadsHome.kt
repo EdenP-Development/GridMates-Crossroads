@@ -82,6 +82,8 @@ internal fun CrossroadsHomeScreen(
     wins: Int,
     completed: Int,
     onStart: (Int, Boolean) -> Unit,
+    onNearbyHost: () -> Unit,
+    onNearbyJoin: () -> Unit,
     recoveryWarning: String? = null
 ) {
     // The first run is a single tap: 1 human + 1 bot. No room codes or setup screens.
@@ -170,6 +172,19 @@ internal fun CrossroadsHomeScreen(
         ) {
             Text("Start journey", style = MaterialTheme.typography.titleMedium)
         }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                onClick = onNearbyHost,
+                modifier = Modifier.weight(1f).heightIn(min = 48.dp)
+            ) { Text("Host nearby") }
+            OutlinedButton(
+                onClick = onNearbyJoin,
+                modifier = Modifier.weight(1f).heightIn(min = 48.dp)
+            ) { Text("Join nearby") }
+        }
         TextButton(
             onClick = { showGuide = true },
             modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -200,7 +215,7 @@ internal fun CrossroadsHomeScreen(
                 }
             }
         }
-        Text("QA playtest · Offline Solo / Pass & Play · Woodland Crossing",
+        Text("QA playtest · Offline Solo / Pass & Play / Nearby · Woodland Crossing",
             style = MaterialTheme.typography.labelSmall, color = Muted)
     }
     if (showGuide) {
