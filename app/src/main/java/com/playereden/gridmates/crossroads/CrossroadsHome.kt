@@ -88,6 +88,13 @@ internal fun CrossroadsHomeScreen(
     var seats by remember { mutableIntStateOf(2) }
     var passAndPlay by remember { mutableStateOf(false) }
     var showGuide by remember { mutableStateOf(false) }
+    // Keep both setup selectors in the Woodland palette; Material's default
+    // selected chip tint was lavender on actual Android QA1130 screenshots.
+    val choiceColors = FilterChipDefaults.filterChipColors(
+        selectedContainerColor = Color(0xFFE2EAD9),
+        selectedLabelColor = Ink,
+        labelColor = Muted
+    )
 
     Column(
         modifier = Modifier.fillMaxSize().background(Paper)
@@ -126,12 +133,14 @@ internal fun CrossroadsHomeScreen(
                 selected = !passAndPlay,
                 onClick = { passAndPlay = false },
                 label = { Text("Solo vs AI") },
+                colors = choiceColors,
                 modifier = Modifier.weight(1f)
             )
             FilterChip(
                 selected = passAndPlay,
                 onClick = { passAndPlay = true },
                 label = { Text("Pass & Play") },
+                colors = choiceColors,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -149,6 +158,7 @@ internal fun CrossroadsHomeScreen(
                     selected = count == seats,
                     onClick = { seats = count },
                     label = { Text("$count players", textAlign = TextAlign.Center) },
+                   colors = choiceColors,
                     modifier = Modifier.weight(1f)
                 )
             }
