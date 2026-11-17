@@ -233,7 +233,8 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                 state.players.forEachIndexed { i, player ->
                     Surface(
                         modifier = Modifier.weight(1f),
-                        color = if (i == state.playerIndex && state.phase != Phase.FINISHED)
+                        color = if (i == (if (!turnReady) cameraTrackIndex else state.playerIndex) &&
+                            state.phase != Phase.FINISHED)
                             Color(0xFFE6E9D6) else Color(0xFFF0E9D9),
                         shape = MaterialTheme.shapes.medium
                     ) {
@@ -242,17 +243,26 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             Box(Modifier.size(12.dp).background(PlayerColors[i], androidx.compose.foundation.shape.CircleShape))
                             Spacer(Modifier.width(5.dp))
                             Text(player.name, fontSize = 12.sp, fontWeight =
-                                if (i == state.playerIndex) FontWeight.Bold else FontWeight.Normal)
+                                if (i == (if (!turnReady) cameraTrackIndex else state.playerIndex))
+                                    FontWeight.Bold else FontWeight.Normal)
                             if (player.shield) Text(" 🛡", fontSize = 11.sp)
                         }
                     }
                 }
             }
-            Column(
-                modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
+            // Size the board to the actual portrait viewport above the controls.
+            // On ordinary screens the parent does not steal one-finger board drags.
+            BoxWithConstraints(modifier = Modifier.weight(1f)) {
+                val boardChrome = if (showBoardGestureHint) 152.dp else 84.dp
+                val boardSpace = maxHeight - boardChrome
+                val fittedBoardHeight = boardSpace.coerceIn(220.dp, 520.dp)
+                val needsScroll = boardSpace < 220.dp
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                        .verticalScroll(rememberScrollState(), enabled = needsScroll)
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically) {
                     Text("Woodland Crossing", fontWeight = FontWeight.Bold, color = Forest,
@@ -310,8 +320,10 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                 }
                 // The event reveal already appears in the fixed action pane.
                 // Keep the complete playable board visible, with history in Match options.
-                BoardCanvas(board, state, height = 340.dp, matchKey = game,
-                    stepMillis = speed.stepMillis, focusPlayerIndex = cameraTrackIndex)
+                BoardCanvas(board, state, height = fittedBoardHeight, matchKey = game,
+                    stepMillis = speed.stepMillis, focusPlayerIndex = cameraTrackIndex,
+                    isTurnTransitioning = !turnReady)
+                }
             }
             Surface(color = Color(0xFFECE3CE), tonalElevation = 2.dp, shadowElevation = 5.dp,
                 modifier = Modifier.fillMaxWidth()) {
@@ -321,8 +333,16 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                 ) {
                     val round = (state.turn - 1) / state.players.size + 1
                     val currentName = state.players[state.playerIndex].name
+                    val trackedName = state.players[
+                        cameraTrackIndex.coerceIn(state.players.indices)
+                    ].name
                     Text(
-                        if (state.phase == Phase.FINISHED) "Journey complete!"
+                        if (state.phase == Phase.FINISHED && !turnReady) "Approaching the finish…"
+                        else if (state.phase == Phase.FINISHED) "Journey complete!"
+                        else if (!turnReady && !rollingDie) {
+                            if (cameraTrackIndex == 0) "You're on the move…"
+                            else "$trackedName is on the move…"
+                        }
                         else if (state.playerIndex == 0) "Round $round · Your turn"
                         else "Round $round · $currentName's turn",
                         fontWeight = FontWeight.Bold, color = Forest, fontSize = 16.sp
@@ -335,10 +355,6 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         else "Latest action · ${state.lastMessage}",
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    if (!turnReady && state.phase != Phase.FINISHED && !rollingDie) {
-                        Text("Following the trail…", style = MaterialTheme.typography.labelSmall,
-                            color = Bark)
-                    }
                     if (state.phase != Phase.FINISHED) {
                         AnimatedContent(
                             targetState = recentReveal,
@@ -571,7 +587,8 @@ private fun BoardCanvas(
     animateTokens: Boolean = true,
     matchKey: Any? = null,
     stepMillis: Int = PresentationSpeed.COZY.stepMillis,
-    focusPlayerIndex: Int = state.playerIndex
+    focusPlayerIndex: Int = state.playerIndex,
+    isTurnTransitioning: Boolean = false
 ) {
     // The new GameSession object resets visual positions after Rematch.
     val motion = remember(matchKey, board.id, state.players.size, animateTokens) {
@@ -624,6 +641,10 @@ private fun BoardCanvas(
         mutableStateOf(IntSize.Zero)
     }
     val cameraSubject = focusPlayerIndex.coerceIn(displayed.indices)
+    // The snapshot may have advanced to the next player while a piece is still
+    // visibly traveling. The highlighted token follows the actual presentation.
+    val highlightedSeat = if (isTurnTransitioning && animateTokens)
+        cameraSubject else state.playerIndex
     val active = displayed[cameraSubject]
     val cameraTarget = if (state.phase == Phase.ROUTE &&
         focusPlayerIndex == state.playerIndex) {
@@ -673,10 +694,19 @@ private fun BoardCanvas(
 
     // Touching the focused piece or double-tapping resumes cinematic following.
     val liveViewportSize by rememberUpdatedState(canvasDimensions)
+    // Match the pawn's true visual offset at the shared Start; tapping its
+    // painted location should still recenter at higher zoom.
+    val focusedGroup = displayed.indices.filter { index ->
+        (displayed[index] - active).getDistance() < 0.012f
+    }
+    val focusedRank = focusedGroup.indexOf(cameraSubject)
+    val focusedDx = if (focusedGroup.size == 1) 0f
+        else (focusedRank - (focusedGroup.size - 1) / 2f) * 18f * tokenScale
+    val focusedDy = if (focusedGroup.size == 1) -14f * tokenScale else -17f * tokenScale
     val livePieceLocation by rememberUpdatedState(
         Offset(
-            boardPadding + active.x * (viewportWidth - 2f * boardPadding).coerceAtLeast(0f),
-            boardPadding + active.y * (viewportHeight - 2f * boardPadding).coerceAtLeast(0f)
+            boardPadding + active.x * (viewportWidth - 2f * boardPadding).coerceAtLeast(0f) + focusedDx,
+            boardPadding + active.y * (viewportHeight - 2f * boardPadding).coerceAtLeast(0f) + focusedDy
         )
     )
     val density = LocalDensity.current
@@ -866,7 +896,7 @@ private fun BoardCanvas(
                 }
             }
             // Highlight the active piece and both available route entrances.
-            if (state.phase == Phase.ROUTE) {
+            if (state.phase == Phase.ROUTE && !isTurnTransitioning) {
                 val fork = board.node(state.players[state.playerIndex].position)
                 fork.next.forEach { candidate ->
                     val ring = when (board.node(candidate).route) {
@@ -878,31 +908,41 @@ private fun BoardCanvas(
                         style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f))
                 }
             }
-            drawCircle(Forest.copy(alpha = 0.7f), radius = 17f * tokenScale,
-                center = Offset(left + displayed[state.playerIndex].x * drawWidth,
-                    top + displayed[state.playerIndex].y * drawHeight),
-                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.3f))
-            state.players.forEachIndexed { i, player ->
-                val common = state.players.count { it.position == player.position }
-                val rank = state.players.take(i).count { it.position == player.position }
-                val center = position(player.position)
-                val dx = if (common == 1) 0f else (rank - (common - 1) / 2f) * 18f * tokenScale
-                val dy = if (common == 1) -14f * tokenScale else -17f * tokenScale
-                val marker = Offset(left + displayed[i].x * drawWidth + dx,
-                    top + displayed[i].y * drawHeight + dy)
-                val tokenRadius = (if (i == state.playerIndex) 12.5f else 11f) * tokenScale
-                drawCircle(PlayerColors[i], tokenRadius, marker)
-                drawCircle(Color.White, tokenRadius, marker,
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.3f))
+            // Use animated on-screen coordinates to spread clustered tokens.
+            // Snapshot positions can already be several spaces ahead mid-animation.
+            state.players.forEachIndexed { i, _ ->
+                val group = displayed.indices.filter { index ->
+                    (displayed[index] - displayed[i]).getDistance() < 0.012f
+                }
+                val rank = group.indexOf(i)
+                val dx = if (group.size == 1) 0f
+                    else (rank - (group.size - 1) / 2f) * 18f * tokenScale
+                val dy = if (group.size == 1) -14f * tokenScale else -17f * tokenScale
+                val marker = Offset(
+                    left + displayed[i].x * drawWidth + dx,
+                    top + displayed[i].y * drawHeight + dy
+                )
+                val highlighted = i == highlightedSeat
+                val tokenRadius = (if (highlighted) 12.5f else 11f) * tokenScale
+                drawCrossroadsPiece(
+                    center = marker,
+                    radius = tokenRadius,
+                    seatColor = PlayerColors[i],
+                    highlighted = highlighted,
+                    traveling = highlighted && isTurnTransitioning
+                )
                 drawIntoCanvas { canvas ->
                     val paint = android.graphics.Paint().apply {
-                        this.color = android.graphics.Color.WHITE
+                        color = android.graphics.Color.WHITE
                         textSize = 12f * tokenScale
                         isAntiAlias = true
                         isFakeBoldText = true
                         textAlign = android.graphics.Paint.Align.CENTER
+                        setShadowLayer(1.6f, 0f, 0.6f,
+                            android.graphics.Color.argb(110, 40, 34, 24))
                     }
-                    canvas.nativeCanvas.drawText("${i + 1}", marker.x, marker.y + 4f * tokenScale, paint)
+                    canvas.nativeCanvas.drawText("${i + 1}", marker.x,
+                        marker.y + 4f * tokenScale, paint)
                 }
             }
             }
