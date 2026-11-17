@@ -3,6 +3,11 @@ package com.playereden.gridmates.crossroads
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -63,6 +68,32 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     val state = remember(game, revision) { game?.snapshot() }
     var showJournal by remember(game) { mutableStateOf(false) }
     var confirmExit by remember(game) { mutableStateOf(false) }
+    var rollingDie by remember(game) { mutableStateOf(false) }
+    var rollingFace by remember(game) { mutableIntStateOf(1) }
+    var recentReveal by remember(game) { mutableStateOf<EncounterNote?>(null) }
+    val latestNote = state?.encounters?.lastOrNull()
+    LaunchedEffect(game, latestNote) {
+        if (latestNote != null) {
+            recentReveal = latestNote
+            delay(2100)
+            recentReveal = null
+        }
+    }
+    LaunchedEffect(game, rollingDie) {
+        if (game != null && rollingDie) {
+            // Visual dice cycling is presentation only: the rules engine draws the
+            // real die exactly once after the animation; no new RNG affects matches.
+            repeat(8) { step ->
+                rollingFace = (step * 5) % 6 + 1
+                delay(45)
+            }
+            if (game.phase == Phase.ROLL && !game.players[game.currentIndex].isBot) {
+                game.roll()
+                revision++
+            }
+            rollingDie = false
+        }
+    }
     val actionScroll = rememberScrollState()
     // The lower control pane changes height between roll, route choice and results.
     // Reset its position on each new action so the title/options don't open half-clipped.
@@ -221,6 +252,37 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                         fontWeight = FontWeight.Bold, color = Forest, fontSize = 16.sp
                     )
                     Text(state.lastMessage, style = MaterialTheme.typography.bodyMedium)
+                    if (state.phase != Phase.FINISHED) {
+                        AnimatedContent(
+                            targetState = recentReveal,
+                            transitionSpec = { fadeIn() togetherWith fadeOut() },
+                            label = "encounter-reveal"
+                        ) { note ->
+                            if (note != null) {
+                                val revealTint = when (note.kind) {
+                                    "setback" -> Color(0xFFF0E0C8)
+                                    "mischief" -> Color(0xFFE9DEED)
+                                    else -> Color(0xFFE1E9D7)
+                                }
+                                val mark = when (note.kind) {
+                                    "setback" -> "⚠"
+                                    "mischief" -> "🎭"
+                                    else -> "🍀"
+                                }
+                                Surface(color = revealTint, shape = MaterialTheme.shapes.medium) {
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth().padding(10.dp),
+                                        verticalArrangement = Arrangement.spacedBy(3.dp)
+                                    ) {
+                                        Text("$mark  ${note.actor} · ${note.title}",
+                                            fontWeight = FontWeight.SemiBold,
+                                            style = MaterialTheme.typography.bodyMedium)
+                                        Text(note.outcome, style = MaterialTheme.typography.bodySmall)
+                                    }
+                                }
+                            }
+                        }
+                    }
                     if (state.die != null && state.phase != Phase.FINISHED) {
                         Text(
                             "🎲 ${state.die}  ·  ${state.remainingSteps} ${if (state.remainingSteps == 1) "step" else "steps"} remaining",
@@ -254,8 +316,12 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                     } else {
                         when (state.phase) {
                             Phase.ROLL -> {
-                                Button(onClick = { update { game.roll() } }, modifier = Modifier.fillMaxWidth()) {
-                                    Text("🎲 Roll the die")
+                                Button(
+                                    onClick = { rollingDie = true },
+                                    enabled = !rollingDie,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(if (rollingDie) "🎲 $rollingFace  Rolling…" else "🎲 Roll the die")
                                 }
                             }
                             Phase.ROUTE -> {
@@ -290,11 +356,11 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             Phase.FINISHED -> Unit
                         }
                     }
+                    }
                     if (state.phase != Phase.FINISHED) {
                         TextButton(onClick = { confirmExit = true }, modifier = Modifier.align(Alignment.End)) {
                             Text("Leave match", color = Bark)
                         }
-                    }
                     }
                 }
             }
@@ -438,12 +504,14 @@ private fun BoardCanvas(board: BoardDefinition, state: Snapshot) {
                 val center = position(player.position)
                 val dx = if (common == 1) 0f else (rank - (common - 1) / 2f) * 14f
                 val dy = if (common == 1) -12f else -14f
-                drawCircle(PlayerColors[i], 9f, Offset(center.x + dx, center.y + dy))
-                drawCircle(Color.White, 9f, Offset(center.x + dx, center.y + dy), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f))
+                val tokenRadius = if (i == state.playerIndex) 10.5f else 9f
+                drawCircle(PlayerColors[i], tokenRadius, Offset(center.x + dx, center.y + dy))
+                drawCircle(Color.White, tokenRadius, Offset(center.x + dx, center.y + dy),
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f))
                 drawIntoCanvas { canvas ->
                     val paint = android.graphics.Paint().apply {
                         this.color = android.graphics.Color.WHITE
-                        textSize = 10f
+                        textSize = 11f
                         isAntiAlias = true
                         isFakeBoldText = true
                         textAlign = android.graphics.Paint.Align.CENTER
