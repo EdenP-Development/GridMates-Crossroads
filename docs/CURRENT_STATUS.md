@@ -1,3 +1,11 @@
+# GUIDE-14 — Optional How to Play (November 17, 2026)
+
+**Source committed; exact CI and new handset acceptance pending.** The rules guide now appears as an optional secondary action on the home screen and inside Match Options, without mandatory onboarding or extra persistent match UI. The woodland-colored scrollable guide explains Start/Finish, real dice, crossroads with remaining steps, helpful/hazard/mischief encounters, shields, risk clues, AI, map gestures and Cozy/Brisk pacing—grounded in the current code. [GUIDE-14 phone QA handoff](GUIDE_14_HOW_TO_PLAY_QA_HANDOFF.md). It is included in Draft PR #18 to limit branch churn.
+
+**Verified source baseline before GUIDE-14:** RESULT-13 signed **QA1093** [Android run 44146471855](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44146471855), [artifact 14356548059](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44146471855/artifacts/14356548059). Automated Android/Gradle and design-data checks passed on that older head; physical QA1093 UI and install-over checks are unconfirmed. No engine/core, saved-profile, sibling repo or `main` merge changes in GUIDE-14.
+
+---
+
 # RESULT-13 — Compact match results (Nov 17, 2026)
 
 **Source committed; new Android and owner-phone verification pending.** The owner QA1082 results screenshot showed an oversized lavender panel and "Last recorded encounter" title separated from its scroll-hidden details. The new `feature/results-polish-v1.2` draft replaces only that results dialog with a cream-colored responsive surface, a compact summary, a complete earlier encounter card, and three fixed footer actions. It still uses exactly the same winner, rounds, elapsed time, player states and event records. [RESULT-13 QA handoff](RESULT_13_COMPACT_RESULTS_QA_HANDOFF.md).
