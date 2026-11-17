@@ -1,32 +1,33 @@
-# Current Crossroads Status — Woven Trail v0.2 QA candidate
+# Crossroads current status — QA 1040 tabletop feedback
 
-**Last verified:** November 16, 2026 (America/Kentucky/Louisville); CI results recorded early November 17 UTC.
+**Last verified:** November 16, 2026 local / November 17 UTC.
 
-## Repository state
-- Active source: [`feature/woven-trail-v0.2`](https://github.com/PlayerEden/GridMates-Crossroads/tree/feature/woven-trail-v0.2), [Draft PR #7](https://github.com/PlayerEden/GridMates-Crossroads/pull/7), stacked on [foundation Draft PR #1](https://github.com/PlayerEden/GridMates-Crossroads/pull/1).
-- `main` is not yet the gameplay code baseline. No owner-approved merge or public release.
-- This document supersedes the earlier v0.1 handoff on this branch. Historical v0.1 receipts remain.
+## Where work lives
+- Source: [`feature/turn-flow-v0.3`](https://github.com/PlayerEden/GridMates-Crossroads/tree/feature/turn-flow-v0.3), [Draft PR #8](https://github.com/PlayerEden/GridMates-Crossroads/pull/8), stacked on Woven Trail Draft PR #7 and Foundation Draft PR #1. No merge to `main`; no public release.
+- One human vs 1–3 AI seats; 38-node handcrafted Woven Trail, one Start and Finish, five crossroads with route-dependent region/event pools, dice and winner determination.
+- Native Compose Android UI includes fixed actions, recent event and history; stats saved locally under `crossroads_qa_profile_v1`. No actual LAN or persistent unfinished-match state yet.
 
-## Source and test evidence
-- Android-independent Kotlin game engine, AI, dice, player-choice routing and first-to-finish results.
-- **Handcrafted Woven Trail** with 38 nodes, 5 named crossroads (one three-way), interconnected route alternatives, one shared Start/Finish.
-- 20 proposed weighted events grouped by board area and hazard/shelter/mischief pools; topology remains fixed between matches.
-- Native Android 2D Compose game, colored/numeric pieces, region washes, journey trails, crossroads choice descriptions, local wins/completions.
-- [JS board/event validation PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/43999321091); [Kotlin/JVM tests PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/43999346658).
-- [Signed QA 1020 APK build PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/43999320965). [Download artifact](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/43999320965/artifacts/14291053254).
-- [1018→1020 actual Android 15 emulator **install-over PASS**](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44000042757): exact SHA-checksummed APKs; 7 completed games/3 wins seeded profile XML byte-for-byte preserved; upgraded app launched. Emulator menu, board and first-roll screenshots captured [here](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44000042757/artifacts/14292176348).
-- [Full immutable test receipt](QA_RECEIPT_WOVEN_V02_2026_11_16.md).
+## Real owner-phone QA
+- A prior three-player owner **win** and a four-player **AI3 win** were both confirmed by screenshots.
+- The newest screenshots of QA 1037 display **1 win and 2 completed matches** on the menu; one new four-player match shows normal turn movement, AI3 encountering Tangled briars (back 2), and AI1 triggering Woodland prank against the human (back 2). This confirms visible adversarial mechanics and event presentation, but not a new final result.
+- Copy, singular/plural labels, player headers and regular route choice buttons are improved. Gameplay presentation still needs richer feedback and visual identity.
+- [QA1037 phone findings](QA_OWNER_PHONE_1037_EVENTS.md). Screenshot bytes remain private in conversation and are not published in GitHub.
 
-## Owner QA and limitations
-- The owner previously supplied **real-phone screenshots of the old three-diamond build**, confirming initial menu, token movement and crossroads prompt. See [first owner phone audit](QA_OWNER_PHONE_SCREENSHOTS_2026_11_16.md).
-- **Owner has not yet verified new Woven Trail QA 1020 on a phone.** Emulator captured a move and an AI shield; it did not complete a full automated gameplay run through a winning end-state on Android.
-- Event weights, relative route win rate and Quick/Classic/Long match times are not balanced. 38-node board is a candidate, not a finished themed collection.
-- No local Wi-Fi multiplayer, pass-and-play, active-match persistence, unlockable pieces, external network/cloud, production key or signed public beta.
-- QA 1020 retains the old stable **public test-only signer**, package `com.playereden.gridmates.crossroads.qa`. Do not use for production.
+## QA1040 source and verification
+- A brief local-only dice cycling presentation appears on human Roll before the game's single deterministic RNG roll. No engine changes or new game data.
+- A short (2.1 s) temporary **encounter reveal** now appears in pinned action panel for both AI and human effects, with benefit/setback/Mischief tints.
+- Leave match moved outside scrollable action list; active numeric piece receives modest emphasis.
+- [JS board/data QA PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44005645444), [Kotlin/JVM QA PASS](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44005650763).
+- [**Signed Android QA1040 build PASS**](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44005645389), [APK ZIP artifact](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44005645389/artifacts/14293982913): `GridMates-Crossroads-QA-1040.apk`, source commit `7fb37fcb2621ac48ca6cc828c6f3bc6f40bdd4c6`, SHA256 `531ed9fade8d8ede415d5bc3789664bebbaa348d801f98c0c668fba79c515473`.
+- [**Real 1037→1040 Android 15 emulator install-over PASS**](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44006111587), two separately built SHA-pinned APKs, seeded 7 games/3 wins profile preserved byte-for-byte, updated app launched and opened match/first roll. [Captured screenshots](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44006111587/artifacts/14294641972).
+- [Immutable details](QA_RECEIPT_1040_2026_11_16.md).
+- Same app identity `com.playereden.gridmates.crossroads.qa` and public test-only signer. Never use that signer for production.
 
-## Next work
-1. Owner installs QA 1020 over their current Crossroads QA version. Validate status-bar safe areas, 5-fork layout, readable text, human path choices, 2/3/4 AI matches and local win count.
-2. Tune hazard/shelter weights and costs with match statistics. Do not promise choices are perfectly fair until simulations/human testing.
-3. Fix readability/scale based on owner screenshots and test increased font sizes; consider zoom/pan only if necessary.
-4. After first complete human playtest, develop same-Wi-Fi nearby play with careful state synchronization and update-safe active-match persistence.
-5. Only then selectively import approved GridMates art as optional animal tokens and themed board decoration.
+## Open gates
+1. Owner installs QA1040 over QA1037 and evaluates whether die reveal and encounter banner feel better without being distracting.
+2. Physically test 3-way Old Forest Junction, multi-fork same roll, visible Leave control, replay and stats persistence.
+3. Test unfinished-match exit confirmation and large-text accessibility.
+4. Do measured route balancing and match timing before setting Quick/Classic/Long durations.
+5. Then add optional original GridMates animal art and coherent woodland presentation; postpone ambitious LAN and permanent multiplayer until solo fun is established.
+
+Do not claim a full QA1040 phone match, timed dice animation or user acceptance without owner feedback.

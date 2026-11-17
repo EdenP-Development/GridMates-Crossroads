@@ -9,8 +9,8 @@ import subprocess
 import time
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-BASE_CODE = int(os.environ.get("BASE_CODE", "1018"))
-NEXT_CODE = int(os.environ.get("NEXT_CODE", "1020"))
+BASE_CODE = int(os.environ.get("BASE_CODE", "1037"))
+NEXT_CODE = int(os.environ.get("NEXT_CODE", "1040"))
 BEFORE = ROOT / f"qa-archives/base/GridMates-Crossroads-QA-{BASE_CODE}.apk"
 AFTER = ROOT / f"qa-archives/next/GridMates-Crossroads-QA-{NEXT_CODE}.apk"
 PKG = "com.playereden.gridmates.crossroads.qa"
@@ -33,8 +33,8 @@ def checksum(path):
             h.update(chunk)
     return h.hexdigest()
 
-assert checksum(BEFORE) == os.environ.get("BASE_SHA", "5b70cca909d6154bb5fa5cd227df6abf7a8480424da6e45cdf4776813c395d2d")
-assert checksum(AFTER) == os.environ.get("NEXT_SHA", "f528d0b722363e3df8043faa4344427afad506ec29b79b212231813499dcad40")
+assert checksum(BEFORE) == os.environ.get("BASE_SHA", "1dd8e270cbc14823f91432d3635e4f87529f19b7c6b7f377be4ce9b5db9bc0c9")
+assert checksum(AFTER) == os.environ.get("NEXT_SHA", "531ed9fade8d8ede415d5bc3789664bebbaa348d801f98c0c668fba79c515473")
 
 assert "Success" in adb("install", str(BEFORE))
 adb("shell", "am", "start", "-W", "-n", ACTIVITY)

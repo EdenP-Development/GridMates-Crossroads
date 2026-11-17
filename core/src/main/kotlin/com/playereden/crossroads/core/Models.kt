@@ -55,6 +55,14 @@ object GameData {
     fun events(source: String): EventCatalogue = json.decodeFromString<EventCatalogue>(source)
 }
 
+/** A short, display-ready memory of an actual encountered event. */
+data class EncounterNote(
+    val turn: Int,
+    val actor: String,
+    val title: String,
+    val outcome: String,
+    val kind: String
+)
 enum class Phase { ROLL, ROUTE, TARGET, FINISHED }
 data class Player(
     val name: String,
@@ -73,5 +81,6 @@ data class Snapshot(
     val lastMessage: String,
     val winnerIndex: Int?,
     val turn: Int,
-    val lastEventId: String?
+    val lastEventId: String?,
+    val encounters: List<EncounterNote>
 )
