@@ -1,3 +1,11 @@
+# HOME-11 — Matching home and finish experience (Nov 17, 2026)
+
+**New source candidate; Android/phone verification pending on this branch.** In `feature/home-results-v1.1`, the main menu now uses a single Start journey action with 2/3/4 participant chips (1 human and 1–3 bots), a lightweight original woodland path motif and existing local stats. A completed match triggers a results dialog **after** final movement, showing only real winner/rounds/seats/elapsed/last encounter facts; the result timer is frozen once. Rematch, View board and Main menu remain available. [HOME-11 QA handoff](HOME_11_RESULTS_UX_QA_HANDOFF.md).
+
+**Previous exact CI PASS:** FEEL-10 signed QA1078, [GitHub Android run 44135365624](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44135365624), [artifact 14352481263](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44135365624/artifacts/14352481263), and board-data QA 44135314224. Real-device install-over and UI acceptance have not been shown. No new mechanics, package identity, signers or `main` merges.
+
+---
+
 # FEEL-10 — Adaptive board and tactile movement (Nov 17, 2026)
 
 **Source candidate; new Android and owner-phone verification pending.** On `feature/gamefeel-v1.0`, the board viewport adapts to available portrait space (220–520dp), the ordinary in-match page avoids stealing pan gestures, the active seat and turn heading follow the piece currently traveling, and the original layered tokens are clustered using actual animated positions. Fork entrances are highlighted only after travel completes. [FEEL-10 QA handoff](FEEL_10_ADAPTIVE_MOTION_QA_HANDOFF.md).
