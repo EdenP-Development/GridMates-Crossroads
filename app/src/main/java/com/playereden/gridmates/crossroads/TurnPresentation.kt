@@ -167,7 +167,7 @@ internal fun EncounterRibbon(note: EncounterNote) {
 /** Presentation-only stage of a tabletop turn, never a second gameplay state. */
 internal fun turnMomentName(phase: Phase, moving: Boolean): String = when {
     moving -> "ON THE TRAIL"
-    phase == Phase.ROLL -> "YOUR MOVE"
+    phase == Phase.ROLL -> "DICE ROLL"
     phase == Phase.ROUTE -> "AT A CROSSROADS"
     phase == Phase.TARGET -> "MISCHIEF"
     phase == Phase.FINISHED -> "FINISH LINE"
