@@ -21,6 +21,8 @@ class GameSession(
     private var steadyFooting = false
     /** Live, replay-derived travel stance; used only to describe Lab route choices. */
     val steadyTravelChosen: Boolean get() = playtestRules && steadyFooting
+    /** At most one on-entry encounter (and v2 shelter bonus) per entire turn. */
+    val routeEncounterAvailable: Boolean get() = playtestRules && !eventTriggeredThisTurn
     private val originalHumanIndices = humanIndices.toSortedSet()
     private val acceptedActions = mutableListOf<MatchAction>()
     // A bot turn executes one nested legal roll/route/target internally; the
