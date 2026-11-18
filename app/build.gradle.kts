@@ -15,7 +15,10 @@ android {
         minSdk = 26
         targetSdk = 35
         versionCode = requestedQaVersion ?: 1
-        versionName = "0.1.0-prototype"
+        versionName = "0.1.0"
+        // Public-facing label by default. The .qa build overrides it below.
+        // This does NOT configure or authorize a production-signed release.
+        resValue("string", "app_name", "GridMates: Crossroads")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     signingConfigs {
@@ -33,6 +36,7 @@ android {
         getByName("debug") {
             applicationIdSuffix = ".qa"
             versionNameSuffix = "-qa"
+            resValue("string", "app_name", "Crossroads QA")
             signingConfig = signingConfigs.getByName("qaPublicTestOnly")
         }
         getByName("release") {
