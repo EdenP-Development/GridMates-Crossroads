@@ -59,6 +59,9 @@ class GameSession(
     private var eventTriggeredThisTurn = false
     private var pendingPrank = 0
     private var pendingPrankName = ""
+    private var pendingEncounterPool = ""
+    private var pendingEncounterRegion = ""
+    private var pendingEncounterRoute = ""
     private fun spacesText(count: Int): String = "$count ${if (count == 1) "space" else "spaces"}"
     private val encounterLog = mutableListOf<EncounterNote>()
     private fun recordEncounter(title: String, outcome: String, kind: String) {
@@ -141,6 +144,10 @@ class GameSession(
                     MatchActionKind.BOLD_ROLL -> {
                         require(action.routeId == null && action.targetIndex == null)
                         game.rollBold()
+                    }
+                    MatchActionKind.ENCOUNTER -> {
+                        require(action.routeId != null && action.targetIndex == null)
+                        game.chooseEncounter(action.routeId)
                     }
                     MatchActionKind.ROUTE -> {
                         require(action.routeId != null && action.targetIndex == null)
@@ -236,6 +243,88 @@ class GameSession(
         record(MatchAction(MatchActionKind.ROUTE, routeId = id))
     }
 
+    /** Optional Lab v3 response. Never surfaced for older rule variants. */
+    fun availableEncounterChoices(): List<String> {
+        if (!DecisionLab.isV3(board) || phase != Phase.ENCOUNTER) return emptyList()
+        return when (pendingEncounterPool) {
+            "shelter" -> listOf("supplies", "cover")
+            "hazard" -> listOf("gamble", "brace")
+            else -> emptyList()
+        }
+    }
+
+    fun chooseEncounter(choice: String) {
+        require(phase == Phase.ENCOUNTER && DecisionLab.isV3(board)) {
+            "No encounter decision is pending"
+        }
+        require(choice in availableEncounterChoices()) { "Unavailable encounter choice" }
+        val kind = pendingEncounterPool
+        val region = pendingEncounterRegion
+        val route = pendingEncounterRoute
+        pendingEncounterPool = ""
+        pendingEncounterRegion = ""
+        pendingEncounterRoute = ""
+
+        when (choice) {
+            "supplies" -> {
+                remainingSteps += 2
+                lastEventId = "lab_v3_shelter_supplies"
+                lastMessage = "${players[currentIndex].name} collected supplies on $route: +2 steps."
+                recordEncounter("Shelter supplies", "Advance 2 spaces", "benefit")
+                progress()
+            }
+            "cover" -> {
+                remainingSteps += 1
+                players[currentIndex].shield = true
+                lastEventId = "lab_v3_shelter_cover"
+                lastMessage = "${players[currentIndex].name} took cover on $route: shield and +1 step."
+                recordEncounter("Shelter cover", "Shield and 1 step", "benefit")
+                progress()
+            }
+            "brace" -> {
+                lastEventId = "lab_v3_hazard_brace"
+                lastMessage = "${players[currentIndex].name} braced on $route and ended the move safely."
+                recordEncounter("Hazard avoided", "Stopped here; no retreat", "benefit")
+                finishTurn()
+            }
+            "gamble" -> {
+                val pool = catalogue.events.filter {
+                    region in it.regions && "hazard" in it.pools && it.weight > 0
+                }
+                require(pool.isNotEmpty()) { "No regional hazard event" }
+                var ticket = random.nextInt(pool.sumOf { it.weight })
+                val event = pool.first { ticket -= it.weight; ticket < 0 }
+                lastEventId = event.id
+                val title = event.description.ifBlank { event.id.replace('_', ' ') }
+                when (event.effect.type) {
+                    "advance" -> {
+                        remainingSteps += event.effect.spaces
+                        lastMessage = "${players[currentIndex].name} risked $route: $title! +${event.effect.spaces} steps."
+                        recordEncounter(title, "Risk succeeded: +${event.effect.spaces} steps", "benefit")
+                        progress()
+                    }
+                    "retreat" -> {
+                        if (steadyFooting) {
+                            steadyFooting = false
+                            lastMessage = "${players[currentIndex].name} steadied through $title."
+                            recordEncounter(title, "Steady blocked the setback", "benefit")
+                            progress()
+                        } else {
+                            moveBack(players[currentIndex], event.effect.spaces)
+                            lastMessage = "${players[currentIndex].name} risked $route: $title! Back ${event.effect.spaces}."
+                            recordEncounter(title, "Risk failed: back ${event.effect.spaces}", "setback")
+                            finishTurn()
+                        }
+                    }
+                    else -> error("Unsupported hazard outcome ${event.effect.type}")
+                }
+            }
+            else -> error("Unexpected encounter choice")
+        }
+        revision++
+        record(MatchAction(MatchActionKind.ENCOUNTER, routeId = choice))
+    }
+
     fun availableTargets(): List<Int> =
         if (phase == Phase.TARGET) players.indices.filter { it != currentIndex && players[it].position != board.finish }
         else emptyList()
@@ -291,6 +380,21 @@ class GameSession(
                     distanceToFinish(route.id).toDouble() + riskCost + random.nextDouble(0.0, 1.3)
                 }
                 chooseRoute(chosen.id)
+            }
+            Phase.ENCOUNTER -> {
+                val options = availableEncounterChoices()
+                val own = distanceToFinish(players[currentIndex].position)
+                val closest = players.indices.filter { it != currentIndex }
+                    .minOf { distanceToFinish(players[it].position) }
+                val leading = own < closest
+                val choice = when {
+                    "supplies" in options -> if (leading && !players[currentIndex].shield)
+                        "cover" else "supplies"
+                    "gamble" in options -> if (leading && !steadyFooting)
+                        "brace" else "gamble"
+                    else -> error("No valid encounter choice")
+                }
+                chooseEncounter(choice)
             }
             Phase.TARGET -> {
                 val targets = availableTargets()
@@ -349,15 +453,24 @@ class GameSession(
             return
         }
         eventTriggeredThisTurn = true
-        // v2 alone: sheltered paths are longer (often two spaces on Long).
+        // v2+ sheltered paths are longer (often two spaces on Long).
         // A player who commits to Steady AND Shelter keeps a one-space
         // momentum advantage, in addition to the single existing shelter draw.
         // This is intentionally not applied on v1, other risks, or LAN.
         val steadyShelterBonus =
-            if (DecisionLab.isV2(board) && choice.risk == "low" && steadyFooting) 1
+            if (DecisionLab.supportsSteadyShelterBonus(board) &&
+                choice.risk == "low" && steadyFooting) 1
             else 0
         remainingSteps += steadyShelterBonus
         val bonusMessage = if (steadyShelterBonus > 0) " · Steady trail +1" else ""
+        if (DecisionLab.isV3(board) && poolName in listOf("shelter", "hazard")) {
+            pendingEncounterPool = poolName
+            pendingEncounterRegion = entered.region
+            pendingEncounterRoute = choice.label
+            phase = Phase.ENCOUNTER
+            lastMessage = "${players[currentIndex].name} entered ${choice.label}. Choose how to respond."
+            return
+        }
         val total = options.sumOf { it.weight }
         var ticket = random.nextInt(total)
         val event = options.first { candidate ->
@@ -495,6 +608,9 @@ class GameSession(
         eventTriggeredThisTurn = false
         pendingPrank = 0
         pendingPrankName = ""
+        pendingEncounterPool = ""
+        pendingEncounterRegion = ""
+        pendingEncounterRoute = ""
         steadyFooting = false
     }
 
