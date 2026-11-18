@@ -16,6 +16,9 @@ class BalanceAuditTest {
     private val quick = GameData.board(
         File(root, "data/boards/woodland_brookside_quick.json").readText()
     )
+    private val long = GameData.board(
+        File(root, "data/boards/woodland_cedarwood_long.json").readText()
+    )
     private val events = GameData.events(
         File(root, "data/events/woven_events_v02.json").readText()
     )
@@ -91,13 +94,13 @@ class BalanceAuditTest {
 
     @Test fun deterministicCourseAndSeatBalanceAudit() {
         val samples = buildList {
-            for (board in listOf(quick, classic)) {
+            for (board in listOf(quick, classic, long)) {
                 for (seats in 2..4) {
                     for (seed in 1..240) add(play(board, seats, seed))
                 }
             }
         }
-        assertEquals(1_440, samples.size)
+        assertEquals(2_160, samples.size)
         assertTrue("No encounters were observed", samples.any { it.encounters > 0 })
 
         val destination = File(root, "core/build/reports/balance")
@@ -107,8 +110,8 @@ class BalanceAuditTest {
                 samples.joinToString("\n") { it.csv() } + "\n"
         )
         val lines = mutableListOf<String>()
-        lines += "CROSSROADS BALANCE-28: deterministic all-AI race audit"
-        lines += "Sample: 240 fixed seeds per course and seat count; 1440 completed races"
+        lines += "CROSSROADS BALANCE-31: deterministic all-AI race audit"
+        lines += "Sample: 240 fixed seeds per course and seat count; 2160 completed races"
         lines += "Dice rolls are turn actions, NOT elapsed minutes"
         lines += "AI choices do not predict human route selection or enjoyment"
         lines += ""
@@ -116,7 +119,7 @@ class BalanceAuditTest {
             "Course", "Seats", "Median", "P90", "Min-Max", "Avg events", "Seat1 win", "Wins/seat"
         )
         val meanRolls = mutableMapOf<Pair<String, Int>, Double>()
-        for (course in listOf(quick.id, classic.id)) {
+        for (course in listOf(quick.id, classic.id, long.id)) {
             for (seats in 2..4) {
                 val group = samples.filter { it.course == course && it.seats == seats }
                 val rolls = group.map { it.rolls }
@@ -143,7 +146,15 @@ class BalanceAuditTest {
             if (ratio >= 100) lines += "    REVIEW: Quick did not prove shorter"
         }
         lines += ""
-        lines += "Encounter totals across all 1440 races:"
+        lines += "Long average dice-roll count relative to Classic (higher is longer):"
+        for (seats in 2..4) {
+            val ratio = 100 * meanRolls.getValue(long.id to seats) /
+                meanRolls.getValue(classic.id to seats)
+            lines += "  " + seats + " seats: %.1f%%".format(ratio)
+            if (ratio <= 125) lines += "    REVIEW: Long was not substantially longer"
+        }
+        lines += ""
+        lines += "Encounter totals across all 2160 races:"
         lines += "  draws: " + samples.sumOf { it.encounters }
         lines += "  advances: " + samples.sumOf { it.advances }
         lines += "  retreats: " + samples.sumOf { it.setbacks }
