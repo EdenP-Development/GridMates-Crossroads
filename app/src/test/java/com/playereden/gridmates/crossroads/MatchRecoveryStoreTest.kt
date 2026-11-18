@@ -18,6 +18,9 @@ class MatchRecoveryStoreTest {
     private val quick = GameData.board(
         File(dataRoot, "boards/woodland_brookside_quick.json").readText()
     )
+    private val cedarwood = GameData.board(
+        File(dataRoot, "boards/woodland_cedarwood_long.json").readText()
+    )
 
     private fun finishMatch(game: GameSession, onAction: () -> Unit) {
         var actions = 0
@@ -177,6 +180,36 @@ class MatchRecoveryStoreTest {
         assertNull(prefs.getString("active_match_checkpoint_v1", null))
         assertEquals(9, prefs.getInt("completed", 0))
         assertEquals(3, prefs.getInt("wins", 0))
+    }
+
+    @Test fun longRaceResumeAndBackupKeepThePreviousCoursesAvailable() {
+        val boards = mapOf(board.id to board, quick.id to quick, cedarwood.id to cedarwood)
+        val prefs = MemoryPreferences()
+        val store = MatchRecoveryStore(prefs, board, events, boards)
+        val race = GameSession(cedarwood, events, seats = 4, seed = 202,
+            humanIndices = setOf(0))
+        race.roll()
+        val start = System.currentTimeMillis() - 4000L
+        assertTrue(store.persist(race, "cedarwood-race", start))
+        val afterUpdate = MatchRecoveryStore(prefs, board, events, boards)
+        assertEquals(race.snapshot(), requireNotNull(afterUpdate.load().match).game.snapshot())
+
+        val portable = afterUpdate.exportProgress()
+        val newPrefs = MemoryPreferences()
+        val publicCopy = MatchRecoveryStore(newPrefs, board, events, boards)
+        assertTrue(publicCopy.importProgress(publicCopy.previewImport(portable)))
+        val moved = requireNotNull(publicCopy.load().match)
+        assertEquals(cedarwood.id, moved.game.board.id)
+        assertEquals(race.snapshot(), moved.game.snapshot())
+        assertEquals(0, newPrefs.getInt("wins", 0))
+        assertEquals(0, newPrefs.getInt("completed", 0))
+
+        // The earlier app sees an unknown course but never erases its bytes.
+        val oldStore = MatchRecoveryStore(prefs, board, events,
+            mapOf(board.id to board, quick.id to quick))
+        assertTrue(oldStore.load().invalidSavedMatch)
+        assertEquals(race.snapshot(),
+            requireNotNull(afterUpdate.load().match).game.snapshot())
     }
 
     @Test fun olderFinishedCheckpointGetsOneTimeElapsedFallback() {
