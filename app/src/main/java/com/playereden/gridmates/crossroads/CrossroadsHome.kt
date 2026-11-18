@@ -96,6 +96,8 @@ internal fun CrossroadsHomeScreen(
     onStart: (Int, Boolean) -> Unit,
     selectedCourseId: String,
     onCourseChange: (String) -> Unit,
+    boardLook: CrossroadsBoardLook,
+    onBoardLookChange: (CrossroadsBoardLook) -> Unit,
     playtestRules: Boolean,
     onPlaytestRulesChange: (Boolean) -> Unit,
     onNearbyHost: () -> Unit,
@@ -109,6 +111,7 @@ internal fun CrossroadsHomeScreen(
     var passAndPlay by remember { mutableStateOf(false) }
     var showGuide by remember { mutableStateOf(false) }
     var showAbout by remember { mutableStateOf(false) }
+    var showAppearancePicker by remember { mutableStateOf(false) }
     // Keep both setup selectors in the Woodland palette; Material's default
     // selected chip tint was lavender on actual Android QA1130 screenshots.
     val choiceColors = FilterChipDefaults.filterChipColors(
@@ -219,6 +222,22 @@ internal fun CrossroadsHomeScreen(
             },
             style = MaterialTheme.typography.bodySmall, color = Muted
         )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                Text("Board appearance", color = Ink,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold)
+                Text("Visual only · rules unchanged",
+                    style = MaterialTheme.typography.labelSmall, color = Muted)
+            }
+            TextButton(onClick = { showAppearancePicker = true }) {
+                Text(boardLook.label + " ▾")
+            }
+        }
         Surface(
             color = if (playtestRules) Color(0xFFE4EBD9) else Color(0xFFECE5D4),
             shape = MaterialTheme.shapes.medium
@@ -318,6 +337,44 @@ internal fun CrossroadsHomeScreen(
                 }
             }
         }
+    }
+    if (showAppearancePicker) {
+        AlertDialog(
+            onDismissRequest = { showAppearancePicker = false },
+            containerColor = Paper,
+            title = { Text("Board appearance", color = Ink) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                    Text("Choose the visual style for every course. This does not change routes, rewards or saved matches.",
+                        style = MaterialTheme.typography.bodySmall, color = Muted)
+                    CrossroadsBoardLook.entries.forEach { look ->
+                        OutlinedButton(
+                            onClick = {
+                                onBoardLookChange(look)
+                                showAppearancePicker = false
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Text(
+                                    (if (look == boardLook) "✓ " else "") + look.label,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(look.description, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAppearancePicker = false }) { Text("Done") }
+            }
+        )
     }
     if (showGuide) {
         CrossroadsHowToPlayDialog(onDismiss = { showGuide = false })
