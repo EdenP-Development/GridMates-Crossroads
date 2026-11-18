@@ -1332,6 +1332,20 @@ private fun CrossroadsApp(
                         }
                     }
                     }
+                    // The two-route list may still exceed its panel at large
+                    // accessibility font scales. Make that overflow explicit;
+                    // the second legal choice must never look unavailable.
+                    if (state.phase == Phase.ROUTE &&
+                        game.availableRoutes().size == 2 &&
+                        actionScroll.maxValue > 0 &&
+                        actionScroll.value < actionScroll.maxValue
+                    ) {
+                        Text(
+                            "Scroll down for more of this choice ↓",
+                            color = Forest,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
                 }
             }
         }
