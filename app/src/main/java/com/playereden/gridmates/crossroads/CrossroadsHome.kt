@@ -269,9 +269,11 @@ internal fun CrossroadsHomeScreen(
                     Text("NEARBY PLAY", color = Ink,
                         fontWeight = FontWeight.SemiBold)
                     Text("Nearby games connect directly on the same Wi-Fi. The host shares live match data, including game actions and the match seed, with the joined device. The current nearby connection is not encrypted, so use a trusted private Wi-Fi network.")
-                    Text("PRIVACY & RELEASE", color = Ink,
-                        fontWeight = FontWeight.SemiBold)
-                    Text("This is an in-app explanation of how the current game works, not a complete privacy policy. Public release requirements are still being prepared.")
+                    if (BuildConfig.DEBUG) {
+                        Text("QA PRIVACY NOTE", color = Ink,
+                            fontWeight = FontWeight.SemiBold)
+                        Text("This information describes the test app's current behavior. A published privacy policy and distribution review are still required before public release.")
+                    }
                 }
             },
             confirmButton = {
