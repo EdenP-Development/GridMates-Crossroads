@@ -1044,7 +1044,9 @@ private fun CrossroadsApp(
                         state.phase == Phase.ROLL && state.die == null &&
                         state.encounters.isEmpty()
                     Text(
-                        if (initialInstructions) "Roll the die to begin your journey."
+                        if (initialInstructions && game.playtestRules)
+                            "Choose Steady or Push to begin your journey."
+                        else if (initialInstructions) "Roll the die to begin your journey."
                         else "Latest action · ${state.lastMessage}",
                         style = MaterialTheme.typography.bodyMedium
                     )
