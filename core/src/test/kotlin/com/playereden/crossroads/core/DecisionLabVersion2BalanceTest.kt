@@ -150,7 +150,7 @@ class DecisionLabVersion2BalanceTest {
 
         val lines = mutableListOf<String>()
         lines += "GAMEPLAY-36 — LAB v1 versus v2 mirrored-seat comparisons"
-        lines += "3,456 paired synthetic races = 3 courses × (2+4 mirrored human seats) × 24 seeds × 4 policies × 2 rule variants."
+        lines += "3,456 individual races (1,728 paired v1-v2 scenarios) = 3 courses × (2+4 mirrored human seats) × 24 seeds × 4 policies × 2 rule variants."
         lines += "Both variants use EXACT same original board nodes, events, bot policy, seed and human seat."
         lines += "v2 adds one move step only when Steady enters a low-risk shelter route."
         lines += "Caveat: after action divergence, later RNG consumption may differ."
