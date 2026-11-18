@@ -15,6 +15,10 @@ class GameSession(
 ) {
     private val random = Random(seed)
     private val initialSeed = seed
+    val playtestRules: Boolean = DecisionLab.enabled(board)
+    // Reconstructed entirely from actions during checkpoint replay. Neither
+    // this transient guard nor UI animation enters the saved snapshot.
+    private var steadyFooting = false
     private val originalHumanIndices = humanIndices.toSortedSet()
     private val acceptedActions = mutableListOf<MatchAction>()
     // A bot turn executes one nested legal roll/route/target internally; the
@@ -126,6 +130,14 @@ class GameSession(
                         require(action.routeId == null && action.targetIndex == null)
                         game.roll()
                     }
+                    MatchActionKind.STEADY_ROLL -> {
+                        require(action.routeId == null && action.targetIndex == null)
+                        game.rollSteady()
+                    }
+                    MatchActionKind.BOLD_ROLL -> {
+                        require(action.routeId == null && action.targetIndex == null)
+                        game.rollBold()
+                    }
                     MatchActionKind.ROUTE -> {
                         require(action.routeId != null && action.targetIndex == null)
                         game.chooseRoute(action.routeId)
@@ -158,6 +170,7 @@ class GameSession(
     )
 
     fun roll() {
+        require(!playtestRules) { "Decision Lab requires a travel choice" }
         require(phase == Phase.ROLL) { "Not waiting for a roll" }
         die = random.nextInt(1, 7)
         remainingSteps = requireNotNull(die)
@@ -168,6 +181,37 @@ class GameSession(
         record(MatchAction(MatchActionKind.ROLL))
     }
 
+    /**
+     * Decision Lab: steady has predictable movement and protects against one
+     * setback encountered THIS turn. Bold can move 5–8, but die 1–2
+     * stumbles move only 1 space. Not available on legacy/LAN.
+     */
+    fun rollSteady() = travelRoll(steady = true)
+    fun rollBold() = travelRoll(steady = false)
+
+    private fun travelRoll(steady: Boolean) {
+        require(playtestRules) { "Travel tactics are not available in classic rules" }
+        require(phase == Phase.ROLL) { "Not waiting for a roll" }
+        steadyFooting = steady
+        if (steady) {
+            die = 4
+            remainingSteps = 4
+            lastMessage = "${players[currentIndex].name} chose Steady: 4 steps and firm footing."
+        } else {
+            die = random.nextInt(1, 7)
+            remainingSteps = if (requireNotNull(die) <= 2) 1 else requireNotNull(die) + 2
+            lastMessage = if (requireNotNull(die) <= 2)
+                "${players[currentIndex].name} pushed too hard and stumbled: 1 step."
+            else "${players[currentIndex].name} pushed ahead: $remainingSteps steps."
+        }
+        lastEventId = null
+        progress()
+        revision++
+        record(MatchAction(
+            if (steady) MatchActionKind.STEADY_ROLL else MatchActionKind.BOLD_ROLL
+        ))
+    }
+
     fun availableRoutes(): List<BoardNode> =
         if (phase == Phase.ROUTE) board.node(players[currentIndex].position).next.map(board::node)
         else emptyList()
@@ -175,12 +219,15 @@ class GameSession(
     fun chooseRoute(id: String) {
         require(phase == Phase.ROUTE) { "Not at a crossroads" }
         require(id in board.node(players[currentIndex].position).next) { "Invalid route" }
+        val previous = players[currentIndex].position
+        val choice = board.forkAt(previous)?.choices?.firstOrNull { it.to == id }
         stepForward(id)
         remainingSteps--
-        val label = board.forkAt(players[currentIndex].traversed[players[currentIndex].traversed.lastIndex - 1])
-            ?.choices?.firstOrNull { it.to == id }?.label ?: board.node(id).region
+        val label = choice?.label ?: board.node(id).region
         lastMessage = "${players[currentIndex].name} chose $label."
-        progress()
+        if (playtestRules && !eventTriggeredThisTurn && choice != null) {
+            resolveRouteCommitment(choice, board.node(id))
+        } else progress()
         revision++
         record(MatchAction(MatchActionKind.ROUTE, routeId = id))
     }
@@ -214,7 +261,12 @@ class GameSession(
         insideBotCommand = true
         try {
         when (phase) {
-            Phase.ROLL -> roll()
+            Phase.ROLL -> if (playtestRules) {
+                val own = distanceToFinish(players[currentIndex].position)
+                val nearest = players.indices.filter { it != currentIndex }
+                    .minOf { distanceToFinish(players[it].position) }
+                if (own <= nearest) rollSteady() else rollBold()
+            } else roll()
             Phase.ROUTE -> {
                 val routes = availableRoutes()
                 val fork = board.forkAt(players[currentIndex].position)
@@ -271,6 +323,80 @@ class GameSession(
         player.traversed.add(next)
     }
 
+    /**
+     * Commit to a route = encounter its advertised risk. On legacy boards,
+     * chance events still trigger only on landing as before. Lab routes
+     * instead always draw one eligible event on entry (at most once per
+     * turn), fixing the issue where long dice throws skipped every hazard.
+     */
+    private fun resolveRouteCommitment(choice: ForkChoice, entered: BoardNode) {
+        val poolName = when (choice.risk) {
+            "high" -> "hazard"
+            "medium" -> "mischief"
+            "low" -> "shelter"
+            else -> { progress(); return }
+        }
+        val options = catalogue.events.filter { event ->
+            entered.region in event.regions && poolName in event.pools && event.weight > 0
+        }
+        if (options.isEmpty()) {
+            // A missing regional pool must never stall or manufacture an event.
+            progress()
+            return
+        }
+        eventTriggeredThisTurn = true
+        val total = options.sumOf { it.weight }
+        var ticket = random.nextInt(total)
+        val event = options.first { candidate ->
+            ticket -= candidate.weight
+            ticket < 0
+        }
+        lastEventId = event.id
+        val title = event.description.ifBlank { event.id.replace('_', ' ') }
+        when (event.effect.type) {
+            "advance" -> {
+                remainingSteps += event.effect.spaces
+                lastMessage = "${players[currentIndex].name}: $title! +${event.effect.spaces} steps."
+                recordEncounter(title, "Route benefit: +${event.effect.spaces} steps", "benefit")
+                progress()
+            }
+            "retreat" -> {
+                if (steadyFooting) {
+                    steadyFooting = false
+                    lastMessage = "${players[currentIndex].name} held steady through $title!"
+                    recordEncounter(title, "Steady footing blocked the setback", "benefit")
+                    progress()
+                } else {
+                    moveBack(players[currentIndex], event.effect.spaces)
+                    lastMessage = "${players[currentIndex].name}: $title! Back ${event.effect.spaces}."
+                    recordEncounter(title, "Route setback: back ${spacesText(event.effect.spaces)}", "setback")
+                    finishTurn()
+                }
+            }
+            "shield" -> {
+                players[currentIndex].shield = true
+                lastMessage = "${players[currentIndex].name} found protection on $title."
+                recordEncounter(title, "Gained a shield", "benefit")
+                progress()
+            }
+            "prank" -> {
+                val targets = availablePrankTargets()
+                if (targets.isEmpty() || event.effect.spaces <= 0) {
+                    progress()
+                } else {
+                    pendingPrank = event.effect.spaces
+                    pendingPrankName = title
+                    phase = Phase.TARGET
+                    lastMessage = "Mischief! Choose a rival to send back ${spacesText(pendingPrank)}."
+                }
+            }
+            else -> error("Unsupported route event ${event.effect.type}")
+        }
+    }
+
+    private fun availablePrankTargets(): List<Int> =
+        players.indices.filter { it != currentIndex && players[it].position != board.finish }
+
     private fun resolveLanding() {
         if (eventTriggeredThisTurn || board.node(players[currentIndex].position).kind != "event") {
             finishTurn()
@@ -301,9 +427,15 @@ class GameSession(
                 if (remainingSteps > 0) progress() else finishTurn()
             }
             "retreat" -> {
-                moveBack(players[currentIndex], effect.spaces)
-                lastMessage = "${players[currentIndex].name}: $encounterTitle! Back ${effect.spaces}."
-                recordEncounter(encounterTitle, "Moved back ${spacesText(effect.spaces)}", "setback")
+                if (playtestRules && steadyFooting) {
+                    steadyFooting = false
+                    lastMessage = "${players[currentIndex].name} steadied against $encounterTitle."
+                    recordEncounter(encounterTitle, "Steady footing blocked the setback", "benefit")
+                } else {
+                    moveBack(players[currentIndex], effect.spaces)
+                    lastMessage = "${players[currentIndex].name}: $encounterTitle! Back ${effect.spaces}."
+                    recordEncounter(encounterTitle, "Moved back ${spacesText(effect.spaces)}", "setback")
+                }
                 finishTurn()
             }
             "shield" -> {
@@ -350,6 +482,7 @@ class GameSession(
         eventTriggeredThisTurn = false
         pendingPrank = 0
         pendingPrankName = ""
+        steadyFooting = false
     }
 
     private fun distanceToFinish(id: String, seen: Set<String> = emptySet()): Int {

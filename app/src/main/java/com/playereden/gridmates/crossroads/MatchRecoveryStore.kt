@@ -74,9 +74,14 @@ internal class MatchRecoveryStore(
         if (game.phase == Phase.FINISHED &&
             prefs.getString(LAST_COMPLETED_ID, null) != matchId
         ) {
-            editor.putInt("completed", prefs.getInt("completed", 0) + 1)
-            editor.putInt("wins", prefs.getInt("wins", 0) +
-                if (game.winnerIndex == 0 && game.players.count { !it.isBot } == 1) 1 else 0)
+            // Experimental races are deliberately excluded from the user's
+            // established Classic/Quick/Long records. They still receive a
+            // completed timestamp and restorable results receipt.
+            if (!game.playtestRules) {
+                editor.putInt("completed", prefs.getInt("completed", 0) + 1)
+                editor.putInt("wins", prefs.getInt("wins", 0) +
+                    if (game.winnerIndex == 0 && game.players.count { !it.isBot } == 1) 1 else 0)
+            }
             editor.putString(LAST_COMPLETED_ID, matchId)
             // Save the actual rules finish moment alongside the finished match
             // and record. Reopening the completed game must not grow its timer.

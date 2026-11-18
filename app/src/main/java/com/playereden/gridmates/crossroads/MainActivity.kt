@@ -75,6 +75,7 @@ private val Bark = Color(0xFF80664B)
 private val PlayerColors = listOf(Color(0xFFC75C49), Color(0xFF3D729F), Color(0xFF729B60), Color(0xFFB48A36))
 private enum class BoardCameraMode { FOLLOW, MANUAL }
 private enum class LanRole { OFFLINE, HOST, GUEST }
+private enum class LabRoll { STEADY, PUSH }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -113,11 +114,8 @@ private fun CrossroadsApp(
     catalogue: EventCatalogue
 ) {
     val knownBoards = remember(classicBoard, quickBoard, longBoard) {
-        mapOf(
-            classicBoard.id to classicBoard,
-            quickBoard.id to quickBoard,
-            longBoard.id to longBoard
-        )
+        val original = listOf(classicBoard, quickBoard, longBoard)
+        (original + original.map(DecisionLab::variant)).associateBy { it.id }
     }
     val context = LocalContext.current
     // Crossroads runs inside its own ComponentActivity. Explicitly observe the
@@ -153,7 +151,12 @@ private fun CrossroadsApp(
     // The course is player-selected for a new offline race, but an existing
     // checkpoint always determines its own original board.
     var selectedCourseId by remember {
-        mutableStateOf(initialRecovery.match?.game?.board?.id ?: classicBoard.id)
+        mutableStateOf(
+            DecisionLab.baseId(initialRecovery.match?.game?.board?.id ?: classicBoard.id)
+        )
+    }
+    var playtestRules by remember {
+        mutableStateOf(initialRecovery.match?.game?.playtestRules ?: false)
     }
     var activeMatchId by remember { mutableStateOf(initialRecovery.match?.matchId ?: "") }
     var matchStartedAtEpochMillis by remember {
@@ -280,6 +283,7 @@ private fun CrossroadsApp(
     var inspectBoard by remember(game) { mutableStateOf(false) }
     var showBoardGestureHint by remember { mutableStateOf(!prefs.getBoolean("board_gesture_hint_seen_v1", false)) }
     var rollingDie by remember(game) { mutableStateOf(false) }
+    var queuedLabRoll by remember(game) { mutableStateOf<LabRoll?>(null) }
     var speed by remember {
         mutableStateOf(
             runCatching {
@@ -358,7 +362,9 @@ private fun CrossroadsApp(
             repeat(rollSpeed.dieFrames) { step ->
                 // These deterministic preview pips are decorative only; the
                 // authoritative result is drawn once by GameSession.roll().
-                rollingFace = previewFaces[step % previewFaces.size]
+                rollingFace = if (game.playtestRules &&
+                    queuedLabRoll == LabRoll.STEADY) 4
+                    else previewFaces[step % previewFaces.size]
                 delay(rollSpeed.dieFrameDelayMillis(step))
             }
             // If Android paused us just as the last decorative face finished,
@@ -386,7 +392,13 @@ private fun CrossroadsApp(
                             LanTurnAuthority.apply(game, 0, LanAction(LanActionType.ROLL))
                             lanHost?.publish(game.checkpoint(activeMatchId, matchStartedAtEpochMillis))
                         } else {
-                            game.roll() // Exactly one real roll, never during preview.
+                            if (game.playtestRules) {
+                                when (queuedLabRoll) {
+                                    LabRoll.STEADY -> game.rollSteady()
+                                    LabRoll.PUSH -> game.rollBold()
+                                    null -> error("No tactical travel choice was selected")
+                                }
+                            } else game.roll() // One authoritative action after preview.
                             persistGame(game)
                         }
                         cameraTrackIndex = PresentationPacing.mover(before, game.snapshot())
@@ -397,6 +409,7 @@ private fun CrossroadsApp(
                 }
             }
             rollingDie = false
+            queuedLabRoll = null
         }
     }
     val actionScroll = rememberScrollState()
@@ -469,7 +482,9 @@ private fun CrossroadsApp(
     fun start(seats: Int, passAndPlay: Boolean) {
         if (lanRole != LanRole.OFFLINE) leaveGame()
         val humans = if (passAndPlay) (0 until seats).toSet() else setOf(0)
-        val newGame = GameSession(knownBoards.getValue(selectedCourseId), catalogue, seats = seats,
+        val boardId = if (playtestRules) selectedCourseId + DecisionLab.SUFFIX
+            else selectedCourseId
+        val newGame = GameSession(knownBoards.getValue(boardId), catalogue, seats = seats,
             seed = java.util.Random().nextInt(), humanIndices = humans)
         activeMatchId = java.util.UUID.randomUUID().toString()
         matchStartedAtEpochMillis = System.currentTimeMillis()
@@ -779,6 +794,8 @@ private fun CrossroadsApp(
             onCourseChange = { courseId ->
                 if (courseId in knownBoards) selectedCourseId = courseId
             },
+            playtestRules = playtestRules,
+            onPlaytestRulesChange = { playtestRules = it },
             onNearbyHost = {
                 lanMessage = null
                 lanRole = LanRole.HOST
@@ -1027,7 +1044,9 @@ private fun CrossroadsApp(
                         state.phase == Phase.ROLL && state.die == null &&
                         state.encounters.isEmpty()
                     Text(
-                        if (initialInstructions) "Roll the die to begin your journey."
+                        if (initialInstructions && game.playtestRules)
+                            "Choose Steady or Push to begin your journey."
+                        else if (initialInstructions) "Roll the die to begin your journey."
                         else "Latest action · ${state.lastMessage}",
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -1102,6 +1121,46 @@ private fun CrossroadsApp(
                     } else {
                         when (state.phase) {
                             Phase.ROLL -> {
+                                if (game.playtestRules && lanRole == LanRole.OFFLINE) {
+                                    Text(
+                                        "Choose your travel style",
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Forest
+                                    )
+                                    Text(
+                                        "Steady: 4 spaces, blocks one setback this turn. " +
+                                            "Push: roll 1–6; 1–2 stumbles 1 space, 3–6 moves 5–8.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Bark
+                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Button(
+                                            onClick = {
+                                                queuedLabRoll = LabRoll.STEADY
+                                                rollingDie = true
+                                            },
+                                            enabled = !rollingDie && turnReady,
+                                            modifier = Modifier.weight(1f).heightIn(min = 54.dp)
+                                        ) {
+                                            Text(if (rollingDie && queuedLabRoll == LabRoll.STEADY)
+                                                "Steady…" else "Steady · 4")
+                                        }
+                                        OutlinedButton(
+                                            onClick = {
+                                                queuedLabRoll = LabRoll.PUSH
+                                                rollingDie = true
+                                            },
+                                            enabled = !rollingDie && turnReady,
+                                            modifier = Modifier.weight(1f).heightIn(min = 54.dp)
+                                        ) {
+                                            Text(if (rollingDie && queuedLabRoll == LabRoll.PUSH)
+                                                "Pushing…" else "Push · risky")
+                                        }
+                                    }
+                                } else {
                                 Button(
                                     onClick = {
                                         if (touchFeedback) {
@@ -1130,6 +1189,7 @@ private fun CrossroadsApp(
                                         Text(if (rollingDie) "Rolling…" else "Roll the die",
                                             fontWeight = FontWeight.SemiBold)
                                     }
+                                }
                                 }
                             }
                             Phase.ROUTE -> {

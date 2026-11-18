@@ -84,6 +84,8 @@ internal fun CrossroadsHomeScreen(
     onStart: (Int, Boolean) -> Unit,
     selectedCourseId: String,
     onCourseChange: (String) -> Unit,
+    playtestRules: Boolean,
+    onPlaytestRulesChange: (Boolean) -> Unit,
     onNearbyHost: () -> Unit,
     onNearbyJoin: () -> Unit,
     onExportProgress: () -> Unit,
@@ -197,6 +199,28 @@ internal fun CrossroadsHomeScreen(
             },
             style = MaterialTheme.typography.bodySmall, color = Muted
         )
+        Surface(
+            color = if (playtestRules) Color(0xFFE4EBD9) else Color(0xFFECE5D4),
+            shape = MaterialTheme.shapes.medium
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 5.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Gameplay 2.0 · Playtest", color = Ink,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold)
+                    Text("Optional offline tactical rules",
+                        style = MaterialTheme.typography.bodySmall, color = Muted)
+                }
+                Switch(checked = playtestRules, onCheckedChange = onPlaytestRulesChange)
+            }
+        }
+        if (playtestRules) {
+            Text("Choose Steady or Push each turn. Route risks and benefits trigger when you enter a branch. Experimental balance.",
+                style = MaterialTheme.typography.bodySmall, color = Muted)
+        }
         Button(
             onClick = { onStart(seats, passAndPlay) },
             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
