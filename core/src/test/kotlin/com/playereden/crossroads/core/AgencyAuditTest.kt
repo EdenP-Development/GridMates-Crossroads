@@ -134,7 +134,7 @@ class AgencyAuditTest {
         assertEquals("Baseline stalled: ${board.id} $seats $seed", Phase.FINISHED, game.phase)
         assertEquals(board.finish, game.players[requireNotNull(game.winnerIndex)].position)
         val whatIf = firstFork?.let { checkpoint ->
-            firstOptions.mapIndexed { index, option ->
+            firstOptions.map { option ->
                 val replay = GameSession.restore(board, events, checkpoint)
                 assertEquals(Phase.ROUTE, replay.phase)
                 assertEquals(0, replay.currentIndex)
@@ -142,7 +142,7 @@ class AgencyAuditTest {
                 // A fixed, independent post-fork synthetic policy. Each
                 // branch continues honestly, with the same seeded rule RNG
                 // up until the choice. Later event draws may diverge.
-                playToFinish(replay, Random(seed * 137 + seats * 29 + index * 0))
+                playToFinish(replay, Random(seed * 137 + seats * 29))
             }
         }
 
