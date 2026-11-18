@@ -162,6 +162,7 @@ class DecisionLabVersion2Test {
                         (seed + actions) % game.availableRoutes().size
                     ].id)
                     Phase.TARGET -> game.chooseTarget(game.availableTargets().first())
+                    Phase.ENCOUNTER -> error("Encounter phase belongs only to Lab v3")
                     Phase.FINISHED -> Unit
                 }
                 if (seed <= 3) {
