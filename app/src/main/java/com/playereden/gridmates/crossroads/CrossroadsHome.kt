@@ -295,7 +295,7 @@ internal fun CrossroadsHomeScreen(
         Surface(
             modifier = Modifier.align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.safeDrawing),
+                .windowInsetsPadding(WindowInsets.navigationBars),
             color = Paper,
             shadowElevation = 8.dp
         ) {
