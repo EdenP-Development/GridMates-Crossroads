@@ -151,6 +151,19 @@
       "origin": null,
       "license": null,
       "sha256": null
+    },
+    {
+      "id": "TRAIL_ATLAS",
+      "filename": "trail_atlas_v1.png",
+      "width": 128,
+      "height": 128,
+      "requiresAlpha": true,
+      "purpose": "QA-only shared illustrated road and junction texture; horizontal road atlas (0,0,128,32), junction medallion (32,42,64,64); no pre-baked map routes",
+      "status": "approved",
+      "origin": "Original ChatGPT image generation 2026-11-18 (generation b21a09d7-9c4d-46ec-a027-e006fcf790b4); transparent cropped sprite sheet, compact 6-color RGBA atlas 128x128; visual approval pending",
+      "license": "generated",
+      "sha256": "ae5e4e8e5724b49f55f2892f96f5dca92b4b31b7bc8c84a821aef07fe2a11293",
+      "reviewStatus": "qa-preview-only-not-owner-approved"
     }
   ]
 }

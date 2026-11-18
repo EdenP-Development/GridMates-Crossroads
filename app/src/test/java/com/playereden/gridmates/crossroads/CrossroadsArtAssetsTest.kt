@@ -8,7 +8,9 @@ import org.junit.Test
 class CrossroadsArtAssetsTest {
     @Test fun artSlotPathsAreStableLocalAndUnique() {
         val slots = CrossroadsArtSlot.entries
-        assertEquals(12, slots.size)
+        assertEquals(13, slots.size)
+        assertTrue("Illustrated shared trail atlas must be registered",
+            slots.contains(CrossroadsArtSlot.TRAIL_ATLAS))
         assertEquals(slots.size, slots.map { it.filename }.distinct().size)
         slots.forEach {
             assertTrue(it.filename.matches(Regex("[a-z][a-z0-9_]*\\.png")))
