@@ -6,6 +6,8 @@ import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
@@ -59,7 +61,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.playereden.crossroads.core.*
+import java.io.ByteArrayOutputStream
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private val Forest = Color(0xFF48684D)
 private val Cream = Color(0xFFF7F0DE)
@@ -147,6 +153,62 @@ private fun CrossroadsApp(
                 "The previous journey couldn't be restored. Starting a new one will replace that save."
             else null
         )
+    }
+    var transferMessage by remember { mutableStateOf<String?>(null) }
+    var importPending by remember { mutableStateOf<VerifiedCrossroadsProgress?>(null) }
+    val transferScope = rememberCoroutineScope()
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri != null) {
+            transferScope.launch {
+                val outcome = withContext(Dispatchers.IO) {
+                    runCatching {
+                        val payload = recoveryStore.exportProgress()
+                        context.contentResolver.openOutputStream(uri, "wt")?.bufferedWriter(Charsets.UTF_8)?.use {
+                            it.write(payload)
+                        } ?: error("Could not write to the chosen document")
+                    }
+                }
+                transferMessage = if (outcome.isSuccess) {
+                    "Backup exported. Keep the JSON file somewhere private until you restore it."
+                } else {
+                    "Backup could not be exported: ${outcome.exceptionOrNull()?.message ?: "Storage error"}"
+                }
+            }
+        }
+    }
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            transferScope.launch {
+                val outcome = withContext(Dispatchers.IO) {
+                    runCatching {
+                        // Never let a hostile or accidental huge file exhaust app memory.
+                        val bytes = context.contentResolver.openInputStream(uri)?.use { source ->
+                            val output = ByteArrayOutputStream()
+                            val chunk = ByteArray(8192)
+                            while (true) {
+                                val read = source.read(chunk)
+                                if (read < 0) break
+                                if (read == 0) continue
+                                require(output.size() + read <= CrossroadsProgressCodec.MAX_DOCUMENT_BYTES) {
+                                    "This backup file is too large"
+                                }
+                                output.write(chunk, 0, read)
+                            }
+                            output.toByteArray()
+                        } ?: error("Could not read the chosen document")
+                        recoveryStore.previewImport(String(bytes, Charsets.UTF_8))
+                    }
+                }
+                outcome.onSuccess { importPending = it }
+                    .onFailure {
+                        transferMessage = "No data imported: ${it.message ?: "Invalid or incompatible backup"}"
+                    }
+            }
+        }
     }
     var revision by remember { mutableIntStateOf(0) }
     // Nearby is independent from offline local saves. Only the host changes
@@ -340,7 +402,8 @@ private fun CrossroadsApp(
     // should also pause the AI. Splitting this from the movement effect prevents
     // a dismissed menu from replaying the last movement delay or skipping a turn.
     val readingOrMenuOpen = showGuide || showJournal || inspectBoard ||
-        confirmExit || showMatchOptions || showResults
+        confirmExit || showMatchOptions || showResults ||
+        importPending != null || transferMessage != null
     LaunchedEffect(game, revision, turnReady, readingOrMenuOpen, appInForeground, lanRole, lanConnected) {
         // In nearby play only the host advances AI. Guests replay host checkpoints
         // and must never independently consume their own dice/event randomness.
@@ -701,6 +764,10 @@ private fun CrossroadsApp(
                 lanRole = LanRole.GUEST
                 lanScreen = LanScreen.JOIN
             },
+            onExportProgress = { exportLauncher.launch("GridMates-Crossroads-backup.json") },
+            onImportProgress = {
+                importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream"))
+            },
             recoveryWarning = recoveryWarning
         )
     } else {
@@ -799,6 +866,15 @@ private fun CrossroadsApp(
                                 enabled = state.encounters.isNotEmpty(),
                                 onClick = { showMatchOptions = false; showJournal = true }
                             )
+                            if (lanRole == LanRole.OFFLINE) {
+                                DropdownMenuItem(
+                                    text = { Text("Export progress") },
+                                    onClick = {
+                                        showMatchOptions = false
+                                        exportLauncher.launch("GridMates-Crossroads-backup.json")
+                                    }
+                                )
+                            }
                             HorizontalDivider()
                             DropdownMenuItem(
                                 text = {
@@ -1253,6 +1329,65 @@ private fun CrossroadsApp(
                 }
             )
         }
+    }
+    if (importPending != null) {
+        val candidate = requireNotNull(importPending)
+        AlertDialog(
+            onDismissRequest = { importPending = null },
+            containerColor = Cream,
+            title = { Text("Replace local progress?") },
+            text = {
+                val explanation = if (candidate.restoredMatch != null) {
+                    " and a saved offline race. Importing replaces this device's current records and saved race."
+                } else {
+                    ". Importing replaces this device's current records and removes any saved race."
+                }
+                Text("This backup contains ${candidate.bundle.completed} finished matches, " +
+                    "${candidate.bundle.wins} solo wins" + explanation)
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (lanRole != LanRole.OFFLINE || session != null) {
+                        transferMessage = "Finish or leave the current game before importing."
+                    } else {
+                        val imported = runCatching { recoveryStore.importProgress(candidate) }
+                            .getOrDefault(false)
+                        if (imported) {
+                            matches = prefs.getInt("completed", 0)
+                            wins = prefs.getInt("wins", 0)
+                            val restored = recoveryStore.load()
+                            session = restored.match?.game
+                            activeMatchId = restored.match?.matchId.orEmpty()
+                            matchStartedAtEpochMillis = restored.match?.startedAtEpochMillis ?: 0L
+                            startedFromCheckpoint = restored.match != null
+                            if (restored.match != null) {
+                                selectedCourseId = restored.match.game.board.id
+                            }
+                            recoveryWarning = null
+                            revision++
+                            transferMessage = "Local progress imported. Keep your backup file until you have checked your records."
+                        } else {
+                            transferMessage = "Import failed. Your existing local progress was not replaced."
+                        }
+                    }
+                    importPending = null
+                }) { Text("Replace & import") }
+            },
+            dismissButton = {
+                TextButton(onClick = { importPending = null }) { Text("Keep my data") }
+            }
+        )
+    }
+    if (transferMessage != null) {
+        AlertDialog(
+            onDismissRequest = { transferMessage = null },
+            containerColor = Cream,
+            title = { Text("Local backup") },
+            text = { Text(transferMessage.orEmpty()) },
+            confirmButton = {
+                TextButton(onClick = { transferMessage = null }) { Text("Done") }
+            }
+        )
     }
 }
 

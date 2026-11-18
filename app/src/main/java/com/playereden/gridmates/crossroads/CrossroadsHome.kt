@@ -86,6 +86,8 @@ internal fun CrossroadsHomeScreen(
     onQuickRaceChange: (Boolean) -> Unit,
     onNearbyHost: () -> Unit,
     onNearbyJoin: () -> Unit,
+    onExportProgress: () -> Unit,
+    onImportProgress: () -> Unit,
     recoveryWarning: String? = null
 ) {
     // The first run is a single tap: 1 human + 1 bot. No room codes or setup screens.
@@ -266,6 +268,16 @@ internal fun CrossroadsHomeScreen(
                     Text("SAVING YOUR PROGRESS", color = Ink,
                         fontWeight = FontWeight.SemiBold)
                     Text("Current offline matches and your local win and match counts are stored on this device. No account or cloud sync is required. Clearing app storage or uninstalling can erase this progress.")
+                    Text("Make a portable backup before switching from QA to the public app. Choose a safe location for the JSON file; it is readable text, not an encrypted backup.")
+                    OutlinedButton(
+                        onClick = { showAbout = false; onExportProgress() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Export local progress") }
+                    OutlinedButton(
+                        onClick = { showAbout = false; onImportProgress() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Import a backup") }
+                    Text("Importing requires confirmation and replaces the current device's local record and saved offline race. It does not import multiplayer rooms or synchronize devices.")
                     Text("NEARBY PLAY", color = Ink,
                         fontWeight = FontWeight.SemiBold)
                     Text("Nearby games connect directly on the same Wi-Fi. The host shares live match data, including game actions and the match seed, with the joined device. The current nearby connection is not encrypted, so use a trusted private Wi-Fi network.")
