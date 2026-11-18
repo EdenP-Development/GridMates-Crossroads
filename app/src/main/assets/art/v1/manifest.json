@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "description": "Crossroads packaged, local-only visual surfaces. Planned entries are optional. Approved entries require verified provenance and SHA-256.",
+  "slots": [
+    {
+      "id": "HOME_HERO",
+      "filename": "home_hero.png",
+      "width": 1600,
+      "height": 640,
+      "requiresAlpha": false,
+      "purpose": "Home decorative panoramic illustration; no text or play buttons",
+      "status": "planned",
+      "origin": null,
+      "license": null,
+      "sha256": null
+    },
+    {
+      "id": "BOARD_BROOKSIDE",
+      "filename": "board_brookside.png",
+      "width": 1536,
+      "height": 1536,
+      "requiresAlpha": false,
+      "purpose": "Brookside scenic backplate only; never paint routes, nodes or token positions",
+      "status": "planned",
+      "origin": null,
+      "license": null,
+      "sha256": null
+    },
+    {
+      "id": "BOARD_WOVEN",
+      "filename": "board_woven.png",
+      "width": 1536,
+      "height": 1536,
+      "requiresAlpha": false,
+      "purpose": "Woven Trail scenic backplate; meadow forest village",
+      "status": "planned",
+      "origin": null,
+      "license": null,
+      "sha256": null
+    },
+    {
+      "id": "BOARD_CEDARWOOD",
+      "filename": "board_cedarwood.png",
+      "width": 1536,
+      "height": 1536,
+      "requiresAlpha": false,
+      "purpose": "Cedarwood scenic backplate; no routes or landmarks implying other mechanics",
+      "status": "planned",
+      "origin": null,
+      "license": null,
+      "sha256": null
+    },
+    {
+      "id": "EVENT_SHELTER",
+      "filename": "event_shelter.png",
+      "width": 768,
+      "height": 768,
+      "requiresAlpha": false,
+      "purpose": "Shelter icon or vignette; no choices written into the image",
+      "status": "planned",
+      "origin": null,
+      "license": null,
+      "sha256": null
+    },
+    {
+      "id": "EVENT_HAZARD",
+      "filename": "event_hazard.png",
+      "width": 768,
+      "height": 768,
+      "requiresAlpha": false,
+      "purpose": "Hazard icon or vignette; no choices written into the image",
+      "status": "planned",
+      "origin": null,
+      "license": null,
+      "sha256": null
+    },
+    {
+      "id": "EVENT_MISCHIEF",
+      "filename": "event_mischief.png",
+      "width": 768,
+      "height": 768,
+      "requiresAlpha": false,
+      "purpose": "Mischief icon or vignette; no gameplay text",
+      "status": "planned",
+      "origin": null,
+      "license": null,
+      "sha256": null
+    },
+    {
+      "id": "RESULT_VICTORY",
+      "filename": "result_victory.png",
+      "width": 1600,
+      "height": 480,
+      "requiresAlpha": false,
+      "purpose": "Illustrated finish ceremony banner; no winner text",
+      "status": "planned",
+      "origin": null,
+      "license": null,
+      "sha256": null
+    },
+    {
+      "id": "TOKEN_SEAT_1",
+      "filename": "token_seat_1.png",
+      "width": 512,
+      "height": 512,
+      "requiresAlpha": true,
+      "purpose": "Seat-1 miniature illustration on transparent background",
+      "status": "planned",
+      "origin": null,
+      "license": null,
+      "sha256": null
+    },
+    {
+      "id": "TOKEN_SEAT_2",
+      "filename": "token_seat_2.png",
+      "width": 512,
+      "height": 512,
+      "requiresAlpha": true,
+      "purpose": "Seat-2 miniature illustration on transparent background",
+      "status": "planned",
+      "origin": null,
+      "license": null,
+      "sha256": null
+    },
+    {
+      "id": "TOKEN_SEAT_3",
+      "filename": "token_seat_3.png",
+      "width": 512,
+      "height": 512,
+      "requiresAlpha": true,
+      "purpose": "Seat-3 miniature illustration on transparent background",
+      "status": "planned",
+      "origin": null,
+      "license": null,
+      "sha256": null
+    },
+    {
+      "id": "TOKEN_SEAT_4",
+      "filename": "token_seat_4.png",
+      "width": 512,
+      "height": 512,
+      "requiresAlpha": true,
+      "purpose": "Seat-4 miniature illustration on transparent background",
+      "status": "planned",
+      "origin": null,
+      "license": null,
+      "sha256": null
+    }
+  ]
+}
