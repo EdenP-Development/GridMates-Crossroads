@@ -22,10 +22,11 @@
       "height": 1536,
       "requiresAlpha": false,
       "purpose": "Brookside scenic backplate only; never paint routes, nodes or token positions",
-      "status": "planned",
-      "origin": null,
-      "license": null,
-      "sha256": null
+      "status": "approved",
+      "origin": "Original ChatGPT image generation on 2026-11-18 (generation 3f7b1e2f-8815-498d-b41a-5bb575d8c323), RGB 1536 PNG; palette-aware 512px review export resampled to required dimensions. Source remains local.",
+      "license": "generated",
+      "sha256": "036f8dacbd7c03999f0467205df31cdec34707fb88c9b676f1024a4f53d0b4c7",
+      "reviewStatus": "qa-preview-only-not-owner-approved"
     },
     {
       "id": "BOARD_WOVEN",
@@ -47,10 +48,11 @@
       "height": 1536,
       "requiresAlpha": false,
       "purpose": "Cedarwood scenic backplate; no routes or landmarks implying other mechanics",
-      "status": "planned",
-      "origin": null,
-      "license": null,
-      "sha256": null
+      "status": "approved",
+      "origin": "Original ChatGPT image generation on 2026-11-18 (generation 8c570516-88d5-4230-b914-269108b339b2), RGB 1536 PNG; palette-aware 512px review export resampled to required dimensions. Source remains local.",
+      "license": "generated",
+      "sha256": "36528260c2a330282da93e35dcc039f738e86b47ed1ad0395d9a1a0046e5627c",
+      "reviewStatus": "qa-preview-only-not-owner-approved"
     },
     {
       "id": "EVENT_SHELTER",
