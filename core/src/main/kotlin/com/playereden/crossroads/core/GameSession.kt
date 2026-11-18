@@ -282,9 +282,10 @@ class GameSession(
                 progress()
             }
             "brace" -> {
+                players[currentIndex].shield = true
                 lastEventId = "lab_v3_hazard_brace"
-                lastMessage = "${players[currentIndex].name} braced on $route and ended the move safely."
-                recordEncounter("Hazard avoided", "Stopped here; no retreat", "benefit")
+                lastMessage = "${players[currentIndex].name} braced on $route: shield gained, move ended."
+                recordEncounter("Hazard avoided", "Shield gained; stopped safely", "benefit")
                 finishTurn()
             }
             "gamble" -> {
@@ -390,7 +391,7 @@ class GameSession(
                 val choice = when {
                     "supplies" in options -> if (leading && !players[currentIndex].shield)
                         "cover" else "supplies"
-                    "gamble" in options -> if (leading && !steadyFooting)
+                    "gamble" in options -> if (leading && !players[currentIndex].shield)
                         "brace" else "gamble"
                     else -> error("No valid encounter choice")
                 }
