@@ -71,6 +71,22 @@ jobs:
         shell: bash
         run: |
           gradle --no-daemon :core:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug             "-PcrossroadsQaVersionCode=$QA_CODE" --console=plain
+      - name: Validate unsigned public variant without distributing it
+        shell: bash
+        run: |
+          set -euo pipefail
+          gradle --no-daemon :app:assembleRelease "-PcrossroadsQaVersionCode=$QA_CODE" --console=plain
+          unsigned=app/build/outputs/apk/release/app-release-unsigned.apk
+          test -s "$unsigned"
+          tools="$ANDROID_HOME/build-tools/35.0.0"
+          "$tools/aapt" dump badging "$unsigned" | tee /tmp/crossroads-release-badging.txt
+          grep -F "package: name='com.playereden.gridmates.crossroads'" /tmp/crossroads-release-badging.txt
+          grep -F "application-label:'GridMates: Crossroads'" /tmp/crossroads-release-badging.txt
+          if "$tools/apksigner" verify "$unsigned" >/dev/null 2>&1; then
+            echo "ERROR: public preview was unexpectedly signed; review release signing setup." >&2
+            exit 1
+          fi
+          echo "Unsigned public preview compiled with correct package and label. NOT distributable." >> "$GITHUB_STEP_SUMMARY"
       - name: Verify signed APK identity and assemble receipt
         shell: bash
         run: |
