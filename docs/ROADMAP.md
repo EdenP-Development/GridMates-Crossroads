@@ -1,3 +1,6 @@
+**Active creative production direction — ARTREADY-38 (November 18, 2026):** Build visual cohesion *without* making new artwork alter game rules. [Art Bible & Import QA](ARTREADY_38_ASSET_BIBLE_AND_IMPORT_QA.md) defines 12 precise slots, runtime fallbacks, SHA/provenance gates and the **four-image first art batch** (home panorama, Woven scenery, shelter, hazard). Artwork slots are infrastructure, not evidence of the original 34-second button-mashing problem being solved; GAMEPLAY-37's interactive encounter acceptance and actual match pacing are still separate priorities. Draft PRs remain unmerged.
+
+---
 # Crossroads — Lean Classic Game Roadmap
 
 ## Current development direction — GAMEFEEL-33 (November 17, 2026)

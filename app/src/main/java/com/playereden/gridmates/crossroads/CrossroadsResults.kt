@@ -1,6 +1,7 @@
 package com.playereden.gridmates.crossroads
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -9,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,12 +60,21 @@ internal fun CrossroadsResultsContent(
     val winnerName = winnerIndex?.let { state.players.getOrNull(it)?.name } ?: "A player"
     val roundCount = (state.turn - 1) / state.players.size + 1
     val lastEncounter = state.encounters.lastOrNull()
+    val victoryArtwork = rememberOptionalCrossroadsArt(CrossroadsArtSlot.RESULT_VICTORY)
 
     Column(
         modifier = modifier.fillMaxWidth()
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
+        if (victoryArtwork != null) {
+            Image(
+                bitmap = victoryArtwork,
+                contentDescription = null, // Winner and time remain readable text.
+                modifier = Modifier.fillMaxWidth().height(84.dp),
+                contentScale = ContentScale.Crop
+            )
+        }
         Surface(
             color = if (winnerIndex == 0) Color(0xFFE4EAD5) else Color(0xFFF0E5CF),
             shape = MaterialTheme.shapes.large,

@@ -33,6 +33,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.input.pointer.pointerInput
@@ -58,6 +61,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -1253,15 +1257,36 @@ private fun CrossroadsApp(
                                 }
                             }
                             Phase.ENCOUNTER -> {
-                                Text("A woodland encounter — choose your response",
-                                    fontWeight = FontWeight.SemiBold, color = Forest)
-                                Text(
-                                    if (game.availableEncounterChoices().contains("supplies"))
-                                        "Make progress now, or keep a shield for a rival's mischief."
-                                    else "Risk the hazard for progress, or stop safely and gain a shield.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Bark
+                                val shelter = game.availableEncounterChoices().contains("supplies")
+                                val illustration = rememberOptionalCrossroadsArt(
+                                    if (shelter) CrossroadsArtSlot.EVENT_SHELTER
+                                    else CrossroadsArtSlot.EVENT_HAZARD
                                 )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    if (illustration != null) {
+                                        Image(
+                                            bitmap = illustration,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(62.dp),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    }
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text("A woodland encounter — choose your response",
+                                            fontWeight = FontWeight.SemiBold, color = Forest)
+                                        Text(
+                                            if (shelter)
+                                                "Make progress now, or keep a shield for a rival's mischief."
+                                            else "Risk the hazard for progress, or stop safely and gain a shield.",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Bark
+                                        )
+                                    }
+                                }
                                 game.availableEncounterChoices().forEach { option ->
                                     val heading = when (option) {
                                         "supplies" -> "Take supplies · +2 steps"
@@ -1278,7 +1303,22 @@ private fun CrossroadsApp(
                                 }
                             }
                             Phase.TARGET -> {
-                                Text("Mischief! Choose an opponent.", fontWeight = FontWeight.SemiBold, color = Forest)
+                                val mischiefArt = rememberOptionalCrossroadsArt(
+                                    CrossroadsArtSlot.EVENT_MISCHIEF
+                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(9.dp)
+                                ) {
+                                    if (mischiefArt != null) {
+                                        Image(mischiefArt, contentDescription = null,
+                                            modifier = Modifier.size(56.dp),
+                                            contentScale = ContentScale.Crop)
+                                    }
+                                    Text("Mischief! Choose an opponent.",
+                                        fontWeight = FontWeight.SemiBold, color = Forest)
+                                }
                                 game.availableTargets().forEach { target ->
                                     OutlinedButton(onClick = { localAction(LanAction(LanActionType.TARGET, target = target)) },
                                         enabled = turnReady,
@@ -1611,6 +1651,15 @@ private fun BoardCanvas(
     isTurnTransitioning: Boolean = false,
     startAtCurrent: Boolean = false
 ) {
+    // The scene is data-independent: scenery and optional illustrated pawns
+    // are drawn beneath the authoritative routes and numeric seat labels.
+    val boardBackdrop = rememberOptionalCrossroadsArt(CrossroadsArtCatalog.backplate(board.id))
+    val seatImages = listOf(
+        rememberOptionalCrossroadsArt(CrossroadsArtSlot.TOKEN_SEAT_1),
+        rememberOptionalCrossroadsArt(CrossroadsArtSlot.TOKEN_SEAT_2),
+        rememberOptionalCrossroadsArt(CrossroadsArtSlot.TOKEN_SEAT_3),
+        rememberOptionalCrossroadsArt(CrossroadsArtSlot.TOKEN_SEAT_4)
+    )
     // The new GameSession object resets visual positions after Rematch.
     val motion = remember(matchKey, board.id, state.players.size, animateTokens, startAtCurrent) {
         List(state.players.size) { i ->
@@ -1836,12 +1885,25 @@ private fun BoardCanvas(
                 val node = board.node(id)
                 return Offset(left + node.x * drawWidth, top + node.y * drawHeight)
             }
-            // Original ART-08 region illustration is always BELOW navigable roads.
-            // It scales with the existing gesture-first 2D camera, never the game graph.
-            drawWoodlandBoardArt(
-                boardId = board.id,
-                left = left, top = top, width = drawWidth, height = drawHeight
-            )
+            // Artwork is strictly below all navigable routes, nodes, pieces and
+            // hit targets. A missing art slot preserves the tested ART-08 drawing.
+            // Both use the same normalized board frame and camera transform.
+            if (boardBackdrop == null) {
+                drawWoodlandBoardArt(
+                    boardId = board.id,
+                    left = left, top = top, width = drawWidth, height = drawHeight
+                )
+            } else {
+                drawImage(
+                    image = boardBackdrop,
+                    srcOffset = IntOffset.Zero,
+                    srcSize = IntSize(boardBackdrop.width, boardBackdrop.height),
+                    dstOffset = IntOffset(left.toInt(), top.toInt()),
+                    dstSize = IntSize(drawWidth.toInt().coerceAtLeast(1),
+                        drawHeight.toInt().coerceAtLeast(1)),
+                    filterQuality = FilterQuality.Medium
+                )
+            }
             // Region names make the fixed course easier to learn between matches.
             drawIntoCanvas { canvas ->
                 val labelPaint = android.graphics.Paint().apply {
@@ -1857,7 +1919,7 @@ private fun BoardCanvas(
             }
             // Longer authored courses have more route nodes in the same viewport.
             // Reduce plain-node and trail thickness just for this dense atlas.
-            val denseBoard = board.id == CrossroadsCourse.LONG_ID
+            val denseBoard = DecisionLab.baseId(board.id) == CrossroadsCourse.LONG_ID
             // Shared board geography never changes with the event seed.
             board.nodes.forEach { node ->
                 val from = position(node.id)
@@ -1987,6 +2049,21 @@ private fun BoardCanvas(
                     highlighted = highlighted,
                     traveling = highlighted && isTurnTransitioning
                 )
+                // A transparent miniature sits within the existing numbered
+                // and color-coded rim; it never replaces accessibility labels.
+                seatImages.getOrNull(i)?.let { art ->
+                    val diameter = (tokenRadius * 1.35f).toInt().coerceAtLeast(1)
+                    drawImage(
+                        image = art,
+                        srcSize = IntSize(art.width, art.height),
+                        dstOffset = IntOffset(
+                            (marker.x - diameter / 2f).toInt(),
+                            (marker.y - diameter / 2f).toInt()
+                        ),
+                        dstSize = IntSize(diameter, diameter),
+                        filterQuality = FilterQuality.Medium
+                    )
+                }
                 drawIntoCanvas { canvas ->
                     val paint = android.graphics.Paint().apply {
                         color = android.graphics.Color.WHITE
