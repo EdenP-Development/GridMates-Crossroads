@@ -19,6 +19,8 @@ class GameSession(
     // Reconstructed entirely from actions during checkpoint replay. Neither
     // this transient guard nor UI animation enters the saved snapshot.
     private var steadyFooting = false
+    /** Live, replay-derived travel stance; used only to describe Lab route choices. */
+    val steadyTravelChosen: Boolean get() = playtestRules && steadyFooting
     private val originalHumanIndices = humanIndices.toSortedSet()
     private val acceptedActions = mutableListOf<MatchAction>()
     // A bot turn executes one nested legal roll/route/target internally; the
@@ -345,6 +347,15 @@ class GameSession(
             return
         }
         eventTriggeredThisTurn = true
+        // v2 alone: sheltered paths are longer (often two spaces on Long).
+        // A player who commits to Steady AND Shelter keeps a one-space
+        // momentum advantage, in addition to the single existing shelter draw.
+        // This is intentionally not applied on v1, other risks, or LAN.
+        val steadyShelterBonus =
+            if (DecisionLab.isV2(board) && choice.risk == "low" && steadyFooting) 1
+            else 0
+        remainingSteps += steadyShelterBonus
+        val bonusMessage = if (steadyShelterBonus > 0) " · Steady trail +1" else ""
         val total = options.sumOf { it.weight }
         var ticket = random.nextInt(total)
         val event = options.first { candidate ->
@@ -356,8 +367,8 @@ class GameSession(
         when (event.effect.type) {
             "advance" -> {
                 remainingSteps += event.effect.spaces
-                lastMessage = "${players[currentIndex].name}: $title! +${event.effect.spaces} steps."
-                recordEncounter(title, "Route benefit: +${event.effect.spaces} steps", "benefit")
+                lastMessage = "${players[currentIndex].name}: $title! +${event.effect.spaces} steps$bonusMessage."
+                recordEncounter(title, "Route benefit: +${event.effect.spaces} steps$bonusMessage", "benefit")
                 progress()
             }
             "retreat" -> {
@@ -375,8 +386,8 @@ class GameSession(
             }
             "shield" -> {
                 players[currentIndex].shield = true
-                lastMessage = "${players[currentIndex].name} found protection on $title."
-                recordEncounter(title, "Gained a shield", "benefit")
+                lastMessage = "${players[currentIndex].name} found protection on $title$bonusMessage."
+                recordEncounter(title, "Gained a shield$bonusMessage", "benefit")
                 progress()
             }
             "prank" -> {
