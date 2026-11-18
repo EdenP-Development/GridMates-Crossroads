@@ -16,8 +16,8 @@ class LanMultiplayerTest {
     private val catalogue = GameData.events(File(root, "data/events/woven_events_v02.json").readText())
     private val stamp = 1794931200000L
 
-    private fun room(seed: Int = 133): GameSession =
-        GameSession(board, catalogue, seats = 2, seed = seed, humanIndices = setOf(0, 1))
+    private fun room(seed: Int = 133, seats: Int = 2): GameSession =
+        GameSession(board, catalogue, seats = seats, seed = seed, humanIndices = setOf(0, 1))
 
     @Test fun onlySeatOwnerCanRollChooseRouteOrTarget() {
         val game = room()
@@ -56,6 +56,50 @@ class LanMultiplayerTest {
             LanWire.read(ByteArrayInputStream(invalid.toByteArray()))
             fail("Accepted unsupported version")
         } catch (_: IOException) {}
+    }
+
+    @Test fun twoNearbyHumansCanRaceOneOrTwoHostOwnedBotsWithVerifiedReplay() {
+        for (seats in 3..4) {
+            for (seed in listOf(101, 202, 303)) {
+                val game = room(seed, seats)
+                assertEquals(2, game.players.count { !it.isBot })
+                assertEquals(seats - 2, game.players.count { it.isBot })
+                var actions = 0
+                var botActions = 0
+                while (game.phase != Phase.FINISHED && actions++ < 400) {
+                    val seat = game.currentIndex
+                    if (game.players[seat].isBot) {
+                        assertTrue("A bot must not take a guest's seat", seat >= 2)
+                        val before = game.snapshot()
+                        try {
+                            LanTurnAuthority.apply(game, 1, LanAction(LanActionType.ROLL))
+                            fail("Guest took action on an AI turn")
+                        } catch (_: IllegalArgumentException) { }
+                        assertEquals(before, game.snapshot())
+                        game.botStep() // Only the host does this; guest replays the checkpoint.
+                        botActions++
+                    } else {
+                        val action = when (game.phase) {
+                            Phase.ROLL -> LanAction(LanActionType.ROLL)
+                            Phase.ROUTE -> LanAction(LanActionType.ROUTE,
+                                route = game.availableRoutes().first().id)
+                            Phase.TARGET -> LanAction(LanActionType.TARGET,
+                                target = game.availableTargets().first())
+                            Phase.FINISHED -> error("Already finished")
+                        }
+                        LanTurnAuthority.apply(game, seat, action)
+                    }
+                    val checkpoint = game.checkpoint("nearby-ai-$seats-$seed", stamp)
+                    val guestMirror = GameSession.restore(board, catalogue, checkpoint)
+                    assertEquals("Guest diverged from host at action $actions",
+                        game.snapshot(), guestMirror.snapshot())
+                }
+                assertEquals("Race did not finish", Phase.FINISHED, game.phase)
+                assertTrue("AI never got to move", botActions > 0)
+                assertTrue(game.checkpoint("nearby-ai-$seats-$seed", stamp).actions
+                    .any { it.kind == MatchActionKind.BOT })
+            }
+        }
     }
 
     @Test fun hostAndGuestExchangeRealVerifiedTurnsOverTcp() {
