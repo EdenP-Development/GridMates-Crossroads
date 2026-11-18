@@ -57,10 +57,11 @@ class DecisionLabTest {
             fail("Lab silently accepted old roll")
         } catch (_: IllegalArgumentException) { }
         game.rollSteady()
-        // Three spaces were traveled, then the turn ended and die was
-        // intentionally cleared by finishTurn().
+        // Four-space Steady reaches the first fork with a step to
+        // spend, so a meaningful route decision occurs on turn one.
         assertEquals(4, game.players[0].traversed.size)
-        assertEquals(Phase.ROLL, game.phase)
+        assertEquals(Phase.ROUTE, game.phase)
+        assertEquals(4, game.die)
         assertEquals(game.snapshot(),
             GameSession.restore(board, events,
                 game.checkpoint("lab-steady", started)).snapshot())
