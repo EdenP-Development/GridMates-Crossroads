@@ -68,6 +68,7 @@ class LanMultiplayerTest {
                     LanAction(LanActionType.ROUTE, route = game.availableRoutes().first().id))
                 Phase.TARGET -> LanTurnAuthority.apply(game, 0,
                     LanAction(LanActionType.TARGET, target = game.availableTargets().first()))
+                Phase.ENCOUNTER -> error("LAN never permits experimental encounters")
                 Phase.FINISHED -> error("Race ended before Player 2")
             }
         }
@@ -117,6 +118,7 @@ class LanMultiplayerTest {
                                 route = game.availableRoutes().first().id)
                             Phase.TARGET -> LanAction(LanActionType.TARGET,
                                 target = game.availableTargets().first())
+                            Phase.ENCOUNTER -> error("LAN never permits experimental encounters")
                             Phase.FINISHED -> error("Already finished")
                         }
                         LanTurnAuthority.apply(game, seat, action)
@@ -146,6 +148,7 @@ class LanMultiplayerTest {
                     LanAction(LanActionType.ROUTE, route = game.availableRoutes().first().id))
                 Phase.TARGET -> LanTurnAuthority.apply(game, 0,
                     LanAction(LanActionType.TARGET, target = game.availableTargets().first()))
+                Phase.ENCOUNTER -> error("LAN never permits experimental encounters")
                 Phase.FINISHED -> Unit
             }
         }
