@@ -2,6 +2,7 @@ package com.playereden.gridmates.crossroads
 
 import androidx.compose.ui.geometry.Offset
 import com.playereden.crossroads.core.Phase
+import com.playereden.crossroads.core.DecisionLab
 
 /** Shared, presentation-only labels. Never rename board IDs or saved-game data. */
 internal object CrossroadsCourse {
@@ -9,21 +10,25 @@ internal object CrossroadsCourse {
     const val QUICK_ID = "woodland_brookside_quick_v01"
     const val LONG_ID = "woodland_cedarwood_long_v01"
 
-    fun title(boardId: String): String = when (boardId) {
+    fun title(boardId: String): String = when (DecisionLab.baseId(boardId)) {
         QUICK_ID -> "Brookside Dash"
         LONG_ID -> "Cedarwood Expedition"
         CLASSIC_ID -> "Woven Trail"
         else -> "Woodland Crossing"
     }
 
-    fun subtitle(boardId: String): String = when (boardId) {
+    fun subtitle(boardId: String): String = if (boardId.endsWith(DecisionLab.SUFFIX))
+        "Gameplay 2.0 · Experimental"
+    else when (boardId) {
         QUICK_ID -> "Quick race"
         LONG_ID -> "Long race"
         CLASSIC_ID -> "Classic race"
         else -> "Woodland race"
     }
 
-    fun resultLine(boardId: String): String = "First across ${title(boardId)}"
+    fun resultLine(boardId: String): String =
+        "First across ${title(boardId)}" +
+            if (boardId.endsWith(DecisionLab.SUFFIX)) " · Playtest" else ""
 }
 
 /** The whole board is visible at the start and finish, with gentler midgame tracking. */
