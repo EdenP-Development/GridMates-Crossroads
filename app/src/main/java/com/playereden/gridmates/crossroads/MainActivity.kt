@@ -1085,6 +1085,7 @@ private fun CrossroadsApp(
                             (if (!turnReady) cameraTrackIndex else state.playerIndex)
                                 .coerceIn(state.players.indices)
                         ],
+                        botTurn = state.players[state.playerIndex].isBot,
                         modifier = Modifier.fillMaxWidth()
                     )
                     // A single helpful cue replaces any extra Pass & Play
@@ -1106,7 +1107,12 @@ private fun CrossroadsApp(
                         if (initialInstructions && game.playtestRules)
                             "Choose Steady or Push to begin your journey."
                         else if (initialInstructions) "Roll the die to begin your journey."
-                        else "Latest action · ${state.lastMessage}",
+                        else turnActionSummary(
+                            phase = state.phase,
+                            botTurn = state.players[state.playerIndex].isBot,
+                            actorName = currentName,
+                            latestAction = state.lastMessage
+                        ),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     if (recoveryWarning != null) {
