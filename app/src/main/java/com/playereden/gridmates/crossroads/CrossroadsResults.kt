@@ -50,6 +50,7 @@ private fun ResultStat(label: String, value: String, modifier: Modifier = Modifi
 @Composable
 internal fun CrossroadsResultsContent(
     state: Snapshot,
+    courseId: String,
     elapsedSeconds: Long,
     modifier: Modifier = Modifier
 ) {
@@ -81,7 +82,7 @@ internal fun CrossroadsResultsContent(
                         fontWeight = FontWeight.Bold,
                         color = Evergreen
                     )
-                    Text("First across Woodland Crossing",
+                    Text(CrossroadsCourse.resultLine(courseId),
                         style = MaterialTheme.typography.bodySmall, color = Earth)
                 }
             }
