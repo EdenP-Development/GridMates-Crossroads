@@ -171,6 +171,7 @@ internal fun turnMomentName(phase: Phase, moving: Boolean): String = when {
     phase == Phase.ROLL -> "DICE ROLL"
     phase == Phase.ROUTE -> "AT A CROSSROADS"
     phase == Phase.TARGET -> "MISCHIEF"
+    phase == Phase.ENCOUNTER -> "YOUR CHOICE"
     phase == Phase.FINISHED -> "FINISH LINE"
     else -> "ON THE TRAIL"
 }
@@ -191,6 +192,7 @@ internal fun TurnMomentPlaque(
     val moment = turnMomentName(phase, moving)
     val target = when (moment) {
         "AT A CROSSROADS" -> Color(0xFFF6E6C5)
+        "YOUR CHOICE" -> Color(0xFFEDE8D2)
         "FINISH LINE" -> Color(0xFFF5E5BB)
         "MISCHIEF" -> Color(0xFFECE0EB)
         "ON THE TRAIL" -> Color(0xFFE7E8D8)
