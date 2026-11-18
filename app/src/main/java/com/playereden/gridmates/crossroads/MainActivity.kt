@@ -865,6 +865,15 @@ private fun CrossroadsApp(
                                 enabled = state.encounters.isNotEmpty(),
                                 onClick = { showMatchOptions = false; showJournal = true }
                             )
+                            if (lanRole == LanRole.OFFLINE) {
+                                DropdownMenuItem(
+                                    text = { Text("Export progress") },
+                                    onClick = {
+                                        showMatchOptions = false
+                                        exportLauncher.launch("GridMates-Crossroads-backup.json")
+                                    }
+                                )
+                            }
                             HorizontalDivider()
                             DropdownMenuItem(
                                 text = {
