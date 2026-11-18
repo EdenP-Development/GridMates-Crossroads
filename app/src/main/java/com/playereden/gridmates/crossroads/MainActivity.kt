@@ -73,7 +73,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = true
-        val board = GameData.board(assets.open("boards/woodland_woven_trail.json").bufferedReader().use { it.readText() })
+        val classicBoard = GameData.board(assets.open("boards/woodland_woven_trail.json").bufferedReader().use { it.readText() })
+        val quickBoard = GameData.board(assets.open("boards/woodland_brookside_quick.json").bufferedReader().use { it.readText() })
         val catalogue = GameData.events(assets.open("events/woven_events_v02.json").bufferedReader().use { it.readText() })
         setContent {
             MaterialTheme(
@@ -82,14 +83,21 @@ class MainActivity : ComponentActivity() {
                     background = Cream, onSurface = Color(0xFF302E28), secondary = Bark
                 )
             ) {
-                CrossroadsApp(board, catalogue)
+                CrossroadsApp(classicBoard, quickBoard, catalogue)
             }
         }
     }
 }
 
 @Composable
-private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
+private fun CrossroadsApp(
+    classicBoard: BoardDefinition,
+    quickBoard: BoardDefinition,
+    catalogue: EventCatalogue
+) {
+    val knownBoards = remember(classicBoard, quickBoard) {
+        mapOf(classicBoard.id to classicBoard, quickBoard.id to quickBoard)
+    }
     val context = LocalContext.current
     // Crossroads runs inside its own ComponentActivity. Explicitly observe the
     // Activity lifecycle so no AI move happens while the app is paused.
@@ -110,8 +118,8 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         onDispose { lifecycle.removeObserver(observer) }
     }
     val prefs = remember { context.getSharedPreferences("crossroads_qa_profile_v1", 0) }
-    val recoveryStore = remember(prefs, board, catalogue) {
-        MatchRecoveryStore(prefs, board, catalogue)
+    val recoveryStore = remember(prefs, classicBoard, quickBoard, catalogue) {
+        MatchRecoveryStore(prefs, classicBoard, catalogue, knownBoards)
     }
     // A restarted Activity gets its entire authoritative match from the saved
     // seed + accepted actions; incompatible/corrupt saves never half-restore.
@@ -119,6 +127,11 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     var matches by remember { mutableIntStateOf(prefs.getInt("completed", 0)) }
     var wins by remember { mutableIntStateOf(prefs.getInt("wins", 0)) }
     var session by remember { mutableStateOf(initialRecovery.match?.game) }
+    // The course is player-selected for a new offline race, but an existing
+    // checkpoint always determines its own original board.
+    var selectedCourseId by remember {
+        mutableStateOf(initialRecovery.match?.game?.board?.id ?: classicBoard.id)
+    }
     var activeMatchId by remember { mutableStateOf(initialRecovery.match?.matchId ?: "") }
     var matchStartedAtEpochMillis by remember {
         mutableLongStateOf(initialRecovery.match?.startedAtEpochMillis ?: 0L)
@@ -174,6 +187,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         }
     }
     val game = session
+    val board = game?.board ?: knownBoards.getValue(selectedCourseId)
     val state = remember(game, revision) { game?.snapshot() }
     // QA wall-clock timer intentionally continues while away from the app.
     // The start timestamp is persisted, unlike elapsedRealtime().
@@ -371,7 +385,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     fun start(seats: Int, passAndPlay: Boolean) {
         if (lanRole != LanRole.OFFLINE) leaveGame()
         val humans = if (passAndPlay) (0 until seats).toSet() else setOf(0)
-        val newGame = GameSession(board, catalogue, seats = seats,
+        val newGame = GameSession(knownBoards.getValue(selectedCourseId), catalogue, seats = seats,
             seed = java.util.Random().nextInt(), humanIndices = humans)
         activeMatchId = java.util.UUID.randomUUID().toString()
         matchStartedAtEpochMillis = System.currentTimeMillis()
@@ -393,7 +407,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         lanBusy = true
         lanMessage = null
         val roomGame = GameSession(
-            board, catalogue, seats = seats, seed = java.util.Random().nextInt(),
+            classicBoard, catalogue, seats = seats, seed = java.util.Random().nextInt(),
             humanIndices = setOf(0, 1)
         )
         val roomId = java.util.UUID.randomUUID().toString()
@@ -507,7 +521,8 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                     mainHandler.post {
                         if (lanRole == LanRole.GUEST) {
                             runCatching {
-                                GameSession.restore(board, catalogue, checkpoint)
+                                // LAN-23 remains Classic-only until actual two-phone QA.
+                                GameSession.restore(classicBoard, catalogue, checkpoint)
                             }.onSuccess { restored ->
                                 if (restored.players.size !in 2..4 ||
                                     restored.players.take(2).any { it.isBot } ||
@@ -606,7 +621,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         val current = session ?: return
         if (lanRole == LanRole.HOST) {
             if (!lanConnected) return
-            val next = GameSession(board, catalogue, seats = current.players.size,
+            val next = GameSession(current.board, catalogue, seats = current.players.size,
                 seed = java.util.Random().nextInt(), humanIndices = setOf(0, 1))
             activeMatchId = java.util.UUID.randomUUID().toString()
             matchStartedAtEpochMillis = System.currentTimeMillis()
@@ -670,6 +685,10 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             wins = wins,
             completed = matches,
             onStart = { seats, localPlayers -> start(seats, localPlayers) },
+            quickRace = selectedCourseId == quickBoard.id,
+            onQuickRaceChange = { quick ->
+                selectedCourseId = if (quick) quickBoard.id else classicBoard.id
+            },
             onNearbyHost = {
                 lanMessage = null
                 lanRole = LanRole.HOST
