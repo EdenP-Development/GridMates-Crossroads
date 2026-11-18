@@ -32,7 +32,7 @@ private fun HomeTrailIllustration() {
         color = Color(0xFFECE5D4),
         tonalElevation = 2.dp
     ) {
-        Canvas(Modifier.fillMaxWidth().height(175.dp)) {
+        Canvas(Modifier.fillMaxWidth().height(104.dp)) {
             val inset = 12f
             val w = (size.width - 2f * inset).coerceAtLeast(1f)
             val h = (size.height - 2f * inset).coerceAtLeast(1f)
@@ -107,19 +107,14 @@ internal fun CrossroadsHomeScreen(
         modifier = Modifier.fillMaxSize().background(Paper)
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .padding(horizontal = 20.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Text("GRIDMATES · BOARD GAMES",
             style = MaterialTheme.typography.labelLarge, color = Muted)
         Text("Crossroads", fontSize = 33.sp, fontWeight = FontWeight.Bold, color = Ink)
         Text("Every path is a choice.", style = MaterialTheme.typography.titleMedium,
             color = Muted)
-        HomeTrailIllustration()
-        Text(
-            "Wander through the meadow, forest, and village. Choose your trails, take a chance, and reach the finish first.",
-            style = MaterialTheme.typography.bodyMedium, color = Ink
-        )
         if (recoveryWarning != null) {
             Surface(color = Color(0xFFF1E0CF), shape = MaterialTheme.shapes.medium) {
                 Text(
@@ -129,7 +124,6 @@ internal fun CrossroadsHomeScreen(
                 )
             }
         }
-        HorizontalDivider(color = Muted.copy(alpha = 0.24f))
         Text("Ready to play?", style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold, color = Ink)
         Row(
@@ -179,14 +173,14 @@ internal fun CrossroadsHomeScreen(
             FilterChip(
                 selected = quickRace,
                 onClick = { onQuickRaceChange(true) },
-                label = { Text("Quick · Brookside") },
+                label = { Text("Quick · Brookside", maxLines = 2) },
                 colors = choiceColors,
                 modifier = Modifier.weight(1f)
             )
             FilterChip(
                 selected = !quickRace,
                 onClick = { onQuickRaceChange(false) },
-                label = { Text("Classic · Woven Trail") },
+                label = { Text("Classic · Woven Trail", maxLines = 2) },
                 colors = choiceColors,
                 modifier = Modifier.weight(1f)
             )
@@ -223,6 +217,13 @@ internal fun CrossroadsHomeScreen(
             TextButton(onClick = { showGuide = true }) { Text("How to play") }
             TextButton(onClick = { showAbout = true }) { Text("About & data") }
         }
+        // Decorative hero artwork belongs *after* the action, not between the
+        // title and Start journey. On real phones that placed Start below the fold.
+        HomeTrailIllustration()
+        Text(
+            "Meadow, forest, village. Choose your trail and reach the finish first.",
+            style = MaterialTheme.typography.bodySmall, color = Muted
+        )
         Card(
             colors = CardDefaults.cardColors(containerColor = Color(0xFFEAE1CA)),
             modifier = Modifier.fillMaxWidth()

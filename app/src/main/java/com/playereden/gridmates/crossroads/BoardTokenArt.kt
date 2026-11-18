@@ -40,9 +40,17 @@ internal fun DrawScope.drawCrossroadsPiece(
             style = Stroke(width = radius * 0.13f)
         )
     }
-    drawCircle(Color(0xFF765F4B).copy(alpha = 0.55f), radius * 1.13f, center)
-    drawCircle(Color(0xFFFFF8E6), radius * 1.05f, center)
-    drawCircle(seatColor, radius * 0.92f, center + Offset(0f, -radius * 0.06f))
+    // Warm engraved rim and raised colored enamel. The numbered center remains
+    // unobstructed, so colorblind players can still distinguish each seat.
+    drawCircle(Color(0xFF765F4B).copy(alpha = 0.62f), radius * 1.17f, center)
+    drawCircle(Color(0xFFD5B778), radius * 1.08f, center)
+    drawCircle(Color(0xFFFFF8E6), radius * 1.00f, center)
+    drawCircle(seatColor, radius * 0.88f, center + Offset(0f, -radius * 0.06f))
+    drawCircle(
+        Color(0xFF493A2C).copy(alpha = 0.20f),
+        radius * 0.93f, center,
+        style = Stroke(width = radius * 0.07f)
+    )
 
     // Soft highlights make the token legible against both dark forest and
     // pale meadow without adding another icon or changing the player's color.

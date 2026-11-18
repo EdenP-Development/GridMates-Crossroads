@@ -1,5 +1,6 @@
 package com.playereden.gridmates.crossroads
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -8,6 +9,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
@@ -51,8 +54,16 @@ internal fun CrossroadsLanLobby(
     var participants by remember { mutableIntStateOf(2) }
     var address by remember { mutableStateOf("") }
     var code by remember { mutableStateOf("") }
+    var addressCopied by remember { mutableStateOf(false) }
+    val clipboard = LocalClipboardManager.current
+    val choiceColors = FilterChipDefaults.filterChipColors(
+        selectedContainerColor = Color(0xFFE2EAD9),
+        selectedLabelColor = forest,
+        labelColor = Color(0xFF80664B)
+    )
     Column(
-        modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)
+        modifier = Modifier.fillMaxSize().background(cream)
+            .windowInsetsPadding(WindowInsets.safeDrawing)
             .verticalScroll(rememberScrollState()).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
@@ -82,6 +93,7 @@ internal fun CrossroadsLanLobby(
                             selected = participants == count,
                             onClick = { participants = count },
                             label = { Text("$count racers") },
+                            colors = choiceColors,
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -109,20 +121,49 @@ internal fun CrossroadsLanLobby(
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                         Text("Waiting for Player 2", color = forest,
                             style = MaterialTheme.typography.titleMedium)
-                        Text("$hostSeats racers · 2 people on phones and ${hostSeats - 2} AI")
+                        Text(
+                            if (hostSeats == 2) "2 people on phones · no AI"
+                            else "$hostSeats racers · 2 people on phones and ${hostSeats - 2} AI",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                         Text("Your room should appear on the other phone under Nearby games.")
                         if (inviteCode.isNotEmpty()) {
                             Text("Room code: $inviteCode", fontWeight = FontWeight.Bold)
                         } else Text("No room code needed")
-                        Text("Manual address: $hostAddress:$hostPort",
-                            style = MaterialTheme.typography.bodyMedium)
+                        Text("Manual address", color = forest,
+                            style = MaterialTheme.typography.labelMedium)
+                        Text("$hostAddress:$hostPort",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold)
+                        OutlinedButton(
+                            enabled = hostAddress.isNotBlank() && hostPort in 1..65535,
+                            onClick = {
+                                clipboard.setText(AnnotatedString("$hostAddress:$hostPort"))
+                                addressCopied = true
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) { Text(if (addressCopied) "Address copied" else "Copy host address") }
                     }
                 }
                 Text("The match begins when Player 2 joins.")
             }
             LanScreen.JOIN -> {
                 Text("Nearby games", color = forest, style = MaterialTheme.typography.titleMedium)
-                if (rooms.isEmpty()) Text("No nearby rooms found yet. Ask the host to create one.")
+                if (rooms.isEmpty()) {
+                    Surface(
+                        color = Color(0xFFE5EBD8),
+                        shape = MaterialTheme.shapes.large,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                            Text("Looking for a room", color = forest,
+                                fontWeight = FontWeight.SemiBold)
+                            Text("Ask Player 1 to create a room, then refresh. " +
+                                "If it doesn't appear, use their address below.")
+                        }
+                    }
+                }
                 rooms.forEach { room ->
                     OutlinedButton(
                         onClick = { onJoin(room.host, room.port, code) },
@@ -143,7 +184,7 @@ internal fun CrossroadsLanLobby(
                 }
                 HorizontalDivider()
                 Text("Join manually", color = forest, style = MaterialTheme.typography.titleMedium)
-                Text("Use this if the nearby room doesn't appear.")
+                Text("Enter the address shown on the host phone (including the port).")
                 OutlinedTextField(
                     value = address, onValueChange = { address = it },
                     label = { Text("Host address") },
