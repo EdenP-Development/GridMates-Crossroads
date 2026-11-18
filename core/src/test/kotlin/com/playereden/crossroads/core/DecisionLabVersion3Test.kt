@@ -119,6 +119,7 @@ class DecisionLabVersion3Test {
         assertEquals(Phase.ROLL, safe.phase)
         assertEquals(1, safe.currentIndex)
         assertEquals("HAZ", safe.players[0].position)
+        assertTrue(safe.players[0].shield)
         assertEquals("lab_v3_hazard_brace", safe.lastEventId)
         assertEquals(safe.snapshot(), GameSession.restore(
             safe.board, fixedEvents, safe.checkpoint("brace", epoch)
