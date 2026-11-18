@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.rotate
 
 /**
  * Experimental printed-board trail treatment.
@@ -121,7 +122,7 @@ internal fun DrawScope.drawCrossroadsIllustratedTrail(
     drawLine(routeTint.copy(alpha = 0.75f), from, to,
         strokeWidth = 15f * weight, cap = StrokeCap.Round)
     val angle = Math.toDegrees(kotlin.math.atan2(delta.y.toDouble(), delta.x.toDouble())).toFloat()
-    androidx.compose.ui.graphics.drawscope.rotate(angle, pivot = from) {
+    rotate(angle, pivot = from) {
         drawImage(
             image = atlas,
             srcOffset = androidx.compose.ui.unit.IntOffset(0, 0),
