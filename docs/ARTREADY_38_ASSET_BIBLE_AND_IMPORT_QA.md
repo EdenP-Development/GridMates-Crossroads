@@ -24,11 +24,21 @@ Important: A board background **MUST NOT contain drawn path lines, playable node
 **"A tiny woodland race played on a beautifully printed tabletop."** Warm, inviting, hand-authored, slightly nostalgic and polished—like a modern illustrated family board game placed on wood, **not** generic app forms, stock fantasy art, shiny 3D MMORPG scenery or AI faux-HTML. The game should be comfortable for older/nontechnical players as well as children.
 
 - **Palette:** parchment `#F7F0DE`, deep forest `#48684D`, bark `#80664B`, muted warm gold `#D9B872`, creek blue `#8FBCC3`. These are guidance, not an excuse to ignore accessibility.
-- **Rendering:** illustrated print texture, restrained engraved edges, soft shadows, natural materials, clean silhouette of miniatures, consistent line weight, hand-painted texture with low-contrast scenery behind mechanics.
+- **Rendering:** **match the existing GridMates Woodland cut-paper editorial portrait family**: broad flat natural-color shapes, confident deep forest-green contour, cream highlights, restrained soft tabletop shadows, simple species silhouettes. Backplates may have subtle paper/wood grain, but no generic painterly stock texture, hyperrealism or extra shading on character portraits. Keep low-contrast scenery behind mechanics.
 - **Regions:** Meadow (flowers, open grassy light), Forest (canopies, firs, bridge/stream motifs), Village (cottages, orchard, fence). Cedarwood gets denser forest and warm expedition camp details; Brookside is brighter and creek-led.
 - **Lighting:** warm, soft daylight with lightly dimensional tabletop shadowing. Avoid dramatically dark forest, heavy bloom, hyperrealism, glitter and overcomplicated UI chrome.
 - **Hierarchy:** the board remains the hero; dice, player color/number, current decision and the actual road geometry must be far clearer than environmental decoration.
 - **Consistency:** the same illustration language applies to home panorama, three boards, 3 encounters, finish banner and token portraits. Reject an individual beautiful asset if it does not belong to the set.
+
+## Verified sibling artwork that can guide the style (NOT copied yet)
+
+**GitHub source inspected on November 18, 2026:** [GridMates Sudoku main](https://github.com/PlayerEden/SudokuTogether) contains **12 packaged Woodland portraits**, plus their originals, original/resource SHA-256 mappings and prompts: [packaged-assets.json](https://github.com/PlayerEden/SudokuTogether/blob/main/design/woodland/packaged-assets.json) and [generation.json](https://github.com/PlayerEden/SudokuTogether/blob/main/design/woodland/generation.json).
+
+The existing **Owl + Fox** are the strongest visual references. Their documented style is *flat editorial cut-paper artwork, forest-green outlines, warm cream and muted ochre, head-and-shoulders, transparent square crop, legible at 48px*. Other existing Woodland subjects include squirrel, tortoise, rabbit, badger, bear, deer, robin, otter, hedgehog and cat.
+
+**Reuse gate:** Those files were generated for Sudoku's collection and have provenance/hashes, but Crossroads does **not** yet have an explicit approved cross-project redistribution/licensing entry in its own manifest. Do **not** copy them, assign new collection ownership, or claim player unlocks. If reusing a portrait for a Crossroads seat, explicitly approve that source, verify terms, export a 512 × 512 transparent variant, record the *new* file SHA and original source in Crossroads' manifest, then rerun QA. The shared art language is allowed as design guidance independently of transferring binary files.
+
+For other assets, use Owl/Fox as visual reference, **not** an invitation to copy fox ears or owl feather patterns onto other species. Create scenery and event illustrations in the same simplified print/contour family.
 
 ## Approved slot registry (planned until actual files exist)
 
