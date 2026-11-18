@@ -310,8 +310,14 @@ private fun CrossroadsApp(
     }
     // QA-only presentation switch, independent from match state and saves.
     // Allows a same-board/same-art comparison of illustrated route treatments.
-    var usePrintedTrails by remember {
-        mutableStateOf(prefs.getBoolean("qa_printed_trails_v1", true))
+    var trailStyle by remember {
+        mutableStateOf(
+            runCatching {
+                CrossroadsTrailStyle.valueOf(
+                    prefs.getString("qa_trail_style_v2", "ARTWORK") ?: "ARTWORK"
+                )
+            }.getOrDefault(CrossroadsTrailStyle.ARTWORK)
+        )
     }
     var transitionDelay by remember(game) { mutableLongStateOf(0L) }
     var turnReady by remember(game) { mutableStateOf(true) }
@@ -974,13 +980,12 @@ private fun CrossroadsApp(
                             if (BuildConfig.DEBUG) {
                                 DropdownMenuItem(
                                     text = {
-                                        Text(if (usePrintedTrails) "Trail style: Printed"
-                                            else "Trail style: Simple")
+                                        Text("Trail style: ${trailStyle.label}")
                                     },
                                     onClick = {
-                                        usePrintedTrails = !usePrintedTrails
-                                        prefs.edit().putBoolean(
-                                            "qa_printed_trails_v1", usePrintedTrails
+                                        trailStyle = trailStyle.next()
+                                        prefs.edit().putString(
+                                            "qa_trail_style_v2", trailStyle.name
                                         ).apply()
                                         showMatchOptions = false
                                     }
@@ -1040,7 +1045,7 @@ private fun CrossroadsApp(
                 // The event reveal already appears in the fixed action pane.
                 // Keep the complete playable board visible, with history in Match options.
                 BoardCanvas(board, state, height = fittedBoardHeight, matchKey = game,
-                    boardLook = boardLook, printedTrails = usePrintedTrails,
+                    boardLook = boardLook, trailStyle = trailStyle,
                     stepMillis = speed.stepMillis, focusPlayerIndex = cameraTrackIndex,
                     isTurnTransitioning = !turnReady,
                     startAtCurrent = startedFromCheckpoint)
@@ -1530,7 +1535,7 @@ private fun CrossroadsApp(
                             val mapHeight = (maxWidth * 0.94f).coerceIn(245.dp, 328.dp)
                             BoardCanvas(board, state, height = mapHeight, tokenScale = 1.35f,
                                 animateTokens = false, matchKey = game,
-                                boardLook = boardLook, printedTrails = usePrintedTrails)
+                                boardLook = boardLook, trailStyle = trailStyle)
                         }
                         Text("Amber: hazard  •  Green: shelter  •  Purple: mischief",
                             style = MaterialTheme.typography.bodySmall, color = Bark)
@@ -1698,7 +1703,7 @@ private fun BoardCanvas(
     state: Snapshot,
     height: Dp = 315.dp,
     boardLook: CrossroadsBoardLook = CrossroadsBoardLook.ILLUSTRATED,
-    printedTrails: Boolean = true,
+    trailStyle: CrossroadsTrailStyle = CrossroadsTrailStyle.SIMPLE,
     tokenScale: Float = 1f,
     animateTokens: Boolean = true,
     matchKey: Any? = null,
@@ -1712,6 +1717,15 @@ private fun BoardCanvas(
     val boardBackdrop = rememberOptionalCrossroadsArt(
         if (boardLook == CrossroadsBoardLook.ILLUSTRATED)
             CrossroadsArtCatalog.backplate(board.id) else null
+    )
+    val trailAtlas = rememberOptionalCrossroadsArt(
+        if (BuildConfig.DEBUG && boardLook == CrossroadsBoardLook.ILLUSTRATED)
+            CrossroadsArtSlot.TRAIL_ATLAS else null
+    )
+    val effectiveTrails = effectiveTrailStyle(
+        wanted = if (BuildConfig.DEBUG) trailStyle else CrossroadsTrailStyle.SIMPLE,
+        illustratedBoard = boardLook == CrossroadsBoardLook.ILLUSTRATED,
+        atlasPresent = trailAtlas != null
     )
     val seatImages = listOf(
         rememberOptionalCrossroadsArt(CrossroadsArtSlot.TOKEN_SEAT_1),
@@ -1988,14 +2002,23 @@ private fun BoardCanvas(
                         node.route != "neutral" -> node.route
                         else -> "neutral"
                     }
-                    drawCrossroadsTrail(
-                        from = from,
-                        to = position(dest),
-                        route = route,
-                        dense = denseBoard,
-                        printed = boardLook == CrossroadsBoardLook.ILLUSTRATED &&
-                            printedTrails
-                    )
+                    if (effectiveTrails == CrossroadsTrailStyle.ARTWORK && trailAtlas != null) {
+                        drawCrossroadsIllustratedTrail(
+                            from = from,
+                            to = position(dest),
+                            route = route,
+                            dense = denseBoard,
+                            atlas = trailAtlas
+                        )
+                    } else {
+                        drawCrossroadsTrail(
+                            from = from,
+                            to = position(dest),
+                            route = route,
+                            dense = denseBoard,
+                            printed = effectiveTrails == CrossroadsTrailStyle.PRINTED
+                        )
+                    }
                 }
             }
             board.nodes.forEach { node ->
@@ -2034,11 +2057,16 @@ private fun BoardCanvas(
                         radius = 16.5f, center = center,
                         style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.2f))
                 }
-                if (boardLook == CrossroadsBoardLook.ILLUSTRATED && printedTrails) {
-                    // A tiny printed medallion, rather than a bare UI dot.
-                    drawCircle(Color(0xFF334C3C).copy(alpha = 0.66f),
-                        radius = radius + 3.2f, center = center)
-                    drawCircle(Color(0xFFF7EBD2), radius = radius + 1.8f, center = center)
+                when (effectiveTrails) {
+                    CrossroadsTrailStyle.ARTWORK -> if (trailAtlas != null) {
+                        drawCrossroadsIllustratedJunction(center, radius, trailAtlas)
+                    }
+                    CrossroadsTrailStyle.PRINTED -> {
+                        drawCircle(Color(0xFF334C3C).copy(alpha = 0.66f),
+                            radius = radius + 3.2f, center = center)
+                        drawCircle(Color(0xFFF7EBD2), radius = radius + 1.8f, center = center)
+                    }
+                    CrossroadsTrailStyle.SIMPLE -> Unit
                 }
                 drawCircle(color, radius, center)
                 drawCircle(Color(0xFF9E896B), radius, center,
