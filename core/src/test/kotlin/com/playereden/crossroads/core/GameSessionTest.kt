@@ -224,6 +224,7 @@ class GameSessionTest {
                     Phase.ROLL -> game.roll()
                     Phase.ROUTE -> game.chooseRoute(game.availableRoutes().first().id)
                     Phase.TARGET -> game.chooseTarget(game.availableTargets().first())
+                    Phase.ENCOUNTER -> error("Encounter phase belongs only to Lab v3")
                     Phase.FINISHED -> Unit
                 }
             }
