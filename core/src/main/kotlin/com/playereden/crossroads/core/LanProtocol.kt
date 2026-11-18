@@ -11,7 +11,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 /** Small, versioned household LAN protocol. The host alone rolls dice. */
-const val CROSSROADS_LAN_VERSION = 1
+const val CROSSROADS_LAN_VERSION = 2
 
 @Serializable
 enum class LanActionType { ROLL, ROUTE, TARGET }
@@ -20,7 +20,11 @@ enum class LanActionType { ROLL, ROUTE, TARGET }
 data class LanAction(
     val type: LanActionType,
     val route: String? = null,
-    val target: Int? = null
+    val target: Int? = null,
+    // Remote commands are tied to the specific authoritative turn the guest saw.
+    // Host-local actions omit these fields.
+    val expectedMatchId: String? = null,
+    val expectedRevision: Int? = null
 )
 
 @Serializable
@@ -48,7 +52,9 @@ object LanWire {
             return json.decodeFromString<LanPacket>(bytes.toString(Charsets.UTF_8)).also {
                 if (it.type.length !in 1..24 || it.roomId.length > 100 ||
                     it.code.length > 12 || it.token.length > 128 ||
-                    it.message.length > 300 || it.version != CROSSROADS_LAN_VERSION
+                    it.message.length > 300 ||
+                    (it.action?.expectedMatchId?.length ?: 0) > 100 ||
+                    it.version != CROSSROADS_LAN_VERSION
                 ) throw IOException("Incompatible room message")
             }
         } catch (e: IOException) {
@@ -70,6 +76,14 @@ object LanWire {
  * Rejected actions never consume a die, change a route or mutate the snapshot.
  */
 object LanTurnAuthority {
+    /** Reject replayed requests and requests belonging to an earlier rematch. */
+    fun applyRemote(game: GameSession, matchId: String, seat: Int, action: LanAction) {
+        require(action.expectedMatchId == matchId && action.expectedRevision == game.revision) {
+            "That turn has changed. Your board will refresh."
+        }
+        apply(game, seat, action)
+    }
+
     fun apply(game: GameSession, seat: Int, action: LanAction) {
         require(seat in 0..1 && seat < game.players.size) { "Invalid LAN seat" }
         require(!game.players[seat].isBot && game.currentIndex == seat) {
