@@ -98,6 +98,9 @@ internal fun DrawScope.drawWoodlandBoardArt(
         listOf(0.13f to 0.30f, 0.23f to 0.17f, 0.15f to 0.95f).forEach { (x, y) ->
             drawCircle(gold.copy(alpha = 0.27f), radius = u * 0.48f, center = p(x, y))
         }
+        // Additional illustrated landmarks are purely background art. The
+        // route graph, event markers and numbered tokens render after this.
+        drawBrooksideDetails(left, top, width, height)
         return
     }
     // Decorative art is unique to each handcrafted course. Never paint a
