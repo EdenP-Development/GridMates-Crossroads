@@ -1152,7 +1152,7 @@ private fun CrossroadsApp(
             val junction = board.forkAt(state.players[state.playerIndex].position)
             // Keep all three route options readable, without an Android system
             // purple/lavender dialog. Only the choices scroll on short phones;
-            // the title and View board action stay accessible.
+            // the title and Inspect full map action stay accessible.
             Dialog(
                 onDismissRequest = { routeDialogDismissed = true },
                 properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -1215,13 +1215,16 @@ private fun CrossroadsApp(
                                 }
                             }
                             OutlinedButton(
-                                onClick = { routeDialogDismissed = true },
+                                // Hide the three-way popup while the full map
+                                // is inspected; reopening the decision must
+                                // keep the same authoritative dice and routes.
+                                onClick = { inspectBoard = true },
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                                 border = androidx.compose.foundation.BorderStroke(
                                     1.dp, Color(0xFFB5A88F)
                                 )
                             ) {
-                                Text("View board")
+                                Text("Inspect full map")
                             }
                         }
                     }
@@ -1284,7 +1287,14 @@ private fun CrossroadsApp(
                     }
                 },
                 confirmButton = {
-                    TextButton(onClick = { inspectBoard = false }) { Text("Back to game") }
+                    TextButton(onClick = { inspectBoard = false }) {
+                        Text(
+                            if (state.phase == Phase.ROUTE &&
+                                localIsCurrentSeat && game.availableRoutes().size > 2 &&
+                                !routeDialogDismissed) "Back to route choices"
+                            else "Back to game"
+                        )
+                    }
                 }
             )
         }
