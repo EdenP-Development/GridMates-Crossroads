@@ -81,14 +81,17 @@ class DecisionLabTest {
         // First fork is two spaces from Start on Quick, hence Steady reaches it.
         val base = boards.first()
         for (risk in listOf("high", "low")) {
-            val board = DecisionLab.variant(base)
+            val firstForkAtStart = base.copy(nodes = base.nodes.map { node ->
+                if (node.id == base.start) node.copy(next = listOf("F1")) else node
+            })
+            val board = DecisionLab.variant(firstForkAtStart)
             val game = GameSession(board, events, seats = 2, seed = 31,
                 humanIndices = setOf(0, 1))
             game.rollSteady()
             assertEquals(Phase.ROUTE, game.phase)
             val fork = requireNotNull(board.forkAt(game.players[0].position))
             val selected = fork.choices.first { it.risk == risk }
-            assertEquals(null, game.lastEventId)
+            assertNull(game.lastEventId)
             game.chooseRoute(selected.to)
             assertNotNull("Entering $risk failed to trigger a route encounter",
                 game.lastEventId)
