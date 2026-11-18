@@ -11,6 +11,7 @@ on:
       - "settings.gradle.kts"
       - "gradle.properties"
       - "scripts/check_release_surface.py"
+      - "tools/check_crossroads_art_pack.py"
       - ".github/workflows/crossroads-android-qa.yml"
   pull_request:
     paths:
@@ -21,6 +22,7 @@ on:
       - "settings.gradle.kts"
       - "gradle.properties"
       - "scripts/check_release_surface.py"
+      - "tools/check_crossroads_art_pack.py"
       - ".github/workflows/crossroads-android-qa.yml"
 permissions:
   contents: read
@@ -35,6 +37,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Public-facing release surface preflight
         run: python3 scripts/check_release_surface.py
+      - name: Validate optional woodland art, provenance and size budget
+        run: python3 tools/check_crossroads_art_pack.py
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
