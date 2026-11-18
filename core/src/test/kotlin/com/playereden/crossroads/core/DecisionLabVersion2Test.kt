@@ -68,6 +68,11 @@ class DecisionLabVersion2Test {
                     .contains("Steady trail bonus +1"))
                 assertFalse(DecisionLab.routePreview(newLab, choice.to, choice.risk, false)
                     .contains("Steady trail bonus +1"))
+                val afterEncounter = DecisionLab.routePreview(newLab,
+                    choice.to, choice.risk, true, encounterAvailable = false)
+                assertTrue(afterEncounter.contains("Encounter already used this turn"))
+                assertFalse(afterEncounter.contains("bonus +1"))
+                assertFalse(afterEncounter.contains("on entry"))
             }
         }
     }
