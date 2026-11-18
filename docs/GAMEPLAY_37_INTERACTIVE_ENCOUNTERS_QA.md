@@ -17,7 +17,7 @@ Under **v3 only**, an encountered **Shelter** offers a small but genuinely conte
 
 A **Hazard** offers:
 - **Take the gamble:** draw the usual, weighted regional hazard encounter (advance or retreat); Steady still blocks one setback.
-- **Brace:** end the current move on the entered route, with no hazard setback. Good when protecting a lead; costly if you have unspent movement.
+- **Brace:** end the current move on the entered route, with no hazard setback, **and gain a shield against the next prank**. Good when protecting a lead; costly if you have unspent movement. The shield is intentional so Gamble doesn't strictly dominate Brace during a protected Steady turn.
 
 **Mischief** continues using its existing opponent-targeting action. No currency, deckbuilder, mandatory tutorial, inventory, automatic catch-up rigging, new event JSON, new animations or timed popup was introduced. Every decision is a deliberate button in the fixed game controls.
 
