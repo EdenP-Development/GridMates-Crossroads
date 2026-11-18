@@ -185,14 +185,26 @@ internal fun EncounterRibbon(note: EncounterNote) {
 }
 
 /** Presentation-only stage of a tabletop turn, never a second gameplay state. */
-internal fun turnMomentName(phase: Phase, moving: Boolean): String = when {
+internal fun turnMomentName(phase: Phase, moving: Boolean, botTurn: Boolean = false): String = when {
     moving -> "ON THE TRAIL"
     phase == Phase.ROLL -> "DICE ROLL"
     phase == Phase.ROUTE -> "AT A CROSSROADS"
     phase == Phase.TARGET -> "MISCHIEF"
-    phase == Phase.ENCOUNTER -> "YOUR CHOICE"
+    phase == Phase.ENCOUNTER -> if (botTurn) "ENCOUNTER" else "YOUR CHOICE"
     phase == Phase.FINISHED -> "FINISH LINE"
     else -> "ON THE TRAIL"
+}
+
+/** The action copy should never instruct the human to decide on a bot-controlled turn. */
+internal fun turnActionSummary(
+    phase: Phase,
+    botTurn: Boolean,
+    actorName: String,
+    latestAction: String
+): String = if (botTurn && phase == Phase.ENCOUNTER) {
+    "$actorName is resolving an encounter…"
+} else {
+    "Latest action · $latestAction"
 }
 
 /**
@@ -206,12 +218,13 @@ internal fun TurnMomentPlaque(
     phase: Phase,
     moving: Boolean,
     seatColor: Color,
+    botTurn: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    val moment = turnMomentName(phase, moving)
+    val moment = turnMomentName(phase, moving, botTurn)
     val target = when (moment) {
         "AT A CROSSROADS" -> Color(0xFFF6E6C5)
-        "YOUR CHOICE" -> Color(0xFFEDE8D2)
+        "YOUR CHOICE", "ENCOUNTER" -> Color(0xFFEDE8D2)
         "FINISH LINE" -> Color(0xFFF5E5BB)
         "MISCHIEF" -> Color(0xFFECE0EB)
         "ON THE TRAIL" -> Color(0xFFE7E8D8)
