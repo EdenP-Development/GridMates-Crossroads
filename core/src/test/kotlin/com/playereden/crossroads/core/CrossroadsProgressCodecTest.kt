@@ -71,6 +71,7 @@ class CrossroadsProgressCodecTest {
         assertInvalid(Json.encodeToString(
             CrossroadsProgressBundle(completed = 2, wins = 1, version = 99)))
         assertInvalid("{}")
+        assertInvalid("{\"completed\":1,\"wins\":0}")
         assertInvalid("a".repeat(CrossroadsProgressCodec.MAX_DOCUMENT_CHARS + 1))
         val game = GameSession(classic, events, seats = 2, seed = 22)
         game.roll()
