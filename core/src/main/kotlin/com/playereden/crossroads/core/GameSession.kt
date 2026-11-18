@@ -183,8 +183,8 @@ class GameSession(
 
     /**
      * Decision Lab: steady has predictable movement and protects against one
-     * setback encountered THIS turn. Bold can move 5–8, but 1–3 stumbles
-     * move only 1 space. Never available on established courses or LAN.
+     * setback encountered THIS turn. Bold can move 5–8, but die 1–2
+     * stumbles move only 1 space. Not available on legacy/LAN.
      */
     fun rollSteady() = travelRoll(steady = true)
     fun rollBold() = travelRoll(steady = false)
@@ -194,13 +194,13 @@ class GameSession(
         require(phase == Phase.ROLL) { "Not waiting for a roll" }
         steadyFooting = steady
         if (steady) {
-            die = 3
-            remainingSteps = 3
-            lastMessage = "${players[currentIndex].name} chose Steady: 3 steps and firm footing."
+            die = 4
+            remainingSteps = 4
+            lastMessage = "${players[currentIndex].name} chose Steady: 4 steps and firm footing."
         } else {
             die = random.nextInt(1, 7)
-            remainingSteps = if (requireNotNull(die) <= 3) 1 else requireNotNull(die) + 2
-            lastMessage = if (requireNotNull(die) <= 3)
+            remainingSteps = if (requireNotNull(die) <= 2) 1 else requireNotNull(die) + 2
+            lastMessage = if (requireNotNull(die) <= 2)
                 "${players[currentIndex].name} pushed too hard and stumbled: 1 step."
             else "${players[currentIndex].name} pushed ahead: $remainingSteps steps."
         }
