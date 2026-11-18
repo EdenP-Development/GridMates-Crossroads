@@ -47,8 +47,61 @@ internal fun DrawScope.drawWoodlandBoardArt(
         size = Size(width, height),
         cornerRadius = CornerRadius(u * 1.4f)
     )
-    // Decorative art is unique to this handcrafted course. Never draw it onto
-    // future maps with different route topology.
+    // Brookside Dash is a second handcrafted course. Give it its own quiet
+    // paper/creek identity instead of reusing Woven Trail landmarks that would
+    // misrepresent its map. All art stays beneath traversable paths.
+    if (boardId == "woodland_brookside_quick_v01") {
+        drawOval(
+            color = meadow.copy(alpha = 0.25f),
+            topLeft = p(-0.14f, 0.09f),
+            size = Size(width * 0.57f, height * 0.96f)
+        )
+        drawOval(
+            color = forest.copy(alpha = 0.24f),
+            topLeft = p(0.36f, -0.03f),
+            size = Size(width * 0.42f, height * 1.07f)
+        )
+        drawOval(
+            color = village.copy(alpha = 0.21f),
+            topLeft = p(0.74f, 0.09f),
+            size = Size(width * 0.33f, height * 0.82f)
+        )
+        val brook = Path().apply {
+            moveTo(p(0.32f, 0.09f).x, p(0.32f, 0.09f).y)
+            cubicTo(
+                p(0.28f, 0.36f).x, p(0.28f, 0.36f).y,
+                p(0.48f, 0.43f).x, p(0.48f, 0.43f).y,
+                p(0.49f, 0.61f).x, p(0.49f, 0.61f).y
+            )
+            cubicTo(
+                p(0.50f, 0.80f).x, p(0.50f, 0.80f).y,
+                p(0.65f, 0.82f).x, p(0.65f, 0.82f).y,
+                p(0.69f, 0.98f).x, p(0.69f, 0.98f).y
+            )
+        }
+        drawPath(brook, creek.copy(alpha = 0.22f),
+            style = Stroke(width = u * 1.25f, cap = StrokeCap.Round))
+        drawPath(brook, Color(0xFFDDF0EF).copy(alpha = 0.48f),
+            style = Stroke(width = u * 0.43f, cap = StrokeCap.Round))
+        // Small landmarks, deliberately outside the critical junction text.
+        listOf(0.43f to 0.09f, 0.53f to 0.13f, 0.60f to 0.18f,
+            0.51f to 0.89f, 0.58f to 0.93f).forEach { (x, y) ->
+            val c = p(x, y)
+            val crown = Path().apply {
+                moveTo(c.x, c.y - u * 0.9f)
+                lineTo(c.x - u * 0.55f, c.y + u * 0.45f)
+                lineTo(c.x + u * 0.55f, c.y + u * 0.45f)
+                close()
+            }
+            drawPath(crown, pine.copy(alpha = 0.39f))
+        }
+        listOf(0.13f to 0.30f, 0.23f to 0.17f, 0.15f to 0.95f).forEach { (x, y) ->
+            drawCircle(gold.copy(alpha = 0.27f), radius = u * 0.48f, center = p(x, y))
+        }
+        return
+    }
+    // Decorative art is unique to each handcrafted course. Never paint a
+    // known map's landmarks onto a different route graph.
     if (boardId != "woodland_woven_trail_v02") return
 
     // Very soft zones, instead of the previous blocky rectangular color panels.
