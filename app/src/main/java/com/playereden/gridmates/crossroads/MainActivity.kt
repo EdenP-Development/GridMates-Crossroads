@@ -1252,7 +1252,7 @@ private fun CrossroadsApp(
             AlertDialog(
                 onDismissRequest = { inspectBoard = false },
                 containerColor = Cream,
-                title = { Text("Woodland Crossing · Route map", color = Forest) },
+                title = { Text("${CrossroadsCourse.title(board.id)} · Route map", color = Forest) },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         BoardCanvas(board, state, height = 385.dp, tokenScale = 1.35f,
