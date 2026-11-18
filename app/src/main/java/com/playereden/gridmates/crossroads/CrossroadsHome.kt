@@ -82,8 +82,8 @@ internal fun CrossroadsHomeScreen(
     wins: Int,
     completed: Int,
     onStart: (Int, Boolean) -> Unit,
-    quickRace: Boolean,
-    onQuickRaceChange: (Boolean) -> Unit,
+    selectedCourseId: String,
+    onCourseChange: (String) -> Unit,
     onNearbyHost: () -> Unit,
     onNearbyJoin: () -> Unit,
     onExportProgress: () -> Unit,
@@ -166,28 +166,35 @@ internal fun CrossroadsHomeScreen(
         }
         Text("Choose your course", style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold, color = Ink)
+        // Short labels keep all three race lengths on one comfortable row
+        // at the owner's real-device font size; the description names the map.
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            FilterChip(
-                selected = quickRace,
-                onClick = { onQuickRaceChange(true) },
-                label = { Text("Quick · Brookside", maxLines = 2) },
-                colors = choiceColors,
-                modifier = Modifier.weight(1f)
-            )
-            FilterChip(
-                selected = !quickRace,
-                onClick = { onQuickRaceChange(false) },
-                label = { Text("Classic · Woven Trail", maxLines = 2) },
-                colors = choiceColors,
-                modifier = Modifier.weight(1f)
-            )
+            listOf(
+                CrossroadsCourse.QUICK_ID to "Quick",
+                CrossroadsCourse.CLASSIC_ID to "Classic",
+                CrossroadsCourse.LONG_ID to "Long"
+            ).forEach { (id, label) ->
+                FilterChip(
+                    selected = selectedCourseId == id,
+                    onClick = { onCourseChange(id) },
+                    label = { Text(label, maxLines = 1) },
+                    colors = choiceColors,
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
         Text(
-            if (quickRace) "Brookside Dash · 2 crossroads · a shorter, punchier route"
-            else "Woven Trail · 5 crossroads · the full woodland journey",
+            when (selectedCourseId) {
+                CrossroadsCourse.QUICK_ID ->
+                    "Brookside Dash · 2 crossroads · a short woodland sprint"
+                CrossroadsCourse.LONG_ID ->
+                    "Cedarwood Expedition · 6 crossroads · a much longer winding journey"
+                else ->
+                    "Woven Trail · 5 crossroads · the original woodland race"
+            },
             style = MaterialTheme.typography.bodySmall, color = Muted
         )
         Button(
