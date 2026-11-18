@@ -65,5 +65,7 @@ jobs:
           path: |
             core/build/reports/agency/crossroads_agency_summary.txt
             core/build/reports/agency/crossroads_agency_samples.csv
+            core/build/reports/agency/crossroads_strategy_summary.txt
+            core/build/reports/agency/crossroads_strategy_samples.csv
           if-no-files-found: warn
           retention-days: 30
