@@ -47,7 +47,7 @@ internal fun DrawScope.drawWoodlandBoardArt(
         size = Size(width, height),
         cornerRadius = CornerRadius(u * 1.4f)
     )
-    if (boardId.removeSuffix(com.playereden.crossroads.core.DecisionLab.SUFFIX) ==
+    if (com.playereden.crossroads.core.DecisionLab.baseId(boardId) ==
         "woodland_cedarwood_long_v01") {
         drawCedarwoodLongArt(left, top, width, height)
         return
@@ -55,7 +55,7 @@ internal fun DrawScope.drawWoodlandBoardArt(
     // Brookside Dash is a second handcrafted course. Give it its own quiet
     // paper/creek identity instead of reusing Woven Trail landmarks that would
     // misrepresent its map. All art stays beneath traversable paths.
-    if (boardId.removeSuffix(com.playereden.crossroads.core.DecisionLab.SUFFIX) ==
+    if (com.playereden.crossroads.core.DecisionLab.baseId(boardId) ==
         "woodland_brookside_quick_v01") {
         drawOval(
             color = meadow.copy(alpha = 0.25f),

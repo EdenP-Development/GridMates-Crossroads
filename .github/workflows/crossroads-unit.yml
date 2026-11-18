@@ -80,3 +80,14 @@ jobs:
             core/build/reports/decision-lab/lab_vs_legacy_samples.csv
           if-no-files-found: warn
           retention-days: 30
+
+      - name: Upload Gameplay v2 seat-mirrored comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-GAMEPLAY-36-${{ github.sha }}
+          path: |
+            core/build/reports/decision-lab-v2/v1_vs_v2_mirrored_seat_summary.txt
+            core/build/reports/decision-lab-v2/v1_vs_v2_mirrored_seat_samples.csv
+          if-no-files-found: warn
+          retention-days: 30

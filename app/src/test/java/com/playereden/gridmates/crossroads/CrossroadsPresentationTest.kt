@@ -19,6 +19,11 @@ class CrossroadsPresentationTest {
         assertEquals("Brookside Dash", CrossroadsCourse.title(lab))
         assertEquals("Gameplay 2.0 · Experimental", CrossroadsCourse.subtitle(lab))
         assertEquals("First across Brookside Dash · Playtest", CrossroadsCourse.resultLine(lab))
+        val secondLab = CrossroadsCourse.LONG_ID + "__decision_lab_v2"
+        assertEquals("Cedarwood Expedition", CrossroadsCourse.title(secondLab))
+        assertEquals("Gameplay 2.0 · Lab v2", CrossroadsCourse.subtitle(secondLab))
+        assertEquals("First across Cedarwood Expedition · Playtest",
+            CrossroadsCourse.resultLine(secondLab))
     }
 
     @Test fun initialForkAndFinishKeepMoreMapInView() {
