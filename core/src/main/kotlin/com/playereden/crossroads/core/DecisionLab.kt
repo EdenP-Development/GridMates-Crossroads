@@ -47,8 +47,14 @@ object DecisionLab {
 
     /** Honesty-first route text; disclose only the known risk and public path graph. */
     fun routePreview(board: BoardDefinition, to: String, risk: String?,
-                     steadyChosen: Boolean): String {
+                     steadyChosen: Boolean,
+                     encounterAvailable: Boolean = true): String {
         val shortest = minimumSpacesToFinish(board, to)
+        // A powerful move can cross more than one fork. The first on-entry
+        // encounter uses the turn's single event, so later junctions cannot
+        // honestly promise another draw or the Steady bonus.
+        if (!encounterAvailable)
+            return "Min $shortest spaces left · Encounter already used this turn"
         val encounter = when (risk) {
             "high" -> "Hazard on entry"
             "low" -> "Shelter on entry"
