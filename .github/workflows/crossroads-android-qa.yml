@@ -97,6 +97,7 @@ jobs:
           "$TOOLS/apksigner" verify --print-certs "$APK" | tee /tmp/crossroads-certs.txt
           grep -iF '75cc3c896247d71fbd51f7a3ed41f90c8218a8a5a70df8c0f6b494b5cc23d419' /tmp/crossroads-certs.txt
           "$TOOLS/aapt" dump badging "$APK" | grep -F "name='com.playereden.gridmates.crossroads.qa' versionCode='$QA_CODE'"
+          "$TOOLS/aapt" dump badging "$APK" | grep -F "application-label:'Crossroads QA'"
           cp "$APK" "GridMates-Crossroads-QA-$QA_CODE.apk"
           sha256sum "GridMates-Crossroads-QA-$QA_CODE.apk" > "GridMates-Crossroads-QA-$QA_CODE.apk.sha256"
           python3 - <<'PY'
