@@ -178,7 +178,9 @@ internal fun CrossroadsLanLobby(
             onClick = onExit,
             modifier = Modifier.align(Alignment.CenterHorizontally).heightIn(min = 48.dp)
         ) { Text("Back to main menu") }
-        Text("Nearby QA · Two Android phones · Same Wi-Fi",
-            color = Color(0xFF80664B), style = MaterialTheme.typography.labelSmall)
+        if (BuildConfig.DEBUG) {
+            Text("Nearby QA · Two Android phones · Same Wi-Fi",
+                color = Color(0xFF80664B), style = MaterialTheme.typography.labelSmall)
+        }
     }
 }
