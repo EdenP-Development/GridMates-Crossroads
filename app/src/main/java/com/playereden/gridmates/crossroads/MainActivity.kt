@@ -1252,11 +1252,25 @@ private fun CrossroadsApp(
             AlertDialog(
                 onDismissRequest = { inspectBoard = false },
                 containerColor = Cream,
-                title = { Text("${CrossroadsCourse.title(board.id)} · Route map", color = Forest) },
+                title = {
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(CrossroadsCourse.title(board.id), color = Forest,
+                            style = MaterialTheme.typography.titleLarge)
+                        Text("Route overview", color = Bark,
+                            style = MaterialTheme.typography.labelMedium)
+                    }
+                },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        BoardCanvas(board, state, height = 385.dp, tokenScale = 1.35f,
-                            animateTokens = false, matchKey = game)
+                        // The prior 385dp portrait viewport made this same
+                        // route appear far taller/narrower than the live board.
+                        // A width-based viewport keeps course proportions
+                        // more consistent on small and large phones.
+                        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                            val mapHeight = (maxWidth * 0.94f).coerceIn(245.dp, 328.dp)
+                            BoardCanvas(board, state, height = mapHeight, tokenScale = 1.35f,
+                                animateTokens = false, matchKey = game)
+                        }
                         Text("Amber: hazard  •  Green: shelter  •  Purple: mischief",
                             style = MaterialTheme.typography.bodySmall, color = Bark)
                         Text("This map is for inspection; close it to make your next move.",
