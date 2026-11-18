@@ -1687,6 +1687,9 @@ private fun BoardCanvas(
                     canvas.nativeCanvas.drawText(label, left + (0.2f + index * 0.29f) * drawWidth, top + 8f, labelPaint)
                 }
             }
+            // Longer authored courses have more route nodes in the same viewport.
+            // Reduce plain-node and trail thickness just for this dense atlas.
+            val denseBoard = board.id == CrossroadsCourse.LONG_ID
             // Shared board geography never changes with the event seed.
             board.nodes.forEach { node ->
                 val from = position(node.id)
@@ -1702,8 +1705,12 @@ private fun BoardCanvas(
                         "mischief" -> Color(0xFFA18BB1)
                         else -> Color(0xFFD4C3A3)
                     }
-                    drawLine(laneColor, from, position(dest), strokeWidth = 11f, cap = StrokeCap.Round)
-                    drawLine(Color(0xFFFCF8ED), from, position(dest), strokeWidth = 3f, cap = StrokeCap.Round)
+                    drawLine(laneColor, from, position(dest),
+                        strokeWidth = if (denseBoard) 7.5f else 11f,
+                        cap = StrokeCap.Round)
+                    drawLine(Color(0xFFFCF8ED), from, position(dest),
+                        strokeWidth = if (denseBoard) 2.0f else 3f,
+                        cap = StrokeCap.Round)
                 }
             }
             board.nodes.forEach { node ->
@@ -1720,7 +1727,13 @@ private fun BoardCanvas(
                     "finish" -> Color(0xFFB47E40)
                     else -> Color(0xFFFDF8E9)
                 }
-                val radius = if (node.kind == "fork") 12f else if (node.kind == "start" || node.kind == "finish") 13f else 7f
+                val radius = when {
+                    node.kind == "fork" -> if (denseBoard) 11f else 12f
+                    node.kind == "start" || node.kind == "finish" -> 13f
+                    denseBoard && node.kind == "plain" -> 4.75f
+                    denseBoard && node.kind == "event" -> 6.25f
+                    else -> 7f
+                }
                 // Tabletop start/finish emblems are distinguishable even when
                 // pawns are clustered near the entrance or camera is fit-to-map.
                 if (node.kind == "finish") {
