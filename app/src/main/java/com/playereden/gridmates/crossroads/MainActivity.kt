@@ -85,8 +85,15 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme(
                 colorScheme = lightColorScheme(
-                    primary = Forest, onPrimary = Color.White, surface = Cream,
-                    background = Cream, onSurface = Color(0xFF302E28), secondary = Bark
+                    primary = Forest, onPrimary = Color.White,
+                    primaryContainer = Color(0xFFE2EAD9), onPrimaryContainer = Forest,
+                    secondary = Bark, onSecondary = Color.White,
+                    secondaryContainer = Color(0xFFECE3CE), onSecondaryContainer = Bark,
+                    tertiary = Color(0xFFAD8946), onTertiary = Color.White,
+                    background = Cream, onBackground = Color(0xFF302E28),
+                    surface = Cream, onSurface = Color(0xFF302E28),
+                    surfaceVariant = Color(0xFFECE3CE), onSurfaceVariant = Bark,
+                    outline = Color(0xFF978B76), outlineVariant = Color(0xFFD8CCB3)
                 )
             ) {
                 CrossroadsApp(classicBoard, quickBoard, catalogue)
@@ -840,8 +847,17 @@ private fun CrossroadsApp(
                 ) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically) {
-                    Text("Woodland Crossing", fontWeight = FontWeight.Bold, color = Forest,
-                        style = MaterialTheme.typography.titleMedium)
+                    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                        Text(CrossroadsCourse.title(board.id),
+                            fontWeight = FontWeight.Bold, color = Forest,
+                            style = MaterialTheme.typography.titleMedium)
+                        Text(CrossroadsCourse.subtitle(board.id),
+                            color = Bark, style = MaterialTheme.typography.labelSmall)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        TextButton(onClick = { inspectBoard = true }) {
+                            Text("Full map", color = Forest)
+                        }
                     Box {
                         IconButton(
                             onClick = { showMatchOptions = true },
@@ -851,7 +867,8 @@ private fun CrossroadsApp(
                         ) { Text("⋯", fontSize = 25.sp, color = Forest) }
                         DropdownMenu(
                             expanded = showMatchOptions,
-                            onDismissRequest = { showMatchOptions = false }
+                            onDismissRequest = { showMatchOptions = false },
+                            containerColor = Cream
                         ) {
                             DropdownMenuItem(
                                 text = { Text("How to play") },
@@ -888,6 +905,7 @@ private fun CrossroadsApp(
                                 }
                             )
                         }
+                    }
                     }
                 }
                 if (showBoardGestureHint) {
@@ -1279,6 +1297,7 @@ private fun CrossroadsApp(
                                 fontWeight = FontWeight.Bold, color = Forest)
                             CrossroadsResultsContent(
                                 state = state,
+                                courseId = board.id,
                                 elapsedSeconds = finishedElapsedSeconds,
                                 modifier = Modifier.weight(1f, fill = false)
                             )
@@ -1459,7 +1478,7 @@ private fun BoardCanvas(
     val cameraSubject = focusPlayerIndex.coerceIn(displayed.indices)
     val focusPlayerName = state.players[cameraSubject].name
     val focusRegion = board.node(state.players[cameraSubject].position).region
-    val cameraDescription = "Woodland Crossing board. $focusPlayerName in $focusRegion."
+    val cameraDescription = "${CrossroadsCourse.title(board.id)} board. $focusPlayerName in $focusRegion."
     // The snapshot may have advanced to the next player while a piece is still
     // visibly traveling. The highlighted token follows the actual presentation.
     val highlightedSeat = if (isTurnTransitioning && animateTokens)
@@ -1480,7 +1499,9 @@ private fun BoardCanvas(
     )
     val autoZoom by animateFloatAsState(
         targetValue = when (cameraMode) {
-            BoardCameraMode.FOLLOW -> if (state.phase == Phase.ROUTE) 1.4f else 1.7f
+            BoardCameraMode.FOLLOW -> CrossroadsCameraPreset.followZoom(
+                state.phase, state.turn, animateTokens
+            )
             BoardCameraMode.MANUAL -> manualZoom
         },
         animationSpec = tween(durationMillis = 330),
@@ -1519,13 +1540,13 @@ private fun BoardCanvas(
         (displayed[index] - active).getDistance() < 0.012f
     }
     val focusedRank = focusedGroup.indexOf(cameraSubject)
-    val focusedDx = if (focusedGroup.size == 1) 0f
-        else (focusedRank - (focusedGroup.size - 1) / 2f) * 18f * tokenScale
-    val focusedDy = if (focusedGroup.size == 1) -14f * tokenScale else -17f * tokenScale
+    val focusedOffset = CrossroadsPiecePlacement.offset(
+        focusedRank.coerceAtLeast(0), focusedGroup.size.coerceAtLeast(1), tokenScale
+    )
     val livePieceLocation by rememberUpdatedState(
         Offset(
-            boardPadding + active.x * (viewportWidth - 2f * boardPadding).coerceAtLeast(0f) + focusedDx,
-            boardPadding + active.y * (viewportHeight - 2f * boardPadding).coerceAtLeast(0f) + focusedDy
+            boardPadding + active.x * (viewportWidth - 2f * boardPadding).coerceAtLeast(0f) + focusedOffset.x,
+            boardPadding + active.y * (viewportHeight - 2f * boardPadding).coerceAtLeast(0f) + focusedOffset.y
         )
     )
     val density = LocalDensity.current
@@ -1736,12 +1757,10 @@ private fun BoardCanvas(
                     (displayed[index] - displayed[i]).getDistance() < 0.012f
                 }
                 val rank = group.indexOf(i)
-                val dx = if (group.size == 1) 0f
-                    else (rank - (group.size - 1) / 2f) * 18f * tokenScale
-                val dy = if (group.size == 1) -14f * tokenScale else -17f * tokenScale
+                val offset = CrossroadsPiecePlacement.offset(rank, group.size, tokenScale)
                 val marker = Offset(
-                    left + displayed[i].x * drawWidth + dx,
-                    top + displayed[i].y * drawHeight + dy
+                    left + displayed[i].x * drawWidth + offset.x,
+                    top + displayed[i].y * drawHeight + offset.y
                 )
                 val highlighted = i == highlightedSeat
                 val tokenRadius = (if (highlighted) 12.5f else 11f) * tokenScale
