@@ -6,6 +6,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -115,24 +116,42 @@ internal fun RouteChoiceSummary(label: String, description: String, risk: String
         "low" -> Color(0xFF456F49)
         else -> CocoaInk
     }
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-        Surface(
-            color = accent.copy(alpha = 0.12f),
-            shape = RoundedCornerShape(9.dp)
+    // Keep the route's name and risk together, then give the actual stakes
+    // the whole card width. Side-by-side labels used to wrap a two-route fork
+    // into very tall buttons and hide the second option on small phones.
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(9.dp)
         ) {
             Text(
-                name,
-                color = accent,
-                style = MaterialTheme.typography.labelSmall,
+                label,
+                modifier = Modifier.weight(1f),
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 7.dp, vertical = 6.dp)
+                color = PineInk,
+                style = MaterialTheme.typography.bodyMedium
             )
+            Surface(
+                color = accent.copy(alpha = 0.12f),
+                shape = RoundedCornerShape(9.dp)
+            ) {
+                Text(
+                    name, color = accent,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
+                )
+            }
         }
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(label, fontWeight = FontWeight.SemiBold, color = PineInk,
-                style = MaterialTheme.typography.bodyMedium)
-            Text(description, style = MaterialTheme.typography.bodySmall, color = CocoaInk)
-        }
+        Text(
+            description,
+            style = MaterialTheme.typography.bodySmall,
+            color = CocoaInk
+        )
     }
 }
 
