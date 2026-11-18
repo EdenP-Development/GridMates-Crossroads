@@ -29,7 +29,7 @@ concurrency:
 jobs:
   rules:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -89,5 +89,16 @@ jobs:
           path: |
             core/build/reports/decision-lab-v2/v1_vs_v2_mirrored_seat_summary.txt
             core/build/reports/decision-lab-v2/v1_vs_v2_mirrored_seat_samples.csv
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload Gameplay v3 encounter-agency comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-GAMEPLAY-37-${{ github.sha }}
+          path: |
+            core/build/reports/encounter-lab-v3/v2_vs_v3_mirrored_summary.txt
+            core/build/reports/encounter-lab-v3/v2_vs_v3_mirrored_samples.csv
           if-no-files-found: warn
           retention-days: 30

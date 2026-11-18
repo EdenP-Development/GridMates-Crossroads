@@ -116,7 +116,8 @@ private fun CrossroadsApp(
     val knownBoards = remember(classicBoard, quickBoard, longBoard) {
         val original = listOf(classicBoard, quickBoard, longBoard)
         (original + original.map(DecisionLab::variant) +
-            original.map(DecisionLab::variantV2)).associateBy { it.id }
+            original.map(DecisionLab::variantV2) +
+            original.map(DecisionLab::variantV3)).associateBy { it.id }
     }
     val context = LocalContext.current
     // Crossroads runs inside its own ComponentActivity. Explicitly observe the
@@ -483,7 +484,7 @@ private fun CrossroadsApp(
     fun start(seats: Int, passAndPlay: Boolean) {
         if (lanRole != LanRole.OFFLINE) leaveGame()
         val humans = if (passAndPlay) (0 until seats).toSet() else setOf(0)
-        val boardId = if (playtestRules) selectedCourseId + DecisionLab.V2_SUFFIX
+        val boardId = if (playtestRules) selectedCourseId + DecisionLab.V3_SUFFIX
             else selectedCourseId
         val newGame = GameSession(knownBoards.getValue(boardId), catalogue, seats = seats,
             seed = java.util.Random().nextInt(), humanIndices = humans)
@@ -717,6 +718,26 @@ private fun CrossroadsApp(
         } else {
             persistGame(current)
         }
+        cameraTrackIndex = PresentationPacing.mover(before, current.snapshot())
+        transitionDelay = PresentationPacing.waitForMovement(before, current.snapshot(), speed)
+        turnReady = false
+        revision++
+    }
+
+    fun localEncounterChoice(choice: String) {
+        val current = session ?: return
+        if (lanRole != LanRole.OFFLINE ||
+            current.players[current.currentIndex].isBot || !turnReady) return
+        val before = current.snapshot()
+        val outcome = runCatching { current.chooseEncounter(choice) }
+        if (outcome.isFailure) {
+            lanMessage = outcome.exceptionOrNull()?.message ?: "Unavailable encounter choice"
+            return
+        }
+        if (touchFeedback) {
+            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        }
+        persistGame(current)
         cameraTrackIndex = PresentationPacing.mover(before, current.snapshot())
         transitionDelay = PresentationPacing.waitForMovement(before, current.snapshot(), speed)
         turnReady = false
@@ -1229,6 +1250,31 @@ private fun CrossroadsApp(
                                             )
                                         }
                                     }
+                                }
+                            }
+                            Phase.ENCOUNTER -> {
+                                Text("A woodland encounter — choose your response",
+                                    fontWeight = FontWeight.SemiBold, color = Forest)
+                                Text(
+                                    if (game.availableEncounterChoices().contains("supplies"))
+                                        "Make progress now, or keep a shield for a rival's mischief."
+                                    else "Risk the hazard for progress, or stop safely and gain a shield.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Bark
+                                )
+                                game.availableEncounterChoices().forEach { option ->
+                                    val heading = when (option) {
+                                        "supplies" -> "Take supplies · +2 steps"
+                                        "cover" -> "Take cover · shield +1 step"
+                                        "gamble" -> "Take the gamble · risk hazard outcome"
+                                        "brace" -> "Brace · gain shield, end move"
+                                        else -> option
+                                    }
+                                    OutlinedButton(
+                                        onClick = { localEncounterChoice(option) },
+                                        enabled = turnReady,
+                                        modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp)
+                                    ) { Text(heading) }
                                 }
                             }
                             Phase.TARGET -> {

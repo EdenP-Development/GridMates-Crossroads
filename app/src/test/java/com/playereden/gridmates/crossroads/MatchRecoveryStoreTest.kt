@@ -32,6 +32,7 @@ class MatchRecoveryStoreTest {
                     Phase.ROLL -> game.roll()
                     Phase.ROUTE -> game.chooseRoute(game.availableRoutes().first().id)
                     Phase.TARGET -> game.chooseTarget(game.availableTargets().first())
+                    Phase.ENCOUNTER -> error("Older rules must not enter Lab v3 encounters")
                     Phase.FINISHED -> Unit
                 }
             }
@@ -230,6 +231,7 @@ class MatchRecoveryStoreTest {
                 Phase.ROLL -> if (actions % 2 == 0) game.rollSteady() else game.rollBold()
                 Phase.ROUTE -> game.chooseRoute(game.availableRoutes().first().id)
                 Phase.TARGET -> game.chooseTarget(game.availableTargets().first())
+                Phase.ENCOUNTER -> error("Older rules must not enter Lab v3 encounters")
                 Phase.FINISHED -> Unit
             }
             assertTrue(storage.persist(game, "lab-playtest", start))
@@ -293,6 +295,44 @@ class MatchRecoveryStoreTest {
             requireNotNull(imported.load().match).game.snapshot())
         assertEquals(12, prefs.getInt("completed", 0))
         assertEquals(5, prefs.getInt("wins", 0))
+    }
+
+    @Test fun v3EncounterPendingCheckpointResumesWithoutAFreeChoice() {
+        val v1 = DecisionLab.variant(quick)
+        val v2 = DecisionLab.variantV2(quick)
+        val v3 = DecisionLab.variantV3(quick)
+        val registry = mapOf(board.id to board, quick.id to quick,
+            v1.id to v1, v2.id to v2, v3.id to v3)
+        val prefs = MemoryPreferences()
+        prefs.edit().putInt("wins", 7).putInt("completed", 11).commit()
+        val store = MatchRecoveryStore(prefs, board, events, registry)
+        val game = GameSession(v3, events, 2, 61, setOf(0))
+        game.rollSteady()
+        assertEquals(Phase.ROUTE, game.phase)
+        game.chooseRoute(game.availableRoutes().first { route ->
+            quick.forkAt(game.players[0].position)?.choices
+                ?.firstOrNull { it.to == route.id }?.risk == "low"
+        }.id)
+        assertEquals(Phase.ENCOUNTER, game.phase)
+        assertTrue(store.persist(game, "pending-v3-encounter",
+            System.currentTimeMillis() - 10_000L))
+        val loaded = requireNotNull(store.load().match).game
+        assertEquals(Phase.ENCOUNTER, loaded.phase)
+        assertEquals(game.snapshot(), loaded.snapshot())
+        assertEquals(game.availableEncounterChoices(), loaded.availableEncounterChoices())
+
+        val backup = store.exportProgress()
+        val another = MatchRecoveryStore(MemoryPreferences(), board, events, registry)
+        assertTrue(another.importProgress(another.previewImport(backup)))
+        assertEquals(loaded.snapshot(), requireNotNull(another.load().match).game.snapshot())
+        loaded.chooseEncounter("cover")
+        assertTrue(store.persist(loaded, "pending-v3-encounter",
+            System.currentTimeMillis() - 10_000L))
+        assertEquals(7, prefs.getInt("wins", 0))
+        assertEquals(11, prefs.getInt("completed", 0))
+        val stored = requireNotNull(store.load().match).game
+        assertEquals(loaded.snapshot(), stored.snapshot())
+        assertTrue(stored.availableEncounterChoices().isEmpty())
     }
 
     @Test fun olderFinishedCheckpointGetsOneTimeElapsedFallback() {
