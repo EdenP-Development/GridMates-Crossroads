@@ -32,6 +32,7 @@ class MatchRecoveryStoreTest {
                     Phase.ROLL -> game.roll()
                     Phase.ROUTE -> game.chooseRoute(game.availableRoutes().first().id)
                     Phase.TARGET -> game.chooseTarget(game.availableTargets().first())
+                    Phase.ENCOUNTER -> error("Older rules must not enter Lab v3 encounters")
                     Phase.FINISHED -> Unit
                 }
             }
@@ -230,6 +231,7 @@ class MatchRecoveryStoreTest {
                 Phase.ROLL -> if (actions % 2 == 0) game.rollSteady() else game.rollBold()
                 Phase.ROUTE -> game.chooseRoute(game.availableRoutes().first().id)
                 Phase.TARGET -> game.chooseTarget(game.availableTargets().first())
+                Phase.ENCOUNTER -> error("Older rules must not enter Lab v3 encounters")
                 Phase.FINISHED -> Unit
             }
             assertTrue(storage.persist(game, "lab-playtest", start))
