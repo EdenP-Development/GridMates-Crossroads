@@ -56,3 +56,14 @@ jobs:
             core/build/reports/balance/crossroads_balance_samples.csv
           if-no-files-found: warn
           retention-days: 30
+
+      - name: Upload gameplay agency / decision-leverage audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-AGENCY-34-${{ github.sha }}
+          path: |
+            core/build/reports/agency/crossroads_agency_summary.txt
+            core/build/reports/agency/crossroads_agency_samples.csv
+          if-no-files-found: warn
+          retention-days: 30
