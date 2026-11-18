@@ -8,6 +8,8 @@ class CrossroadsPresentationTest {
     @Test fun courseTitlesAreSpecificAndNeverAlterStoredIds() {
         assertEquals("Woven Trail", CrossroadsCourse.title(CrossroadsCourse.CLASSIC_ID))
         assertEquals("Brookside Dash", CrossroadsCourse.title(CrossroadsCourse.QUICK_ID))
+        assertEquals("Cedarwood Expedition", CrossroadsCourse.title(CrossroadsCourse.LONG_ID))
+        assertEquals("Long race", CrossroadsCourse.subtitle(CrossroadsCourse.LONG_ID))
         assertEquals("Classic race", CrossroadsCourse.subtitle(CrossroadsCourse.CLASSIC_ID))
         assertEquals("Quick race", CrossroadsCourse.subtitle(CrossroadsCourse.QUICK_ID))
         assertEquals("First across Brookside Dash",
