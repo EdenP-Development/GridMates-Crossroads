@@ -43,6 +43,31 @@ class LongCourseTest {
         assertTrue(all.distinct().size > 4)
     }
 
+    @Test fun noDecorativeCrossingLooksLikeAFakeLegalJunction() {
+        val edges = long.nodes.flatMap { from ->
+            from.next.map { id -> from to long.node(id) }
+        }
+        fun side(a: BoardNode, b: BoardNode, c: BoardNode): Float =
+            (b.x - a.x) * (c.y - a.y) -
+                (b.y - a.y) * (c.x - a.x)
+        val fakeCrossings = mutableListOf<String>()
+        for (i in edges.indices) for (j in i + 1 until edges.size) {
+            val (a, b) = edges[i]
+            val (c, d) = edges[j]
+            if (a.id == c.id || a.id == d.id || b.id == c.id || b.id == d.id) continue
+            // A proper line-segment intersection without a graph node is a
+            // misleading visual fork: users should never be asked to guess.
+            val p = side(a, b, c)
+            val q = side(a, b, d)
+            val r = side(c, d, a)
+            val t = side(c, d, b)
+            if (p * q < -0.00000001f && r * t < -0.00000001f) {
+                fakeCrossings += "${a.id}->${b.id} crosses ${c.id}->${d.id}"
+            }
+        }
+        assertTrue(fakeCrossings.joinToString("; "), fakeCrossings.isEmpty())
+    }
+
     @Test fun everyBranchHasAnHonestRiskAndPlayEnabledEncounterPool() {
         val risks = mapOf("risky" to "high", "safe" to "low", "mischief" to "medium")
         long.forks.forEach { fork ->
