@@ -402,7 +402,8 @@ private fun CrossroadsApp(
     // should also pause the AI. Splitting this from the movement effect prevents
     // a dismissed menu from replaying the last movement delay or skipping a turn.
     val readingOrMenuOpen = showGuide || showJournal || inspectBoard ||
-        confirmExit || showMatchOptions || showResults
+        confirmExit || showMatchOptions || showResults ||
+        importPending != null || transferMessage != null
     LaunchedEffect(game, revision, turnReady, readingOrMenuOpen, appInForeground, lanRole, lanConnected) {
         // In nearby play only the host advances AI. Guests replay host checkpoints
         // and must never independently consume their own dice/event randomness.
