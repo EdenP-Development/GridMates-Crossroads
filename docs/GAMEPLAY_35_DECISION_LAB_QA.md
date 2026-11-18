@@ -12,8 +12,8 @@ This milestone experiments with *two real tradeoffs*, while preserving fully fun
 From the home screen, choose Quick, Classic or Long, and turn **Gameplay 2.0 · Playtest** **ON**. Start an offline Solo or Pass & Play game. The home toggle is OFF for ordinary games by default.
 
 On each human turn choose:
-- **Steady · 3** — move a predictable **3 spaces**; the first hazard setback from this turn is blocked, but otherwise advances are slower.
-- **Push · risky** — the six-sided die gives **1 step on a roll of 1, 2 or 3** (a stumble), or **6, 7 or 8 steps on rolls of 4, 5 or 6**. No setback protection.
+- **Steady · 4** — move a predictable **4 spaces**; the first hazard setback from this turn is blocked, but otherwise advances are slower.
+- **Push · risky** — the six-sided die gives **1 step on a roll of 1 or 2** (a stumble), or **5, 6, 7 or 8 steps on rolls of 3, 4, 5 or 6**. No setback protection.
 
 At a **crossroads**, entering a high-risk branch draws one hazard encounter immediately; a low-risk branch draws one shelter benefit; a medium-risk branch draws a mischief encounter if that region has an eligible pool. There is at most one encounter per turn, so landing on an encounter after a route commitment will not trigger a second surprise. Old modes retain the original landing-only rule. Encounter descriptions and live piece movement reflect the consequences.
 
@@ -48,7 +48,7 @@ Steady's protection blocks a *setback/retreat*, not another player's prank; stor
 2. Start **Quick with Gameplay 2.0 OFF**. Confirm original Roll button, same race and event rules, and unchanged records. This is essential baseline.
 3. Return Home. Turn **Gameplay 2.0 ON** and start Quick with two racers. Confirm the **Steady / Push** buttons, action explanation and experimental course label.
 4. Use Steady until reaching a fork and choose the high-risk route. Even when a die would skip hazard spaces, this experimental route must show a hazard encounter immediately. Check shield-like setback protection is readable.
-5. Use Push for several turns. Note both one-step stumbles and six-to-eight-space bursts. The game must show the actual progress, not falsely report the raw die as number of traveled spaces.
+5. Use Push for several turns. Note both one-step stumbles and five-to-eight-space bursts. The game must show the actual progress, not falsely report the raw die as number of traveled spaces.
 6. Enter a low-risk route: a shelter benefit triggers. Enter a medium-risk choice on its eligible woodland course: mischief applies or prompts an opponent choice.
 7. **Force-stop/reopen** during a human Steady/Push turn, while a fork is pending, and while an event target is pending. No lost or doubled move; current board and players must match.
 8. Complete a lab match and inspect results. The regular local **Solo wins** and **Finished matches** numbers should be the same as before the experimental match. Reopening results must not advance the timer.
