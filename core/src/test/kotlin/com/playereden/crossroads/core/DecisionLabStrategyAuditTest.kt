@@ -145,8 +145,8 @@ class DecisionLabStrategyAuditTest {
         val lines = mutableListOf<String>()
         lines += "GAMEPLAY-35 — tactical Decision Lab vs original rules"
         lines += "5,760 synthetic races. 120 seeds × 3 courses × 2/4 seats × 4 human policies × legacy/lab."
-        lines += "Steady: 3 reliable steps and one setback cancellation per turn."
-        lines += "Push: die 1–3 => one step; 4–6 => six to eight steps."
+        lines += "Steady: 4 reliable steps and one setback cancellation per turn."
+        lines += "Push: die 1–2 => one step; 3–6 => five to eight steps."
         lines += "Lab route selection draws one risk-aligned encounter on entry per turn."
         lines += "This is not human play, wall-clock minutes or evidence of fun."
         lines += ""
