@@ -1258,7 +1258,7 @@ private fun CrossroadsApp(
                                 Text(
                                     if (game.availableEncounterChoices().contains("supplies"))
                                         "Make progress now, or keep a shield for a rival's mischief."
-                                    else "Accept the gamble, or end your move here without a setback.",
+                                    else "Risk the hazard for progress, or stop safely and gain a shield.",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = Bark
                                 )
@@ -1267,7 +1267,7 @@ private fun CrossroadsApp(
                                         "supplies" -> "Take supplies · +2 steps"
                                         "cover" -> "Take cover · shield +1 step"
                                         "gamble" -> "Take the gamble · risk hazard outcome"
-                                        "brace" -> "Brace · stop safely this turn"
+                                        "brace" -> "Brace · gain shield, end move"
                                         else -> option
                                     }
                                     OutlinedButton(
