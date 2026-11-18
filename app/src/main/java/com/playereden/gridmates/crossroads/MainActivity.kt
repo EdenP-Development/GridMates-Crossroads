@@ -117,6 +117,8 @@ private fun CrossroadsApp(
         appInForeground = lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
         onDispose { lifecycle.removeObserver(observer) }
     }
+    // Preserve this long-standing preference filename for QA install-over updates.
+    // Changing it would strand existing local wins and match checkpoints.
     val prefs = remember { context.getSharedPreferences("crossroads_qa_profile_v1", 0) }
     val recoveryStore = remember(prefs, classicBoard, quickBoard, catalogue) {
         MatchRecoveryStore(prefs, classicBoard, catalogue, knownBoards)
@@ -541,7 +543,7 @@ private fun CrossroadsApp(
                                     revision++
                                 }
                             }.onFailure {
-                                lanMessage = "Couldn't verify the host game. Use the same QA build."
+                                lanMessage = "Couldn't verify this match. Both devices need the same app version."
                                 lanBusy = false
                             }
                         }
@@ -710,7 +712,8 @@ private fun CrossroadsApp(
                 modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("CROSSROADS · QA", style = MaterialTheme.typography.labelLarge, color = Forest)
+                Text(if (BuildConfig.DEBUG) "CROSSROADS · QA" else "CROSSROADS",
+                    style = MaterialTheme.typography.labelLarge, color = Forest)
                 TextButton(onClick = {
                     speed = if (speed == PresentationSpeed.COZY)
                         PresentationSpeed.BRISK else PresentationSpeed.COZY

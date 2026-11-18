@@ -92,6 +92,7 @@ internal fun CrossroadsHomeScreen(
     var seats by remember { mutableIntStateOf(2) }
     var passAndPlay by remember { mutableStateOf(false) }
     var showGuide by remember { mutableStateOf(false) }
+    var showAbout by remember { mutableStateOf(false) }
     // Keep both setup selectors in the Woodland palette; Material's default
     // selected chip tint was lavender on actual Android QA1130 screenshots.
     val choiceColors = FilterChipDefaults.filterChipColors(
@@ -213,11 +214,12 @@ internal fun CrossroadsHomeScreen(
                 modifier = Modifier.weight(1f).heightIn(min = 48.dp)
             ) { Text("Join nearby") }
         }
-        TextButton(
-            onClick = { showGuide = true },
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
         ) {
-            Text("How to play")
+            TextButton(onClick = { showGuide = true }) { Text("How to play") }
+            TextButton(onClick = { showAbout = true }) { Text("About & data") }
         }
         Card(
             colors = CardDefaults.cardColors(containerColor = Color(0xFFEAE1CA)),
@@ -243,10 +245,41 @@ internal fun CrossroadsHomeScreen(
                 }
             }
         }
-        Text("QA playtest · Offline Solo / Pass & Play / Nearby · Woodland Crossing",
-            style = MaterialTheme.typography.labelSmall, color = Muted)
+        if (BuildConfig.DEBUG) {
+            Text("QA playtest · Offline Solo / Pass & Play / Nearby · Woodland Crossing",
+                style = MaterialTheme.typography.labelSmall, color = Muted)
+        }
     }
     if (showGuide) {
         CrossroadsHowToPlayDialog(onDismiss = { showGuide = false })
+    }
+    if (showAbout) {
+        AlertDialog(
+            onDismissRequest = { showAbout = false },
+            title = { Text("About Crossroads", color = Ink) },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text("A cozy GridMates board race. Play alone against AI, pass one phone around, or connect two phones over nearby Wi-Fi.")
+                    Text("SAVING YOUR PROGRESS", color = Ink,
+                        fontWeight = FontWeight.SemiBold)
+                    Text("Current offline matches and your local win and match counts are stored on this device. No account or cloud sync is required. Clearing app storage or uninstalling can erase this progress.")
+                    Text("NEARBY PLAY", color = Ink,
+                        fontWeight = FontWeight.SemiBold)
+                    Text("Nearby games connect directly on the same Wi-Fi. The host shares live match data, including game actions and the match seed, with the joined device. The current nearby connection is not encrypted, so use a trusted private Wi-Fi network.")
+                    if (BuildConfig.DEBUG) {
+                        Text("QA PRIVACY NOTE", color = Ink,
+                            fontWeight = FontWeight.SemiBold)
+                        Text("This information describes the test app's current behavior. A published privacy policy and distribution review are still required before public release.")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAbout = false }) { Text("Done") }
+            },
+            containerColor = Paper
+        )
     }
 }

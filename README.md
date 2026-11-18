@@ -1,6 +1,6 @@
 # GridMates: Crossroads
 
-**Status:** CAM-06 **QA1057** signed Android build and **actual QA1051→1057 install-over PASSED** on emulator with test statistics preserved. Animated Follow camera, overview, pinch zoom, pan and map inspection are implemented; **owner phone gesture/feel review pending**. Source: `feature/dynamic-camera-v0.6` ([Draft PR #12](https://github.com/PlayerEden/GridMates-Crossroads/pull/12)), stacked on earlier drafts. LAN not yet implemented.
+**Current draft development status (November 17, 2026):** Two handcrafted offline courses (Brookside Quick and Woven Trail Classic), Solo versus AI, local Pass & Play, deterministic save/recovery and Android LAN Host/Join prototype are in stacked **draft** PRs. [COURSE-24](https://github.com/PlayerEden/GridMates-Crossroads/pull/24) passed Android/rules CI as signed **QA1202**. LAN-23 passed automated tests but still needs two real phones. [RELEASE-25 public-surface work](docs/RELEASE_25_PUBLIC_SURFACE_AND_QA_GATES.md) is an unmerged draft and does not constitute a public release. `main` has **not** received these drafts.
 **Design baseline:** 0.1.0 · 2026-11-16  
 **Owner:** PlayerEden  
 **Name:** *GridMates: Crossroads* is the current preferred **working** name; app-store/trademark clearance has not been performed.
@@ -35,7 +35,7 @@
 | Quick / Classic / Long length options **as design targets** | Pay-to-win, energy/time gates, forced daily chores |
 | Token cosmetics, theme possibilities, local achievements | Cross-app unlock sync |
 
-> **Current implementation candidate:** Kotlin/JVM deterministic race engine with bots + Android Compose board/UI, 2–4 total seats, dice and crossroads choice. It also includes proposed region-specific events, a QA build workflow and locally saved win counts. **Owner confirmed an earlier full Woven Trail match on a physical phone; new QA1026 screen still needs owner testing. LAN, final visuals and release readiness remain unfinished.** See [Prototype status](docs/PROTOTYPE_V0_1_ANDROID.md) and [Current Status](docs/CURRENT_STATUS.md).
+> **Current implementation:** Kotlin/JVM deterministic engine, 2–4 participants, Quick and Classic boards, Solo AI, Pass & Play, local action-replay saves, and an Android Nearby Host/Join prototype with host-authoritative gameplay. Automated Android and rules checks are passing on the latest feature drafts, but full two-phone LAN and physical release acceptance remain pending. See [Course QA](docs/COURSE_24_QUICK_BROOKSIDE_QA.md) and [Release gates](docs/RELEASE_25_PUBLIC_SURFACE_AND_QA_GATES.md).
 
 ## Validation for included *design data*
 
