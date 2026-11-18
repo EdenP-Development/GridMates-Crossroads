@@ -1336,11 +1336,13 @@ private fun CrossroadsApp(
             containerColor = Cream,
             title = { Text("Replace local progress?") },
             text = {
+                val explanation = if (candidate.restoredMatch != null) {
+                    " and a saved offline race. Importing replaces this device's current records and saved race."
+                } else {
+                    ". Importing replaces this device's current records and removes any saved race."
+                }
                 Text("This backup contains ${candidate.bundle.completed} finished matches, " +
-                    "${candidate.bundle.wins} solo wins" +
-                    if (candidate.restoredMatch != null) " and a saved offline race. " +
-                        "Importing replaces this device's current records and saved race."
-                    else ". Importing replaces this device's current records and removes any saved race.")
+                    "${candidate.bundle.wins} solo wins" + explanation)
             },
             confirmButton = {
                 TextButton(onClick = {
