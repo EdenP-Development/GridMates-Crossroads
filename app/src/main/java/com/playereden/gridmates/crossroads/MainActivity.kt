@@ -363,7 +363,7 @@ private fun CrossroadsApp(
                 // These deterministic preview pips are decorative only; the
                 // authoritative result is drawn once by GameSession.roll().
                 rollingFace = if (game.playtestRules &&
-                    queuedLabRoll == LabRoll.STEADY) 3
+                    queuedLabRoll == LabRoll.STEADY) 4
                     else previewFaces[step % previewFaces.size]
                 delay(rollSpeed.dieFrameDelayMillis(step))
             }
@@ -1128,8 +1128,8 @@ private fun CrossroadsApp(
                                         color = Forest
                                     )
                                     Text(
-                                        "Steady: 3 spaces, blocks one setback this turn. " +
-                                            "Push: roll 1–6; 1–3 stumbles 1 space, 4–6 moves 6–8.",
+                                        "Steady: 4 spaces, blocks one setback this turn. " +
+                                            "Push: roll 1–6; 1–2 stumbles 1 space, 3–6 moves 5–8.",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = Bark
                                     )
@@ -1146,7 +1146,7 @@ private fun CrossroadsApp(
                                             modifier = Modifier.weight(1f).heightIn(min = 54.dp)
                                         ) {
                                             Text(if (rollingDie && queuedLabRoll == LabRoll.STEADY)
-                                                "Steady…" else "Steady · 3")
+                                                "Steady…" else "Steady · 4")
                                         }
                                         OutlinedButton(
                                             onClick = {
