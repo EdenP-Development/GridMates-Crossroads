@@ -1221,7 +1221,8 @@ private fun CrossroadsApp(
                                                     if (game.playtestRules)
                                                         " · " + DecisionLab.routePreview(
                                                             board, route.id, choice?.risk,
-                                                            game.steadyTravelChosen
+                                                            game.steadyTravelChosen,
+                                                            game.routeEncounterAvailable
                                                         )
                                                     else "",
                                                 risk = choice?.risk
@@ -1312,7 +1313,14 @@ private fun CrossroadsApp(
                                     ) {
                                         RouteChoiceSummary(
                                             label = choice?.label ?: route.id,
-                                            description = choice?.description ?: "Follow this trail",
+                                            description = (choice?.description ?: "Follow this trail") +
+                                                if (game.playtestRules)
+                                                    " · " + DecisionLab.routePreview(
+                                                        board, route.id, choice?.risk,
+                                                        game.steadyTravelChosen,
+                                                        game.routeEncounterAvailable
+                                                    )
+                                                else "",
                                             risk = choice?.risk
                                         )
                                     }
