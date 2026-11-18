@@ -3,6 +3,9 @@ package com.playereden.gridmates.crossroads
 import android.content.SharedPreferences
 import com.playereden.crossroads.core.BoardDefinition
 import com.playereden.crossroads.core.EventCatalogue
+import com.playereden.crossroads.core.CrossroadsProgressBundle
+import com.playereden.crossroads.core.CrossroadsProgressCodec
+import com.playereden.crossroads.core.VerifiedCrossroadsProgress
 import com.playereden.crossroads.core.GameSession
 import com.playereden.crossroads.core.MatchCheckpointCodec
 import com.playereden.crossroads.core.Phase
@@ -102,6 +105,62 @@ internal class MatchRecoveryStore(
             fallback
         }
         return ((finishedAt - startedAtEpochMillis).coerceAtLeast(0L) / 1000L)
+    }
+
+    /**
+     * Export the existing record and optional complete offline match. No hidden
+     * filesystem path, account, or server is used; Android's file picker owns
+     * the destination and the resulting document is plain text JSON.
+     */
+    fun exportProgress(): String {
+        val checkpoint = prefs.getString(ACTIVE_KEY, null)?.let { encoded ->
+            val parsed = MatchCheckpointCodec.decode(encoded)
+            val chosenBoard = requireNotNull(knownBoards[parsed.boardId]) {
+                "Saved course is no longer available"
+            }
+            GameSession.restore(chosenBoard, catalogue, parsed)
+            parsed
+        }
+        val bundle = CrossroadsProgressBundle(
+            completed = prefs.getInt("completed", 0),
+            wins = prefs.getInt("wins", 0),
+            activeMatch = checkpoint,
+            lastCompletedMatchId = prefs.getString(LAST_COMPLETED_ID, null),
+            lastFinishedAtEpochMillis = prefs.getLong(LAST_FINISHED_AT, 0L)
+        )
+        val payload = CrossroadsProgressCodec.encode(bundle)
+        // A backup must be restorable with the exact data shipped in this APK.
+        CrossroadsProgressCodec.verify(payload, knownBoards, catalogue)
+        return payload
+    }
+
+    fun previewImport(payload: String): VerifiedCrossroadsProgress =
+        CrossroadsProgressCodec.verify(payload, knownBoards, catalogue)
+
+    /**
+     * The caller must obtain explicit replace confirmation before invoking.
+     * No state is touched unless the *entire* backup passes strict validation.
+     * One synchronous editor commit writes the profile and match atomically.
+     */
+    fun importProgress(verified: VerifiedCrossroadsProgress): Boolean {
+        val payload = CrossroadsProgressCodec.encode(verified.bundle)
+        val safe = CrossroadsProgressCodec.verify(payload, knownBoards, catalogue).bundle
+        val editor = prefs.edit()
+            .putInt("completed", safe.completed)
+            .putInt("wins", safe.wins)
+        val checkpoint = safe.activeMatch
+        if (checkpoint == null) {
+            editor.remove(ACTIVE_KEY)
+        } else {
+            editor.putString(ACTIVE_KEY, MatchCheckpointCodec.encode(checkpoint))
+        }
+        if (safe.lastCompletedMatchId == null) {
+            editor.remove(LAST_COMPLETED_ID).remove(LAST_FINISHED_AT)
+        } else {
+            editor.putString(LAST_COMPLETED_ID, safe.lastCompletedMatchId)
+                .putLong(LAST_FINISHED_AT, safe.lastFinishedAtEpochMillis)
+        }
+        return editor.commit()
     }
 
     /** Only intentional Leave/Main menu actions discard the saved race. */
