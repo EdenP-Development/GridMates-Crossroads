@@ -65,7 +65,7 @@ data class EncounterNote(
     val kind: String
 )
 @Serializable
-enum class Phase { ROLL, ROUTE, TARGET, FINISHED }
+enum class Phase { ROLL, ROUTE, TARGET, FINISHED, ENCOUNTER }
 @Serializable
 data class Player(
     val name: String,
