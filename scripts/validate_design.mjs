@@ -90,9 +90,21 @@ export function validateDesign(board, catalogue) {
 
 const invoked=process.argv[1] && path.resolve(process.argv[1])===fileURLToPath(import.meta.url);
 if(invoked) {
-  const board=JSON.parse(fs.readFileSync(new URL("../data/boards/woodland_woven_trail.json",import.meta.url),"utf8"));
   const catalogue=JSON.parse(fs.readFileSync(new URL("../data/events/woven_events_v02.json",import.meta.url),"utf8"));
-  const errors=validateDesign(board,catalogue);
-  if(errors.length){console.error(errors.join("\n"));process.exitCode=1;}
-  else console.log("Design data checks passed: "+board.nodes.length+" nodes, "+catalogue.events.length+" events.");
+  const boards=[
+    "woodland_brookside_quick.json",
+    "woodland_woven_trail.json",
+    "woodland_cedarwood_long.json"
+  ];
+  for (const file of boards) {
+    const board=JSON.parse(fs.readFileSync(new URL("../data/boards/"+file,import.meta.url),"utf8"));
+    const errors=validateDesign(board,catalogue);
+    if(errors.length) {
+      console.error(file+":\n"+errors.join("\n"));
+      process.exitCode=1;
+    } else {
+      console.log("Design data passed: "+file+" ("+board.nodes.length+
+        " nodes, "+board.forks.length+" forks, "+catalogue.events.length+" events)");
+    }
+  }
 }

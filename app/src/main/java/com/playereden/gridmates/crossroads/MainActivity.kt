@@ -81,6 +81,7 @@ class MainActivity : ComponentActivity() {
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = true
         val classicBoard = GameData.board(assets.open("boards/woodland_woven_trail.json").bufferedReader().use { it.readText() })
         val quickBoard = GameData.board(assets.open("boards/woodland_brookside_quick.json").bufferedReader().use { it.readText() })
+        val longBoard = GameData.board(assets.open("boards/woodland_cedarwood_long.json").bufferedReader().use { it.readText() })
         val catalogue = GameData.events(assets.open("events/woven_events_v02.json").bufferedReader().use { it.readText() })
         setContent {
             MaterialTheme(
@@ -96,7 +97,7 @@ class MainActivity : ComponentActivity() {
                     outline = Color(0xFF978B76), outlineVariant = Color(0xFFD8CCB3)
                 )
             ) {
-                CrossroadsApp(classicBoard, quickBoard, catalogue)
+                CrossroadsApp(classicBoard, quickBoard, longBoard, catalogue)
             }
         }
     }
@@ -106,10 +107,15 @@ class MainActivity : ComponentActivity() {
 private fun CrossroadsApp(
     classicBoard: BoardDefinition,
     quickBoard: BoardDefinition,
+    longBoard: BoardDefinition,
     catalogue: EventCatalogue
 ) {
-    val knownBoards = remember(classicBoard, quickBoard) {
-        mapOf(classicBoard.id to classicBoard, quickBoard.id to quickBoard)
+    val knownBoards = remember(classicBoard, quickBoard, longBoard) {
+        mapOf(
+            classicBoard.id to classicBoard,
+            quickBoard.id to quickBoard,
+            longBoard.id to longBoard
+        )
     }
     val context = LocalContext.current
     // Crossroads runs inside its own ComponentActivity. Explicitly observe the
@@ -133,7 +139,7 @@ private fun CrossroadsApp(
     // Preserve this long-standing preference filename for QA install-over updates.
     // Changing it would strand existing local wins and match checkpoints.
     val prefs = remember { context.getSharedPreferences("crossroads_qa_profile_v1", 0) }
-    val recoveryStore = remember(prefs, classicBoard, quickBoard, catalogue) {
+    val recoveryStore = remember(prefs, classicBoard, quickBoard, longBoard, catalogue) {
         MatchRecoveryStore(prefs, classicBoard, catalogue, knownBoards)
     }
     // A restarted Activity gets its entire authoritative match from the saved
@@ -757,9 +763,9 @@ private fun CrossroadsApp(
             wins = wins,
             completed = matches,
             onStart = { seats, localPlayers -> start(seats, localPlayers) },
-            quickRace = selectedCourseId == quickBoard.id,
-            onQuickRaceChange = { quick ->
-                selectedCourseId = if (quick) quickBoard.id else classicBoard.id
+            selectedCourseId = selectedCourseId,
+            onCourseChange = { courseId ->
+                if (courseId in knownBoards) selectedCourseId = courseId
             },
             onNearbyHost = {
                 lanMessage = null
@@ -1681,6 +1687,9 @@ private fun BoardCanvas(
                     canvas.nativeCanvas.drawText(label, left + (0.2f + index * 0.29f) * drawWidth, top + 8f, labelPaint)
                 }
             }
+            // Longer authored courses have more route nodes in the same viewport.
+            // Reduce plain-node and trail thickness just for this dense atlas.
+            val denseBoard = board.id == CrossroadsCourse.LONG_ID
             // Shared board geography never changes with the event seed.
             board.nodes.forEach { node ->
                 val from = position(node.id)
@@ -1696,8 +1705,12 @@ private fun BoardCanvas(
                         "mischief" -> Color(0xFFA18BB1)
                         else -> Color(0xFFD4C3A3)
                     }
-                    drawLine(laneColor, from, position(dest), strokeWidth = 11f, cap = StrokeCap.Round)
-                    drawLine(Color(0xFFFCF8ED), from, position(dest), strokeWidth = 3f, cap = StrokeCap.Round)
+                    drawLine(laneColor, from, position(dest),
+                        strokeWidth = if (denseBoard) 7.5f else 11f,
+                        cap = StrokeCap.Round)
+                    drawLine(Color(0xFFFCF8ED), from, position(dest),
+                        strokeWidth = if (denseBoard) 2.0f else 3f,
+                        cap = StrokeCap.Round)
                 }
             }
             board.nodes.forEach { node ->
@@ -1714,7 +1727,13 @@ private fun BoardCanvas(
                     "finish" -> Color(0xFFB47E40)
                     else -> Color(0xFFFDF8E9)
                 }
-                val radius = if (node.kind == "fork") 12f else if (node.kind == "start" || node.kind == "finish") 13f else 7f
+                val radius = when {
+                    node.kind == "fork" -> if (denseBoard) 11f else 12f
+                    node.kind == "start" || node.kind == "finish" -> 13f
+                    denseBoard && node.kind == "plain" -> 4.75f
+                    denseBoard && node.kind == "event" -> 6.25f
+                    else -> 7f
+                }
                 // Tabletop start/finish emblems are distinguishable even when
                 // pawns are clustered near the entrance or camera is fit-to-map.
                 if (node.kind == "finish") {

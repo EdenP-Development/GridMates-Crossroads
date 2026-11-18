@@ -47,6 +47,10 @@ internal fun DrawScope.drawWoodlandBoardArt(
         size = Size(width, height),
         cornerRadius = CornerRadius(u * 1.4f)
     )
+    if (boardId == "woodland_cedarwood_long_v01") {
+        drawCedarwoodLongArt(left, top, width, height)
+        return
+    }
     // Brookside Dash is a second handcrafted course. Give it its own quiet
     // paper/creek identity instead of reusing Woven Trail landmarks that would
     // misrepresent its map. All art stays beneath traversable paths.

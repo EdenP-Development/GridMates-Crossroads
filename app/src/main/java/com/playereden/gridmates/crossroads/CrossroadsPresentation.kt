@@ -7,15 +7,18 @@ import com.playereden.crossroads.core.Phase
 internal object CrossroadsCourse {
     const val CLASSIC_ID = "woodland_woven_trail_v02"
     const val QUICK_ID = "woodland_brookside_quick_v01"
+    const val LONG_ID = "woodland_cedarwood_long_v01"
 
     fun title(boardId: String): String = when (boardId) {
         QUICK_ID -> "Brookside Dash"
+        LONG_ID -> "Cedarwood Expedition"
         CLASSIC_ID -> "Woven Trail"
         else -> "Woodland Crossing"
     }
 
     fun subtitle(boardId: String): String = when (boardId) {
         QUICK_ID -> "Quick race"
+        LONG_ID -> "Long race"
         CLASSIC_ID -> "Classic race"
         else -> "Woodland race"
     }
