@@ -1257,15 +1257,36 @@ private fun CrossroadsApp(
                                 }
                             }
                             Phase.ENCOUNTER -> {
-                                Text("A woodland encounter — choose your response",
-                                    fontWeight = FontWeight.SemiBold, color = Forest)
-                                Text(
-                                    if (game.availableEncounterChoices().contains("supplies"))
-                                        "Make progress now, or keep a shield for a rival's mischief."
-                                    else "Risk the hazard for progress, or stop safely and gain a shield.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Bark
+                                val shelter = game.availableEncounterChoices().contains("supplies")
+                                val illustration = rememberOptionalCrossroadsArt(
+                                    if (shelter) CrossroadsArtSlot.EVENT_SHELTER
+                                    else CrossroadsArtSlot.EVENT_HAZARD
                                 )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    if (illustration != null) {
+                                        Image(
+                                            bitmap = illustration,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(62.dp),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    }
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text("A woodland encounter — choose your response",
+                                            fontWeight = FontWeight.SemiBold, color = Forest)
+                                        Text(
+                                            if (shelter)
+                                                "Make progress now, or keep a shield for a rival's mischief."
+                                            else "Risk the hazard for progress, or stop safely and gain a shield.",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Bark
+                                        )
+                                    }
+                                }
                                 game.availableEncounterChoices().forEach { option ->
                                     val heading = when (option) {
                                         "supplies" -> "Take supplies · +2 steps"
@@ -1282,7 +1303,22 @@ private fun CrossroadsApp(
                                 }
                             }
                             Phase.TARGET -> {
-                                Text("Mischief! Choose an opponent.", fontWeight = FontWeight.SemiBold, color = Forest)
+                                val mischiefArt = rememberOptionalCrossroadsArt(
+                                    CrossroadsArtSlot.EVENT_MISCHIEF
+                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(9.dp)
+                                ) {
+                                    if (mischiefArt != null) {
+                                        Image(mischiefArt, contentDescription = null,
+                                            modifier = Modifier.size(56.dp),
+                                            contentScale = ContentScale.Crop)
+                                    }
+                                    Text("Mischief! Choose an opponent.",
+                                        fontWeight = FontWeight.SemiBold, color = Forest)
+                                }
                                 game.availableTargets().forEach { target ->
                                     OutlinedButton(onClick = { localAction(LanAction(LanActionType.TARGET, target = target)) },
                                         enabled = turnReady,
