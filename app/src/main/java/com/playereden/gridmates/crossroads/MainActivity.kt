@@ -1113,8 +1113,10 @@ private fun CrossroadsApp(
                     }
                     // Keep the turn title and die visible while long choice lists scroll.
                     Column(
-                        modifier = Modifier.fillMaxWidth().heightIn(max = 230.dp)
-                            .verticalScroll(actionScroll),
+                        modifier = Modifier.fillMaxWidth().heightIn(
+                            max = if (state.phase == Phase.ROUTE &&
+                                game.availableRoutes().size == 2) 280.dp else 230.dp
+                        ).verticalScroll(actionScroll),
                         verticalArrangement = Arrangement.spacedBy(7.dp)
                     ) {
                     if (state.phase == Phase.FINISHED && !turnReady) {
@@ -1149,12 +1151,12 @@ private fun CrossroadsApp(
                             Phase.ROLL -> {
                                 if (game.playtestRules && lanRole == LanRole.OFFLINE) {
                                     Text(
-                                        "Choose your travel style",
+                                        "Take it steady, or push your luck?",
                                         fontWeight = FontWeight.SemiBold,
                                         color = Forest
                                     )
                                     Text(
-                                        "Steady: 4 spaces, blocks one setback this turn. " +
+                                        "Steady: 4 spaces and one setback blocked. " +
                                             "Push: roll 1–6; 1–2 stumbles 1 space, 3–6 moves 5–8.",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = Bark
@@ -1163,7 +1165,7 @@ private fun CrossroadsApp(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        Button(
+                                        OutlinedButton(
                                             onClick = {
                                                 queuedLabRoll = LabRoll.STEADY
                                                 rollingDie = true
@@ -1222,7 +1224,7 @@ private fun CrossroadsApp(
                                 val fork = board.forkAt(state.players[state.playerIndex].position)
                                 Text(fork?.title ?: "Choose your route", fontWeight = FontWeight.SemiBold, color = Forest)
                                 if (fork != null) {
-                                    Text("Check each trail’s risk before choosing.",
+                                    Text("Compare the routes before setting off.",
                                         style = MaterialTheme.typography.bodySmall)
                                 }
                                 if (game.availableRoutes().size > 2) {
@@ -1242,14 +1244,13 @@ private fun CrossroadsApp(
                                         ) {
                                             RouteChoiceSummary(
                                                 label = choice?.label ?: route.id,
-                                                description = (choice?.description ?: "Follow this trail") +
-                                                    if (game.playtestRules)
-                                                        " · " + DecisionLab.routePreview(
-                                                            board, route.id, choice?.risk,
-                                                            game.steadyTravelChosen,
-                                                            game.routeEncounterAvailable
-                                                        )
-                                                    else "",
+                                                description = if (game.playtestRules)
+                                                    DecisionLab.routePreview(
+                                                        board, route.id, choice?.risk,
+                                                        game.steadyTravelChosen,
+                                                        game.routeEncounterAvailable
+                                                    )
+                                                else (choice?.description ?: "Follow this trail"),
                                                 risk = choice?.risk
                                             )
                                         }
@@ -1276,12 +1277,12 @@ private fun CrossroadsApp(
                                         )
                                     }
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text("A woodland encounter — choose your response",
+                                        Text(if (shelter) "A shelter along the trail" else "Trouble on the trail",
                                             fontWeight = FontWeight.SemiBold, color = Forest)
                                         Text(
                                             if (shelter)
-                                                "Make progress now, or keep a shield for a rival's mischief."
-                                            else "Risk the hazard for progress, or stop safely and gain a shield.",
+                                                "Take supplies to travel farther, or cover to gain a shield."
+                                            else "Gamble on the outcome, or brace to avoid a setback.",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = Bark
                                         )
@@ -1289,10 +1290,10 @@ private fun CrossroadsApp(
                                 }
                                 game.availableEncounterChoices().forEach { option ->
                                     val heading = when (option) {
-                                        "supplies" -> "Take supplies · +2 steps"
-                                        "cover" -> "Take cover · shield +1 step"
-                                        "gamble" -> "Take the gamble · risk hazard outcome"
-                                        "brace" -> "Brace · gain shield, end move"
+                                        "supplies" -> "Supplies · advance 2 spaces"
+                                        "cover" -> "Cover · advance 1 + shield"
+                                        "gamble" -> "Gamble · face the hazard"
+                                        "brace" -> "Brace · stop + shield"
                                         else -> option
                                     }
                                     OutlinedButton(
@@ -1330,6 +1331,20 @@ private fun CrossroadsApp(
                             Phase.FINISHED -> Unit
                         }
                     }
+                    }
+                    // The two-route list may still exceed its panel at large
+                    // accessibility font scales. Make that overflow explicit;
+                    // the second legal choice must never look unavailable.
+                    if (state.phase == Phase.ROUTE &&
+                        game.availableRoutes().size == 2 &&
+                        actionScroll.maxValue > 0 &&
+                        actionScroll.value < actionScroll.maxValue
+                    ) {
+                        Text(
+                            "Scroll down for more of this choice ↓",
+                            color = Forest,
+                            style = MaterialTheme.typography.labelSmall
+                        )
                     }
                 }
             }
@@ -1399,14 +1414,13 @@ private fun CrossroadsApp(
                                     ) {
                                         RouteChoiceSummary(
                                             label = choice?.label ?: route.id,
-                                            description = (choice?.description ?: "Follow this trail") +
-                                                if (game.playtestRules)
-                                                    " · " + DecisionLab.routePreview(
+                                            description = if (game.playtestRules)
+                                                    DecisionLab.routePreview(
                                                         board, route.id, choice?.risk,
                                                         game.steadyTravelChosen,
                                                         game.routeEncounterAvailable
                                                     )
-                                                else "",
+                                                else (choice?.description ?: "Follow this trail"),
                                             risk = choice?.risk
                                         )
                                     }
@@ -1935,11 +1949,16 @@ private fun BoardCanvas(
                         "mischief" -> Color(0xFFA18BB1)
                         else -> Color(0xFFD4C3A3)
                     }
+                    // A subtle printed keyline distinguishes actual paths from
+                    // painted creeks, fences and flower edges.
+                    drawLine(Color(0xFF334C3C).copy(alpha = 0.80f), from, position(dest),
+                        strokeWidth = if (denseBoard) 12f else 15f,
+                        cap = StrokeCap.Round)
                     drawLine(laneColor, from, position(dest),
-                        strokeWidth = if (denseBoard) 7.5f else 11f,
+                        strokeWidth = if (denseBoard) 8.5f else 11f,
                         cap = StrokeCap.Round)
                     drawLine(Color(0xFFFCF8ED), from, position(dest),
-                        strokeWidth = if (denseBoard) 2.0f else 3f,
+                        strokeWidth = if (denseBoard) 2.1f else 3f,
                         cap = StrokeCap.Round)
                 }
             }
