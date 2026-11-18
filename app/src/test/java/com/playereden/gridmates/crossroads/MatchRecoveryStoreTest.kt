@@ -212,6 +212,56 @@ class MatchRecoveryStoreTest {
             requireNotNull(afterUpdate.load().match).game.snapshot())
     }
 
+    @Test fun decisionLabReplayBackupAndNoOfficialStatContamination() {
+        val lab = DecisionLab.variant(quick)
+        val boards = mapOf(board.id to board, quick.id to quick, lab.id to lab)
+        val prefs = MemoryPreferences()
+        prefs.edit().putInt("completed", 8).putInt("wins", 6).commit()
+        val storage = MatchRecoveryStore(prefs, board, events, boards)
+        val start = System.currentTimeMillis() - 45_000L
+        val game = GameSession(lab, events, seats = 2, seed = 2727,
+            humanIndices = setOf(0))
+        assertTrue(storage.persist(game, "lab-playtest", start))
+        var actions = 0
+        var resumeObserved = false
+        while (game.phase != Phase.FINISHED && actions++ < 800) {
+            if (game.players[game.currentIndex].isBot) game.botStep()
+            else when (game.phase) {
+                Phase.ROLL -> if (actions % 2 == 0) game.rollSteady() else game.rollBold()
+                Phase.ROUTE -> game.chooseRoute(game.availableRoutes().first().id)
+                Phase.TARGET -> game.chooseTarget(game.availableTargets().first())
+                Phase.FINISHED -> Unit
+            }
+            assertTrue(storage.persist(game, "lab-playtest", start))
+            if (!resumeObserved && actions > 4) {
+                val restored = requireNotNull(storage.load().match)
+                assertEquals(game.snapshot(), restored.game.snapshot())
+                val transfer = storage.exportProgress()
+                val imported = MatchRecoveryStore(MemoryPreferences(),
+                    board, events, boards)
+                assertTrue(imported.importProgress(imported.previewImport(transfer)))
+                assertEquals(game.snapshot(),
+                    requireNotNull(imported.load().match).game.snapshot())
+                resumeObserved = true
+            }
+        }
+        assertTrue(resumeObserved)
+        assertEquals(Phase.FINISHED, game.phase)
+        assertEquals(8, prefs.getInt("completed", 0))
+        assertEquals(6, prefs.getInt("wins", 0))
+        assertTrue(storage.completedElapsedSeconds("lab-playtest", start) >= 0L)
+        val completed = prefs.getLong("last_completed_at_epoch_millis_v1", 0L)
+        assertTrue(completed >= start)
+        assertTrue(storage.persist(game, "lab-playtest", start))
+        assertEquals(completed, prefs.getLong("last_completed_at_epoch_millis_v1", 0L))
+        assertEquals(8, prefs.getInt("completed", 0))
+
+        val older = MatchRecoveryStore(prefs, board, events,
+            mapOf(board.id to board, quick.id to quick))
+        assertTrue(older.load().invalidSavedMatch)
+        assertEquals(game.snapshot(), requireNotNull(storage.load().match).game.snapshot())
+    }
+
     @Test fun olderFinishedCheckpointGetsOneTimeElapsedFallback() {
         val prefs = MemoryPreferences()
         val store = MatchRecoveryStore(prefs, board, events)
