@@ -118,6 +118,67 @@ class MatchRecoveryStoreTest {
             requireNotNull(both.load().match).game.snapshot())
     }
 
+    @Test fun manualBackupCanMoveClassicOrQuickSaveToASeparateApp() {
+        for (course in listOf(board, quick)) {
+            val originalPrefs = MemoryPreferences()
+            val original = MatchRecoveryStore(originalPrefs, board, events,
+                mapOf(board.id to board, quick.id to quick))
+            val game = GameSession(course, events, seats = 3, seed = 37,
+                humanIndices = setOf(0))
+            game.roll()
+            val started = System.currentTimeMillis() - 1000L
+            assertTrue(original.persist(game, "portable-match", started))
+            originalPrefs.edit().putInt("completed", 42).putInt("wins", 7)
+                .putString("last_completed_match_id_v1", "old-completed")
+                .putLong("last_completed_at_epoch_millis_v1", started - 3000).commit()
+            val backup = original.exportProgress()
+
+            // Different SharedPreferences instance represents the other package sandbox.
+            val targetPrefs = MemoryPreferences()
+            val newApp = MatchRecoveryStore(targetPrefs, board, events,
+                mapOf(board.id to board, quick.id to quick))
+            val inspected = newApp.previewImport(backup)
+            assertEquals(42, inspected.bundle.completed)
+            assertEquals(7, inspected.bundle.wins)
+            assertTrue(newApp.importProgress(inspected))
+            assertEquals(42, targetPrefs.getInt("completed", 0))
+            assertEquals(7, targetPrefs.getInt("wins", 0))
+            assertEquals("old-completed",
+                targetPrefs.getString("last_completed_match_id_v1", null))
+            val recovered = requireNotNull(newApp.load().match)
+            assertEquals(course.id, recovered.game.board.id)
+            assertEquals(game.snapshot(), recovered.game.snapshot())
+            assertEquals(42, originalPrefs.getInt("completed", 0))
+            assertEquals(7, originalPrefs.getInt("wins", 0))
+        }
+    }
+
+    @Test fun invalidBackupDoesNotMutateExistingPrefsAndRecordsOnlyClearsSavedMatch() {
+        val prefs = MemoryPreferences()
+        val store = MatchRecoveryStore(prefs, board, events,
+            mapOf(board.id to board, quick.id to quick))
+        val game = GameSession(quick, events, seats = 2, seed = 59)
+        val started = System.currentTimeMillis() - 1000
+        assertTrue(store.persist(game, "current-progress", started))
+        prefs.edit().putInt("completed", 5).putInt("wins", 1).commit()
+        val activeBefore = prefs.getString("active_match_checkpoint_v1", null)
+
+        try {
+            store.previewImport("{\"completed\":999,\"wins\":1000}")
+            fail("Accepted malformed backup")
+        } catch (_: RuntimeException) { }
+        assertEquals(activeBefore, prefs.getString("active_match_checkpoint_v1", null))
+        assertEquals(5, prefs.getInt("completed", 0))
+        assertEquals(1, prefs.getInt("wins", 0))
+
+        val recordsOnly = CrossroadsProgressBundle(completed = 9, wins = 3)
+        val verified = store.previewImport(CrossroadsProgressCodec.encode(recordsOnly))
+        assertTrue(store.importProgress(verified))
+        assertNull(prefs.getString("active_match_checkpoint_v1", null))
+        assertEquals(9, prefs.getInt("completed", 0))
+        assertEquals(3, prefs.getInt("wins", 0))
+    }
+
     @Test fun olderFinishedCheckpointGetsOneTimeElapsedFallback() {
         val prefs = MemoryPreferences()
         val store = MatchRecoveryStore(prefs, board, events)
