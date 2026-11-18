@@ -18,7 +18,7 @@ import kotlinx.serialization.json.Json
  * incompatible checkpoints are rejected rather than resumed with changed odds.
  */
 @Serializable
-enum class MatchActionKind { ROLL, ROUTE, TARGET, BOT, STEADY_ROLL, BOLD_ROLL }
+enum class MatchActionKind { ROLL, ROUTE, TARGET, BOT, STEADY_ROLL, BOLD_ROLL, ENCOUNTER }
 
 @Serializable
 data class MatchAction(
