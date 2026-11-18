@@ -142,6 +142,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     var lanHost by remember { mutableStateOf<CrossroadsLanHost?>(null) }
     var lanGuest by remember { mutableStateOf<CrossroadsLanGuest?>(null) }
     var lanConnected by remember { mutableStateOf(false) }
+    var lanSeats by remember { mutableIntStateOf(2) }
     var lanBusy by remember { mutableStateOf(false) }
     var lanMessage by remember { mutableStateOf<String?>(null) }
     var lanRooms by remember { mutableStateOf<List<NearbyCrossroads>>(emptyList()) }
@@ -276,7 +277,10 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                 )) {
                     if (lanRole == LanRole.GUEST) {
                         runCatching {
-                            lanGuest?.submit(LanAction(LanActionType.ROLL))
+                            lanGuest?.submit(LanAction(
+                                LanActionType.ROLL, expectedMatchId = activeMatchId,
+                                expectedRevision = game.revision
+                            ))
                         }.onSuccess { lanPendingAction = true }
                             .onFailure { lanMessage = "Reconnect before rolling." }
                     } else {
@@ -321,17 +325,27 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
     // a dismissed menu from replaying the last movement delay or skipping a turn.
     val readingOrMenuOpen = showGuide || showJournal || inspectBoard ||
         confirmExit || showMatchOptions || showResults
-    LaunchedEffect(game, revision, turnReady, readingOrMenuOpen, appInForeground) {
-        if (game != null &&
+    LaunchedEffect(game, revision, turnReady, readingOrMenuOpen, appInForeground, lanRole, lanConnected) {
+        // In nearby play only the host advances AI. Guests replay host checkpoints
+        // and must never independently consume their own dice/event randomness.
+        // A disconnected host also pauses bots so the returning guest misses nothing.
+        if (game != null && lanRole != LanRole.GUEST &&
+            (lanRole != LanRole.HOST || lanConnected) &&
             TurnFlowGate.mayAdvanceAi(state, turnReady, readingOrMenuOpen, appInForeground)
         ) {
             delay(speed.aiBreathMillis)
-            if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            if (!lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) ||
+                lanRole == LanRole.GUEST || (lanRole == LanRole.HOST && !lanConnected)
+            ) {
                 return@LaunchedEffect
             }
             val before = game.snapshot()
             game.botStep()
-            persistGame(game)
+            if (lanRole == LanRole.HOST) {
+                lanHost?.publish(game.checkpoint(activeMatchId, matchStartedAtEpochMillis))
+            } else {
+                persistGame(game)
+            }
             cameraTrackIndex = PresentationPacing.mover(before, game.snapshot())
             transitionDelay = PresentationPacing.waitForMovement(before, game.snapshot(), speed)
             turnReady = false
@@ -367,7 +381,11 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         revision++
     }
 
-    fun startLanHost(requireCode: Boolean) {
+    fun startLanHost(requireCode: Boolean, seats: Int) {
+        if (seats !in 2..4) {
+            lanMessage = "Nearby games support two to four participants."
+            return
+        }
         if (!nearby.hasWifi()) {
             lanMessage = "Connect both phones to the same Wi-Fi before hosting."
             return
@@ -375,12 +393,13 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         lanBusy = true
         lanMessage = null
         val roomGame = GameSession(
-            board, catalogue, seats = 2, seed = java.util.Random().nextInt(),
+            board, catalogue, seats = seats, seed = java.util.Random().nextInt(),
             humanIndices = setOf(0, 1)
         )
         val roomId = java.util.UUID.randomUUID().toString()
         val started = System.currentTimeMillis()
         lanRole = LanRole.HOST
+        lanSeats = seats
         activeMatchId = roomId
         matchStartedAtEpochMillis = started
         startedFromCheckpoint = false
@@ -388,28 +407,43 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         // socket worker. Every guest command is forwarded to Android's main queue.
         Thread({
             try {
-                val server = CrossroadsLanHost(
+                lateinit var server: CrossroadsLanHost
+                server = CrossroadsLanHost(
                     initial = roomGame.checkpoint(roomId, started),
                     requiresCode = requireCode,
                     onAction = { action ->
                         mainHandler.post {
-                            if (lanRole == LanRole.HOST && session === roomGame) {
+                            val currentGame = session
+                            if (lanRole == LanRole.HOST && lanHost === server &&
+                                lanConnected && currentGame != null
+                            ) {
                                 if (!appInForeground) {
-                                    lanHost?.message("Host is away. Try again when they return.")
+                                    server.message("Host is away. Try again when they return.")
                                 } else {
-                                    val before = roomGame.snapshot()
+                                    val before = currentGame.snapshot()
                                     runCatching {
-                                        LanTurnAuthority.apply(roomGame, 1, action)
+                                        LanTurnAuthority.applyRemote(
+                                            currentGame, activeMatchId, 1, action
+                                        )
                                     }.onSuccess {
-                                        lanHost?.publish(roomGame.checkpoint(roomId, started))
-                                        cameraTrackIndex = PresentationPacing.mover(before, roomGame.snapshot())
+                                        server.publish(currentGame.checkpoint(
+                                            activeMatchId, matchStartedAtEpochMillis
+                                        ))
+                                        cameraTrackIndex = PresentationPacing.mover(
+                                            before, currentGame.snapshot()
+                                        )
                                         transitionDelay = PresentationPacing.waitForMovement(
-                                            before, roomGame.snapshot(), speed
+                                            before, currentGame.snapshot(), speed
                                         )
                                         turnReady = false
                                         revision++
                                     }.onFailure { error ->
-                                        lanHost?.message(error.message ?: "Invalid turn")
+                                        server.message(error.message ?: "Invalid turn")
+                                        // A rejected duplicate/old command must not strand the
+                                        // guest's pending-action UI. Re-send authoritative state.
+                                        server.publish(currentGame.checkpoint(
+                                            activeMatchId, matchStartedAtEpochMillis
+                                        ))
                                     }
                                 }
                             }
@@ -417,7 +451,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                     },
                     onPresence = { joined, detail ->
                         mainHandler.post {
-                            if (lanRole == LanRole.HOST && activeMatchId == roomId) {
+                            if (lanRole == LanRole.HOST && lanHost === server) {
                                 lanConnected = joined
                                 lanBusy = false
                                 if (joined) {
@@ -475,8 +509,9 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                             runCatching {
                                 GameSession.restore(board, catalogue, checkpoint)
                             }.onSuccess { restored ->
-                                if (restored.players.size != 2 ||
-                                    restored.players.any { it.isBot }
+                                if (restored.players.size !in 2..4 ||
+                                    restored.players.take(2).any { it.isBot } ||
+                                    restored.players.drop(2).any { !it.isBot }
                                 ) {
                                     lanMessage = "The host has an incompatible match."
                                     lanBusy = false
@@ -529,7 +564,10 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         if (lanRole == LanRole.GUEST) {
             if (!lanConnected || lanPendingAction || current.currentIndex != 1) return
             runCatching {
-                lanGuest?.submit(action)
+                lanGuest?.submit(action.copy(
+                    expectedMatchId = activeMatchId,
+                    expectedRevision = current.revision
+                ))
             }.onSuccess { lanPendingAction = true }
                 .onFailure { lanMessage = it.message ?: "Reconnect to play." }
             return
@@ -568,7 +606,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         val current = session ?: return
         if (lanRole == LanRole.HOST) {
             if (!lanConnected) return
-            val next = GameSession(board, catalogue, seats = 2,
+            val next = GameSession(board, catalogue, seats = current.players.size,
                 seed = java.util.Random().nextInt(), humanIndices = setOf(0, 1))
             activeMatchId = java.util.UUID.randomUUID().toString()
             matchStartedAtEpochMillis = System.currentTimeMillis()
@@ -611,10 +649,11 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
             rooms = lanRooms,
             hostAddress = nearby.address(),
             hostPort = lanHost?.port ?: 0,
+            hostSeats = lanSeats,
             inviteCode = lanHost?.code.orEmpty(),
             note = lanMessage,
             busy = lanBusy,
-            onHost = { requireCode -> startLanHost(requireCode) },
+            onHost = { requireCode, seats -> startLanHost(requireCode, seats) },
             onJoin = { host, port, code -> joinLan(host, port, code) },
             onRefresh = { nearby.discover { lanRooms = it } },
             onExit = { leaveGame() },

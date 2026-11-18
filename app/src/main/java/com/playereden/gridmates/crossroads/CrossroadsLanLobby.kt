@@ -34,10 +34,11 @@ internal fun CrossroadsLanLobby(
     rooms: List<NearbyCrossroads>,
     hostAddress: String,
     hostPort: Int,
+    hostSeats: Int,
     inviteCode: String,
     note: String?,
     busy: Boolean,
-    onHost: (Boolean) -> Unit,
+    onHost: (Boolean, Int) -> Unit,
     onJoin: (String, Int, String) -> Unit,
     onRefresh: () -> Unit,
     onExit: () -> Unit,
@@ -47,6 +48,7 @@ internal fun CrossroadsLanLobby(
     val forest = Color(0xFF48684D)
     val cream = Color(0xFFF7F0DE)
     var requireCode by remember { mutableStateOf(false) }
+    var participants by remember { mutableIntStateOf(2) }
     var address by remember { mutableStateOf("") }
     var code by remember { mutableStateOf("") }
     Column(
@@ -70,14 +72,31 @@ internal fun CrossroadsLanLobby(
             style = MaterialTheme.typography.bodyMedium)
         when (screen) {
             LanScreen.HOST_SETUP -> {
-                Text("Two players · one phone each · Woodland Crossing",
+                Text("Two people on separate phones, plus optional AI rivals.",
                     style = MaterialTheme.typography.bodyMedium)
+                Text("Racers in this match", color = forest,
+                    style = MaterialTheme.typography.titleMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    (2..4).forEach { count ->
+                        FilterChip(
+                            selected = participants == count,
+                            onClick = { participants = count },
+                            label = { Text("$count racers") },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+                Text(
+                    if (participants == 2) "2 human players · no AI"
+                    else "2 human players · ${participants - 2} AI ${if (participants == 3) "rival" else "rivals"}",
+                    style = MaterialTheme.typography.bodySmall
+                )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = requireCode, onCheckedChange = { requireCode = it })
                     Text("Require a six-digit room code")
                 }
                 Button(
-                    onClick = { onHost(requireCode) },
+                    onClick = { onHost(requireCode, participants) },
                     enabled = !busy,
                     modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                 ) { Text("Create nearby room") }
@@ -90,6 +109,7 @@ internal fun CrossroadsLanLobby(
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                         Text("Waiting for Player 2", color = forest,
                             style = MaterialTheme.typography.titleMedium)
+                        Text("$hostSeats racers · 2 people on phones and ${hostSeats - 2} AI")
                         Text("Your room should appear on the other phone under Nearby games.")
                         if (inviteCode.isNotEmpty()) {
                             Text("Room code: $inviteCode", fontWeight = FontWeight.Bold)
