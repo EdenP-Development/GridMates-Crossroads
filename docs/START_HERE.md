@@ -1,3 +1,6 @@
+**ARTREADY-38 (November 18, 2026):** The next art handoff is [Original Artwork Asset Bible and Import QA](ARTREADY_38_ASSET_BIBLE_AND_IMPORT_QA.md). The Android app supports optional packaged art for home, three backplates, encounters, finish and numbered miniature portraits; 12 empty slots have procedural fallback and a provenance/PNG/size check. **No finished bitmap art is imported yet.** This milestone is stacked above the draft GAMEPLAY-37 encounter rules; both remain unmerged and require exact-head Android QA plus owner phone review.
+
+---
 # Start here — GridMates: Crossroads (November 17, 2026)
 
 **CURRENT:** Three hand-authored race lengths (Quick / Classic / Long), Solo AI, Pass & Play, nearby two-phone LAN *prototype*, deterministic saved offline races and manual JSON backup, Android QA1270. Subsequent draft JUNCTION-32 Android build succeeded; verify the actual phone flow. A fully completed Long human session, real two-phone LAN match, public signing and production launch remain **unverified/not done**. The older camera/LAN notes below are historical.
