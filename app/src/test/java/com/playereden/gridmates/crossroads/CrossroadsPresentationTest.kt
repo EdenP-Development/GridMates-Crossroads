@@ -16,12 +16,12 @@ class CrossroadsPresentationTest {
     }
 
     @Test fun initialForkAndFinishKeepMoreMapInView() {
-        assertEquals(1.0f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 1, true))
-        assertEquals(1.0f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 1, true))
-        assertEquals(1.15f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 12, true))
-        assertEquals(1.28f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 12, true))
-        assertEquals(1.0f, CrossroadsCameraPreset.followZoom(Phase.FINISHED, 21, true))
-        assertEquals(1.0f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 9, false))
+        assertEquals(1.0f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 1, true), 0.0001f)
+        assertEquals(1.0f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 1, true), 0.0001f)
+        assertEquals(1.15f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 12, true), 0.0001f)
+        assertEquals(1.28f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 12, true), 0.0001f)
+        assertEquals(1.0f, CrossroadsCameraPreset.followZoom(Phase.FINISHED, 21, true), 0.0001f)
+        assertEquals(1.0f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 9, false), 0.0001f)
     }
 
     @Test fun fourPiecesStaySeparatedAtSharedStartAndFocusOffsetMatchesRendering() {
@@ -41,6 +41,6 @@ class CrossroadsPresentationTest {
             }
         }
         assertEquals(2f * CrossroadsPiecePlacement.offset(0, 4, 1f).x,
-            CrossroadsPiecePlacement.offset(0, 4, 2f).x)
+            CrossroadsPiecePlacement.offset(0, 4, 2f).x, 0.0001f)
     }
 }
