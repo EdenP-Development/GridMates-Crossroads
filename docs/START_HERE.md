@@ -1,3 +1,11 @@
+# Start here — GridMates: Crossroads (November 17, 2026)
+
+**CURRENT:** Three hand-authored race lengths (Quick / Classic / Long), Solo AI, Pass & Play, nearby two-phone LAN *prototype*, deterministic saved offline races and manual JSON backup, Android QA1270. Subsequent draft JUNCTION-32 Android build succeeded; verify the actual phone flow. A fully completed Long human session, real two-phone LAN match, public signing and production launch remain **unverified/not done**. The older camera/LAN notes below are historical.
+
+**Start here for the active game-feel project:** [GAMEFEEL-33 Experience Bible & Roadmap](GAMEFEEL_33_EXPERIENCE_BIBLE_AND_ROADMAP.md). It incorporates previous research, current screenshots and an implementation/QA sequence. Existing detailed vision and constraints remain in [Game Bible](GAME_BIBLE.md) and [GridMates Charter](GRIDMATES_CLASSIC_GAMES_CHARTER.md).
+
+---
+
 # Start here — Crossroads foundation
 **Status:** CAM-06 QA1057 built and verified updating over QA1051 with saved statistics preserved on an Android emulator. Dynamic camera Follow/Overview and manual zoom/pan await owner physical-phone approval. LAN is not yet implemented.
 

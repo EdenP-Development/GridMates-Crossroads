@@ -1,5 +1,16 @@
 # Crossroads — Lean Classic Game Roadmap
 
+## Current development direction — GAMEFEEL-33 (November 17, 2026)
+
+The owner asked to move from functional prototype polish into a **cohesive game experience** informed by tabletop science, quality digital board-game examples, and real Android screenshots. The new [Game Feel Experience Bible & Roadmap](GAMEFEEL_33_EXPERIENCE_BIBLE_AND_ROADMAP.md) is the *current priority map*. Work in **larger coherent vertical slices**, not independent cosmetic nips.
+
+**Current verified source baseline:** QA1270 brought Quick/Classic/Long, including the owner-phone Cedarwood first-fork screenshot. JUNCTION-32's Android CI also passed; physical confirmation of full-map return is still pending. Current three-course Android title/race selector and offline save recovery are implemented. LAN Host/Join remains **unaccepted until a real two-phone match**. A complete Long-owner-phone playthrough and trustworthy human session durations are also untested.
+
+**Next track:** GAMEFEEL-33 (turn identity + opt-out tactile confirmation) → GAMEFEEL-34 (unified event/consequence payoff) → VISUAL-35 (art-system master pass), alongside gameplay agency/balance, real-duration playtests and LAN acceptance. No extra currencies, chores, account system or unrelated feature expansion. Draft PR review only; do not merge `main` or publish without explicit owner approval.
+
+### Historical roadmap below (superseded status snapshots)
+The LAN-22 / QA1121 descriptions below document what was true earlier and are not a current statement that only one board or no LAN prototype exists.
+
 ## Immediate implementation priority — LAN-22 (Nov 17, 2026)
 
 Owner redirected development from repeated fine tuning to **missing core features**. The first LAN milestone implements two actual Android devices: Host Nearby, Join Nearby (NSD with manual IP fallback), one host-authoritative 2-human Woodland match, shared legal turns/routes/pranks, host rematch, and in-memory seat rejoin. Source and loopback tests are a test candidate; real two-device gameplay must be verified before declaring LAN ready. [LAN-22 two-phone QA](LAN_22_TWO_PHONE_VERTICAL_SLICE_QA.md).

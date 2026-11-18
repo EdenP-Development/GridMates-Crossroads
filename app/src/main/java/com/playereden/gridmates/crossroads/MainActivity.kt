@@ -51,6 +51,8 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -284,6 +286,10 @@ private fun CrossroadsApp(
                 PresentationSpeed.valueOf(prefs.getString("match_pace_v1", "COZY") ?: "COZY")
             }.getOrDefault(PresentationSpeed.COZY)
         )
+    }
+    val haptics = LocalHapticFeedback.current
+    var touchFeedback by remember {
+        mutableStateOf(prefs.getBoolean("feel_touch_feedback_v1", true))
     }
     var transitionDelay by remember(game) { mutableLongStateOf(0L) }
     var turnReady by remember(game) { mutableStateOf(true) }
@@ -684,6 +690,12 @@ private fun CrossroadsApp(
             lanMessage = result.exceptionOrNull()?.message ?: "Unavailable move"
             return
         }
+        // Only a legal human action gets tactile confirmation. The UI never
+        // vibrates for AI turns or changes the result of the die.
+        if (touchFeedback && lanRole == LanRole.OFFLINE &&
+            action.type != LanActionType.ROLL) {
+            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        }
         if (lanRole == LanRole.HOST) {
             lanHost?.publish(current.checkpoint(activeMatchId, matchStartedAtEpochMillis))
         } else {
@@ -901,6 +913,19 @@ private fun CrossroadsApp(
                             HorizontalDivider()
                             DropdownMenuItem(
                                 text = {
+                                    Text(if (touchFeedback) "Touch feedback: On"
+                                        else "Touch feedback: Off")
+                                },
+                                onClick = {
+                                    touchFeedback = !touchFeedback
+                                    prefs.edit().putBoolean(
+                                        "feel_touch_feedback_v1", touchFeedback
+                                    ).apply()
+                                    showMatchOptions = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = {
                                     Text(if (state.phase == Phase.FINISHED) "Main menu"
                                         else "Leave match", color = Bark)
                                 },
@@ -968,8 +993,8 @@ private fun CrossroadsApp(
                     val trackedName = state.players[
                         cameraTrackIndex.coerceIn(state.players.indices)
                     ].name
-                    Text(
-                        if (state.phase == Phase.FINISHED && !turnReady) "Approaching the finish…"
+                    TurnMomentPlaque(
+                        title = if (state.phase == Phase.FINISHED && !turnReady) "Approaching the finish…"
                         else if (state.phase == Phase.FINISHED) "Journey complete!"
                         else if (!turnReady && !rollingDie) {
                             if (state.players[cameraTrackIndex.coerceIn(state.players.indices)].name == "You")
@@ -978,8 +1003,13 @@ private fun CrossroadsApp(
                         }
                         else if (currentName == "You") "Round $round · Your turn"
                         else "Round $round · $currentName's turn",
-                        fontWeight = FontWeight.Bold, color = Forest, fontSize = 16.sp,
-                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+                        phase = state.phase,
+                        moving = !turnReady && !rollingDie,
+                        seatColor = PlayerColors[
+                            (if (!turnReady) cameraTrackIndex else state.playerIndex)
+                                .coerceIn(state.players.indices)
+                        ],
+                        modifier = Modifier.fillMaxWidth()
                     )
                     // A single helpful cue replaces any extra Pass & Play
                     // handoff dialog: next player can roll immediately.
@@ -1073,7 +1103,14 @@ private fun CrossroadsApp(
                         when (state.phase) {
                             Phase.ROLL -> {
                                 Button(
-                                    onClick = { rollingDie = true },
+                                    onClick = {
+                                        if (touchFeedback) {
+                                            haptics.performHapticFeedback(
+                                                HapticFeedbackType.TextHandleMove
+                                            )
+                                        }
+                                        rollingDie = true
+                                    },
                                     enabled = !rollingDie && turnReady &&
                                          (lanRole == LanRole.OFFLINE ||
                                              (lanConnected && !lanPendingAction)),
