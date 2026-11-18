@@ -82,6 +82,8 @@ internal fun CrossroadsHomeScreen(
     wins: Int,
     completed: Int,
     onStart: (Int, Boolean) -> Unit,
+    quickRace: Boolean,
+    onQuickRaceChange: (Boolean) -> Unit,
     onNearbyHost: () -> Unit,
     onNearbyJoin: () -> Unit,
     recoveryWarning: String? = null
@@ -165,6 +167,32 @@ internal fun CrossroadsHomeScreen(
                 )
             }
         }
+        Text("Choose your course", style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold, color = Ink)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilterChip(
+                selected = quickRace,
+                onClick = { onQuickRaceChange(true) },
+                label = { Text("Quick · Brookside") },
+                colors = choiceColors,
+                modifier = Modifier.weight(1f)
+            )
+            FilterChip(
+                selected = !quickRace,
+                onClick = { onQuickRaceChange(false) },
+                label = { Text("Classic · Woven Trail") },
+                colors = choiceColors,
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Text(
+            if (quickRace) "Brookside Dash · 2 crossroads · a shorter, punchier route"
+            else "Woven Trail · 5 crossroads · the full woodland journey",
+            style = MaterialTheme.typography.bodySmall, color = Muted
+        )
         Button(
             onClick = { onStart(seats, passAndPlay) },
             modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
