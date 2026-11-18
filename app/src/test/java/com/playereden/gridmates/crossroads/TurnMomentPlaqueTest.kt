@@ -10,6 +10,7 @@ class TurnMomentPlaqueTest {
         assertEquals("DICE ROLL", turnMomentName(Phase.ROLL, false))
         assertEquals("AT A CROSSROADS", turnMomentName(Phase.ROUTE, false))
         assertEquals("MISCHIEF", turnMomentName(Phase.TARGET, false))
+        assertEquals("YOUR CHOICE", turnMomentName(Phase.ENCOUNTER, false))
         assertEquals("FINISH LINE", turnMomentName(Phase.FINISHED, false))
         assertEquals("ON THE TRAIL", turnMomentName(Phase.ROLL, true))
         assertEquals("ON THE TRAIL", turnMomentName(Phase.FINISHED, true))
