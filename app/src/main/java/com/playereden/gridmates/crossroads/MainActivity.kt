@@ -1715,6 +1715,21 @@ private fun BoardCanvas(
                     else -> Color(0xFFFDF8E9)
                 }
                 val radius = if (node.kind == "fork") 12f else if (node.kind == "start" || node.kind == "finish") 13f else 7f
+                // Tabletop start/finish emblems are distinguishable even when
+                // pawns are clustered near the entrance or camera is fit-to-map.
+                if (node.kind == "finish") {
+                    drawCircle(Color(0xFFFFE8B6).copy(alpha = 0.55f),
+                        radius = 22f, center = center)
+                    drawCircle(Color(0xFFAC7C3B).copy(alpha = 0.77f),
+                        radius = 18f, center = center,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f))
+                } else if (node.kind == "start") {
+                    drawCircle(Color(0xFFDEE9D5).copy(alpha = 0.56f),
+                        radius = 19f, center = center)
+                    drawCircle(Forest.copy(alpha = 0.48f),
+                        radius = 16.5f, center = center,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.2f))
+                }
                 drawCircle(color, radius, center)
                 drawCircle(Color(0xFF9E896B), radius, center, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.3f))
                 if (node.kind == "fork" || node.kind == "start" || node.kind == "finish") {
