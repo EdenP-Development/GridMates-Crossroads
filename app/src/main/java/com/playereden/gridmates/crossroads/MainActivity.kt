@@ -277,7 +277,10 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                 )) {
                     if (lanRole == LanRole.GUEST) {
                         runCatching {
-                            lanGuest?.submit(LanAction(LanActionType.ROLL))
+                            lanGuest?.submit(LanAction(
+                                LanActionType.ROLL, expectedMatchId = activeMatchId,
+                                expectedRevision = game.revision
+                            ))
                         }.onSuccess { lanPendingAction = true }
                             .onFailure { lanMessage = "Reconnect before rolling." }
                     } else {
@@ -404,28 +407,43 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         // socket worker. Every guest command is forwarded to Android's main queue.
         Thread({
             try {
-                val server = CrossroadsLanHost(
+                lateinit var server: CrossroadsLanHost
+                server = CrossroadsLanHost(
                     initial = roomGame.checkpoint(roomId, started),
                     requiresCode = requireCode,
                     onAction = { action ->
                         mainHandler.post {
-                            if (lanRole == LanRole.HOST && session === roomGame) {
+                            val currentGame = session
+                            if (lanRole == LanRole.HOST && lanHost === server &&
+                                lanConnected && currentGame != null
+                            ) {
                                 if (!appInForeground) {
-                                    lanHost?.message("Host is away. Try again when they return.")
+                                    server.message("Host is away. Try again when they return.")
                                 } else {
-                                    val before = roomGame.snapshot()
+                                    val before = currentGame.snapshot()
                                     runCatching {
-                                        LanTurnAuthority.apply(roomGame, 1, action)
+                                        LanTurnAuthority.applyRemote(
+                                            currentGame, activeMatchId, 1, action
+                                        )
                                     }.onSuccess {
-                                        lanHost?.publish(roomGame.checkpoint(roomId, started))
-                                        cameraTrackIndex = PresentationPacing.mover(before, roomGame.snapshot())
+                                        server.publish(currentGame.checkpoint(
+                                            activeMatchId, matchStartedAtEpochMillis
+                                        ))
+                                        cameraTrackIndex = PresentationPacing.mover(
+                                            before, currentGame.snapshot()
+                                        )
                                         transitionDelay = PresentationPacing.waitForMovement(
-                                            before, roomGame.snapshot(), speed
+                                            before, currentGame.snapshot(), speed
                                         )
                                         turnReady = false
                                         revision++
                                     }.onFailure { error ->
-                                        lanHost?.message(error.message ?: "Invalid turn")
+                                        server.message(error.message ?: "Invalid turn")
+                                        // A rejected duplicate/old command must not strand the
+                                        // guest's pending-action UI. Re-send authoritative state.
+                                        server.publish(currentGame.checkpoint(
+                                            activeMatchId, matchStartedAtEpochMillis
+                                        ))
                                     }
                                 }
                             }
@@ -433,7 +451,7 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
                     },
                     onPresence = { joined, detail ->
                         mainHandler.post {
-                            if (lanRole == LanRole.HOST && activeMatchId == roomId) {
+                            if (lanRole == LanRole.HOST && lanHost === server) {
                                 lanConnected = joined
                                 lanBusy = false
                                 if (joined) {
@@ -546,7 +564,10 @@ private fun CrossroadsApp(board: BoardDefinition, catalogue: EventCatalogue) {
         if (lanRole == LanRole.GUEST) {
             if (!lanConnected || lanPendingAction || current.currentIndex != 1) return
             runCatching {
-                lanGuest?.submit(action)
+                lanGuest?.submit(action.copy(
+                    expectedMatchId = activeMatchId,
+                    expectedRevision = current.revision
+                ))
             }.onSuccess { lanPendingAction = true }
                 .onFailure { lanMessage = it.message ?: "Reconnect to play." }
             return
