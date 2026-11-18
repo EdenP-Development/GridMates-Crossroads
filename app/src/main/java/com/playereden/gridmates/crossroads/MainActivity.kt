@@ -145,6 +145,13 @@ private fun CrossroadsApp(
     // Preserve this long-standing preference filename for QA install-over updates.
     // Changing it would strand existing local wins and match checkpoints.
     val prefs = remember { context.getSharedPreferences("crossroads_qa_profile_v1", 0) }
+    // Stored separately from checkpoint state. Changing a board's appearance
+    // must never modify its route graph, seed, replay or old save compatibility.
+    var boardLook by remember {
+        mutableStateOf(
+            CrossroadsBoardLook.fromStored(prefs.getString("board_look_v1", null))
+        )
+    }
     val recoveryStore = remember(prefs, classicBoard, quickBoard, longBoard, catalogue) {
         MatchRecoveryStore(prefs, classicBoard, catalogue, knownBoards)
     }
@@ -820,6 +827,11 @@ private fun CrossroadsApp(
             onCourseChange = { courseId ->
                 if (courseId in knownBoards) selectedCourseId = courseId
             },
+            boardLook = boardLook,
+            onBoardLookChange = { look ->
+                boardLook = look
+                prefs.edit().putString("board_look_v1", look.name).apply()
+            },
             playtestRules = playtestRules,
             onPlaytestRulesChange = { playtestRules = it },
             onNearbyHost = {
@@ -1008,6 +1020,7 @@ private fun CrossroadsApp(
                 // The event reveal already appears in the fixed action pane.
                 // Keep the complete playable board visible, with history in Match options.
                 BoardCanvas(board, state, height = fittedBoardHeight, matchKey = game,
+                    boardLook = boardLook,
                     stepMillis = speed.stepMillis, focusPlayerIndex = cameraTrackIndex,
                     isTurnTransitioning = !turnReady,
                     startAtCurrent = startedFromCheckpoint)
@@ -1490,7 +1503,7 @@ private fun CrossroadsApp(
                         BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
                             val mapHeight = (maxWidth * 0.94f).coerceIn(245.dp, 328.dp)
                             BoardCanvas(board, state, height = mapHeight, tokenScale = 1.35f,
-                                animateTokens = false, matchKey = game)
+                                animateTokens = false, matchKey = game, boardLook = boardLook)
                         }
                         Text("Amber: hazard  •  Green: shelter  •  Purple: mischief",
                             style = MaterialTheme.typography.bodySmall, color = Bark)
@@ -1657,6 +1670,7 @@ private fun BoardCanvas(
     board: BoardDefinition,
     state: Snapshot,
     height: Dp = 315.dp,
+    boardLook: CrossroadsBoardLook = CrossroadsBoardLook.ILLUSTRATED,
     tokenScale: Float = 1f,
     animateTokens: Boolean = true,
     matchKey: Any? = null,
@@ -1667,7 +1681,10 @@ private fun BoardCanvas(
 ) {
     // The scene is data-independent: scenery and optional illustrated pawns
     // are drawn beneath the authoritative routes and numeric seat labels.
-    val boardBackdrop = rememberOptionalCrossroadsArt(CrossroadsArtCatalog.backplate(board.id))
+    val boardBackdrop = rememberOptionalCrossroadsArt(
+        if (boardLook == CrossroadsBoardLook.ILLUSTRATED)
+            CrossroadsArtCatalog.backplate(board.id) else null
+    )
     val seatImages = listOf(
         rememberOptionalCrossroadsArt(CrossroadsArtSlot.TOKEN_SEAT_1),
         rememberOptionalCrossroadsArt(CrossroadsArtSlot.TOKEN_SEAT_2),
