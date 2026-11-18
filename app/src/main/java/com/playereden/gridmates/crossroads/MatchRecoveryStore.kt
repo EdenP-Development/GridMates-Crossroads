@@ -121,6 +121,14 @@ internal class MatchRecoveryStore(
             GameSession.restore(chosenBoard, catalogue, parsed)
             parsed
         }
+        if (checkpoint != null && checkpoint.expected.phase == Phase.FINISHED &&
+            prefs.getString(LAST_COMPLETED_ID, null) == checkpoint.matchId &&
+            prefs.getLong(LAST_FINISHED_AT, 0L) < checkpoint.startedAtEpochMillis
+        ) {
+            // Earlier QA builds stored a completed receipt without the finish time.
+            // Freeze it once before export so a finished race cannot recount later.
+            completedElapsedSeconds(checkpoint.matchId, checkpoint.startedAtEpochMillis)
+        }
         val bundle = CrossroadsProgressBundle(
             completed = prefs.getInt("completed", 0),
             wins = prefs.getInt("wins", 0),
