@@ -115,7 +115,8 @@ private fun CrossroadsApp(
 ) {
     val knownBoards = remember(classicBoard, quickBoard, longBoard) {
         val original = listOf(classicBoard, quickBoard, longBoard)
-        (original + original.map(DecisionLab::variant)).associateBy { it.id }
+        (original + original.map(DecisionLab::variant) +
+            original.map(DecisionLab::variantV2)).associateBy { it.id }
     }
     val context = LocalContext.current
     // Crossroads runs inside its own ComponentActivity. Explicitly observe the
@@ -482,7 +483,7 @@ private fun CrossroadsApp(
     fun start(seats: Int, passAndPlay: Boolean) {
         if (lanRole != LanRole.OFFLINE) leaveGame()
         val humans = if (passAndPlay) (0 until seats).toSet() else setOf(0)
-        val boardId = if (playtestRules) selectedCourseId + DecisionLab.SUFFIX
+        val boardId = if (playtestRules) selectedCourseId + DecisionLab.V2_SUFFIX
             else selectedCourseId
         val newGame = GameSession(knownBoards.getValue(boardId), catalogue, seats = seats,
             seed = java.util.Random().nextInt(), humanIndices = humans)
@@ -1216,7 +1217,13 @@ private fun CrossroadsApp(
                                         ) {
                                             RouteChoiceSummary(
                                                 label = choice?.label ?: route.id,
-                                                description = choice?.description ?: "Follow this trail",
+                                                description = (choice?.description ?: "Follow this trail") +
+                                                    if (game.playtestRules)
+                                                        " · " + DecisionLab.routePreview(
+                                                            board, route.id, choice?.risk,
+                                                            game.steadyTravelChosen
+                                                        )
+                                                    else "",
                                                 risk = choice?.risk
                                             )
                                         }
