@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 
 /**
  * Explicit, user-controlled local backup for Android QA -> production transfers.
@@ -52,6 +53,12 @@ object CrossroadsProgressCodec {
     ): VerifiedCrossroadsProgress {
         require(payload.isNotBlank() && payload.length <= MAX_DOCUMENT_CHARS)
         require(payload.toByteArray(Charsets.UTF_8).size <= MAX_DOCUMENT_BYTES)
+        // Default Kotlin serialization values are convenient for writing but
+        // not enough to distinguish a real backup from arbitrary JSON.
+        val envelope = json.parseToJsonElement(payload).jsonObject
+        require("kind" in envelope && "version" in envelope) {
+            "Missing Crossroads backup identifier"
+        }
         val value = json.decodeFromString<CrossroadsProgressBundle>(payload)
         require(value.kind == "gridmates-crossroads-progress" && value.version == 1) {
             "Not a supported Crossroads backup"
