@@ -46,3 +46,13 @@ jobs:
           gradle-version: "8.11.1"
       - name: Run JVM rules tests
         run: gradle --no-daemon :core:test --console=plain
+      - name: Upload reproducible gameplay balance report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-BALANCE-28-${{ github.sha }}
+          path: |
+            core/build/reports/balance/crossroads_balance_summary.txt
+            core/build/reports/balance/crossroads_balance_samples.csv
+          if-no-files-found: warn
+          retention-days: 30
