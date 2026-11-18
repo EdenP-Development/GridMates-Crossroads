@@ -7,7 +7,7 @@ import org.junit.Test
 /** Labels are pure presentation: they cannot change the next legal action. */
 class TurnMomentPlaqueTest {
     @Test fun eachTurnPhaseHasAnUnambiguousReadableMoment() {
-        assertEquals("YOUR MOVE", turnMomentName(Phase.ROLL, false))
+        assertEquals("DICE ROLL", turnMomentName(Phase.ROLL, false))
         assertEquals("AT A CROSSROADS", turnMomentName(Phase.ROUTE, false))
         assertEquals("MISCHIEF", turnMomentName(Phase.TARGET, false))
         assertEquals("FINISH LINE", turnMomentName(Phase.FINISHED, false))
