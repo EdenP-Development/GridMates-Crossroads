@@ -9,10 +9,11 @@
       "height": 640,
       "requiresAlpha": false,
       "purpose": "Home decorative panoramic illustration; no text or play buttons",
-      "status": "planned",
-      "origin": null,
-      "license": null,
-      "sha256": null
+      "status": "approved",
+      "origin": "Original ChatGPT image generation on 2026-11-18 (generation aeca4f93-234e-4247-bb71-22dbe3a3b2de); exported to exact Crossroads dimensions and RGB PNG; isolated QA preview pending owner-phone visual approval",
+      "license": "generated",
+      "sha256": "b338bf65526e9b3a6fccaff571edd0f9e66a5e9f21c20af91f19b8dd1c5b42e8",
+      "reviewStatus": "qa-preview-only-not-owner-approved"
     },
     {
       "id": "BOARD_BROOKSIDE",
@@ -33,10 +34,11 @@
       "height": 1536,
       "requiresAlpha": false,
       "purpose": "Woven Trail scenic backplate; meadow forest village",
-      "status": "planned",
-      "origin": null,
-      "license": null,
-      "sha256": null
+      "status": "approved",
+      "origin": "Original ChatGPT image generation on 2026-11-18 (generation be63e201-3549-4b03-8f4b-6f4e025dc22d); exported to exact Crossroads dimensions and RGB PNG; isolated QA preview pending owner-phone visual approval",
+      "license": "generated",
+      "sha256": "2c6675130e80743957d79fd28501c6f5ae245f7a09541395f0da5d8b9ac7973b",
+      "reviewStatus": "qa-preview-only-not-owner-approved"
     },
     {
       "id": "BOARD_CEDARWOOD",
@@ -57,10 +59,11 @@
       "height": 768,
       "requiresAlpha": false,
       "purpose": "Shelter icon or vignette; no choices written into the image",
-      "status": "planned",
-      "origin": null,
-      "license": null,
-      "sha256": null
+      "status": "approved",
+      "origin": "Original ChatGPT image generation on 2026-11-18 (generation 30191f00-9b8b-4a67-88b6-8f6bf92bf06a); exported to exact Crossroads dimensions and RGB PNG; isolated QA preview pending owner-phone visual approval",
+      "license": "generated",
+      "sha256": "e41a4e993585524b306892fd4dc76084fc2a0023dcde320b55869efb932d566a",
+      "reviewStatus": "qa-preview-only-not-owner-approved"
     },
     {
       "id": "EVENT_HAZARD",
@@ -69,10 +72,11 @@
       "height": 768,
       "requiresAlpha": false,
       "purpose": "Hazard icon or vignette; no choices written into the image",
-      "status": "planned",
-      "origin": null,
-      "license": null,
-      "sha256": null
+      "status": "approved",
+      "origin": "Original ChatGPT image generation on 2026-11-18 (generation 322f5b19-e495-4c75-987d-ad85ee548096); exported to exact Crossroads dimensions and RGB PNG; isolated QA preview pending owner-phone visual approval",
+      "license": "generated",
+      "sha256": "c345af18a45069e4136e85dc293e7256c5144c441dbf53a5ad7b0eb50c47e770",
+      "reviewStatus": "qa-preview-only-not-owner-approved"
     },
     {
       "id": "EVENT_MISCHIEF",
