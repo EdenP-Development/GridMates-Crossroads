@@ -19,7 +19,10 @@ import com.playereden.crossroads.core.Phase
 internal class MatchRecoveryStore(
     private val prefs: SharedPreferences,
     private val board: BoardDefinition,
-    private val catalogue: EventCatalogue
+    private val catalogue: EventCatalogue,
+    // Old QA checkpoints have always carried boardId. Resolve by ID before
+    // restoring so enabling a new course never invalidates an old Woven Trail save.
+    private val knownBoards: Map<String, BoardDefinition> = mapOf(board.id to board)
 ) {
     companion object {
         private const val ACTIVE_KEY = "active_match_checkpoint_v1"
@@ -39,7 +42,10 @@ internal class MatchRecoveryStore(
         val payload = prefs.getString(ACTIVE_KEY, null) ?: return LoadResult(null, false)
         return try {
             val checkpoint = MatchCheckpointCodec.decode(payload)
-            val game = GameSession.restore(board, catalogue, checkpoint)
+            val savedBoard = requireNotNull(knownBoards[checkpoint.boardId]) {
+                "Saved course isn't bundled with this version"
+            }
+            val game = GameSession.restore(savedBoard, catalogue, checkpoint)
             LoadResult(
                 Restored(game, checkpoint.matchId, checkpoint.startedAtEpochMillis),
                 invalidSavedMatch = false

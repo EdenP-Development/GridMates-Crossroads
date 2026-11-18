@@ -15,6 +15,9 @@ class MatchRecoveryStoreTest {
     private val events = GameData.events(
         File(dataRoot, "events/woven_events_v02.json").readText()
     )
+    private val quick = GameData.board(
+        File(dataRoot, "boards/woodland_brookside_quick.json").readText()
+    )
 
     private fun finishMatch(game: GameSession, onAction: () -> Unit) {
         var actions = 0
@@ -68,6 +71,51 @@ class MatchRecoveryStoreTest {
             assertEquals(1, prefs.getInt("completed", 0))
             assertEquals(expectedWins, prefs.getInt("wins", 0))
         }
+    }
+
+    @Test fun newCourseDoesNotInvalidateOldClassicSaveAndQuickCanResume() {
+        val prefs = MemoryPreferences()
+        val legacy = MatchRecoveryStore(prefs, board, events)
+        val classicMatch = GameSession(board, events, seats = 3, seed = 151)
+        val started = System.currentTimeMillis() - 12_000L
+        classicMatch.roll()
+        assertTrue(legacy.persist(classicMatch, "existing-classic-save", started))
+
+        val both = MatchRecoveryStore(prefs, board, events,
+            mapOf(board.id to board, quick.id to quick))
+        val existing = requireNotNull(both.load().match)
+        assertEquals("existing-classic-save", existing.matchId)
+        assertEquals(classicMatch.snapshot(), existing.game.snapshot())
+        assertEquals(board.id, existing.game.board.id)
+
+        // A deliberate new race replaces the single active slot, not the
+        // saved match counter or the signed QA installation identity.
+        val quickMatch = GameSession(quick, events, seats = 2, seed = 77,
+            humanIndices = setOf(0, 1))
+        quickMatch.roll()
+        assertTrue(both.persist(quickMatch, "new-quick-save", started + 1))
+        val resumed = requireNotNull(
+            MatchRecoveryStore(prefs, board, events,
+                mapOf(board.id to board, quick.id to quick)).load().match
+        )
+        assertEquals(quick.id, resumed.game.board.id)
+        assertEquals(quickMatch.snapshot(), resumed.game.snapshot())
+        assertEquals(0, prefs.getInt("completed", 0))
+        assertEquals(0, prefs.getInt("wins", 0))
+    }
+
+    @Test fun missingCourseNeverSilentlyOverwritesAnExistingCheckpoint() {
+        val prefs = MemoryPreferences()
+        val both = MatchRecoveryStore(prefs, board, events,
+            mapOf(board.id to board, quick.id to quick))
+        val quickMatch = GameSession(quick, events, seats = 2, seed = 12)
+        val started = System.currentTimeMillis() - 1000L
+        assertTrue(both.persist(quickMatch, "unknown-on-old-app", started))
+        val olderApp = MatchRecoveryStore(prefs, board, events)
+        assertTrue(olderApp.load().invalidSavedMatch)
+        assertFalse(olderApp.load().match != null)
+        assertEquals(quickMatch.snapshot(),
+            requireNotNull(both.load().match).game.snapshot())
     }
 
     @Test fun olderFinishedCheckpointGetsOneTimeElapsedFallback() {

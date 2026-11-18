@@ -1,0 +1,343 @@
+{
+  "id": "woodland_brookside_quick_v01",
+  "version": 1,
+  "status": "PLAYTEST_HANDCRAFTED_NOT_BALANCED",
+  "name": "Brookside Dash · Quick Race",
+  "start": "START",
+  "finish": "FINISH",
+  "regions": [
+    {
+      "id": "meadow",
+      "label": "Meadow",
+      "risk": "mixed"
+    },
+    {
+      "id": "forest",
+      "label": "Forest",
+      "risk": "mixed"
+    },
+    {
+      "id": "village",
+      "label": "Village",
+      "risk": "mixed"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "START",
+      "region": "meadow",
+      "kind": "start",
+      "x": 0.07,
+      "y": 0.82,
+      "next": [
+        "Q1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "Q1",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.11,
+      "y": 0.73,
+      "next": [
+        "Q2"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "Q2",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.16,
+      "y": 0.65,
+      "next": [
+        "F1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "F1",
+      "region": "meadow",
+      "kind": "fork",
+      "x": 0.23,
+      "y": 0.56,
+      "next": [
+        "R1",
+        "L1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "R1",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.29,
+      "y": 0.41,
+      "next": [
+        "R2"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "R2",
+      "region": "meadow",
+      "kind": "event",
+      "x": 0.37,
+      "y": 0.27,
+      "next": [
+        "R3"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "R3",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.46,
+      "y": 0.35,
+      "next": [
+        "J1"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "L1",
+      "region": "meadow",
+      "kind": "event",
+      "x": 0.29,
+      "y": 0.7,
+      "next": [
+        "L2"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "L2",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.36,
+      "y": 0.82,
+      "next": [
+        "L3"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "L3",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.43,
+      "y": 0.76,
+      "next": [
+        "L4"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "L4",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.49,
+      "y": 0.64,
+      "next": [
+        "J1"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "J1",
+      "region": "forest",
+      "kind": "merge",
+      "x": 0.53,
+      "y": 0.52,
+      "next": [
+        "F2"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "F2",
+      "region": "forest",
+      "kind": "fork",
+      "x": 0.6,
+      "y": 0.51,
+      "next": [
+        "C1",
+        "M1",
+        "G1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "C1",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.66,
+      "y": 0.31,
+      "next": [
+        "C2"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "C2",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.75,
+      "y": 0.23,
+      "next": [
+        "C3"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "C3",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.82,
+      "y": 0.37,
+      "next": [
+        "J2"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "M1",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.69,
+      "y": 0.47,
+      "next": [
+        "M2"
+      ],
+      "route": "mischief",
+      "eventPool": "mischief"
+    },
+    {
+      "id": "M2",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.77,
+      "y": 0.49,
+      "next": [
+        "J2"
+      ],
+      "route": "mischief"
+    },
+    {
+      "id": "G1",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.66,
+      "y": 0.68,
+      "next": [
+        "G2"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "G2",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.73,
+      "y": 0.79,
+      "next": [
+        "G3"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "G3",
+      "region": "village",
+      "kind": "event",
+      "x": 0.81,
+      "y": 0.7,
+      "next": [
+        "J2"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "J2",
+      "region": "village",
+      "kind": "merge",
+      "x": 0.86,
+      "y": 0.52,
+      "next": [
+        "T1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "T1",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.91,
+      "y": 0.42,
+      "next": [
+        "FINISH"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "FINISH",
+      "region": "village",
+      "kind": "finish",
+      "x": 0.95,
+      "y": 0.28,
+      "next": [],
+      "route": "neutral"
+    }
+  ],
+  "forks": [
+    {
+      "id": "F1",
+      "title": "Meadow Fork",
+      "choices": [
+        {
+          "to": "R1",
+          "label": "Ridge Cut",
+          "risk": "high",
+          "description": "Faster ridge · thorny surprises"
+        },
+        {
+          "to": "L1",
+          "label": "Brook Walk",
+          "risk": "low",
+          "description": "Gentler detour · helpful finds"
+        }
+      ]
+    },
+    {
+      "id": "F2",
+      "title": "Brookside Junction",
+      "choices": [
+        {
+          "to": "C1",
+          "label": "Pine Shortcut",
+          "risk": "high",
+          "description": "Shorter uphill route · hazards"
+        },
+        {
+          "to": "M1",
+          "label": "Miller's Lane",
+          "risk": "medium",
+          "description": "Direct path · playful mischief"
+        },
+        {
+          "to": "G1",
+          "label": "Garden Bend",
+          "risk": "low",
+          "description": "Longer bend · helpful shelters"
+        }
+      ]
+    }
+  ]
+}
