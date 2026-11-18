@@ -262,6 +262,39 @@ class MatchRecoveryStoreTest {
         assertEquals(game.snapshot(), requireNotNull(storage.load().match).game.snapshot())
     }
 
+    @Test fun qa1312LabV1AndNewLabV2CanRestoreSideBySideWithoutChangingOfficialRecords() {
+        val v1 = DecisionLab.variant(quick)
+        val v2 = DecisionLab.variantV2(quick)
+        val known = mapOf(board.id to board, quick.id to quick,
+            v1.id to v1, v2.id to v2)
+        val prefs = MemoryPreferences()
+        prefs.edit().putInt("completed", 12).putInt("wins", 5).commit()
+        val store = MatchRecoveryStore(prefs, board, events, known)
+        val start = System.currentTimeMillis() - 15_000L
+
+        val old = GameSession(v1, events, 2, 1337, setOf(0))
+        old.rollSteady()
+        assertTrue(store.persist(old, "existing-v1", start))
+        val legacyLoaded = requireNotNull(store.load().match)
+        assertEquals(v1.id, legacyLoaded.game.board.id)
+        assertEquals(old.snapshot(), legacyLoaded.game.snapshot())
+
+        val newer = GameSession(v2, events, 2, 1337, setOf(0))
+        newer.rollSteady()
+        assertTrue(store.persist(newer, "new-v2", start))
+        val newLoaded = requireNotNull(store.load().match)
+        assertEquals(v2.id, newLoaded.game.board.id)
+        assertEquals(newer.snapshot(), newLoaded.game.snapshot())
+        val portable = store.exportProgress()
+        val imported = MatchRecoveryStore(MemoryPreferences(),
+            board, events, known)
+        assertTrue(imported.importProgress(imported.previewImport(portable)))
+        assertEquals(newer.snapshot(),
+            requireNotNull(imported.load().match).game.snapshot())
+        assertEquals(12, prefs.getInt("completed", 0))
+        assertEquals(5, prefs.getInt("wins", 0))
+    }
+
     @Test fun olderFinishedCheckpointGetsOneTimeElapsedFallback() {
         val prefs = MemoryPreferences()
         val store = MatchRecoveryStore(prefs, board, events)
