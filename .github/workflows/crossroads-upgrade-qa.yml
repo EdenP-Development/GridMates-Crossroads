@@ -1,0 +1,100 @@
+name: Crossroads real APK install-over QA
+on:
+  push:
+    branches: ["design/**", "feature/**"]
+    paths:
+      - ".github/workflows/crossroads-upgrade-qa.yml"
+      - ".github/scripts/crossroads_upgrade_emulator.py"
+  workflow_dispatch:
+    inputs:
+      base_run:
+        description: "Previous QA run ID"
+        type: string
+        default: "44011268890"
+      base_name:
+        description: "Previous artifact name"
+        type: string
+        default: "Crossroads-Android-QA-1051-9fa0836db9f3666de34bef57eb4a14f142c97943"
+      base_code:
+        description: "Previous Android versionCode"
+        type: string
+        default: "1051"
+      base_sha:
+        description: "Previous exact APK SHA-256"
+        type: string
+        default: "4a9728a48551cac471ee384ebe7fa7282c36ed86f97e4fd6e9b6457b937361d7"
+      next_run:
+        description: "Candidate QA run ID"
+        type: string
+        default: "44013937297"
+      next_name:
+        description: "Candidate artifact name"
+        type: string
+        default: "Crossroads-Android-QA-1057-b30f5769659e8d08a4e7865a26d15b56ab6c3728"
+      next_code:
+        description: "Candidate Android versionCode"
+        type: string
+        default: "1057"
+      next_sha:
+        description: "Candidate exact APK SHA-256"
+        type: string
+        default: "b42d6218d389238abcc79e1f1bbd6db05d308c1e3a01e4563f21234cbeceb180"
+permissions:
+  contents: read
+  actions: read
+jobs:
+  update-preserves-profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      BASE_CODE: ${{ inputs.base_code || '1051' }}
+      NEXT_CODE: ${{ inputs.next_code || '1057' }}
+      BASE_SHA: ${{ inputs.base_sha || '4a9728a48551cac471ee384ebe7fa7282c36ed86f97e4fd6e9b6457b937361d7' }}
+      NEXT_SHA: ${{ inputs.next_sha || 'b42d6218d389238abcc79e1f1bbd6db05d308c1e3a01e4563f21234cbeceb180' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.base_name || 'Crossroads-Android-QA-1051-9fa0836db9f3666de34bef57eb4a14f142c97943' }}
+          run-id: ${{ inputs.base_run || '44011268890' }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: qa-archives/base
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.next_name || 'Crossroads-Android-QA-1057-b30f5769659e8d08a4e7865a26d15b56ab6c3728' }}
+          run-id: ${{ inputs.next_run || '44013937297' }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: qa-archives/next
+      - name: Verify distinct prior and candidate APK identity/checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$BASE_CODE" =~ ^[0-9]+$ && "$NEXT_CODE" =~ ^[0-9]+$ ]] || exit 1
+          (( NEXT_CODE > BASE_CODE )) || { echo "Candidate must be a higher versionCode"; exit 1; }
+          [[ "$BASE_SHA" =~ ^[[:xdigit:]]{64}$ && "$NEXT_SHA" =~ ^[[:xdigit:]]{64}$ ]] || exit 1
+          echo "$BASE_SHA  qa-archives/base/GridMates-Crossroads-QA-$BASE_CODE.apk" | sha256sum -c
+          echo "$NEXT_SHA  qa-archives/next/GridMates-Crossroads-QA-$NEXT_CODE.apk" | sha256sum -c
+      - name: Enable KVM for emulator
+        shell: bash
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Install previous APK, seed stats, update APK, capture Woven Trail
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_4
+          disable-animations: true
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot
+          script: python3 .github/scripts/crossroads_upgrade_emulator.py
+      - name: Upload source-matched emulator visuals
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-Upgrade-Emulator-${{ env.BASE_CODE }}-to-${{ env.NEXT_CODE }}-${{ github.sha }}
+          path: qa-evidence/*.png
+          if-no-files-found: ignore
+          retention-days: 14

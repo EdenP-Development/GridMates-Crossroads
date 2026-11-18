@@ -1,0 +1,307 @@
+{
+  "version": 2,
+  "status": "PLAYTEST_CURATED_NOT_BALANCED",
+  "description": "Area and route-limited weights; no personalized outcome adjustment",
+  "events": [
+    {
+      "id": "meadow_shortcut",
+      "regions": [
+        "meadow"
+      ],
+      "pools": [
+        "hazard"
+      ],
+      "weight": 3,
+      "description": "Rabbit's shortcut",
+      "effect": {
+        "type": "advance",
+        "spaces": 2
+      }
+    },
+    {
+      "id": "meadow_thorns",
+      "regions": [
+        "meadow"
+      ],
+      "pools": [
+        "hazard"
+      ],
+      "weight": 6,
+      "description": "Tangled briars",
+      "effect": {
+        "type": "retreat",
+        "spaces": 2
+      }
+    },
+    {
+      "id": "meadow_gift",
+      "regions": [
+        "meadow"
+      ],
+      "pools": [
+        "shelter"
+      ],
+      "weight": 4,
+      "description": "Meadow favor",
+      "effect": {
+        "type": "advance",
+        "spaces": 2
+      }
+    },
+    {
+      "id": "meadow_shield",
+      "regions": [
+        "meadow"
+      ],
+      "pools": [
+        "shelter"
+      ],
+      "weight": 3,
+      "description": "Friendly scarecrow",
+      "effect": {
+        "type": "shield",
+        "spaces": 0
+      }
+    },
+    {
+      "id": "meadow_breeze",
+      "regions": [
+        "meadow"
+      ],
+      "pools": [
+        "shelter"
+      ],
+      "weight": 2,
+      "description": "Gentle breeze",
+      "effect": {
+        "type": "advance",
+        "spaces": 1
+      }
+    },
+    {
+      "id": "forest_lucky_find",
+      "regions": [
+        "forest"
+      ],
+      "pools": [
+        "hazard"
+      ],
+      "weight": 3,
+      "description": "Hidden path",
+      "effect": {
+        "type": "advance",
+        "spaces": 3
+      }
+    },
+    {
+      "id": "forest_wrong_turn",
+      "regions": [
+        "forest"
+      ],
+      "pools": [
+        "hazard"
+      ],
+      "weight": 6,
+      "description": "Wrong turn",
+      "effect": {
+        "type": "retreat",
+        "spaces": 2
+      }
+    },
+    {
+      "id": "forest_slip",
+      "regions": [
+        "forest"
+      ],
+      "pools": [
+        "hazard"
+      ],
+      "weight": 1,
+      "description": "Muddy roots",
+      "effect": {
+        "type": "retreat",
+        "spaces": 1
+      }
+    },
+    {
+      "id": "forest_mushrooms",
+      "regions": [
+        "forest"
+      ],
+      "pools": [
+        "shelter"
+      ],
+      "weight": 3,
+      "description": "Forest friend",
+      "effect": {
+        "type": "shield",
+        "spaces": 0
+      }
+    },
+    {
+      "id": "forest_owl",
+      "regions": [
+        "forest"
+      ],
+      "pools": [
+        "shelter"
+      ],
+      "weight": 4,
+      "description": "Owl's directions",
+      "effect": {
+        "type": "advance",
+        "spaces": 2
+      }
+    },
+    {
+      "id": "forest_moss",
+      "regions": [
+        "forest"
+      ],
+      "pools": [
+        "shelter"
+      ],
+      "weight": 2,
+      "description": "Soft moss trail",
+      "effect": {
+        "type": "advance",
+        "spaces": 1
+      }
+    },
+    {
+      "id": "forest_prank",
+      "regions": [
+        "forest"
+      ],
+      "pools": [
+        "mischief"
+      ],
+      "weight": 5,
+      "description": "Woodland prank",
+      "effect": {
+        "type": "prank",
+        "spaces": 2
+      }
+    },
+    {
+      "id": "forest_sneak",
+      "regions": [
+        "forest"
+      ],
+      "pools": [
+        "mischief"
+      ],
+      "weight": 3,
+      "description": "Sneaky shortcut",
+      "effect": {
+        "type": "advance",
+        "spaces": 2
+      }
+    },
+    {
+      "id": "forest_bump",
+      "regions": [
+        "forest"
+      ],
+      "pools": [
+        "mischief"
+      ],
+      "weight": 2,
+      "description": "Caught mischief",
+      "effect": {
+        "type": "retreat",
+        "spaces": 1
+      }
+    },
+    {
+      "id": "village_haste",
+      "regions": [
+        "village"
+      ],
+      "pools": [
+        "hazard"
+      ],
+      "weight": 3,
+      "description": "Open market road",
+      "effect": {
+        "type": "advance",
+        "spaces": 3
+      }
+    },
+    {
+      "id": "village_cobbles",
+      "regions": [
+        "village"
+      ],
+      "pools": [
+        "hazard"
+      ],
+      "weight": 6,
+      "description": "Loose cobblestones",
+      "effect": {
+        "type": "retreat",
+        "spaces": 2
+      }
+    },
+    {
+      "id": "village_wheel",
+      "regions": [
+        "village"
+      ],
+      "pools": [
+        "hazard"
+      ],
+      "weight": 1,
+      "description": "Wobbly cart",
+      "effect": {
+        "type": "retreat",
+        "spaces": 1
+      }
+    },
+    {
+      "id": "village_help",
+      "regions": [
+        "village"
+      ],
+      "pools": [
+        "shelter"
+      ],
+      "weight": 4,
+      "description": "Helping neighbor",
+      "effect": {
+        "type": "advance",
+        "spaces": 2
+      }
+    },
+    {
+      "id": "village_protection",
+      "regions": [
+        "village"
+      ],
+      "pools": [
+        "shelter"
+      ],
+      "weight": 3,
+      "description": "Borrowed umbrella",
+      "effect": {
+        "type": "shield",
+        "spaces": 0
+      }
+    },
+    {
+      "id": "village_festival",
+      "regions": [
+        "village"
+      ],
+      "pools": [
+        "shelter"
+      ],
+      "weight": 2,
+      "description": "Festival cheer",
+      "effect": {
+        "type": "advance",
+        "spaces": 1
+      }
+    }
+  ]
+}
