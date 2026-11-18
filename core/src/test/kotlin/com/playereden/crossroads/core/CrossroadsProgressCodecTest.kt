@@ -10,8 +10,9 @@ class CrossroadsProgressCodecTest {
     private val root = File(System.getProperty("crossroads.repoDir"))
     private val classic = GameData.board(File(root, "data/boards/woodland_woven_trail.json").readText())
     private val quick = GameData.board(File(root, "data/boards/woodland_brookside_quick.json").readText())
+    private val long = GameData.board(File(root, "data/boards/woodland_cedarwood_long.json").readText())
     private val events = GameData.events(File(root, "data/events/woven_events_v02.json").readText())
-    private val boards = mapOf(classic.id to classic, quick.id to quick)
+    private val boards = mapOf(classic.id to classic, quick.id to quick, long.id to long)
 
     private fun assertInvalid(raw: String) {
         try {
@@ -24,8 +25,8 @@ class CrossroadsProgressCodecTest {
         }
     }
 
-    @Test fun offlineQuickAndClassicRaceBackupsRoundTripExactly() {
-        for (board in listOf(classic, quick)) for (seats in 2..4) {
+    @Test fun offlineCourseBackupsRoundTripExactly() {
+        for (board in listOf(classic, quick, long)) for (seats in 2..4) {
             val game = GameSession(board, events, seats, 550 + seats, setOf(0))
             game.roll()
             val cp = game.checkpoint("backup-${board.id}-$seats", 1794931200000L)
