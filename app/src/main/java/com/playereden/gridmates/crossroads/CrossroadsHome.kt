@@ -208,7 +208,7 @@ internal fun CrossroadsHomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Gameplay 2.0 · Playtest", color = Ink,
+                    Text("Gameplay 2.0 · Playtest v2", color = Ink,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold)
                     Text("Optional offline tactical rules",
@@ -218,7 +218,7 @@ internal fun CrossroadsHomeScreen(
             }
         }
         if (playtestRules) {
-            Text("Choose Steady or Push each turn. Route risks and benefits trigger when you enter a branch. Experimental balance.",
+            Text("Choose Steady or Push. Entering a route triggers its encounter; Steady + Shelter gains an extra step. Experimental balance.",
                 style = MaterialTheme.typography.bodySmall, color = Muted)
         }
         Button(
