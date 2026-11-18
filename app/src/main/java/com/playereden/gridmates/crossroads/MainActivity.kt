@@ -81,6 +81,7 @@ class MainActivity : ComponentActivity() {
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = true
         val classicBoard = GameData.board(assets.open("boards/woodland_woven_trail.json").bufferedReader().use { it.readText() })
         val quickBoard = GameData.board(assets.open("boards/woodland_brookside_quick.json").bufferedReader().use { it.readText() })
+        val longBoard = GameData.board(assets.open("boards/woodland_cedarwood_long.json").bufferedReader().use { it.readText() })
         val catalogue = GameData.events(assets.open("events/woven_events_v02.json").bufferedReader().use { it.readText() })
         setContent {
             MaterialTheme(
@@ -96,7 +97,7 @@ class MainActivity : ComponentActivity() {
                     outline = Color(0xFF978B76), outlineVariant = Color(0xFFD8CCB3)
                 )
             ) {
-                CrossroadsApp(classicBoard, quickBoard, catalogue)
+                CrossroadsApp(classicBoard, quickBoard, longBoard, catalogue)
             }
         }
     }
@@ -106,10 +107,15 @@ class MainActivity : ComponentActivity() {
 private fun CrossroadsApp(
     classicBoard: BoardDefinition,
     quickBoard: BoardDefinition,
+    longBoard: BoardDefinition,
     catalogue: EventCatalogue
 ) {
-    val knownBoards = remember(classicBoard, quickBoard) {
-        mapOf(classicBoard.id to classicBoard, quickBoard.id to quickBoard)
+    val knownBoards = remember(classicBoard, quickBoard, longBoard) {
+        mapOf(
+            classicBoard.id to classicBoard,
+            quickBoard.id to quickBoard,
+            longBoard.id to longBoard
+        )
     }
     val context = LocalContext.current
     // Crossroads runs inside its own ComponentActivity. Explicitly observe the
@@ -133,7 +139,7 @@ private fun CrossroadsApp(
     // Preserve this long-standing preference filename for QA install-over updates.
     // Changing it would strand existing local wins and match checkpoints.
     val prefs = remember { context.getSharedPreferences("crossroads_qa_profile_v1", 0) }
-    val recoveryStore = remember(prefs, classicBoard, quickBoard, catalogue) {
+    val recoveryStore = remember(prefs, classicBoard, quickBoard, longBoard, catalogue) {
         MatchRecoveryStore(prefs, classicBoard, catalogue, knownBoards)
     }
     // A restarted Activity gets its entire authoritative match from the saved
@@ -757,9 +763,9 @@ private fun CrossroadsApp(
             wins = wins,
             completed = matches,
             onStart = { seats, localPlayers -> start(seats, localPlayers) },
-            quickRace = selectedCourseId == quickBoard.id,
-            onQuickRaceChange = { quick ->
-                selectedCourseId = if (quick) quickBoard.id else classicBoard.id
+            selectedCourseId = selectedCourseId,
+            onCourseChange = { courseId ->
+                if (courseId in knownBoards) selectedCourseId = courseId
             },
             onNearbyHost = {
                 lanMessage = null
