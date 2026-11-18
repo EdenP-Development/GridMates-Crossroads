@@ -308,6 +308,11 @@ private fun CrossroadsApp(
     var touchFeedback by remember {
         mutableStateOf(prefs.getBoolean("feel_touch_feedback_v1", true))
     }
+    // QA-only presentation switch, independent from match state and saves.
+    // Allows a same-board/same-art comparison of illustrated route treatments.
+    var usePrintedTrails by remember {
+        mutableStateOf(prefs.getBoolean("qa_printed_trails_v1", true))
+    }
     var transitionDelay by remember(game) { mutableLongStateOf(0L) }
     var turnReady by remember(game) { mutableStateOf(true) }
     var cameraTrackIndex by remember(game) { mutableIntStateOf(game?.currentIndex ?: 0) }
@@ -966,6 +971,21 @@ private fun CrossroadsApp(
                                 )
                             }
                             HorizontalDivider()
+                            if (BuildConfig.DEBUG) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(if (usePrintedTrails) "Trail style: Printed"
+                                            else "Trail style: Simple")
+                                    },
+                                    onClick = {
+                                        usePrintedTrails = !usePrintedTrails
+                                        prefs.edit().putBoolean(
+                                            "qa_printed_trails_v1", usePrintedTrails
+                                        ).apply()
+                                        showMatchOptions = false
+                                    }
+                                )
+                            }
                             DropdownMenuItem(
                                 text = {
                                     Text(if (touchFeedback) "Touch feedback: On"
@@ -1020,7 +1040,7 @@ private fun CrossroadsApp(
                 // The event reveal already appears in the fixed action pane.
                 // Keep the complete playable board visible, with history in Match options.
                 BoardCanvas(board, state, height = fittedBoardHeight, matchKey = game,
-                    boardLook = boardLook,
+                    boardLook = boardLook, printedTrails = usePrintedTrails,
                     stepMillis = speed.stepMillis, focusPlayerIndex = cameraTrackIndex,
                     isTurnTransitioning = !turnReady,
                     startAtCurrent = startedFromCheckpoint)
@@ -1503,7 +1523,8 @@ private fun CrossroadsApp(
                         BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
                             val mapHeight = (maxWidth * 0.94f).coerceIn(245.dp, 328.dp)
                             BoardCanvas(board, state, height = mapHeight, tokenScale = 1.35f,
-                                animateTokens = false, matchKey = game, boardLook = boardLook)
+                                animateTokens = false, matchKey = game,
+                                boardLook = boardLook, printedTrails = usePrintedTrails)
                         }
                         Text("Amber: hazard  •  Green: shelter  •  Purple: mischief",
                             style = MaterialTheme.typography.bodySmall, color = Bark)
@@ -1671,6 +1692,7 @@ private fun BoardCanvas(
     state: Snapshot,
     height: Dp = 315.dp,
     boardLook: CrossroadsBoardLook = CrossroadsBoardLook.ILLUSTRATED,
+    printedTrails: Boolean = true,
     tokenScale: Float = 1f,
     animateTokens: Boolean = true,
     matchKey: Any? = null,
@@ -1960,23 +1982,14 @@ private fun BoardCanvas(
                         node.route != "neutral" -> node.route
                         else -> "neutral"
                     }
-                    val laneColor = when (route) {
-                        "risky" -> Color(0xFFC29450)
-                        "safe" -> Color(0xFF83A181)
-                        "mischief" -> Color(0xFFA18BB1)
-                        else -> Color(0xFFD4C3A3)
-                    }
-                    // A subtle printed keyline distinguishes actual paths from
-                    // painted creeks, fences and flower edges.
-                    drawLine(Color(0xFF334C3C).copy(alpha = 0.80f), from, position(dest),
-                        strokeWidth = if (denseBoard) 12f else 15f,
-                        cap = StrokeCap.Round)
-                    drawLine(laneColor, from, position(dest),
-                        strokeWidth = if (denseBoard) 8.5f else 11f,
-                        cap = StrokeCap.Round)
-                    drawLine(Color(0xFFFCF8ED), from, position(dest),
-                        strokeWidth = if (denseBoard) 2.1f else 3f,
-                        cap = StrokeCap.Round)
+                    drawCrossroadsTrail(
+                        from = from,
+                        to = position(dest),
+                        route = route,
+                        dense = denseBoard,
+                        printed = boardLook == CrossroadsBoardLook.ILLUSTRATED &&
+                            printedTrails
+                    )
                 }
             }
             board.nodes.forEach { node ->
@@ -2015,8 +2028,15 @@ private fun BoardCanvas(
                         radius = 16.5f, center = center,
                         style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.2f))
                 }
+                if (boardLook == CrossroadsBoardLook.ILLUSTRATED && printedTrails) {
+                    // A tiny printed medallion, rather than a bare UI dot.
+                    drawCircle(Color(0xFF334C3C).copy(alpha = 0.66f),
+                        radius = radius + 3.2f, center = center)
+                    drawCircle(Color(0xFFF7EBD2), radius = radius + 1.8f, center = center)
+                }
                 drawCircle(color, radius, center)
-                drawCircle(Color(0xFF9E896B), radius, center, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.3f))
+                drawCircle(Color(0xFF9E896B), radius, center,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.3f))
                 if (node.kind == "fork" || node.kind == "start" || node.kind == "finish") {
                     drawIntoCanvas { canvas ->
                         val label = when (node.kind) { "fork" -> "?"; "start" -> "S"; else -> "F" }
