@@ -117,18 +117,26 @@ internal fun CrossroadsHomeScreen(
         labelColor = Muted
     )
 
-    Column(
-        modifier = Modifier.fillMaxSize().background(Paper)
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
+    // A game-first home screen: art appears immediately and Start stays
+    // reachable on short phones, regardless of setup scroll position.
+    Box(Modifier.fillMaxSize().background(Paper)) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .verticalScroll(rememberScrollState())
+                .padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 126.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
         Text("GRIDMATES · BOARD GAMES",
             style = MaterialTheme.typography.labelLarge, color = Muted)
         Text("Crossroads", fontSize = 33.sp, fontWeight = FontWeight.Bold, color = Ink)
         Text("Every path is a choice.", style = MaterialTheme.typography.titleMedium,
             color = Muted)
+        // The same versioned panorama or procedural fallback now anchors the
+        // first viewport instead of being buried below all controls.
+        HomeTrailIllustration()
+        Text("Meadow, forest, village. Choose your trail and reach the finish first.",
+            style = MaterialTheme.typography.bodySmall, color = Muted)
         if (recoveryWarning != null) {
             Surface(color = Color(0xFFF1E0CF), shape = MaterialTheme.shapes.medium) {
                 Text(
@@ -233,13 +241,6 @@ internal fun CrossroadsHomeScreen(
             Text("Choose Steady or Push. Shelter and hazard roads offer a response choice; Steady + Shelter gains a step. Experimental balance.",
                 style = MaterialTheme.typography.bodySmall, color = Muted)
         }
-        Button(
-            onClick = { onStart(seats, passAndPlay) },
-            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
-            contentPadding = PaddingValues(vertical = 12.dp)
-        ) {
-            Text("Start journey", style = MaterialTheme.typography.titleMedium)
-        }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -260,13 +261,6 @@ internal fun CrossroadsHomeScreen(
             TextButton(onClick = { showGuide = true }) { Text("How to play") }
             TextButton(onClick = { showAbout = true }) { Text("About & data") }
         }
-        // Decorative hero artwork belongs *after* the action, not between the
-        // title and Start journey. On real phones that placed Start below the fold.
-        HomeTrailIllustration()
-        Text(
-            "Meadow, forest, village. Choose your trail and reach the finish first.",
-            style = MaterialTheme.typography.bodySmall, color = Muted
-        )
         Card(
             colors = CardDefaults.cardColors(containerColor = Color(0xFFEAE1CA)),
             modifier = Modifier.fillMaxWidth()
@@ -294,6 +288,35 @@ internal fun CrossroadsHomeScreen(
         if (BuildConfig.DEBUG) {
             Text("QA playtest · Offline Solo / Pass & Play / Nearby · Woodland Crossing",
                 style = MaterialTheme.typography.labelSmall, color = Muted)
+        }
+        }
+        // The primary action remains visible as players browse course and
+        // multiplayer settings; decorative assets never push it below the fold.
+        Surface(
+            modifier = Modifier.align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.navigationBars),
+            color = Paper,
+            shadowElevation = 8.dp
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 9.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    if (passAndPlay) "$seats people · Pass & Play · offline"
+                    else "Solo vs AI · $seats racers · offline",
+                    style = MaterialTheme.typography.labelMedium, color = Muted
+                )
+                Button(
+                    onClick = { onStart(seats, passAndPlay) },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                    contentPadding = PaddingValues(vertical = 12.dp)
+                ) {
+                    Text("Start journey", style = MaterialTheme.typography.titleMedium)
+                }
+            }
         }
     }
     if (showGuide) {
