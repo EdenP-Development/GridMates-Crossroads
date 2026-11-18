@@ -58,6 +58,38 @@ class LanMultiplayerTest {
         } catch (_: IOException) {}
     }
 
+    @Test fun replayedAndPreviousMatchRemoteCommandsNeverChangeTheGame() {
+        val game = room(393)
+        var steps = 0
+        while (game.currentIndex == 0 && steps++ < 20) {
+            when (game.phase) {
+                Phase.ROLL -> LanTurnAuthority.apply(game, 0, LanAction(LanActionType.ROLL))
+                Phase.ROUTE -> LanTurnAuthority.apply(game, 0,
+                    LanAction(LanActionType.ROUTE, route = game.availableRoutes().first().id))
+                Phase.TARGET -> LanTurnAuthority.apply(game, 0,
+                    LanAction(LanActionType.TARGET, target = game.availableTargets().first()))
+                Phase.FINISHED -> error("Race ended before Player 2")
+            }
+        }
+        assertEquals(1, game.currentIndex)
+        val original = game.snapshot()
+        val valid = LanAction(LanActionType.ROLL, expectedMatchId = "match-a",
+            expectedRevision = original.revision)
+        try {
+            LanTurnAuthority.applyRemote(game, "match-b", 1, valid)
+            fail("Previous match command was accepted")
+        } catch (_: IllegalArgumentException) { }
+        assertEquals(original, game.snapshot())
+        LanTurnAuthority.applyRemote(game, "match-a", 1, valid)
+        val accepted = game.snapshot()
+        assertTrue(accepted.revision > original.revision)
+        try {
+            LanTurnAuthority.applyRemote(game, "match-a", 1, valid)
+            fail("Duplicate command was accepted")
+        } catch (_: IllegalArgumentException) { }
+        assertEquals(accepted, game.snapshot())
+    }
+
     @Test fun twoNearbyHumansCanRaceOneOrTwoHostOwnedBotsWithVerifiedReplay() {
         for (seats in 3..4) {
             for (seed in listOf(101, 202, 303)) {
@@ -127,7 +159,7 @@ class LanMultiplayerTest {
             game.checkpoint("tcp-test", stamp),
             onAction = { move ->
                 synchronized(game) {
-                    LanTurnAuthority.apply(game, 1, move)
+                    LanTurnAuthority.applyRemote(game, "tcp-test", 1, move)
                     host.publish(game.checkpoint("tcp-test", stamp))
                 }
             }
@@ -147,7 +179,8 @@ class LanMultiplayerTest {
             assertTrue("Guest never received initial state", welcome.await(8, TimeUnit.SECONDS))
             assertEquals(game.snapshot(), GameSession.restore(board, catalogue,
                 requireNotNull(latest.get())).snapshot())
-            client.submit(LanAction(LanActionType.ROLL))
+            client.submit(LanAction(LanActionType.ROLL,
+                expectedMatchId = "tcp-test", expectedRevision = initialRevision))
             assertTrue("Guest action was not broadcast by host",
                 afterRoll.await(8, TimeUnit.SECONDS))
             assertEquals(game.snapshot(), GameSession.restore(board, catalogue,
