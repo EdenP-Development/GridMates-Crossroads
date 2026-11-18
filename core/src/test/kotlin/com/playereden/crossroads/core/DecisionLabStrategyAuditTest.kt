@@ -118,6 +118,7 @@ class DecisionLabStrategyAuditTest {
                     game.chooseRoute(chosen.id)
                 }
                 Phase.TARGET -> game.chooseTarget(game.availableTargets().first())
+                Phase.ENCOUNTER -> error("Encounter phase belongs only to Lab v3")
                 Phase.FINISHED -> Unit
             }
         }
