@@ -69,7 +69,7 @@ class DecisionLabTest {
         val push = GameSession(board, events, seats = 2, seed = 101,
             humanIndices = setOf(0, 1))
         push.rollBold()
-        assertTrue(push.die in 1..6)
+        assertTrue(requireNotNull(push.die) in 1..6)
         assertEquals(push.snapshot(),
             GameSession.restore(board, events,
                 push.checkpoint("lab-push", started)).snapshot())
