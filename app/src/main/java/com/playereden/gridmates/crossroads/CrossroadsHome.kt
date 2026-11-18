@@ -1,6 +1,7 @@
 package com.playereden.gridmates.crossroads
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -14,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -26,12 +28,21 @@ private val Paper = Color(0xFFF7F0DE)
 /** An original miniature travel motif, not an interactive or alternate board. */
 @Composable
 private fun HomeTrailIllustration() {
+    val commissionedArt = rememberOptionalCrossroadsArt(CrossroadsArtSlot.HOME_HERO)
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
         color = Color(0xFFECE5D4),
         tonalElevation = 2.dp
     ) {
+        if (commissionedArt != null) {
+            Image(
+                bitmap = commissionedArt,
+                contentDescription = null, // Nearby game text is the accessible label.
+                modifier = Modifier.fillMaxWidth().height(144.dp),
+                contentScale = ContentScale.Crop
+            )
+        } else {
         Canvas(Modifier.fillMaxWidth().height(104.dp)) {
             val inset = 12f
             val w = (size.width - 2f * inset).coerceAtLeast(1f)
@@ -73,6 +84,7 @@ private fun HomeTrailIllustration() {
             drawCircle(Color(0xFFFDF9EB), 7f, point(0.10f, 0.73f))
             drawCircle(Color(0xFFBB8B41), 14f, point(0.89f, 0.19f))
             drawCircle(Color(0xFFFFF3D5), 8f, point(0.89f, 0.19f))
+        }
         }
     }
 }
