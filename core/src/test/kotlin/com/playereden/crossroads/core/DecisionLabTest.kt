@@ -57,7 +57,10 @@ class DecisionLabTest {
             fail("Lab silently accepted old roll")
         } catch (_: IllegalArgumentException) { }
         game.rollSteady()
-        assertEquals(3, game.die)
+        // Three spaces were traveled, then the turn ended and die was
+        // intentionally cleared by finishTurn().
+        assertEquals(4, game.players[0].traversed.size)
+        assertEquals(Phase.ROLL, game.phase)
         assertEquals(game.snapshot(),
             GameSession.restore(board, events,
                 game.checkpoint("lab-steady", started)).snapshot())
@@ -69,7 +72,10 @@ class DecisionLabTest {
         val push = GameSession(board, events, seats = 2, seed = 101,
             humanIndices = setOf(0, 1))
         push.rollBold()
-        assertTrue(requireNotNull(push.die) in 1..6)
+        assertTrue(push.players[0].traversed.size >= 2)
+        assertTrue(push.checkpoint("lab-push", started).actions.any {
+            it.kind == MatchActionKind.BOLD_ROLL
+        })
         assertEquals(push.snapshot(),
             GameSession.restore(board, events,
                 push.checkpoint("lab-push", started)).snapshot())
