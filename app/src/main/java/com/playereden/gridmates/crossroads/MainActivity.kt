@@ -1200,7 +1200,12 @@ private fun CrossroadsApp(
                 modifier = Modifier.align(Alignment.BottomCenter)
                     .padding(horizontal = 10.dp, vertical = 9.dp)
                     .fillMaxWidth()
-                    .heightIn(max = maxHeight * dockMaxFraction)
+                    .heightIn(
+                        max = maxOf(
+                            maxHeight * dockMaxFraction,
+                            gameActionDockMinimumHeight(state.phase)
+                        ).coerceAtMost((maxHeight - 20.dp).coerceAtLeast(1.dp))
+                    )
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
@@ -1670,76 +1675,150 @@ private fun CrossroadsApp(
             )
         }
         if (inspectBoard) {
-            AlertDialog(
+            // Large, readable read-only game map; this surface intentionally
+            // cannot send a ROUTE action or modify a saved position.
+            Dialog(
                 onDismissRequest = { inspectBoard = false },
-                containerColor = Cream,
-                title = {
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(CrossroadsCourse.title(board.id), color = Forest,
-                            style = MaterialTheme.typography.titleLarge)
-                        Text("Route overview", color = Bark,
-                            style = MaterialTheme.typography.labelMedium)
-                    }
-                },
-                text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        // The prior 385dp portrait viewport made this same
-                        // route appear far taller/narrower than the live board.
-                        // A width-based viewport keeps course proportions
-                        // more consistent on small and large phones.
-                        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                            val mapHeight = (maxWidth * 0.94f).coerceIn(245.dp, 328.dp)
-                            BoardCanvas(board, state, height = mapHeight, tokenScale = 1.35f,
-                                animateTokens = false, matchKey = game,
-                                boardLook = boardLook, trailStyle = trailStyle,
-                                woodlandPieces = woodlandPieces,
-                                paintedMarkers = paintedMarkers)
+                properties = DialogProperties(usePlatformDefaultWidth = false)
+            ) {
+                BoxWithConstraints(
+                    modifier = Modifier.fillMaxSize()
+                        .background(Color(0xDB142419))
+                        .windowInsetsPadding(WindowInsets.safeDrawing),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(horizontal = 12.dp)
+                            .heightIn(max = (maxHeight - 24.dp).coerceAtLeast(220.dp)),
+                        color = Cream,
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(25.dp),
+                        border = androidx.compose.foundation.BorderStroke(
+                            2.dp, Color(0xFFD0B98D)
+                        ),
+                        shadowElevation = 16.dp
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(9.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(Modifier.weight(1f)) {
+                                    Text("THE COURSE", color = Bark,
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.labelSmall)
+                                    Text(CrossroadsCourse.title(board.id), color = Forest,
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.titleLarge)
+                                }
+                                TextButton(
+                                    onClick = { inspectBoard = false },
+                                    modifier = Modifier.heightIn(min = 48.dp)
+                                ) { Text("Close map") }
+                            }
+                            Column(
+                                modifier = Modifier.fillMaxWidth()
+                                    .weight(1f, fill = false)
+                                    .verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Surface(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    color = Color(0xFF263D2C),
+                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(15.dp),
+                                    border = androidx.compose.foundation.BorderStroke(
+                                        2.dp, Color(0xFFC5A773)
+                                    )
+                                ) {
+                                    BoxWithConstraints(
+                                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        val mapHeight = maxWidth.coerceIn(200.dp, 540.dp)
+                                        BoardCanvas(
+                                            board, state,
+                                            height = mapHeight, tokenScale = 1.35f,
+                                            animateTokens = false, matchKey = game,
+                                            boardLook = boardLook, trailStyle = trailStyle,
+                                            woodlandPieces = woodlandPieces,
+                                            paintedMarkers = paintedMarkers
+                                        )
+                                    }
+                                }
+                                Text("Amber: hazard  •  Green: shelter  •  Purple: mischief",
+                                    style = MaterialTheme.typography.bodySmall, color = Bark)
+                                Text("Full course overview · inspection only",
+                                    style = MaterialTheme.typography.labelSmall, color = Bark)
+                            }
+                            Button(
+                                onClick = { inspectBoard = false },
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Forest)
+                            ) {
+                                Text(
+                                    if (state.phase == Phase.ROUTE && localIsCurrentSeat &&
+                                        game.availableRoutes().size >= 2 && !routeDialogDismissed)
+                                        "RETURN TO ROUTE CHOICES" else "BACK TO THE TRAIL"
+                                )
+                            }
                         }
-                        Text("Amber: hazard  •  Green: shelter  •  Purple: mischief",
-                            style = MaterialTheme.typography.bodySmall, color = Bark)
-                        Text("This map is for inspection; close it to make your next move.",
-                            style = MaterialTheme.typography.bodySmall)
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = { inspectBoard = false }) {
-                        Text(
-                            if (state.phase == Phase.ROUTE &&
-                                localIsCurrentSeat && game.availableRoutes().size >= 2 &&
-                                !routeDialogDismissed) "Back to route choices"
-                            else "Back to game"
-                        )
                     }
                 }
-            )
+            }
         }
         if (showResults && state.phase == Phase.FINISHED && turnReady) {
-            // Standard AlertDialog gave the small-screen results an oversized
-            // lavender shell and pushed the encounter details below the fold.
-            // This tabletop-colored dialog keeps actions visible at all times.
+            // The race outcome is a game moment, not a generic settings popup.
+            // The summary scrolls; rematch and return actions stay visible.
             Dialog(
                 onDismissRequest = { showResults = false },
                 properties = DialogProperties(usePlatformDefaultWidth = false)
             ) {
                 BoxWithConstraints(
                     modifier = Modifier.fillMaxSize()
+                        .background(Color(0xD914251A))
                         .windowInsetsPadding(WindowInsets.safeDrawing),
                     contentAlignment = Alignment.Center
                 ) {
                     Surface(
-                        modifier = Modifier.fillMaxWidth(0.91f)
-                            .heightIn(max = (maxHeight - 24.dp).coerceAtLeast(1.dp)),
-                        shape = MaterialTheme.shapes.extraLarge,
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(horizontal = 12.dp)
+                            .heightIn(max = (maxHeight - 24.dp).coerceAtLeast(260.dp)),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(25.dp),
                         color = Cream,
-                        shadowElevation = 10.dp
+                        border = androidx.compose.foundation.BorderStroke(
+                            2.dp, Color(0xFFC9AE78)
+                        ),
+                        shadowElevation = 16.dp
                     ) {
                         Column(
-                            modifier = Modifier.padding(horizontal = 17.dp, vertical = 16.dp),
+                            modifier = Modifier.padding(12.dp),
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Text("Journey complete",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold, color = Forest)
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                                color = Color(0xFF284C38),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    1.5.dp, Color(0xFFD9C08C)
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 13.dp),
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
+                                    Text("JOURNEY COMPLETE", color = Color(0xFFFFF0CD),
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.titleMedium)
+                                    Text(CrossroadsCourse.title(board.id),
+                                        color = Color(0xFFE6D5AA),
+                                        style = MaterialTheme.typography.labelMedium)
+                                }
+                            }
                             CrossroadsResultsContent(
                                 state = state,
                                 courseId = board.id,
@@ -1750,29 +1829,32 @@ private fun CrossroadsApp(
                                 onClick = { rematch() },
                                 enabled = lanRole != LanRole.GUEST &&
                                     (lanRole != LanRole.HOST || lanConnected),
-                                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Forest)
                             ) {
-                                Text(if (lanRole == LanRole.GUEST) "Host starts next match"
-                                    else "Rematch")
+                                Text(if (lanRole == LanRole.GUEST)
+                                    "HOST STARTS NEXT RACE" else "RACE AGAIN")
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 OutlinedButton(
-                                    onClick = { showResults = false },
-                                    modifier = Modifier.weight(1f),
+                                    onClick = {
+                                        // View the complete finished course, not merely
+                                        // dismiss the victory result onto the live camera.
+                                        showResults = false
+                                        inspectBoard = true
+                                    },
+                                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                                     contentPadding = PaddingValues(horizontal = 6.dp)
-                                ) {
-                                    Text("View board")
-                                }
+                                ) { Text("View course") }
                                 TextButton(
                                     onClick = { leaveGame() },
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                                     contentPadding = PaddingValues(horizontal = 6.dp)
-                                ) {
-                                    Text("Main menu")
-                                }
+                                ) { Text("Main menu") }
                             }
                         }
                     }

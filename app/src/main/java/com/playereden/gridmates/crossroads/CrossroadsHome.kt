@@ -25,6 +25,13 @@ private val Ink = Color(0xFF48684D)
 private val Muted = Color(0xFF80664B)
 private val Paper = Color(0xFFF7F0DE)
 
+/** Keep important experimental-rule state visible even with options collapsed. */
+internal fun homeRaceSummary(seats: Int, passAndPlay: Boolean, tactical: Boolean): String {
+    val summary = if (passAndPlay) "$seats people · Pass & Play · offline"
+        else "Solo vs AI · $seats racers · offline"
+    return summary + if (tactical) " · Tactical rules ON" else ""
+}
+
 /** An original miniature travel motif, not an interactive or alternate board. */
 @Composable
 private fun HomeTrailIllustration() {
@@ -39,11 +46,11 @@ private fun HomeTrailIllustration() {
             Image(
                 bitmap = commissionedArt,
                 contentDescription = null, // Nearby game text is the accessible label.
-                modifier = Modifier.fillMaxWidth().height(144.dp),
+                modifier = Modifier.fillMaxWidth().height(202.dp),
                 contentScale = ContentScale.Crop
             )
         } else {
-        Canvas(Modifier.fillMaxWidth().height(104.dp)) {
+        Canvas(Modifier.fillMaxWidth().height(202.dp)) {
             val inset = 12f
             val w = (size.width - 2f * inset).coerceAtLeast(1f)
             val h = (size.height - 2f * inset).coerceAtLeast(1f)
@@ -112,6 +119,9 @@ internal fun CrossroadsHomeScreen(
     var showGuide by remember { mutableStateOf(false) }
     var showAbout by remember { mutableStateOf(false) }
     var showAppearancePicker by remember { mutableStateOf(false) }
+    // Keep the first viewport focused on starting a race. Secondary tools
+    // remain available in an explicit, accessible options section.
+    var showExtraOptions by remember { mutableStateOf(false) }
     // Keep both setup selectors in the Woodland palette; Material's default
     // selected chip tint was lavender on actual Android QA1130 screenshots.
     val choiceColors = FilterChipDefaults.filterChipColors(
@@ -131,15 +141,24 @@ internal fun CrossroadsHomeScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
         Text("GRIDMATES · BOARD GAMES",
-            style = MaterialTheme.typography.labelLarge, color = Muted)
-        Text("Crossroads", fontSize = 33.sp, fontWeight = FontWeight.Bold, color = Ink)
-        Text("Every path is a choice.", style = MaterialTheme.typography.titleMedium,
-            color = Muted)
-        // The same versioned panorama or procedural fallback now anchors the
-        // first viewport instead of being buried below all controls.
-        HomeTrailIllustration()
-        Text("Meadow, forest, village. Choose your trail and reach the finish first.",
-            style = MaterialTheme.typography.bodySmall, color = Muted)
+            style = MaterialTheme.typography.labelMedium, color = Muted)
+        // The illustrated course is the game's cover, not a separate text
+        // page header followed by a thumbnail.
+        Box(Modifier.fillMaxWidth()) {
+            HomeTrailIllustration()
+            Column(
+                modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth()
+                    .background(Color(0xD9233B2B))
+                    .padding(horizontal = 15.dp, vertical = 11.dp),
+                verticalArrangement = Arrangement.spacedBy(1.dp)
+            ) {
+                Text("Crossroads", fontSize = 31.sp,
+                    fontWeight = FontWeight.Bold, color = Color(0xFFF8EED7))
+                Text("Every path is a choice.",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color(0xFFE6D5AA))
+            }
+        }
         if (recoveryWarning != null) {
             Surface(color = Color(0xFFF1E0CF), shape = MaterialTheme.shapes.medium) {
                 Text(
@@ -149,8 +168,8 @@ internal fun CrossroadsHomeScreen(
                 )
             }
         }
-        Text("Ready to play?", style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold, color = Ink)
+        Text("PLAY", style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold, color = Ink)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -222,6 +241,16 @@ internal fun CrossroadsHomeScreen(
             },
             style = MaterialTheme.typography.bodySmall, color = Muted
         )
+        // The menu's next decision is Start. All secondary controls are
+        // reachable but no longer make its first screen a long settings form.
+        OutlinedButton(
+            onClick = { showExtraOptions = !showExtraOptions },
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+        ) {
+            Text(if (showExtraOptions) "Hide more options ↑"
+                else "Nearby play · Appearance · More options ↓")
+        }
+        if (showExtraOptions) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -247,7 +276,7 @@ internal fun CrossroadsHomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Gameplay 2.0 · Playtest v3", color = Ink,
+                    Text("Tactical choices · Experimental", color = Ink,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold)
                     Text("Optional offline tactical rules",
@@ -308,6 +337,7 @@ internal fun CrossroadsHomeScreen(
             Text("QA playtest · Offline Solo / Pass & Play / Nearby · Woodland Crossing",
                 style = MaterialTheme.typography.labelSmall, color = Muted)
         }
+        } // End optional setup, nearby and record information
         }
         // The primary action remains visible as players browse course and
         // multiplayer settings; decorative assets never push it below the fold.
@@ -324,8 +354,7 @@ internal fun CrossroadsHomeScreen(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    if (passAndPlay) "$seats people · Pass & Play · offline"
-                    else "Solo vs AI · $seats racers · offline",
+                    homeRaceSummary(seats, passAndPlay, playtestRules),
                     style = MaterialTheme.typography.labelMedium, color = Muted
                 )
                 Button(
@@ -333,7 +362,8 @@ internal fun CrossroadsHomeScreen(
                     modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
                     contentPadding = PaddingValues(vertical = 12.dp)
                 ) {
-                    Text("Start journey", style = MaterialTheme.typography.titleMedium)
+                    Text("START RACE", style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold)
                 }
             }
         }

@@ -2,6 +2,7 @@ package com.playereden.gridmates.crossroads
 
 import com.playereden.crossroads.core.Phase
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class GameHudTextTest {
@@ -18,6 +19,14 @@ class GameHudTextTest {
         assertEquals(EncounterActionCopy("GAMBLE", "Face hazard"), encounterActionCopy("gamble"))
         assertEquals(EncounterActionCopy("BRACE", "Stop & shield"), encounterActionCopy("brace"))
         assertEquals(EncounterActionCopy("OTHER", "Choose"), encounterActionCopy("other"))
+    }
+
+    @Test fun theCompactDockStillFitsAllPrimaryActionsOnShortPhones() {
+        assertTrue(gameActionDockMinimumHeight(Phase.ROLL).value >= 200f)
+        assertTrue(gameActionDockMinimumHeight(Phase.ROUTE).value >= 240f)
+        assertTrue(gameActionDockMinimumHeight(Phase.ENCOUNTER).value >= 270f)
+        assertTrue(gameActionDockMinimumHeight(Phase.TARGET).value >= 245f)
+        assertTrue(gameActionDockMinimumHeight(Phase.FINISHED).value >= 170f)
     }
 
     @Test fun routeAndRollStaySmallButEncountersGetMoreRoom() {
