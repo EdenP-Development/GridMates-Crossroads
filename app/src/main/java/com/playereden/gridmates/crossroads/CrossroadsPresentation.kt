@@ -75,6 +75,40 @@ internal object CrossroadsCameraPreset {
         return source * originWeight + mean * (1f - originWeight)
     }
 
+    /**
+     * The bottom dock covers part of the world. When a player reaches Start
+     * or Finish, let the world extend UNDER that dock instead of clamping the
+     * player behind it. No board coordinate or movement is changed.
+     */
+    fun boundFollowVertical(
+        desired: Float,
+        viewportHeight: Float,
+        worldTop: Float,
+        worldBottom: Float,
+        zoom: Float,
+        phase: Phase,
+        immersive: Boolean
+    ): Float {
+        if (!immersive || viewportHeight <= 0f || zoom <= 1f) {
+            return com.playereden.crossroads.core.CameraGeometry.boundTranslation(
+                desired, viewportHeight, worldTop, worldBottom, zoom
+            )
+        }
+        val center = viewportHeight * 0.5f
+        val scaledTop = center + (worldTop - center) * zoom
+        val scaledBottom = center + (worldBottom - center) * zoom
+        val safeTop = viewportHeight * 0.18f
+        val safeBottom = viewportHeight * when (phase) {
+            Phase.ENCOUNTER -> 0.55f
+            Phase.TARGET -> 0.57f
+            else -> 0.68f
+        }
+        val min = safeBottom - scaledBottom
+        val max = safeTop - scaledTop
+        return if (min <= max) desired.coerceIn(min, max)
+            else (min + max) * 0.5f
+    }
+
     /** Only the live playfield gains the stronger visual hierarchy. */
     fun trailScale(immersive: Boolean) = if (immersive) 1.32f else 1f
     fun tokenScale(immersive: Boolean) = if (immersive) 1.42f else 1f
