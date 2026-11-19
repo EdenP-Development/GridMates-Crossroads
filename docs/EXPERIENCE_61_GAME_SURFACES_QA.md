@@ -22,7 +22,7 @@ Owner's physical Android screenshots: woodland board, zoomed travelers and camer
 ### Result = race moment, not a generic form
 - Keep exact existing Snapshot / race outcome / timing / encounter summary data; do not invent rankings for unfinished players.
 - Dark evergreen victory header and game-stage parchment with a scrollable match receipt.
-- **RACE AGAIN** and View course / Main menu are pinned below the receipt. Retain host-only rematch authority, LAN guest disabled state and prior result persistence.
+- **RACE AGAIN**, **View course**, and Main menu are pinned below the receipt. **View course opens the actual full-map inspector**, not simply the underlying camera. Retain host-only rematch authority, LAN guest disabled state and prior result persistence.
 
 ## Explicitly unchanged
 Original artwork bitmaps and manifests, app signing/IDs, saved data, engine RNG/rules, AI, networking/authority, route hit geometry and active-match camera. The map is still inspection-only. No game is considered officially finished by CI alone.
