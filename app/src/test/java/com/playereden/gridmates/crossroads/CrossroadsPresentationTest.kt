@@ -31,13 +31,71 @@ class CrossroadsPresentationTest {
             CrossroadsCourse.resultLine(thirdLab))
     }
 
-    @Test fun initialForkAndFinishKeepMoreMapInView() {
-        assertEquals(1.0f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 1, true), 0.0001f)
-        assertEquals(1.0f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 1, true), 0.0001f)
-        assertEquals(1.15f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 12, true), 0.0001f)
-        assertEquals(1.28f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 12, true), 0.0001f)
+    @Test fun liveWorldZoomsIntoActionAndFullMapRemainsWhole() {
+        assertEquals(2.00f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 1, true), 0.0001f)
+        assertEquals(2.15f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 1, true), 0.0001f)
+        assertEquals(2.15f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 12, true), 0.0001f)
+        assertEquals(2.40f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 12, true), 0.0001f)
+        assertEquals(2.55f, CrossroadsCameraPreset.followZoom(Phase.ENCOUNTER, 12, true), 0.0001f)
+        assertEquals(2.30f, CrossroadsCameraPreset.followZoom(Phase.TARGET, 12, true), 0.0001f)
         assertEquals(1.0f, CrossroadsCameraPreset.followZoom(Phase.FINISHED, 21, true), 0.0001f)
         assertEquals(1.0f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 9, false), 0.0001f)
+    }
+
+    @Test fun cameraLooksAboveTheBottomDockAndStaysAtFork() {
+        assertEquals(0.43f, CrossroadsCameraPreset.focusHeightFraction(Phase.ROLL, true), .0001f)
+        assertEquals(0.38f, CrossroadsCameraPreset.focusHeightFraction(Phase.ENCOUNTER, true), .0001f)
+        assertEquals(0.50f, CrossroadsCameraPreset.focusHeightFraction(Phase.ENCOUNTER, false), .0001f)
+        val source = androidx.compose.ui.geometry.Offset(.50f, .50f)
+        val exits = listOf(
+            androidx.compose.ui.geometry.Offset(.15f, .24f),
+            androidx.compose.ui.geometry.Offset(.85f, .24f)
+        )
+        val focused = CrossroadsCameraPreset.forkAnchor(source, exits, true)
+        assertEquals(.50f, focused.x, .0001f)
+        assertTrue("Fork must remain the anchor, not empty scenery", focused.y > .40f)
+        assertEquals(source, CrossroadsCameraPreset.forkAnchor(source, emptyList(), true))
+    }
+
+    @Test fun edgeOfWorldTravelerRemainsAboveActionDock() {
+        val height = 1536f
+        val zoom = 2.4f
+        val lo = CrossroadsCameraPreset.boundFollowVertical(
+            -10000f, height, 0f, height, zoom, Phase.ROLL, true
+        )
+        val screenBottom = height / 2f + (height - height / 2f) * zoom + lo
+        assertEquals("World bottom should live under the roll dock",
+            height * .68f, screenBottom, .01f)
+
+        val hi = CrossroadsCameraPreset.boundFollowVertical(
+            10000f, height, 0f, height, zoom, Phase.ROLL, true
+        )
+        val screenTop = height / 2f + (0f - height / 2f) * zoom + hi
+        assertEquals("World top should live under the status HUD",
+            height * .18f, screenTop, .01f)
+
+        val encounter = CrossroadsCameraPreset.boundFollowVertical(
+            -10000f, height, 0f, height, zoom, Phase.ENCOUNTER, true
+        )
+        assertTrue("Tall encounter dock needs more reserved space", encounter < lo)
+    }
+
+    @Test fun fullMapNeverReceivesImmersiveHudClamping() {
+        val expected = com.playereden.crossroads.core.CameraGeometry.boundTranslation(
+            -10000f, 800f, 18f, 782f, 2f
+        )
+        assertEquals(expected, CrossroadsCameraPreset.boundFollowVertical(
+            -10000f, 800f, 18f, 782f, 2f, Phase.ENCOUNTER, false
+        ), .0001f)
+    }
+
+    @Test fun onlyLiveMatchGetsLargerRoadsAndTravelers() {
+        assertEquals(1.0f, CrossroadsCameraPreset.trailScale(false), .0001f)
+        assertEquals(1.0f, CrossroadsCameraPreset.markerScale(false), .0001f)
+        assertEquals(1.0f, CrossroadsCameraPreset.tokenScale(false), .0001f)
+        assertTrue(CrossroadsCameraPreset.trailScale(true) > 1.25f)
+        assertTrue(CrossroadsCameraPreset.markerScale(true) > 1.10f)
+        assertTrue(CrossroadsCameraPreset.tokenScale(true) > 1.35f)
     }
 
     @Test fun fourPiecesStaySeparatedAtSharedStartAndFocusOffsetMatchesRendering() {

@@ -37,12 +37,82 @@ internal object CrossroadsCourse {
                 boardId.endsWith(DecisionLab.V3_SUFFIX)) " · Playtest" else ""
 }
 
-/** The whole board is visible at the start and finish, with gentler midgame tracking. */
+/**
+ * Cinematic camera presets for the active, portrait game world.
+ * The old 1.15–1.28x framing made pieces and trails illegible on real phones.
+ * Full-map inspection is a separate unanimated 1x canvas, not this camera.
+ */
 internal object CrossroadsCameraPreset {
     fun followZoom(phase: Phase, turn: Int, animated: Boolean): Float {
-        if (!animated || phase == Phase.FINISHED || turn <= 1) return 1.0f
-        return if (phase == Phase.ROUTE) 1.15f else 1.28f
+        if (!animated || phase == Phase.FINISHED) return 1.0f
+        return when (phase) {
+            Phase.ROLL -> if (turn <= 1) 2.00f else 2.40f
+            Phase.ROUTE -> 2.15f // allow the outgoing forks to read together
+            Phase.ENCOUNTER -> 2.55f
+            Phase.TARGET -> 2.30f
+            Phase.FINISHED -> 1.0f
+        }
     }
+
+    /** Keep the piece above the context dock, not at the viewport's covered midpoint. */
+    fun focusHeightFraction(phase: Phase, immersive: Boolean): Float =
+        if (!immersive) 0.50f else when (phase) {
+            Phase.ENCOUNTER -> 0.38f
+            Phase.TARGET -> 0.40f
+            else -> 0.43f
+        }
+
+    /** Focus the actual fork first; leave just enough room to preview exits. */
+    fun forkAnchor(
+        source: Offset,
+        exits: List<Offset>,
+        immersive: Boolean
+    ): Offset {
+        if (exits.isEmpty()) return source
+        val mean = Offset(exits.map { it.x }.average().toFloat(),
+            exits.map { it.y }.average().toFloat())
+        val originWeight = if (immersive) 0.72f else 1f / (exits.size + 1f)
+        return source * originWeight + mean * (1f - originWeight)
+    }
+
+    /**
+     * The bottom dock covers part of the world. When a player reaches Start
+     * or Finish, let the world extend UNDER that dock instead of clamping the
+     * player behind it. No board coordinate or movement is changed.
+     */
+    fun boundFollowVertical(
+        desired: Float,
+        viewportHeight: Float,
+        worldTop: Float,
+        worldBottom: Float,
+        zoom: Float,
+        phase: Phase,
+        immersive: Boolean
+    ): Float {
+        if (!immersive || viewportHeight <= 0f || zoom <= 1f) {
+            return com.playereden.crossroads.core.CameraGeometry.boundTranslation(
+                desired, viewportHeight, worldTop, worldBottom, zoom
+            )
+        }
+        val center = viewportHeight * 0.5f
+        val scaledTop = center + (worldTop - center) * zoom
+        val scaledBottom = center + (worldBottom - center) * zoom
+        val safeTop = viewportHeight * 0.18f
+        val safeBottom = viewportHeight * when (phase) {
+            Phase.ENCOUNTER -> 0.55f
+            Phase.TARGET -> 0.57f
+            else -> 0.68f
+        }
+        val min = safeBottom - scaledBottom
+        val max = safeTop - scaledTop
+        return if (min <= max) desired.coerceIn(min, max)
+            else (min + max) * 0.5f
+    }
+
+    /** Only the live playfield gains the stronger visual hierarchy. */
+    fun trailScale(immersive: Boolean) = if (immersive) 1.32f else 1f
+    fun tokenScale(immersive: Boolean) = if (immersive) 1.42f else 1f
+    fun markerScale(immersive: Boolean) = if (immersive) 1.18f else 1f
 }
 
 /**

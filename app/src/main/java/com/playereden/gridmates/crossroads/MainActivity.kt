@@ -1873,6 +1873,11 @@ private fun BoardCanvas(
         atlasLoaded = markerAtlas != null,
         illustratedBoard = boardLook == CrossroadsBoardLook.ILLUSTRATED
     )
+    // The live world magnifies interactive art; the full-map inspector keeps
+    // its previous compact geometry for legibility and path overview.
+    val gamePieceScale = tokenScale * CrossroadsCameraPreset.tokenScale(immersiveWorld)
+    val roadVisibilityScale = CrossroadsCameraPreset.trailScale(immersiveWorld)
+    val nodeVisibilityScale = CrossroadsCameraPreset.markerScale(immersiveWorld)
     val seatImages = listOf(
         rememberOptionalCrossroadsArt(CrossroadsArtSlot.TOKEN_SEAT_1),
         rememberOptionalCrossroadsArt(CrossroadsArtSlot.TOKEN_SEAT_2),
@@ -1943,10 +1948,13 @@ private fun BoardCanvas(
     val cameraTarget = if (state.phase == Phase.ROUTE &&
         focusPlayerIndex == state.playerIndex) {
         val node = board.node(state.players[state.playerIndex].position)
-        val fork = CameraGeometry.forkFocus(
-            node.x, node.y, node.next.map { board.node(it).x to board.node(it).y }
+        CrossroadsCameraPreset.forkAnchor(
+            source = Offset(node.x, node.y),
+            exits = node.next.map { dest ->
+                board.node(dest).let { Offset(it.x, it.y) }
+            },
+            immersive = immersiveWorld
         )
-        Offset(fork.first, fork.second)
     } else active
     val followedFocus by animateOffsetAsState(
         targetValue = cameraTarget,
@@ -1975,14 +1983,22 @@ private fun BoardCanvas(
     val desiredTranslation = when (cameraMode) {
         BoardCameraMode.FOLLOW -> Offset(
             CameraGeometry.centerTranslation(viewportWidth / 2f, focusPx.x, cameraZoom),
-            CameraGeometry.centerTranslation(viewportHeight / 2f, focusPx.y, cameraZoom)
+            CameraGeometry.centerTranslation(viewportHeight / 2f, focusPx.y, cameraZoom) +
+                viewportHeight * (CrossroadsCameraPreset.focusHeightFraction(
+                    state.phase, immersiveWorld
+                ) - 0.5f)
         )
         BoardCameraMode.MANUAL -> manualTranslation
     }
     val actualTranslation = Offset(
         CameraGeometry.boundTranslation(desiredTranslation.x, viewportWidth,
             worldFrame.left, worldFrame.right, cameraZoom),
-        CameraGeometry.boundTranslation(desiredTranslation.y, viewportHeight,
+        if (cameraMode == BoardCameraMode.FOLLOW)
+            CrossroadsCameraPreset.boundFollowVertical(
+                desiredTranslation.y, viewportHeight, worldFrame.top,
+                worldFrame.bottom, cameraZoom, state.phase, immersiveWorld
+            )
+        else CameraGeometry.boundTranslation(desiredTranslation.y, viewportHeight,
             worldFrame.top, worldFrame.bottom, cameraZoom)
     )
     // Keep the pointer handler stable while receiving the newest following pose.
@@ -1998,7 +2014,7 @@ private fun BoardCanvas(
     }
     val focusedRank = focusedGroup.indexOf(cameraSubject)
     val focusedOffset = CrossroadsPiecePlacement.offset(
-        focusedRank.coerceAtLeast(0), focusedGroup.size.coerceAtLeast(1), tokenScale
+        focusedRank.coerceAtLeast(0), focusedGroup.size.coerceAtLeast(1), gamePieceScale
     )
     val livePieceLocation by rememberUpdatedState(
         worldFrame.position(active.x, active.y) + focusedOffset
@@ -2185,7 +2201,8 @@ private fun BoardCanvas(
                             to = position(dest),
                             route = route,
                             dense = denseBoard,
-                            atlas = trailAtlas
+                            atlas = trailAtlas,
+                            visibilityScale = roadVisibilityScale
                         )
                     } else {
                         drawCrossroadsTrail(
@@ -2193,7 +2210,8 @@ private fun BoardCanvas(
                             to = position(dest),
                             route = route,
                             dense = denseBoard,
-                            printed = effectiveTrails == CrossroadsTrailStyle.PRINTED
+                            printed = effectiveTrails == CrossroadsTrailStyle.PRINTED,
+                            visibilityScale = roadVisibilityScale
                         )
                     }
                 }
@@ -2212,13 +2230,13 @@ private fun BoardCanvas(
                     "finish" -> Color(0xFFB47E40)
                     else -> Color(0xFFFDF8E9)
                 }
-                val radius = when {
+                val radius = (when {
                     node.kind == "fork" -> if (denseBoard) 11f else 12f
                     node.kind == "start" || node.kind == "finish" -> 13f
                     denseBoard && node.kind == "plain" -> 4.75f
                     denseBoard && node.kind == "event" -> 6.25f
                     else -> 7f
-                }
+                }) * nodeVisibilityScale
                 // The painted artwork is purely decorative. Unknown nodes,
                 // start/finish, and missing art retain the exact old marker.
                 val paintedType = if (showPaintedMarkers)
@@ -2309,6 +2327,12 @@ private fun BoardCanvas(
                     )
                 }
             }
+            // A restrained spotlight reduces scenic clutter when a fork
+            // actually requires input. The engine's legal links remain bright.
+            if (immersiveWorld && routeChoiceIds.isNotEmpty() &&
+                state.phase == Phase.ROUTE && !isTurnTransitioning) {
+                drawRect(Color(0xFF15271A).copy(alpha = 0.23f))
+            }
             // Route highlights are ONLY for the current legal human choice.
             // These interactive signs follow the original graph edges exactly;
             // they do not invent paths or displace scenic artwork.
@@ -2322,14 +2346,26 @@ private fun BoardCanvas(
                         "mischief" -> Color(0xFF8A6D9B)
                         else -> Color(0xFF4A7650)
                     }
-                    drawLine(Color(0xFFFFF5D7).copy(alpha = 0.94f), start, end,
-                        strokeWidth = 8.5f, cap = StrokeCap.Round)
-                    drawLine(ring.copy(alpha = 0.86f), start, end,
-                        strokeWidth = 3.6f, cap = StrokeCap.Round)
-                    drawCircle(Color(0xFFFFF8E9), radius = 17.5f, center = end,
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4f))
-                    drawCircle(ring, radius = 14f, center = end,
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.7f))
+                    // Thick, high-contrast trails act as on-board buttons.
+                    // Colors are reinforced by the cream outline/endpoint ring.
+                    val glowWidth = if (immersiveWorld) 29f else 8.5f
+                    val inkWidth = if (immersiveWorld) 15f else 3.6f
+                    drawLine(Color(0xFFFFF5D7).copy(alpha = 0.97f), start, end,
+                        strokeWidth = glowWidth, cap = StrokeCap.Round)
+                    drawLine(ring.copy(alpha = 0.94f), start, end,
+                        strokeWidth = inkWidth, cap = StrokeCap.Round)
+                    drawCircle(Color(0xFFFFF8E9),
+                        radius = if (immersiveWorld) 22f else 17.5f,
+                        center = end,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(
+                            width = if (immersiveWorld) 5.5f else 4f
+                        ))
+                    drawCircle(ring,
+                        radius = if (immersiveWorld) 18f else 14f,
+                        center = end,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(
+                            width = if (immersiveWorld) 4f else 2.7f
+                        ))
                 }
             }
             // Use animated on-screen coordinates to spread clustered tokens.
@@ -2339,13 +2375,13 @@ private fun BoardCanvas(
                     (displayed[index] - displayed[i]).getDistance() < 0.012f
                 }
                 val rank = group.indexOf(i)
-                val offset = CrossroadsPiecePlacement.offset(rank, group.size, tokenScale)
+                val offset = CrossroadsPiecePlacement.offset(rank, group.size, gamePieceScale)
                 val marker = Offset(
                     left + displayed[i].x * drawWidth + offset.x,
                     top + displayed[i].y * drawHeight + offset.y
                 )
                 val highlighted = i == highlightedSeat
-                val tokenRadius = (if (highlighted) 12.5f else 11f) * tokenScale
+                val tokenRadius = (if (highlighted) 12.5f else 11f) * gamePieceScale
                 drawCrossroadsPiece(
                     center = marker,
                     radius = tokenRadius,
@@ -2378,7 +2414,7 @@ private fun BoardCanvas(
                         color = Color(0xFFF7F0DE), radius = tokenRadius * 0.59f,
                         center = numberAt,
                         style = androidx.compose.ui.graphics.drawscope.Stroke(
-                            width = 1.4f * tokenScale
+                            width = 1.4f * gamePieceScale
                         )
                     )
                 } else {
@@ -2403,7 +2439,7 @@ private fun BoardCanvas(
                 drawIntoCanvas { canvas ->
                     val paint = android.graphics.Paint().apply {
                         color = android.graphics.Color.WHITE
-                        textSize = (if (drawWoodlandPortraits) 9.4f else 12f) * tokenScale
+                        textSize = (if (drawWoodlandPortraits) 9.4f else 12f) * gamePieceScale
                         isAntiAlias = true
                         isFakeBoldText = true
                         textAlign = android.graphics.Paint.Align.CENTER
@@ -2411,7 +2447,7 @@ private fun BoardCanvas(
                             android.graphics.Color.argb(110, 40, 34, 24))
                     }
                     canvas.nativeCanvas.drawText("${i + 1}", numberX,
-                        numberY + (if (drawWoodlandPortraits) 3.2f else 4f) * tokenScale,
+                        numberY + (if (drawWoodlandPortraits) 3.2f else 4f) * gamePieceScale,
                         paint)
                 }
             }
