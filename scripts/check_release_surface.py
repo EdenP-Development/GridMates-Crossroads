@@ -62,8 +62,13 @@ require('Text("About & data")' in home,
         "Home must disclose local saves and nearby play")
 require('if (BuildConfig.DEBUG)' in home and 'if (BuildConfig.DEBUG)' in lobby,
         "QA screen footers must be debug-only")
-require('if (BuildConfig.DEBUG) "CROSSROADS · QA" else "CROSSROADS"' in activity,
-        "In-match QA title must not appear in the public UI")
+# Both the original labeled header and the newer course-only game HUD are
+# acceptable: neither can expose a QA label in a public match screen.
+legacy_debug_title = 'if (BuildConfig.DEBUG) "CROSSROADS · QA" else "CROSSROADS"' in activity
+course_only_hud = ('Text(CrossroadsCourse.title(board.id)' in activity and
+                   '"CROSSROADS · QA"' not in activity)
+require(legacy_debug_title or course_only_hud,
+        "In-match HUD must show no unconditional QA branding in public UI")
 require('"crossroads_qa_profile_v1"' in activity,
         "Legacy local profile key changed; QA updates could lose progress")
 
