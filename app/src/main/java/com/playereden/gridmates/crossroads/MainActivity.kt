@@ -870,16 +870,42 @@ private fun CrossroadsApp(
             recoveryWarning = recoveryWarning
         )
     } else {
-        Column(
-            modifier = Modifier.fillMaxSize().background(Cream)
+        // UI-52: game-first layout, not a scrolling app page. The real board
+        // occupies the playfield; status and contextual controls float above it.
+        // All actions still invoke the exact existing match/nearby callbacks.
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxSize()
+                .background(Color(0xFF304433))
                 .windowInsetsPadding(WindowInsets.safeDrawing)
         ) {
+            val boardSide = (maxWidth - 12.dp)
+                .coerceAtMost(maxHeight - 110.dp).coerceAtLeast(220.dp)
+            Box(
+                modifier = Modifier.fillMaxWidth()
+                    .padding(top = 126.dp, start = 6.dp, end = 6.dp),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                BoardCanvas(board, state, height = boardSide, matchKey = game,
+                    boardLook = boardLook, trailStyle = trailStyle,
+                    woodlandPieces = woodlandPieces,
+                    paintedMarkers = paintedMarkers,
+                    stepMillis = speed.stepMillis, focusPlayerIndex = cameraTrackIndex,
+                    isTurnTransitioning = !turnReady,
+                    startAtCurrent = startedFromCheckpoint)
+            }
+            // Compact on-board scoreboard and controls, without a page header.
+            Column(
+                modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth()
+                    .background(Color(0xF6F7F0DE))
+                    .padding(bottom = 2.dp),
+                verticalArrangement = Arrangement.spacedBy(0.dp)
+            ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp),
+                modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 2.dp, bottom = 0.dp),
                 horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(if (BuildConfig.DEBUG) "CROSSROADS · QA" else "CROSSROADS",
-                    style = MaterialTheme.typography.labelLarge, color = Forest)
+                    style = MaterialTheme.typography.labelMedium, color = Forest)
                 TextButton(onClick = {
                     speed = if (speed == PresentationSpeed.COZY)
                         PresentationSpeed.BRISK else PresentationSpeed.COZY
@@ -892,7 +918,7 @@ private fun CrossroadsApp(
             val displayedSeat = (if (!turnReady) cameraTrackIndex else state.playerIndex)
                 .coerceIn(state.players.indices)
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 1.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 state.players.forEachIndexed { i, player ->
@@ -913,7 +939,7 @@ private fun CrossroadsApp(
                             Color(0xFFE6E9D6) else Color(0xFFF0E9D9),
                         shape = MaterialTheme.shapes.medium
                     ) {
-                        Row(modifier = Modifier.padding(horizontal = 7.dp, vertical = 8.dp),
+                        Row(modifier = Modifier.padding(horizontal = 7.dp, vertical = 5.dp),
                             horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.size(12.dp).background(PlayerColors[i], androidx.compose.foundation.shape.CircleShape))
                             Spacer(Modifier.width(5.dp))
@@ -924,26 +950,14 @@ private fun CrossroadsApp(
                     }
                 }
             }
-            // Size the board to the actual portrait viewport above the controls.
-            // On ordinary screens the parent does not steal one-finger board drags.
-            BoxWithConstraints(modifier = Modifier.weight(1f)) {
-                val boardChrome = if (showBoardGestureHint) 152.dp else 84.dp
-                val boardSpace = maxHeight - boardChrome
-                val fittedBoardHeight = boardSpace.coerceIn(220.dp, 520.dp)
-                val needsScroll = boardSpace < 220.dp
-                Column(
-                    modifier = Modifier.fillMaxSize()
-                        .verticalScroll(rememberScrollState(), enabled = needsScroll)
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
+
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically) {
                     Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
                         Text(CrossroadsCourse.title(board.id),
                             fontWeight = FontWeight.Bold, color = Forest,
-                            style = MaterialTheme.typography.titleMedium)
-                        Text(CrossroadsCourse.subtitle(board.id),
+                            style = MaterialTheme.typography.bodyMedium)
+                        Text("Every path is a choice.",
                             color = Bark, style = MaterialTheme.typography.labelSmall)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1053,6 +1067,7 @@ private fun CrossroadsApp(
                     }
                     }
                 }
+
                 if (showBoardGestureHint) {
                     Surface(
                         color = Color(0xFFE6E9D6),
@@ -1076,22 +1091,26 @@ private fun CrossroadsApp(
                         }
                     }
                 }
-                // The event reveal already appears in the fixed action pane.
-                // Keep the complete playable board visible, with history in Match options.
-                BoardCanvas(board, state, height = fittedBoardHeight, matchKey = game,
-                    boardLook = boardLook, trailStyle = trailStyle,
-                    woodlandPieces = woodlandPieces,
-                    paintedMarkers = paintedMarkers,
-                    stepMillis = speed.stepMillis, focusPlayerIndex = cameraTrackIndex,
-                    isTurnTransitioning = !turnReady,
-                    startAtCurrent = startedFromCheckpoint)
-                }
+
             }
-            Surface(color = Color(0xFFECE3CE), tonalElevation = 2.dp, shadowElevation = 5.dp,
-                modifier = Modifier.fillMaxWidth()) {
+            // Context-sensitive action dock, reachable with one thumb. Its
+            // contents scroll as a unit on small phones / large system fonts.
+            Surface(
+                color = Color(0xFFF1E4C8),
+                shadowElevation = 12.dp,
+                tonalElevation = 0.dp,
+                border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF9D865E)),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(
+                    topStart = 22.dp, topEnd = 22.dp
+                ),
+                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                    .heightIn(max = maxHeight * 0.57f)
+            ) {
                 Column(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-                    verticalArrangement = Arrangement.spacedBy(7.dp)
+                    modifier = Modifier.fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     if (lanRole != LanRole.OFFLINE) {
                         Text(
@@ -1110,7 +1129,7 @@ private fun CrossroadsApp(
                     val trackedName = state.players[
                         cameraTrackIndex.coerceIn(state.players.indices)
                     ].name
-                    TurnMomentPlaque(
+                    GameHudTurnStrip(
                         title = if (state.phase == Phase.FINISHED && !turnReady) "Approaching the finish…"
                         else if (state.phase == Phase.FINISHED) "Journey complete!"
                         else if (!turnReady && !rollingDie) {
@@ -1146,15 +1165,16 @@ private fun CrossroadsApp(
                         state.encounters.isEmpty()
                     Text(
                         if (initialInstructions && game.playtestRules)
-                            "Choose Steady or Push to begin your journey."
-                        else if (initialInstructions) "Roll the die to begin your journey."
+                            "Choose a travel style to begin."
+                        else if (initialInstructions) "Roll to begin."
                         else turnActionSummary(
                             phase = state.phase,
                             botTurn = state.players[state.playerIndex].isBot,
                             actorName = currentName,
                             latestAction = state.lastMessage
                         ),
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Bark
                     )
                     if (recoveryWarning != null) {
                         Text(recoveryWarning!!, style = MaterialTheme.typography.labelSmall,
@@ -1238,7 +1258,7 @@ private fun CrossroadsApp(
                             Phase.ROLL -> {
                                 if (game.playtestRules && lanRole == LanRole.OFFLINE) {
                                     Text(
-                                        "Take it steady, or push your luck?",
+                                        gameHudActionHeading(state.phase),
                                         fontWeight = FontWeight.SemiBold,
                                         color = Forest
                                     )
@@ -1252,24 +1272,33 @@ private fun CrossroadsApp(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        OutlinedButton(
+                                        Button(
                                             onClick = {
                                                 queuedLabRoll = LabRoll.STEADY
                                                 rollingDie = true
                                             },
                                             enabled = !rollingDie && turnReady,
-                                            modifier = Modifier.weight(1f).heightIn(min = 54.dp)
+                                            modifier = Modifier.weight(1f).heightIn(min = 54.dp),
+                                            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Forest, contentColor = Color.White
+                                            )
                                         ) {
                                             Text(if (rollingDie && queuedLabRoll == LabRoll.STEADY)
                                                 "Steady…" else "Steady · 4")
                                         }
-                                        OutlinedButton(
+                                        Button(
                                             onClick = {
                                                 queuedLabRoll = LabRoll.PUSH
                                                 rollingDie = true
                                             },
                                             enabled = !rollingDie && turnReady,
-                                            modifier = Modifier.weight(1f).heightIn(min = 54.dp)
+                                            modifier = Modifier.weight(1f).heightIn(min = 54.dp),
+                                            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color(0xFFB58A46),
+                                                contentColor = Color(0xFF292B22)
+                                            )
                                         ) {
                                             Text(if (rollingDie && queuedLabRoll == LabRoll.PUSH)
                                                 "Pushing…" else "Push · risky")
@@ -1435,6 +1464,7 @@ private fun CrossroadsApp(
                     }
                 }
             }
+
         }
         // A dedicated scrollable chooser avoids the third option being hidden
         // under the fixed action pane on smaller handsets.
@@ -1454,14 +1484,19 @@ private fun CrossroadsApp(
                 BoxWithConstraints(
                     modifier = Modifier.fillMaxSize()
                         .windowInsetsPadding(WindowInsets.safeDrawing),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.BottomCenter
                 ) {
                     Surface(
-                        modifier = Modifier.fillMaxWidth(0.91f)
-                            .heightIn(max = (maxHeight - 24.dp).coerceAtLeast(1.dp)),
-                        shape = MaterialTheme.shapes.extraLarge,
-                        color = Cream,
-                        shadowElevation = 10.dp
+                        modifier = Modifier.fillMaxWidth()
+                            .heightIn(max = (maxHeight * 0.76f).coerceAtLeast(200.dp)),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(
+                            topStart = 24.dp, topEnd = 24.dp
+                        ),
+                        color = Color(0xFFF1E4C8),
+                        border = androidx.compose.foundation.BorderStroke(
+                            2.dp, Color(0xFF9D865E)
+                        ),
+                        shadowElevation = 12.dp
                     ) {
                         Column(
                             modifier = Modifier.padding(horizontal = 17.dp, vertical = 16.dp),
