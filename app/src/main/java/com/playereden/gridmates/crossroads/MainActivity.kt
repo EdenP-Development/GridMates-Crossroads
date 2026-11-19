@@ -897,13 +897,16 @@ private fun CrossroadsApp(
                 .background(Color(0xFF304433))
                 .windowInsetsPadding(WindowInsets.safeDrawing)
         ) {
+            // Remember the BoxWithConstraints scope's dimensions outside
+            // descendant Box lambdas, which have their own receiver.
+            val viewportHeight = maxHeight
             // The world extends behind both HUD layers. It is a cropped
             // square, never a stretched portrait background or board card.
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                BoardCanvas(board, state, height = maxHeight,
+                BoardCanvas(board, state, height = viewportHeight,
                     immersiveWorld = true,
                     matchKey = game,
                     boardLook = boardLook, trailStyle = trailStyle,
