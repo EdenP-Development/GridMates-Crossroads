@@ -1190,13 +1190,7 @@ private fun CrossroadsApp(
             var showTurnDetails by remember(game, state.turn, state.phase) {
                 mutableStateOf(false)
             }
-            val dockMaxFraction = when (state.phase) {
-                Phase.ROLL -> 0.32f
-                Phase.ROUTE -> 0.32f
-                Phase.ENCOUNTER -> 0.37f
-                Phase.TARGET -> 0.39f
-                Phase.FINISHED -> 0.30f
-            }
+            val dockMaxFraction = gameActionDockMaxFraction(state.phase)
             Surface(
                 color = Color(0xF8F1E4C8),
                 shadowElevation = 12.dp,
@@ -1463,20 +1457,7 @@ private fun CrossroadsApp(
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
                                         pair.forEach { option ->
-                                            val label = when (option) {
-                                                "supplies" -> "SUPPLIES"
-                                                "cover" -> "COVER"
-                                                "gamble" -> "GAMBLE"
-                                                "brace" -> "BRACE"
-                                                else -> option.uppercase()
-                                            }
-                                            val effect = when (option) {
-                                                "supplies" -> "+2 spaces"
-                                                "cover" -> "+1 & shield"
-                                                "gamble" -> "Face hazard"
-                                                "brace" -> "Stop & shield"
-                                                else -> "Choose"
-                                            }
+                                            val (label, effect) = encounterActionCopy(option)
                                             Button(
                                                 onClick = { localEncounterChoice(option) },
                                                 enabled = turnReady,
@@ -2406,8 +2387,7 @@ private fun BoardCanvas(
                     }
                     // Painted map comes first. Only emphasize the first part
                     // of an available branch: no opaque UI tape across scenery.
-                    val cueStart = start + (end - start) * 0.14f
-                    val cueEnd = start + (end - start) * 0.70f
+                    val (cueStart, cueEnd) = BoardRouteHitTest.cueSegment(start, end)
                     val outlineWidth = if (immersiveWorld) 16f else 7.5f
                     val colorWidth = if (immersiveWorld) 6.5f else 3f
                     drawLine(Color(0xFFF5E9C8).copy(alpha = 0.72f),
