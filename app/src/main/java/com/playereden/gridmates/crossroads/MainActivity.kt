@@ -934,25 +934,9 @@ private fun CrossroadsApp(
             Column(
                 modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth()
                     .background(Color(0xDD233B2B))
-                    .padding(bottom = 2.dp),
+                    .padding(top = 5.dp, bottom = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 2.dp, bottom = 0.dp),
-                horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(if (BuildConfig.DEBUG) "CROSSROADS · QA" else "CROSSROADS",
-                    style = MaterialTheme.typography.labelMedium, color = Color(0xFFF8EED7))
-                TextButton(onClick = {
-                    speed = if (speed == PresentationSpeed.COZY)
-                        PresentationSpeed.BRISK else PresentationSpeed.COZY
-                    prefs.edit().putString("match_pace_v1", speed.name).apply()
-                }) {
-                    Text(if (speed == PresentationSpeed.COZY) "Pace: Cozy" else "Pace: Brisk",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Color(0xFFF8EED7))
-                }
-            }
             val displayedSeat = (if (!turnReady) cameraTrackIndex else state.playerIndex)
                 .coerceIn(state.players.indices)
             Row(
@@ -989,15 +973,21 @@ private fun CrossroadsApp(
                 }
             }
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                        Text(CrossroadsCourse.title(board.id),
-                            fontWeight = FontWeight.Bold, color = Color(0xFFF8EED7),
-                            style = MaterialTheme.typography.bodyMedium)
-                        Text("Every path is a choice.",
-                            color = Color(0xFFDCCDA9), style = MaterialTheme.typography.labelSmall)
-                    }
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(start = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val matchBrand = if (BuildConfig.DEBUG) "CROSSROADS · QA" else "CROSSROADS"
+                    Text(
+                        "$matchBrand · ${CrossroadsCourse.title(board.id)}",
+                        modifier = Modifier.weight(1f),
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFF8EED7),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         TextButton(onClick = { inspectBoard = true }) {
                             Text("Full map", color = Color(0xFFF8EED7))
@@ -1014,6 +1004,18 @@ private fun CrossroadsApp(
                             onDismissRequest = { showMatchOptions = false },
                             containerColor = Cream
                         ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(if (speed == PresentationSpeed.COZY)
+                                        "Movement speed: Cozy" else "Movement speed: Brisk")
+                                },
+                                onClick = {
+                                    speed = if (speed == PresentationSpeed.COZY)
+                                        PresentationSpeed.BRISK else PresentationSpeed.COZY
+                                    prefs.edit().putString("match_pace_v1", speed.name).apply()
+                                    showMatchOptions = false
+                                }
+                            )
                             DropdownMenuItem(
                                 text = { Text("How to play") },
                                 onClick = { showMatchOptions = false; showGuide = true }
