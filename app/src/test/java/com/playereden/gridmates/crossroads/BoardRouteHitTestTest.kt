@@ -37,7 +37,7 @@ class BoardRouteHitTestTest {
     }
 
     @Test fun cameraZoomAndTranslationAreAccountedFor() {
-        val pan = Offset(43f, -17f)
+        val pan = Offset(-90f, 125f)
         val chosen = BoardRouteHitTest.screenPosition(right, canvas, inset, 2.2f, pan)
         assertEquals("right", choose(chosen, zoom = 2.2f, pan = pan))
         // The original, untransformed target is now NOT at the display position.
