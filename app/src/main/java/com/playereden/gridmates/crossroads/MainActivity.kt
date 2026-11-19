@@ -323,6 +323,10 @@ private fun CrossroadsApp(
     var woodlandPieces by remember {
         mutableStateOf(prefs.getBoolean("qa_woodland_pieces_v1", true))
     }
+    // Cosmetic QA-only comparison; never included in authoritative match saves.
+    var paintedMarkers by remember {
+        mutableStateOf(prefs.getBoolean("qa_painted_markers_v1", true))
+    }
     var transitionDelay by remember(game) { mutableLongStateOf(0L) }
     var turnReady by remember(game) { mutableStateOf(true) }
     var cameraTrackIndex by remember(game) { mutableIntStateOf(game?.currentIndex ?: 0) }
@@ -1007,6 +1011,19 @@ private fun CrossroadsApp(
                                         showMatchOptions = false
                                     }
                                 )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(if (paintedMarkers) "Markers: Illustrated"
+                                            else "Markers: Standard")
+                                    },
+                                    onClick = {
+                                        paintedMarkers = !paintedMarkers
+                                        prefs.edit().putBoolean(
+                                            "qa_painted_markers_v1", paintedMarkers
+                                        ).apply()
+                                        showMatchOptions = false
+                                    }
+                                )
                             }
                             DropdownMenuItem(
                                 text = {
@@ -1064,6 +1081,7 @@ private fun CrossroadsApp(
                 BoardCanvas(board, state, height = fittedBoardHeight, matchKey = game,
                     boardLook = boardLook, trailStyle = trailStyle,
                     woodlandPieces = woodlandPieces,
+                    paintedMarkers = paintedMarkers,
                     stepMillis = speed.stepMillis, focusPlayerIndex = cameraTrackIndex,
                     isTurnTransitioning = !turnReady,
                     startAtCurrent = startedFromCheckpoint)
@@ -1578,7 +1596,8 @@ private fun CrossroadsApp(
                             BoardCanvas(board, state, height = mapHeight, tokenScale = 1.35f,
                                 animateTokens = false, matchKey = game,
                                 boardLook = boardLook, trailStyle = trailStyle,
-                                woodlandPieces = woodlandPieces)
+                                woodlandPieces = woodlandPieces,
+                                paintedMarkers = paintedMarkers)
                         }
                         Text("Amber: hazard  •  Green: shelter  •  Purple: mischief",
                             style = MaterialTheme.typography.bodySmall, color = Bark)
@@ -1748,6 +1767,7 @@ private fun BoardCanvas(
     boardLook: CrossroadsBoardLook = CrossroadsBoardLook.ILLUSTRATED,
     trailStyle: CrossroadsTrailStyle = CrossroadsTrailStyle.SIMPLE,
     woodlandPieces: Boolean = false,
+    paintedMarkers: Boolean = false,
     tokenScale: Float = 1f,
     animateTokens: Boolean = true,
     matchKey: Any? = null,
@@ -1778,6 +1798,17 @@ private fun BoardCanvas(
         isQa = BuildConfig.DEBUG,
         requested = woodlandPieces,
         atlasLoaded = woodlandTokenAtlas != null
+    )
+    val markerAtlas = rememberOptionalCrossroadsArt(
+        if (BuildConfig.DEBUG && paintedMarkers &&
+            boardLook == CrossroadsBoardLook.ILLUSTRATED)
+            CrossroadsArtSlot.MARKER_ATLAS else null
+    )
+    val showPaintedMarkers = woodlandMarkerEnabled(
+        isDebug = BuildConfig.DEBUG,
+        requested = paintedMarkers,
+        atlasLoaded = markerAtlas != null,
+        illustratedBoard = boardLook == CrossroadsBoardLook.ILLUSTRATED
     )
     val seatImages = listOf(
         rememberOptionalCrossroadsArt(CrossroadsArtSlot.TOKEN_SEAT_1),
@@ -2094,46 +2125,73 @@ private fun BoardCanvas(
                     denseBoard && node.kind == "event" -> 6.25f
                     else -> 7f
                 }
-                // Tabletop start/finish emblems are distinguishable even when
-                // pawns are clustered near the entrance or camera is fit-to-map.
-                if (node.kind == "finish") {
-                    drawCircle(Color(0xFFFFE8B6).copy(alpha = 0.55f),
-                        radius = 22f, center = center)
-                    drawCircle(Color(0xFFAC7C3B).copy(alpha = 0.77f),
-                        radius = 18f, center = center,
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f))
-                } else if (node.kind == "start") {
-                    drawCircle(Color(0xFFDEE9D5).copy(alpha = 0.56f),
-                        radius = 19f, center = center)
-                    drawCircle(Forest.copy(alpha = 0.48f),
-                        radius = 16.5f, center = center,
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.2f))
-                }
-                when (effectiveTrails) {
-                    CrossroadsTrailStyle.ARTWORK -> if (trailAtlas != null) {
-                        drawCrossroadsIllustratedJunction(center, radius, trailAtlas)
-                    }
-                    CrossroadsTrailStyle.PRINTED -> {
-                        drawCircle(Color(0xFF334C3C).copy(alpha = 0.66f),
-                            radius = radius + 3.2f, center = center)
-                        drawCircle(Color(0xFFF7EBD2), radius = radius + 1.8f, center = center)
-                    }
-                    CrossroadsTrailStyle.SIMPLE -> Unit
-                }
-                drawCircle(color, radius, center)
-                drawCircle(Color(0xFF9E896B), radius, center,
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.3f))
-                if (node.kind == "fork" || node.kind == "start" || node.kind == "finish") {
-                    drawIntoCanvas { canvas ->
-                        val label = when (node.kind) { "fork" -> "?"; "start" -> "S"; else -> "F" }
-                        val paint = android.graphics.Paint().apply {
-                            isAntiAlias = true
-                            this.color = android.graphics.Color.WHITE
-                            textSize = 11f
-                            textAlign = android.graphics.Paint.Align.CENTER
-                            isFakeBoldText = true
+                // The painted artwork is purely decorative. Unknown nodes,
+                // start/finish, and missing art retain the exact old marker.
+                val paintedType = if (showPaintedMarkers)
+                    woodlandMarkerFor(node.kind, node.eventPool) else null
+                if (paintedType != null && markerAtlas != null) {
+                    drawCrossroadsPaintedMarker(center, radius, paintedType, markerAtlas)
+                    if (node.kind == "fork") {
+                        // Keep the authored "?" semantic label visible without
+                        // covering the actual fork icon inside the medallion.
+                        val labelAt = center + Offset(radius * 0.59f, radius * 0.62f)
+                        drawCircle(Forest, radius = radius * 0.45f, center = labelAt)
+                        drawCircle(Color(0xFFF8EDCF), radius = radius * 0.45f,
+                            center = labelAt,
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.2f))
+                        drawIntoCanvas { canvas ->
+                            val paint = android.graphics.Paint().apply {
+                                isAntiAlias = true
+                                this.color = android.graphics.Color.WHITE
+                                textSize = 8.5f
+                                isFakeBoldText = true
+                                textAlign = android.graphics.Paint.Align.CENTER
+                            }
+                            canvas.nativeCanvas.drawText("?", labelAt.x,
+                                labelAt.y + 3f, paint)
                         }
-                        canvas.nativeCanvas.drawText(label, center.x, center.y + 4f, paint)
+                    }
+                } else {
+                    // Preserve old shapes as the QA comparison and art fallback.
+                    if (node.kind == "finish") {
+                        drawCircle(Color(0xFFFFE8B6).copy(alpha = 0.55f),
+                            radius = 22f, center = center)
+                        drawCircle(Color(0xFFAC7C3B).copy(alpha = 0.77f),
+                            radius = 18f, center = center,
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f))
+                    } else if (node.kind == "start") {
+                        drawCircle(Color(0xFFDEE9D5).copy(alpha = 0.56f),
+                            radius = 19f, center = center)
+                        drawCircle(Forest.copy(alpha = 0.48f),
+                            radius = 16.5f, center = center,
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.2f))
+                    }
+                    when (effectiveTrails) {
+                        CrossroadsTrailStyle.ARTWORK -> if (trailAtlas != null) {
+                            drawCrossroadsIllustratedJunction(center, radius, trailAtlas)
+                        }
+                        CrossroadsTrailStyle.PRINTED -> {
+                            drawCircle(Color(0xFF334C3C).copy(alpha = 0.66f),
+                                radius = radius + 3.2f, center = center)
+                            drawCircle(Color(0xFFF7EBD2), radius = radius + 1.8f, center = center)
+                        }
+                        CrossroadsTrailStyle.SIMPLE -> Unit
+                    }
+                    drawCircle(color, radius, center)
+                    drawCircle(Color(0xFF9E896B), radius, center,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.3f))
+                    if (node.kind == "fork" || node.kind == "start" || node.kind == "finish") {
+                        drawIntoCanvas { canvas ->
+                            val label = when (node.kind) { "fork" -> "?"; "start" -> "S"; else -> "F" }
+                            val paint = android.graphics.Paint().apply {
+                                isAntiAlias = true
+                                this.color = android.graphics.Color.WHITE
+                                textSize = 11f
+                                textAlign = android.graphics.Paint.Align.CENTER
+                                isFakeBoldText = true
+                            }
+                            canvas.nativeCanvas.drawText(label, center.x, center.y + 4f, paint)
+                        }
                     }
                 }
             }

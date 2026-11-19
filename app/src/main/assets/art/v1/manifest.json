@@ -177,6 +177,19 @@
       "license": "generated",
       "sha256": "ca2f8dceb3679dff75e24870f4a5b993458b3f853b69df48b6c28a43bed570dc",
       "reviewStatus": "qa-preview-only-not-owner-approved"
+    },
+    {
+      "id": "MARKER_ATLAS",
+      "filename": "marker_atlas_v1.png",
+      "width": 256,
+      "height": 256,
+      "requiresAlpha": true,
+      "purpose": "QA-only printed waypoint marker atlas, four 128x128 transparent cells: fork, shelter, hazard, mischief. Position and events remain graph driven.",
+      "status": "approved",
+      "origin": "Original ChatGPT image generation 2026-11-18 id 40257970-fea9-475a-98c6-a22a9fd578c9; cropped 2x2, resampled to 256x256 and reduced to 32 colors with transparent alpha. QA prototype pending owner visual approval.",
+      "license": "generated",
+      "sha256": "2d5e32e9621b8af9699e541797c4f5b1da1385bed0e05e56de859051ad9a812a",
+      "reviewStatus": "qa-preview-only-not-owner-approved"
     }
   ]
 }
