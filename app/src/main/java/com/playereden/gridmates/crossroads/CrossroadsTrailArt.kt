@@ -98,8 +98,51 @@ internal fun effectiveTrailStyle(
     else -> wanted
 }
 
+/** One piece of the horizontally sliced road atlas, in unrotated Canvas pixels. */
+internal data class TrailSpriteSlice(
+    val sourceX: Int,
+    val sourceWidth: Int,
+    val offsetPx: Float,
+    val widthPx: Float
+)
+
+/**
+ * Preserve the painted proportions of stones and moss on longer graph edges.
+ *
+ * The 128×32 atlas has 16-pixel soft ends, and a reusable 96-pixel center.
+ * Rather than stretching the entire strip to fit an arbitrarily long route,
+ * repeat its center at approximately its native scale and retain both endcaps.
+ * 24 center stamps is a deliberate upper bound for older Android devices.
+ *
+ * Geometry and colors remain determined by the game, not this artwork.
+ */
+internal fun planTrailSpriteSlices(
+    edgeLength: Float,
+    renderedHeight: Float
+): List<TrailSpriteSlice> {
+    if (!edgeLength.isFinite() || !renderedHeight.isFinite() ||
+        edgeLength < 1f || renderedHeight <= 0f) return emptyList()
+
+    val capWidth = renderedHeight * 16f / 32f
+    if (edgeLength <= capWidth * 2f + 2f) {
+        return listOf(TrailSpriteSlice(0, 128, 0f, edgeLength))
+    }
+    val middleLength = edgeLength - 2f * capWidth
+    val idealCenterWidth = renderedHeight * 96f / 32f
+    val repeats = kotlin.math.ceil(middleLength / idealCenterWidth)
+        .toInt().coerceIn(1, 24)
+    val eachWidth = middleLength / repeats
+    val slices = ArrayList<TrailSpriteSlice>(repeats + 2)
+    slices.add(TrailSpriteSlice(0, 16, 0f, capWidth))
+    repeat(repeats) { i ->
+        slices.add(TrailSpriteSlice(16, 96, capWidth + i * eachWidth, eachWidth))
+    }
+    slices.add(TrailSpriteSlice(112, 16, edgeLength - capWidth, capWidth))
+    return slices
+}
+
 /** A real painted RGBA sprite aligned to the original graph edge.
- * PNG atlas upper rectangle: [0, 0, 128, 32]. Geometry never comes from art.
+ * PNG atlas upper rectangle: [0, 0, 128, 32]. Center is tiled to keep pebble\n * proportions consistent at different route lengths. Geometry never comes from art.
  */
 internal fun DrawScope.drawCrossroadsIllustratedTrail(
     from: Offset,
@@ -123,18 +166,24 @@ internal fun DrawScope.drawCrossroadsIllustratedTrail(
         strokeWidth = 15f * weight, cap = StrokeCap.Round)
     val angle = Math.toDegrees(kotlin.math.atan2(delta.y.toDouble(), delta.x.toDouble())).toFloat()
     rotate(angle, pivot = from) {
-        drawImage(
-            image = atlas,
-            srcOffset = androidx.compose.ui.unit.IntOffset(0, 0),
-            srcSize = androidx.compose.ui.unit.IntSize(128, 32),
-            dstOffset = androidx.compose.ui.unit.IntOffset(
-                from.x.toInt(), (from.y - 6.6f * weight).toInt()
-            ),
-            dstSize = androidx.compose.ui.unit.IntSize(
-                length.toInt().coerceAtLeast(1), (13.2f * weight).toInt().coerceAtLeast(1)
-            ),
-            filterQuality = androidx.compose.ui.graphics.FilterQuality.Medium
-        )
+        val heightPx = 13.2f * weight
+        val destinationY = (from.y - heightPx / 2f).toInt()
+        val destinationHeight = heightPx.toInt().coerceAtLeast(1)
+        planTrailSpriteSlices(length, heightPx).forEach { slice ->
+            // Calculate both endpoints before rounding to avoid hairline gaps.
+            val leftX = (from.x + slice.offsetPx).toInt()
+            val rightX = (from.x + slice.offsetPx + slice.widthPx).toInt()
+            drawImage(
+                image = atlas,
+                srcOffset = androidx.compose.ui.unit.IntOffset(slice.sourceX, 0),
+                srcSize = androidx.compose.ui.unit.IntSize(slice.sourceWidth, 32),
+                dstOffset = androidx.compose.ui.unit.IntOffset(leftX, destinationY),
+                dstSize = androidx.compose.ui.unit.IntSize(
+                    (rightX - leftX).coerceAtLeast(1), destinationHeight
+                ),
+                filterQuality = androidx.compose.ui.graphics.FilterQuality.Medium
+            )
+        }
     }
 }
 
