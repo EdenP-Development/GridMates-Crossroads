@@ -1200,7 +1200,12 @@ private fun CrossroadsApp(
                 modifier = Modifier.align(Alignment.BottomCenter)
                     .padding(horizontal = 10.dp, vertical = 9.dp)
                     .fillMaxWidth()
-                    .heightIn(max = maxHeight * dockMaxFraction)
+                    .heightIn(
+                        max = maxOf(
+                            maxHeight * dockMaxFraction,
+                            gameActionDockMinimumHeight(state.phase)
+                        ).coerceAtMost((maxHeight - 20.dp).coerceAtLeast(1.dp))
+                    )
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
