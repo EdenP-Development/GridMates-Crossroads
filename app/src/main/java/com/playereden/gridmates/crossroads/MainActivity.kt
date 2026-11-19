@@ -2332,18 +2332,20 @@ private fun BoardCanvas(
                     drawLine(trail, position(from), position(to), strokeWidth = 3f, cap = StrokeCap.Round)
                 }
             }
-            // A restrained spotlight reduces scenic clutter when a fork
-            // actually requires input. The engine's legal links remain bright.
-            if (immersiveWorld && routeChoiceIds.isNotEmpty() &&
-                state.phase == Phase.ROUTE && !isTurnTransitioning) {
-                drawRect(Color(0xFF15271A).copy(alpha = 0.23f))
-            }
             // Route highlights are ONLY for the current legal human choice.
             // These interactive signs follow the original graph edges exactly;
             // they do not invent paths or displace scenic artwork.
             if (routeChoiceIds.isNotEmpty() && state.phase == Phase.ROUTE &&
                 !isTurnTransitioning) {
                 val start = position(state.players[state.playerIndex].position)
+                drawCircle(
+                    Color(0xFFFFEAC0).copy(alpha = 0.88f),
+                    radius = if (immersiveWorld) 24f else 17f,
+                    center = start,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = if (immersiveWorld) 3.8f else 2.8f
+                    )
+                )
                 routeChoiceIds.forEach { candidate ->
                     val end = position(candidate)
                     val ring = when (board.node(candidate).route) {
@@ -2351,25 +2353,29 @@ private fun BoardCanvas(
                         "mischief" -> Color(0xFF8A6D9B)
                         else -> Color(0xFF4A7650)
                     }
-                    // Thick, high-contrast trails act as on-board buttons.
-                    // Colors are reinforced by the cream outline/endpoint ring.
-                    val glowWidth = if (immersiveWorld) 29f else 8.5f
-                    val inkWidth = if (immersiveWorld) 15f else 3.6f
-                    drawLine(Color(0xFFFFF5D7).copy(alpha = 0.97f), start, end,
-                        strokeWidth = glowWidth, cap = StrokeCap.Round)
-                    drawLine(ring.copy(alpha = 0.94f), start, end,
-                        strokeWidth = inkWidth, cap = StrokeCap.Round)
-                    drawCircle(Color(0xFFFFF8E9),
-                        radius = if (immersiveWorld) 22f else 17.5f,
+                    // Painted map comes first. Only emphasize the first part
+                    // of an available branch: no opaque UI tape across scenery.
+                    val cueStart = start + (end - start) * 0.14f
+                    val cueEnd = start + (end - start) * 0.70f
+                    val outlineWidth = if (immersiveWorld) 16f else 7.5f
+                    val colorWidth = if (immersiveWorld) 6.5f else 3f
+                    drawLine(Color(0xFFF5E9C8).copy(alpha = 0.72f),
+                        cueStart, cueEnd, strokeWidth = outlineWidth,
+                        cap = StrokeCap.Round)
+                    drawLine(ring.copy(alpha = 0.93f),
+                        cueStart, cueEnd, strokeWidth = colorWidth,
+                        cap = StrokeCap.Round)
+                    drawCircle(Color(0xFFFFF7DD),
+                        radius = if (immersiveWorld) 19f else 15f,
                         center = end,
                         style = androidx.compose.ui.graphics.drawscope.Stroke(
-                            width = if (immersiveWorld) 5.5f else 4f
+                            width = if (immersiveWorld) 4.2f else 3f
                         ))
                     drawCircle(ring,
-                        radius = if (immersiveWorld) 18f else 14f,
+                        radius = if (immersiveWorld) 15f else 12f,
                         center = end,
                         style = androidx.compose.ui.graphics.drawscope.Stroke(
-                            width = if (immersiveWorld) 4f else 2.7f
+                            width = if (immersiveWorld) 3.4f else 2.4f
                         ))
                 }
             }
