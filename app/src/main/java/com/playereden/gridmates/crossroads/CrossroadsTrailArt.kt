@@ -25,7 +25,8 @@ internal fun DrawScope.drawCrossroadsTrail(
     to: Offset,
     route: String,
     dense: Boolean,
-    printed: Boolean
+    printed: Boolean,
+    visibilityScale: Float = 1f
 ) {
     val routeInk = when (route) {
         "risky" -> Color(0xFFC29450)
@@ -37,15 +38,15 @@ internal fun DrawScope.drawCrossroadsTrail(
         // Keep the last QA-approved legibility treatment intact for A/B review.
         drawLine(
             Color(0xFF334C3C).copy(alpha = 0.80f), from, to,
-            strokeWidth = if (dense) 12f else 15f, cap = StrokeCap.Round
+            strokeWidth = (if (dense) 12f else 15f) * visibilityScale, cap = StrokeCap.Round
         )
         drawLine(
             routeInk, from, to,
-            strokeWidth = if (dense) 8.5f else 11f, cap = StrokeCap.Round
+            strokeWidth = (if (dense) 8.5f else 11f) * visibilityScale, cap = StrokeCap.Round
         )
         drawLine(
             Color(0xFFFCF8ED), from, to,
-            strokeWidth = if (dense) 2.1f else 3f, cap = StrokeCap.Round
+            strokeWidth = (if (dense) 2.1f else 3f) * visibilityScale, cap = StrokeCap.Round
         )
         return
     }
@@ -53,7 +54,7 @@ internal fun DrawScope.drawCrossroadsTrail(
     // A narrow inked shadow and warm paper deck mimic a printed board-game
     // path. Distinct route types show through as colored sidebands and dashes.
     // No random grain: deterministic strokes avoid shimmer while panning.
-    val weight = if (dense) 0.88f else 1f
+    val weight = (if (dense) 0.88f else 1f) * visibilityScale
     drawLine(
         Color(0xFF31453A).copy(alpha = 0.66f), from, to,
         strokeWidth = 15f * weight, cap = StrokeCap.Round
@@ -149,21 +150,25 @@ internal fun DrawScope.drawCrossroadsIllustratedTrail(
     to: Offset,
     route: String,
     dense: Boolean,
-    atlas: androidx.compose.ui.graphics.ImageBitmap
+    atlas: androidx.compose.ui.graphics.ImageBitmap,
+    visibilityScale: Float = 1f
 ) {
     val delta = to - from
     val length = delta.getDistance()
     if (length < 1f) return
-    val weight = if (dense) 0.87f else 1f
+    val weight = (if (dense) 0.87f else 1f) * visibilityScale
     val routeTint = when (route) {
         "safe" -> Color(0xFF759474)
         "risky" -> Color(0xFFB58A4B)
         "mischief" -> Color(0xFF9980B0)
         else -> Color(0xFFAA946F)
     }
-    // Small, route-specific painted edge visible underneath irregular road sprite.
-    drawLine(routeTint.copy(alpha = 0.75f), from, to,
-        strokeWidth = 15f * weight, cap = StrokeCap.Round)
+    // On the active zoomed board, a dark engraved edge keeps pale woodland
+    // trails readable against both yellow grass and dense dark leaves.
+    drawLine(Color(0xFF2E4638).copy(alpha = 0.82f), from, to,
+        strokeWidth = 21f * weight, cap = StrokeCap.Round)
+    drawLine(routeTint.copy(alpha = 0.94f), from, to,
+        strokeWidth = 17.8f * weight, cap = StrokeCap.Round)
     val angle = Math.toDegrees(kotlin.math.atan2(delta.y.toDouble(), delta.x.toDouble())).toFloat()
     rotate(angle, pivot = from) {
         val heightPx = 13.2f * weight
