@@ -319,6 +319,10 @@ private fun CrossroadsApp(
             }.getOrDefault(CrossroadsTrailStyle.ARTWORK)
         )
     }
+    // QA-only art preference, never included in checkpoint or LAN protocol.
+    var woodlandPieces by remember {
+        mutableStateOf(prefs.getBoolean("qa_woodland_pieces_v1", true))
+    }
     var transitionDelay by remember(game) { mutableLongStateOf(0L) }
     var turnReady by remember(game) { mutableStateOf(true) }
     var cameraTrackIndex by remember(game) { mutableIntStateOf(game?.currentIndex ?: 0) }
@@ -990,6 +994,19 @@ private fun CrossroadsApp(
                                         showMatchOptions = false
                                     }
                                 )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(if (woodlandPieces) "Pieces: Woodland"
+                                            else "Pieces: Standard")
+                                    },
+                                    onClick = {
+                                        woodlandPieces = !woodlandPieces
+                                        prefs.edit().putBoolean(
+                                            "qa_woodland_pieces_v1", woodlandPieces
+                                        ).apply()
+                                        showMatchOptions = false
+                                    }
+                                )
                             }
                             DropdownMenuItem(
                                 text = {
@@ -1046,6 +1063,7 @@ private fun CrossroadsApp(
                 // Keep the complete playable board visible, with history in Match options.
                 BoardCanvas(board, state, height = fittedBoardHeight, matchKey = game,
                     boardLook = boardLook, trailStyle = trailStyle,
+                    woodlandPieces = woodlandPieces,
                     stepMillis = speed.stepMillis, focusPlayerIndex = cameraTrackIndex,
                     isTurnTransitioning = !turnReady,
                     startAtCurrent = startedFromCheckpoint)
@@ -1559,7 +1577,8 @@ private fun CrossroadsApp(
                             val mapHeight = (maxWidth * 0.94f).coerceIn(245.dp, 328.dp)
                             BoardCanvas(board, state, height = mapHeight, tokenScale = 1.35f,
                                 animateTokens = false, matchKey = game,
-                                boardLook = boardLook, trailStyle = trailStyle)
+                                boardLook = boardLook, trailStyle = trailStyle,
+                                woodlandPieces = woodlandPieces)
                         }
                         Text("Amber: hazard  •  Green: shelter  •  Purple: mischief",
                             style = MaterialTheme.typography.bodySmall, color = Bark)
@@ -1728,6 +1747,7 @@ private fun BoardCanvas(
     height: Dp = 315.dp,
     boardLook: CrossroadsBoardLook = CrossroadsBoardLook.ILLUSTRATED,
     trailStyle: CrossroadsTrailStyle = CrossroadsTrailStyle.SIMPLE,
+    woodlandPieces: Boolean = false,
     tokenScale: Float = 1f,
     animateTokens: Boolean = true,
     matchKey: Any? = null,
@@ -1750,6 +1770,14 @@ private fun BoardCanvas(
         wanted = if (BuildConfig.DEBUG) trailStyle else CrossroadsTrailStyle.SIMPLE,
         illustratedBoard = boardLook == CrossroadsBoardLook.ILLUSTRATED,
         atlasPresent = trailAtlas != null
+    )
+    val woodlandTokenAtlas = rememberOptionalCrossroadsArt(
+        if (BuildConfig.DEBUG && woodlandPieces) CrossroadsArtSlot.TOKEN_ATLAS else null
+    )
+    val showWoodlandTokens = shouldShowWoodlandToken(
+        isQa = BuildConfig.DEBUG,
+        requested = woodlandPieces,
+        atlasLoaded = woodlandTokenAtlas != null
     )
     val seatImages = listOf(
         rememberOptionalCrossroadsArt(CrossroadsArtSlot.TOKEN_SEAT_1),
@@ -2163,13 +2191,14 @@ private fun BoardCanvas(
                     highlighted = highlighted,
                     traveling = highlighted && isTurnTransitioning
                 )
-                // A transparent miniature sits within the existing numbered
-                // and color-coded rim; it never replaces accessibility labels.
-                seatImages.getOrNull(i)?.let { art ->
-                    val diameter = (tokenRadius * 1.35f).toInt().coerceAtLeast(1)
+                // Local art lives only inside this token's colored/rimmed seat.
+                // Game-state positions, seat index, and readable number stay authoritative.
+                if (showWoodlandTokens && woodlandTokenAtlas != null && i < 4) {
+                    val diameter = (tokenRadius * 1.88f).toInt().coerceAtLeast(1)
                     drawImage(
-                        image = art,
-                        srcSize = IntSize(art.width, art.height),
+                        image = woodlandTokenAtlas,
+                        srcOffset = IntOffset(i * 128, 0),
+                        srcSize = IntSize(128, 128),
                         dstOffset = IntOffset(
                             (marker.x - diameter / 2f).toInt(),
                             (marker.y - diameter / 2f).toInt()
@@ -2177,19 +2206,51 @@ private fun BoardCanvas(
                         dstSize = IntSize(diameter, diameter),
                         filterQuality = FilterQuality.Medium
                     )
+                    // A separate number medallion lets the character remain visible.
+                    val numberAt = marker + Offset(tokenRadius * 0.58f, tokenRadius * 0.62f)
+                    drawCircle(
+                        color = Color(0xFF35553E), radius = tokenRadius * 0.59f,
+                        center = numberAt
+                    )
+                    drawCircle(
+                        color = Color(0xFFF7F0DE), radius = tokenRadius * 0.59f,
+                        center = numberAt,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(
+                            width = 1.4f * tokenScale
+                        )
+                    )
+                } else {
+                    seatImages.getOrNull(i)?.let { art ->
+                        val diameter = (tokenRadius * 1.35f).toInt().coerceAtLeast(1)
+                        drawImage(
+                            image = art,
+                            srcSize = IntSize(art.width, art.height),
+                            dstOffset = IntOffset(
+                                (marker.x - diameter / 2f).toInt(),
+                                (marker.y - diameter / 2f).toInt()
+                            ),
+                            dstSize = IntSize(diameter, diameter),
+                            filterQuality = FilterQuality.Medium
+                        )
+                    }
                 }
+                val numberX = if (showWoodlandTokens) marker.x + tokenRadius * 0.58f
+                    else marker.x
+                val numberY = if (showWoodlandTokens) marker.y + tokenRadius * 0.62f
+                    else marker.y
                 drawIntoCanvas { canvas ->
                     val paint = android.graphics.Paint().apply {
                         color = android.graphics.Color.WHITE
-                        textSize = 12f * tokenScale
+                        textSize = (if (showWoodlandTokens) 9.4f else 12f) * tokenScale
                         isAntiAlias = true
                         isFakeBoldText = true
                         textAlign = android.graphics.Paint.Align.CENTER
                         setShadowLayer(1.6f, 0f, 0.6f,
                             android.graphics.Color.argb(110, 40, 34, 24))
                     }
-                    canvas.nativeCanvas.drawText("${i + 1}", marker.x,
-                        marker.y + 4f * tokenScale, paint)
+                    canvas.nativeCanvas.drawText("${i + 1}", numberX,
+                        numberY + (if (showWoodlandTokens) 3.2f else 4f) * tokenScale,
+                        paint)
                 }
             }
             }

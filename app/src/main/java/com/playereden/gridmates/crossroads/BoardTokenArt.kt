@@ -66,3 +66,8 @@ internal fun DrawScope.drawCrossroadsPiece(
         style = Stroke(width = radius * 0.11f)
     )
 }
+
+/** A missing atlas or non-QA build must keep the familiar numbered pieces. */
+internal fun shouldShowWoodlandToken(
+    isQa: Boolean, requested: Boolean, atlasLoaded: Boolean
+): Boolean = isQa && requested && atlasLoaded
