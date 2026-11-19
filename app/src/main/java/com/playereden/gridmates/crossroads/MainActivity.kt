@@ -1766,32 +1766,54 @@ private fun CrossroadsApp(
             }
         }
         if (showResults && state.phase == Phase.FINISHED && turnReady) {
-            // Standard AlertDialog gave the small-screen results an oversized
-            // lavender shell and pushed the encounter details below the fold.
-            // This tabletop-colored dialog keeps actions visible at all times.
+            // The race outcome is a game moment, not a generic settings popup.
+            // The summary scrolls; rematch and return actions stay visible.
             Dialog(
                 onDismissRequest = { showResults = false },
                 properties = DialogProperties(usePlatformDefaultWidth = false)
             ) {
                 BoxWithConstraints(
                     modifier = Modifier.fillMaxSize()
+                        .background(Color(0xD914251A))
                         .windowInsetsPadding(WindowInsets.safeDrawing),
                     contentAlignment = Alignment.Center
                 ) {
                     Surface(
-                        modifier = Modifier.fillMaxWidth(0.91f)
-                            .heightIn(max = (maxHeight - 24.dp).coerceAtLeast(1.dp)),
-                        shape = MaterialTheme.shapes.extraLarge,
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(horizontal = 12.dp)
+                            .heightIn(max = (maxHeight - 24.dp).coerceAtLeast(260.dp)),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(25.dp),
                         color = Cream,
-                        shadowElevation = 10.dp
+                        border = androidx.compose.foundation.BorderStroke(
+                            2.dp, Color(0xFFC9AE78)
+                        ),
+                        shadowElevation = 16.dp
                     ) {
                         Column(
-                            modifier = Modifier.padding(horizontal = 17.dp, vertical = 16.dp),
+                            modifier = Modifier.padding(12.dp),
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Text("Journey complete",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold, color = Forest)
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                                color = Color(0xFF284C38),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    1.5.dp, Color(0xFFD9C08C)
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 13.dp),
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
+                                    Text("JOURNEY COMPLETE", color = Color(0xFFFFF0CD),
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.titleMedium)
+                                    Text(CrossroadsCourse.title(board.id),
+                                        color = Color(0xFFE6D5AA),
+                                        style = MaterialTheme.typography.labelMedium)
+                                }
+                            }
                             CrossroadsResultsContent(
                                 state = state,
                                 courseId = board.id,
@@ -1802,10 +1824,12 @@ private fun CrossroadsApp(
                                 onClick = { rematch() },
                                 enabled = lanRole != LanRole.GUEST &&
                                     (lanRole != LanRole.HOST || lanConnected),
-                                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Forest)
                             ) {
-                                Text(if (lanRole == LanRole.GUEST) "Host starts next match"
-                                    else "Rematch")
+                                Text(if (lanRole == LanRole.GUEST)
+                                    "HOST STARTS NEXT RACE" else "RACE AGAIN")
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -1813,18 +1837,14 @@ private fun CrossroadsApp(
                             ) {
                                 OutlinedButton(
                                     onClick = { showResults = false },
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                                     contentPadding = PaddingValues(horizontal = 6.dp)
-                                ) {
-                                    Text("View board")
-                                }
+                                ) { Text("View course") }
                                 TextButton(
                                     onClick = { leaveGame() },
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                                     contentPadding = PaddingValues(horizontal = 6.dp)
-                                ) {
-                                    Text("Main menu")
-                                }
+                                ) { Text("Main menu") }
                             }
                         }
                     }
