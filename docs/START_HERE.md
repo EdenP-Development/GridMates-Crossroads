@@ -1,3 +1,7 @@
+> **Current planning entrypoint (Nov 19, 2026):** [Project State](PROJECT_STATE_2026_11_19.md) and [EXPERIENCE-60 Complete Turn QA](EXPERIENCE_60_COMPLETE_TURN_QA.md). The art slots and QA1270 descriptions below are **historical snapshots**; illustrated art is now physically installed in later draft branches, and QA1479 plus movement #59 have passed Android CI. Neither is a public release. No game code is merged to `main`.
+
+---
+
 **ARTREADY-38 (November 18, 2026):** The next art handoff is [Original Artwork Asset Bible and Import QA](ARTREADY_38_ASSET_BIBLE_AND_IMPORT_QA.md). The Android app supports optional packaged art for home, three backplates, encounters, finish and numbered miniature portraits; 12 empty slots have procedural fallback and a provenance/PNG/size check. **No finished bitmap art is imported yet.** This milestone is stacked above the draft GAMEPLAY-37 encounter rules; both remain unmerged and require exact-head Android QA plus owner phone review.
 
 ---
