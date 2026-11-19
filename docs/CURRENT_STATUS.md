@@ -1,3 +1,9 @@
+# Current status pointer — November 19, 2026
+
+The newest verified project summary is **[PROJECT_STATE_2026_11_19.md](PROJECT_STATE_2026_11_19.md)**. In brief: three illustrated courses, Solo/Pass & Play, save/replay, experimental offline decisions, and LAN prototype exist in a stacked unmerged draft. Owner testing of **QA1479** confirmed marked gameplay visibility improvement; #59 movement visuals passed Android QA; #60 integrated action HUD is still under review. **None of these constitute an approved public release or a real two-phone LAN test.** Historical milestone receipts below are retained for traceability.
+
+---
+
 # LAN-22 — Major feature pivot: two-phone Nearby Play (November 17, 2026)
 
 **Source implementation + socket-level JVM tests committed; Android build, two-device real-Wi-Fi acceptance and production-hardening pending.** The owner requested that we stop overprioritizing minor UI polish and build planned features like LAN multiplayer. The new [LAN-22 feature and two-phone QA handoff](LAN_22_TWO_PHONE_VERTICAL_SLICE_QA.md) implements a minimal **Host nearby / Join nearby** flow on two Android phones using NSD room discovery, manual IP fallback, optional room code and one host-owned race. The host authorizes seat 0 and checks remote seat 1 ROLL/ROUTE/TARGET against the same core `GameSession`; guests verify each versioned host snapshot. The host controls rematch, and a dropped guest can attempt same-process token-based rejoin. No public matchmaking, accounts or mandatory cloud.
