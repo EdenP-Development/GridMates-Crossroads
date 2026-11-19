@@ -15,6 +15,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import com.playereden.crossroads.core.Phase
 
@@ -89,4 +90,13 @@ internal fun gameActionDockMaxFraction(phase: Phase): Float = when (phase) {
     Phase.ENCOUNTER -> 0.37f
     Phase.TARGET -> 0.39f
     Phase.FINISHED -> 0.30f
+}
+
+/** Protect the primary button group from being clipped on short handsets. */
+internal fun gameActionDockMinimumHeight(phase: Phase): Dp = when (phase) {
+    Phase.ROLL -> 204.dp
+    Phase.ROUTE -> 246.dp
+    Phase.ENCOUNTER -> 272.dp
+    Phase.TARGET -> 250.dp
+    Phase.FINISHED -> 175.dp
 }
