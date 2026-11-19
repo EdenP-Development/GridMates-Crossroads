@@ -57,6 +57,38 @@ class CrossroadsPresentationTest {
         assertEquals(source, CrossroadsCameraPreset.forkAnchor(source, emptyList(), true))
     }
 
+    @Test fun edgeOfWorldTravelerRemainsAboveActionDock() {
+        val height = 1536f
+        val zoom = 2.4f
+        val lo = CrossroadsCameraPreset.boundFollowVertical(
+            -10000f, height, 0f, height, zoom, Phase.ROLL, true
+        )
+        val screenBottom = height / 2f + (height - height / 2f) * zoom + lo
+        assertEquals("World bottom should live under the roll dock",
+            height * .68f, screenBottom, .01f)
+
+        val hi = CrossroadsCameraPreset.boundFollowVertical(
+            10000f, height, 0f, height, zoom, Phase.ROLL, true
+        )
+        val screenTop = height / 2f + (0f - height / 2f) * zoom + hi
+        assertEquals("World top should live under the status HUD",
+            height * .18f, screenTop, .01f)
+
+        val encounter = CrossroadsCameraPreset.boundFollowVertical(
+            -10000f, height, 0f, height, zoom, Phase.ENCOUNTER, true
+        )
+        assertTrue("Tall encounter dock needs more reserved space", encounter < lo)
+    }
+
+    @Test fun fullMapNeverReceivesImmersiveHudClamping() {
+        val expected = com.playereden.crossroads.core.CameraGeometry.boundTranslation(
+            -10000f, 800f, 18f, 782f, 2f
+        )
+        assertEquals(expected, CrossroadsCameraPreset.boundFollowVertical(
+            -10000f, 800f, 18f, 782f, 2f, Phase.ENCOUNTER, false
+        ), .0001f)
+    }
+
     @Test fun onlyLiveMatchGetsLargerRoadsAndTravelers() {
         assertEquals(1.0f, CrossroadsCameraPreset.trailScale(false), .0001f)
         assertEquals(1.0f, CrossroadsCameraPreset.markerScale(false), .0001f)
