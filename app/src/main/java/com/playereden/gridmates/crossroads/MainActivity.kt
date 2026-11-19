@@ -51,6 +51,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.platform.LocalContext
@@ -803,6 +804,23 @@ private fun CrossroadsApp(
         localIsCurrentSeat && !state.players[state.playerIndex].isBot &&
         game.availableRoutes().size >= 2 && turnReady &&
         !routeDialogDismissed && !inspectBoard && !confirmExit && !showGuide
+    // A real game viewport hides Android system chrome during an active match.
+    // The home / lobby / dialogs retain their normal app presentation.
+    val matchIsImmersive = game != null && lanScreen == LanScreen.NONE
+    DisposableEffect(matchIsImmersive, context) {
+        val activity = context as ComponentActivity
+        val controller = WindowInsetsControllerCompat(activity.window, activity.window.decorView)
+        if (matchIsImmersive) {
+            controller.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+        } else {
+            controller.show(WindowInsetsCompat.Type.systemBars())
+        }
+        onDispose {
+            controller.show(WindowInsetsCompat.Type.systemBars())
+        }
+    }
     BackHandler(
         enabled = lanScreen == LanScreen.NONE && game != null && state != null &&
             !routeChoiceSheetVisible && !showGuide && !showJournal &&
@@ -879,14 +897,15 @@ private fun CrossroadsApp(
                 .background(Color(0xFF304433))
                 .windowInsetsPadding(WindowInsets.safeDrawing)
         ) {
-            val boardSide = (maxWidth - 12.dp)
-                .coerceAtMost(maxHeight - 110.dp).coerceAtLeast(220.dp)
+            // The world extends behind both HUD layers. It is a cropped
+            // square, never a stretched portrait background or board card.
             Box(
-                modifier = Modifier.fillMaxWidth()
-                    .padding(top = 126.dp, start = 6.dp, end = 6.dp),
-                contentAlignment = Alignment.TopCenter
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                BoardCanvas(board, state, height = boardSide, matchKey = game,
+                BoardCanvas(board, state, height = maxHeight,
+                    immersiveWorld = true,
+                    matchKey = game,
                     boardLook = boardLook, trailStyle = trailStyle,
                     woodlandPieces = woodlandPieces,
                     paintedMarkers = paintedMarkers,
@@ -911,7 +930,7 @@ private fun CrossroadsApp(
             // Compact on-board scoreboard and controls, without a page header.
             Column(
                 modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth()
-                    .background(Color(0xF6F7F0DE))
+                    .background(Color(0xDD233B2B))
                     .padding(bottom = 2.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
@@ -920,14 +939,15 @@ private fun CrossroadsApp(
                 horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(if (BuildConfig.DEBUG) "CROSSROADS · QA" else "CROSSROADS",
-                    style = MaterialTheme.typography.labelMedium, color = Forest)
+                    style = MaterialTheme.typography.labelMedium, color = Color(0xFFF8EED7))
                 TextButton(onClick = {
                     speed = if (speed == PresentationSpeed.COZY)
                         PresentationSpeed.BRISK else PresentationSpeed.COZY
                     prefs.edit().putString("match_pace_v1", speed.name).apply()
                 }) {
                     Text(if (speed == PresentationSpeed.COZY) "Pace: Cozy" else "Pace: Brisk",
-                        style = MaterialTheme.typography.labelMedium)
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color(0xFFF8EED7))
                 }
             }
             val displayedSeat = (if (!turnReady) cameraTrackIndex else state.playerIndex)
@@ -970,14 +990,14 @@ private fun CrossroadsApp(
                     verticalAlignment = Alignment.CenterVertically) {
                     Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
                         Text(CrossroadsCourse.title(board.id),
-                            fontWeight = FontWeight.Bold, color = Forest,
+                            fontWeight = FontWeight.Bold, color = Color(0xFFF8EED7),
                             style = MaterialTheme.typography.bodyMedium)
                         Text("Every path is a choice.",
-                            color = Bark, style = MaterialTheme.typography.labelSmall)
+                            color = Color(0xFFDCCDA9), style = MaterialTheme.typography.labelSmall)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         TextButton(onClick = { inspectBoard = true }) {
-                            Text("Full map", color = Forest)
+                            Text("Full map", color = Color(0xFFF8EED7))
                         }
                     Box {
                         IconButton(
@@ -985,7 +1005,7 @@ private fun CrossroadsApp(
                             modifier = Modifier.size(48.dp).semantics {
                                 contentDescription = "Match options"
                             }
-                        ) { Text("⋯", fontSize = 25.sp, color = Forest) }
+                        ) { Text("⋯", fontSize = 25.sp, color = Color(0xFFF8EED7)) }
                         DropdownMenu(
                             expanded = showMatchOptions,
                             onDismissRequest = { showMatchOptions = false },
@@ -1110,16 +1130,23 @@ private fun CrossroadsApp(
             }
             // Context-sensitive action dock, reachable with one thumb. Its
             // contents scroll as a unit on small phones / large system fonts.
+            val dockMaxFraction = when (state.phase) {
+                Phase.ROLL -> 0.36f
+                Phase.ROUTE -> 0.32f
+                Phase.ENCOUNTER -> 0.49f
+                Phase.TARGET -> 0.43f
+                Phase.FINISHED -> 0.42f
+            }
             Surface(
-                color = Color(0xFFF1E4C8),
-                shadowElevation = 12.dp,
+                color = Color(0xF4F1E4C8),
+                shadowElevation = 14.dp,
                 tonalElevation = 0.dp,
-                border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF9D865E)),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(
-                    topStart = 22.dp, topEnd = 22.dp
-                ),
-                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-                    .heightIn(max = maxHeight * 0.57f)
+                border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF967D54)),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(22.dp),
+                modifier = Modifier.align(Alignment.BottomCenter)
+                    .padding(horizontal = 10.dp, vertical = 9.dp)
+                    .fillMaxWidth()
+                    .heightIn(max = maxHeight * dockMaxFraction)
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
@@ -1792,6 +1819,7 @@ private fun BoardCanvas(
     board: BoardDefinition,
     state: Snapshot,
     height: Dp = 315.dp,
+    immersiveWorld: Boolean = false,
     boardLook: CrossroadsBoardLook = CrossroadsBoardLook.ILLUSTRATED,
     trailStyle: CrossroadsTrailStyle = CrossroadsTrailStyle.SIMPLE,
     woodlandPieces: Boolean = false,
@@ -1937,11 +1965,8 @@ private fun BoardCanvas(
     )
     val viewportWidth = canvasDimensions.width.toFloat()
     val viewportHeight = canvasDimensions.height.toFloat()
-    val boardPadding = 18f
-    val focusPx = Offset(
-        boardPadding + followedFocus.x * (viewportWidth - 2f * boardPadding).coerceAtLeast(0f),
-        boardPadding + followedFocus.y * (viewportHeight - 2f * boardPadding).coerceAtLeast(0f)
-    )
+    val worldFrame = BoardWorldViewport.frame(canvasDimensions, immersiveWorld)
+    val focusPx = worldFrame.position(followedFocus.x, followedFocus.y)
     val desiredTranslation = when (cameraMode) {
         BoardCameraMode.FOLLOW -> Offset(
             CameraGeometry.centerTranslation(viewportWidth / 2f, focusPx.x, cameraZoom),
@@ -1951,9 +1976,9 @@ private fun BoardCanvas(
     }
     val actualTranslation = Offset(
         CameraGeometry.boundTranslation(desiredTranslation.x, viewportWidth,
-            boardPadding, viewportWidth - boardPadding, cameraZoom),
+            worldFrame.left, worldFrame.right, cameraZoom),
         CameraGeometry.boundTranslation(desiredTranslation.y, viewportHeight,
-            boardPadding, viewportHeight - boardPadding, cameraZoom)
+            worldFrame.top, worldFrame.bottom, cameraZoom)
     )
     // Keep the pointer handler stable while receiving the newest following pose.
     val liveZoom by rememberUpdatedState(cameraZoom)
@@ -1971,10 +1996,7 @@ private fun BoardCanvas(
         focusedRank.coerceAtLeast(0), focusedGroup.size.coerceAtLeast(1), tokenScale
     )
     val livePieceLocation by rememberUpdatedState(
-        Offset(
-            boardPadding + active.x * (viewportWidth - 2f * boardPadding).coerceAtLeast(0f) + focusedOffset.x,
-            boardPadding + active.y * (viewportHeight - 2f * boardPadding).coerceAtLeast(0f) + focusedOffset.y
-        )
+        worldFrame.position(active.x, active.y) + focusedOffset
     )
     // Pointer handlers persist across Compose recompositions; keep the latest
     // legal destinations and action callback bound to the latest phase.
@@ -1986,11 +2008,15 @@ private fun BoardCanvas(
     )
     val liveRouteChosen by rememberUpdatedState(onRouteChosen)
     val density = LocalDensity.current
-    val insetPx = with(density) { 8.dp.toPx() }
+    val insetPx = with(density) { if (immersiveWorld) 0f else 8.dp.toPx() }
     val pieceTapRadiusPx = with(density) { 32.dp.toPx() }
     val routeTapRadiusPx = with(density) { 26.dp.toPx() }
 
-    Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEDE4D0))) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF263D2C)),
+        shape = if (immersiveWorld) androidx.compose.foundation.shape.RoundedCornerShape(0.dp)
+            else MaterialTheme.shapes.medium
+    ) {
         Box(
             modifier = Modifier.fillMaxWidth().height(height).clipToBounds()
                 .semantics {
@@ -2029,7 +2055,8 @@ private fun BoardCanvas(
                                     insetPx = insetPx,
                                     zoom = liveZoom,
                                     translation = liveTranslation,
-                                    touchRadiusPx = routeTapRadiusPx
+                                    touchRadiusPx = routeTapRadiusPx,
+                                    immersiveWorld = immersiveWorld
                                 )
                             }
                             if (routeHit != null) {
@@ -2073,16 +2100,17 @@ private fun BoardCanvas(
                         manualZoom = nextZoom
                         manualTranslation = Offset(
                             CameraGeometry.boundTranslation(nextTranslation.x, canvasDimensions.width.toFloat(),
-                                boardPadding, canvasDimensions.width.toFloat() - boardPadding, nextZoom),
+                                worldFrame.left, worldFrame.right, nextZoom),
                             CameraGeometry.boundTranslation(nextTranslation.y, canvasDimensions.height.toFloat(),
-                                boardPadding, canvasDimensions.height.toFloat() - boardPadding, nextZoom)
+                                worldFrame.top, worldFrame.bottom, nextZoom)
                         )
                         cameraMode = BoardCameraMode.MANUAL
                     }
                 }
         ) {
             Canvas(
-                modifier = Modifier.fillMaxSize().padding(8.dp)
+                modifier = Modifier.fillMaxSize()
+                    .then(if (immersiveWorld) Modifier else Modifier.padding(8.dp))
                     .onSizeChanged { canvasDimensions = it }
                     .graphicsLayer {
                         scaleX = cameraZoom
@@ -2091,10 +2119,13 @@ private fun BoardCanvas(
                         translationY = actualTranslation.y
                     }
             ) {
-            val left = 18f
-            val top = 18f
-            val drawWidth = size.width - left * 2
-            val drawHeight = size.height - top * 2
+            val frame = BoardWorldViewport.frame(
+                IntSize(size.width.toInt(), size.height.toInt()), immersiveWorld
+            )
+            val left = frame.left
+            val top = frame.top
+            val drawWidth = frame.width
+            val drawHeight = frame.height
             fun position(id: String): Offset {
                 val node = board.node(id)
                 return Offset(left + node.x * drawWidth, top + node.y * drawHeight)
