@@ -1841,7 +1841,12 @@ private fun CrossroadsApp(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 OutlinedButton(
-                                    onClick = { showResults = false },
+                                    onClick = {
+                                        // View the complete finished course, not merely
+                                        // dismiss the victory result onto the live camera.
+                                        showResults = false
+                                        inspectBoard = true
+                                    },
                                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                                     contentPadding = PaddingValues(horizontal = 6.dp)
                                 ) { Text("View course") }
