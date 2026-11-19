@@ -2416,6 +2416,32 @@ private fun BoardCanvas(
                 }
             }
             }
+            // A conventional game-camera control floats above the world.
+            // It never changes engine state, route selection, or saved matches.
+            if (immersiveWorld && animateTokens) {
+                Surface(
+                    onClick = {
+                        cameraMode = BoardCameraMode.FOLLOW
+                        manualZoom = 1f
+                        manualTranslation = Offset.Zero
+                    },
+                    modifier = Modifier.align(Alignment.TopEnd)
+                        .padding(top = if (height < 440.dp) 94.dp else 116.dp, end = 12.dp)
+                        .size(48.dp)
+                        .semantics { contentDescription = "Follow active player" },
+                    shape = androidx.compose.foundation.shape.CircleShape,
+                    color = Color(0xEA233B2B),
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.5.dp, Color(0xFFE7D3A4)
+                    ),
+                    shadowElevation = 6.dp
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("⌖", color = Color(0xFFF8EED7),
+                            fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
 
         }
     }
