@@ -978,10 +978,16 @@ private fun CrossroadsApp(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(CrossroadsCourse.title(board.id),
-                        fontWeight = FontWeight.Bold, color = Color(0xFFF8EED7),
+                    val matchBrand = if (BuildConfig.DEBUG) "CROSSROADS · QA" else "CROSSROADS"
+                    Text(
+                        "$matchBrand · ${CrossroadsCourse.title(board.id)}",
+                        modifier = Modifier.weight(1f),
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFF8EED7),
                         style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1)
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         TextButton(onClick = { inspectBoard = true }) {
                             Text("Full map", color = Color(0xFFF8EED7))
