@@ -71,3 +71,14 @@ internal fun DrawScope.drawCrossroadsPiece(
 internal fun shouldShowWoodlandToken(
     isQa: Boolean, requested: Boolean, atlasLoaded: Boolean
 ): Boolean = isQa && requested && atlasLoaded
+
+/**
+ * Keep portraits as an enlargement detail, not tiny, overlapping dots on
+ * the fit-to-board map. The stable colored/numbered coin is always available.
+ *
+ * Zoom is camera-only; no game state, token location or hit radius changes.
+ */
+internal fun shouldDrawWoodlandPortrait(
+    artAvailable: Boolean,
+    cameraZoom: Float
+): Boolean = artAvailable && cameraZoom.isFinite() && cameraZoom >= 1.65f
