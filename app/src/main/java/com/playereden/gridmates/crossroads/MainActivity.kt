@@ -1993,7 +1993,12 @@ private fun BoardCanvas(
     val actualTranslation = Offset(
         CameraGeometry.boundTranslation(desiredTranslation.x, viewportWidth,
             worldFrame.left, worldFrame.right, cameraZoom),
-        CameraGeometry.boundTranslation(desiredTranslation.y, viewportHeight,
+        if (cameraMode == BoardCameraMode.FOLLOW)
+            CrossroadsCameraPreset.boundFollowVertical(
+                desiredTranslation.y, viewportHeight, worldFrame.top,
+                worldFrame.bottom, cameraZoom, state.phase, immersiveWorld
+            )
+        else CameraGeometry.boundTranslation(desiredTranslation.y, viewportHeight,
             worldFrame.top, worldFrame.bottom, cameraZoom)
     )
     // Keep the pointer handler stable while receiving the newest following pose.
