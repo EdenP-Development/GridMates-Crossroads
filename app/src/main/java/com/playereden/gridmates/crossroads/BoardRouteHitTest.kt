@@ -3,7 +3,6 @@ package com.playereden.gridmates.crossroads
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
 import com.playereden.crossroads.core.BoardNode
-import kotlin.math.hypot
 import kotlin.math.max
 
 /** Visual-only hit testing. Callers must supply the engine's legal route nodes. */
