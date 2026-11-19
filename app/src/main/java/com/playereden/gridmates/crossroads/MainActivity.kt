@@ -328,6 +328,9 @@ private fun CrossroadsApp(
     var paintedMarkers by remember {
         mutableStateOf(prefs.getBoolean("qa_painted_markers_v1", true))
     }
+    // UI-only info disclosure: the game stays visible, while complete
+    // roll odds and the last action remain one tap away.
+    var showHudDetails by remember(game) { mutableStateOf(false) }
     var transitionDelay by remember(game) { mutableLongStateOf(0L) }
     var turnReady by remember(game) { mutableStateOf(true) }
     var cameraTrackIndex by remember(game) { mutableIntStateOf(game?.currentIndex ?: 0) }
@@ -933,31 +936,20 @@ private fun CrossroadsApp(
             // Compact on-board scoreboard and controls, without a page header.
             Column(
                 modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth()
-                    .background(Color(0xDD233B2B))
-                    .padding(bottom = 2.dp),
+                    .padding(horizontal = 8.dp, vertical = 7.dp)
+                    .background(
+                        Color(0xE0284535),
+                        androidx.compose.foundation.shape.RoundedCornerShape(17.dp)
+                    )
+                    .padding(horizontal = 3.dp, vertical = 3.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 2.dp, bottom = 0.dp),
-                horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(if (BuildConfig.DEBUG) "CROSSROADS · QA" else "CROSSROADS",
-                    style = MaterialTheme.typography.labelMedium, color = Color(0xFFF8EED7))
-                TextButton(onClick = {
-                    speed = if (speed == PresentationSpeed.COZY)
-                        PresentationSpeed.BRISK else PresentationSpeed.COZY
-                    prefs.edit().putString("match_pace_v1", speed.name).apply()
-                }) {
-                    Text(if (speed == PresentationSpeed.COZY) "Pace: Cozy" else "Pace: Brisk",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Color(0xFFF8EED7))
-                }
-            }
             val displayedSeat = (if (!turnReady) cameraTrackIndex else state.playerIndex)
                 .coerceIn(state.players.indices)
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 1.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                modifier = Modifier.fillMaxWidth()
+                    .padding(horizontal = 5.dp, vertical = 2.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 state.players.forEachIndexed { i, player ->
                     val isFocused = i == displayedSeat && state.phase != Phase.FINISHED
@@ -974,33 +966,43 @@ private fun CrossroadsApp(
                                 if (player.shield) ", shielded" else ""
                         },
                         color = if (isFocused)
-                            Color(0xFFE6E9D6) else Color(0xFFF0E9D9),
+                            Color(0xE84F7756) else Color(0xB634513C),
                         shape = MaterialTheme.shapes.medium
                     ) {
                         Row(modifier = Modifier.padding(horizontal = 7.dp, vertical = 5.dp),
                             horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.size(12.dp).background(PlayerColors[i], androidx.compose.foundation.shape.CircleShape))
                             Spacer(Modifier.width(5.dp))
-                            Text(player.name, fontSize = 12.sp, fontWeight =
+                            Text(player.name, fontSize = 12.sp,
+                                color = Color(0xFFF9EED5), fontWeight =
                                 if (isFocused) FontWeight.Bold else FontWeight.Normal)
-                            if (player.shield) Text(" 🛡", fontSize = 11.sp)
+                            if (player.shield) Text(" 🛡", fontSize = 11.sp,
+                                color = Color(0xFFF9EED5))
                         }
                     }
                 }
             }
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                Row(modifier = Modifier.fillMaxWidth()
+                        .padding(start = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically) {
-                    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                        Text(CrossroadsCourse.title(board.id),
-                            fontWeight = FontWeight.Bold, color = Color(0xFFF8EED7),
-                            style = MaterialTheme.typography.bodyMedium)
-                        Text("Every path is a choice.",
-                            color = Color(0xFFDCCDA9), style = MaterialTheme.typography.labelSmall)
-                    }
+                    Text(CrossroadsCourse.title(board.id),
+                        fontWeight = FontWeight.Bold, color = Color(0xFFF8EED7),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f))
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        TextButton(onClick = {
+                            speed = if (speed == PresentationSpeed.COZY)
+                                PresentationSpeed.BRISK else PresentationSpeed.COZY
+                            prefs.edit().putString("match_pace_v1", speed.name).apply()
+                        }) {
+                            Text(if (speed == PresentationSpeed.COZY) "Cozy" else "Brisk",
+                                color = Color(0xFFF8EED7),
+                                style = MaterialTheme.typography.labelSmall)
+                        }
                         TextButton(onClick = { inspectBoard = true }) {
-                            Text("Full map", color = Color(0xFFF8EED7))
+                            Text("Map", color = Color(0xFFF8EED7))
                         }
                     Box {
                         IconButton(
@@ -1174,25 +1176,37 @@ private fun CrossroadsApp(
                     val trackedName = state.players[
                         cameraTrackIndex.coerceIn(state.players.indices)
                     ].name
-                    GameHudTurnStrip(
-                        title = if (state.phase == Phase.FINISHED && !turnReady) "Approaching the finish…"
-                        else if (state.phase == Phase.FINISHED) "Journey complete!"
-                        else if (!turnReady && !rollingDie) {
-                            if (state.players[cameraTrackIndex.coerceIn(state.players.indices)].name == "You")
-                                "You're on the move…"
-                            else "$trackedName is on the move…"
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        GameHudTurnStrip(
+                            title = if (state.phase == Phase.FINISHED && !turnReady) "Approaching the finish…"
+                            else if (state.phase == Phase.FINISHED) "Journey complete!"
+                            else if (!turnReady && !rollingDie) {
+                                if (state.players[cameraTrackIndex.coerceIn(state.players.indices)].name == "You")
+                                    "You're on the move…"
+                                else "$trackedName is on the move…"
+                            }
+                            else if (currentName == "You") "Round $round · Your turn"
+                            else "Round $round · $currentName's turn",
+                            phase = state.phase,
+                            moving = !turnReady && !rollingDie,
+                            seatColor = PlayerColors[
+                                (if (!turnReady) cameraTrackIndex else state.playerIndex)
+                                    .coerceIn(state.players.indices)
+                            ],
+                            botTurn = state.players[state.playerIndex].isBot,
+                            modifier = Modifier.weight(1f)
+                        )
+                        TextButton(
+                            onClick = { showHudDetails = !showHudDetails },
+                            modifier = Modifier.widthIn(min = 58.dp)
+                        ) {
+                            Text(if (showHudDetails) "Less" else "Info",
+                                color = Forest, fontWeight = FontWeight.Bold)
                         }
-                        else if (currentName == "You") "Round $round · Your turn"
-                        else "Round $round · $currentName's turn",
-                        phase = state.phase,
-                        moving = !turnReady && !rollingDie,
-                        seatColor = PlayerColors[
-                            (if (!turnReady) cameraTrackIndex else state.playerIndex)
-                                .coerceIn(state.players.indices)
-                        ],
-                        botTurn = state.players[state.playerIndex].isBot,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    }
                     // A single helpful cue replaces any extra Pass & Play
                     // handoff dialog: next player can roll immediately.
                     if (lanRole == LanRole.OFFLINE &&
@@ -1208,6 +1222,7 @@ private fun CrossroadsApp(
                     val initialInstructions = state.turn == 1 &&
                         state.phase == Phase.ROLL && state.die == null &&
                         state.encounters.isEmpty()
+                    if (showHudDetails) {
                     Text(
                         if (initialInstructions && game.playtestRules)
                             "Choose a travel style to begin."
@@ -1221,6 +1236,7 @@ private fun CrossroadsApp(
                         style = MaterialTheme.typography.bodySmall,
                         color = Bark
                     )
+                    }
                     if (recoveryWarning != null) {
                         Text(recoveryWarning!!, style = MaterialTheme.typography.labelSmall,
                             color = Color(0xFF955B33))
@@ -1307,12 +1323,14 @@ private fun CrossroadsApp(
                                         fontWeight = FontWeight.SemiBold,
                                         color = Forest
                                     )
+                                    if (showHudDetails) {
                                     Text(
                                         "Steady: 4 spaces and one setback blocked. " +
                                             "Push: roll 1–6; 1–2 stumbles 1 space, 3–6 moves 5–8.",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = Bark
                                     )
+                                    }
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1386,12 +1404,14 @@ private fun CrossroadsApp(
                                 val routeCount = game.availableRoutes().size
                                 Text(fork?.title ?: "Choose your route",
                                     fontWeight = FontWeight.SemiBold, color = Forest)
+                                if (showHudDetails) {
                                 Text(
                                     "Tap a glowing path on the board to travel. " +
                                         "Use Compare for distance and risk details.",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = Bark
                                 )
+                                }
                                 Button(
                                     onClick = { routeDialogDismissed = false },
                                     enabled = turnReady && routeCount >= 2,
