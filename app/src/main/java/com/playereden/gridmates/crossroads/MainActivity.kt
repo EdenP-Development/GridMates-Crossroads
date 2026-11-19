@@ -9,6 +9,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateOffsetAsState
@@ -930,6 +931,45 @@ private fun CrossroadsApp(
                     isTurnTransitioning = !turnReady,
                     startAtCurrent = startedFromCheckpoint)
             }
+            // Die anticipation takes place over the world, not in a dialog.
+            // The engine still rolls once after this decorative preview.
+            AnimatedVisibility(
+                visible = rollingDie && state.phase == Phase.ROLL && localIsCurrentSeat,
+                modifier = Modifier.align(Alignment.Center).offset(y = (-82).dp),
+                enter = fadeIn(tween(durationMillis = 95)),
+                exit = fadeOut(tween(durationMillis = 120))
+            ) {
+                Surface(
+                    color = Color(0xF5F5E6CA),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(22.dp),
+                    border = androidx.compose.foundation.BorderStroke(3.dp, Color(0xFFD9B776)),
+                    shadowElevation = 14.dp,
+                    modifier = Modifier.semantics {
+                        contentDescription = "Rolling travel die"
+                    }
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 22.dp, vertical = 15.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        DieFace(rollingFace,
+                            modifier = Modifier.size(66.dp).graphicsLayer {
+                                rotationZ = rollingTilt
+                            },
+                            announceFace = false)
+                        Text(
+                            when (queuedLabRoll) {
+                                LabRoll.STEADY -> "STEADY"
+                                LabRoll.PUSH -> "PUSH"
+                                else -> "ROLLING…"
+                            },
+                            color = Forest, fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+                }
+            }
             // Compact on-board scoreboard and controls, without a page header.
             Column(
                 modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth()
@@ -957,15 +997,20 @@ private fun CrossroadsApp(
                             contentDescription = "Player ${i + 1}, ${player.name}, $seatStatus" +
                                 if (player.shield) ", shielded" else ""
                         },
-                        color = if (isFocused)
-                            Color(0xFFE6E9D6) else Color(0xFFF0E9D9),
-                        shape = MaterialTheme.shapes.medium
+                        color = if (isFocused) Color(0xF0446048)
+                            else Color(0xD9233B2B),
+                        border = androidx.compose.foundation.BorderStroke(
+                            if (isFocused) 1.6.dp else 0.8.dp,
+                            if (isFocused) Color(0xFFF0DDAA) else Color(0x608AB08B)
+                        ),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp)
                     ) {
                         Row(modifier = Modifier.padding(horizontal = 7.dp, vertical = 5.dp),
                             horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.size(12.dp).background(PlayerColors[i], androidx.compose.foundation.shape.CircleShape))
                             Spacer(Modifier.width(5.dp))
-                            Text(player.name, fontSize = 12.sp, fontWeight =
+                            Text(player.name, fontSize = 12.sp,
+                                color = Color(0xFFF9EED5), fontWeight =
                                 if (isFocused) FontWeight.Bold else FontWeight.Normal)
                             if (player.shield) Text(" 🛡", fontSize = 11.sp)
                         }
@@ -980,14 +1025,20 @@ private fun CrossroadsApp(
                 ) {
                     val matchBrand = if (BuildConfig.DEBUG) "CROSSROADS · QA" else "CROSSROADS"
                     Text(
-                        "$matchBrand · ${CrossroadsCourse.title(board.id)}",
-                        modifier = Modifier.weight(1f),
+                        CrossroadsCourse.title(board.id),
+                        modifier = Modifier.weight(1f).semantics {
+                            contentDescription = "$matchBrand · ${CrossroadsCourse.title(board.id)}"
+                        },
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFF8EED7),
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
+                    if (BuildConfig.DEBUG) {
+                        Text("QA", color = Color(0xFFF0D7A5),
+                            style = MaterialTheme.typography.labelSmall)
+                    }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         TextButton(onClick = { inspectBoard = true }) {
                             Text("Full map", color = Color(0xFFF8EED7))
