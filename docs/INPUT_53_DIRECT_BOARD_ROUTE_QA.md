@@ -9,8 +9,8 @@ Owner reported that even with illustrated artwork, Crossroads feels like an app 
 - When a **local human** is currently selecting a route and the previous movement is complete, **only the engine's current `availableRoutes()`** are marked with a restrained white/green, amber, or purple outline on their *actual graph edges* and exit nodes.
 - Tap the highlighted road segment or its endpoint: `BoardRouteHitTest` maps the screen touch into rendered board coordinates using canvas padding, camera zoom and translation. The selected exact route ID is passed back through existing `localAction(LanAction(ROUTE, id))`. There are no new game rules, route shortcuts, or direct snapshot mutations.
 - Taps close to the shared fork center, outside reach, or ambiguous between close routes do **nothing**. The alternative list of choices remains tappable and screen-reader accessible.
-- Three-way route sheet is now **opt-in**: choose directly from the highlighted board or press `Compare all 3 routes` in the bottom HUD dock to open the existing illustrated/tactile selection sheet with all risk/remaining-distance details.
-- The two-route list remains in the dock as an explicit fallback. No player is forced to use screen-space path tapping.
+- The same **opt-in route comparison bottom sheet** serves two-way and three-way forks. Choose directly from the highlighted board or press `Compare 2 paths` / `Compare 3 paths` in the compact bottom HUD dock to inspect risk, distance, and the detailed descriptions before selecting a listed route.
+- No player is forced to use screen-space path tapping. All legal route buttons remain accessible in the sheet, with scrolling on small phones.
 - Outside the route phase, in AI turns, while an animation is moving, or when the local seat doesn't have authority, no path targets are exposed. Existing tap-to-recenter, pan, pinch and double-tap continue.
 - The full-map inspection remains **read-only** and does not enable accidental path selections. The host/guest local authority checks and core engine validation are unchanged.
 
