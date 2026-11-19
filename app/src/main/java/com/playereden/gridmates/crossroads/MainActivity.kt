@@ -1896,6 +1896,11 @@ private fun BoardCanvas(
     val landingGlow = remember(matchKey, board.id, state.players.size, animateTokens) {
         List(state.players.size) { Animatable(0f) }
     }
+    // A separate, purely visual hop runs alongside each existing graph step.
+    // It never modifies the authoritative position or movement timing.
+    val hopProgress = remember(matchKey, board.id, state.players.size, animateTokens) {
+        List(state.players.size) { Animatable(0f) }
+    }
     val displayed = state.players.mapIndexed { i, player ->
         val path = player.traversed.toList()
         // The animation observes the rendered route history, never changes the rules engine.
@@ -1904,6 +1909,7 @@ private fun BoardCanvas(
         }
         LaunchedEffect(matchKey, board.id, path, animateTokens) {
             if (!animateTokens) {
+                hopProgress[i].snapTo(0f)
                 motion[i].snapTo(Offset(board.node(player.position).x, board.node(player.position).y))
             } else {
                 val nodes = MoveTrail.steps(previous, path)
@@ -1911,10 +1917,18 @@ private fun BoardCanvas(
                 // Use brief segments along the exact route, including backwards pranks.
                 for (id in nodes) {
                     val target = board.node(id)
-                    motion[i].animateTo(
-                        Offset(target.x, target.y),
-                        animationSpec = tween(durationMillis = stepMillis)
-                    )
+                    hopProgress[i].snapTo(0f)
+                    kotlinx.coroutines.coroutineScope {
+                        launch {
+                            hopProgress[i].animateTo(
+                                1f, animationSpec = tween(durationMillis = stepMillis)
+                            )
+                        }
+                        motion[i].animateTo(
+                            Offset(target.x, target.y),
+                            animationSpec = tween(durationMillis = stepMillis)
+                        )
+                    }
                 }
                 if (nodes.isNotEmpty()) {
                     landingGlow[i].snapTo(1f)
@@ -2314,19 +2328,6 @@ private fun BoardCanvas(
                     drawLine(trail, position(from), position(to), strokeWidth = 3f, cap = StrokeCap.Round)
                 }
             }
-            // Brief, low-contrast landing ripple communicates the arrival.
-            state.players.forEachIndexed { i, _ ->
-                val strength = landingGlow[i].value
-                if (strength > 0.001f) {
-                    val at = displayed[i]
-                    drawCircle(
-                        PlayerColors[i].copy(alpha = strength * 0.35f),
-                        radius = 19f + (1f - strength) * 12f,
-                        center = Offset(left + at.x * drawWidth, top + at.y * drawHeight),
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.5f)
-                    )
-                }
-            }
             // A restrained spotlight reduces scenic clutter when a fork
             // actually requires input. The engine's legal links remain bright.
             if (immersiveWorld && routeChoiceIds.isNotEmpty() &&
@@ -2378,10 +2379,32 @@ private fun BoardCanvas(
                 val offset = CrossroadsPiecePlacement.offset(rank, group.size, gamePieceScale)
                 val marker = Offset(
                     left + displayed[i].x * drawWidth + offset.x,
-                    top + displayed[i].y * drawHeight + offset.y
+                    top + displayed[i].y * drawHeight + offset.y -
+                        BoardMotionAccent.hopOffsetPx(hopProgress[i].value, gamePieceScale)
                 )
                 val highlighted = i == highlightedSeat
-                val tokenRadius = (if (highlighted) 12.5f else 11f) * gamePieceScale
+                val landingStrength = landingGlow[i].value
+                val tokenRadius = (if (highlighted) 12.5f else 11f) *
+                    gamePieceScale * BoardMotionAccent.arrivalScale(landingStrength)
+                if (landingStrength > 0.001f) {
+                    val alpha = BoardMotionAccent.arrivalRippleAlpha(landingStrength)
+                    drawCircle(
+                        Color(0xFFFFF4D7).copy(alpha = alpha),
+                        radius = tokenRadius * (1.65f + (1f - landingStrength) * 0.9f),
+                        center = marker,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(
+                            width = 4.3f * gamePieceScale
+                        )
+                    )
+                    drawCircle(
+                        PlayerColors[i].copy(alpha = alpha * 0.65f),
+                        radius = tokenRadius * (1.98f + (1f - landingStrength) * 0.8f),
+                        center = marker,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(
+                            width = 2.1f * gamePieceScale
+                        )
+                    )
+                }
                 drawCrossroadsPiece(
                     center = marker,
                     radius = tokenRadius,
