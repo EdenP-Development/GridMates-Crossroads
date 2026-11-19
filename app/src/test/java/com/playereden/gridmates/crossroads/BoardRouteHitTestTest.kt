@@ -70,4 +70,15 @@ class BoardRouteHitTestTest {
         assertNull(BoardRouteHitTest.select(point, fork, listOf(left), canvas,
             inset, 1f, noTranslation, 0f))
     }
+    @Test fun artisticRouteCueDrawsOnlyPartOfALegalEdge() {
+        val start = Offset(20f, 50f)
+        val end = Offset(120f, 250f)
+        val (first, last) = BoardRouteHitTest.cueSegment(start, end)
+        assertEquals(34f, first.x, 0.001f)
+        assertEquals(78f, first.y, 0.001f)
+        assertEquals(90f, last.x, 0.001f)
+        assertEquals(190f, last.y, 0.001f)
+        // The tappable endpoint is STILL the destination, not the painted cue.
+        assertTrue(last.x < end.x)
+    }
 }
