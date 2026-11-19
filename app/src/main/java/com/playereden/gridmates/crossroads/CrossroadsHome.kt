@@ -25,6 +25,13 @@ private val Ink = Color(0xFF48684D)
 private val Muted = Color(0xFF80664B)
 private val Paper = Color(0xFFF7F0DE)
 
+/** Keep important experimental-rule state visible even with options collapsed. */
+internal fun homeRaceSummary(seats: Int, passAndPlay: Boolean, tactical: Boolean): String {
+    val summary = if (passAndPlay) "$seats people · Pass & Play · offline"
+        else "Solo vs AI · $seats racers · offline"
+    return summary + if (tactical) " · Tactical rules ON" else ""
+}
+
 /** An original miniature travel motif, not an interactive or alternate board. */
 @Composable
 private fun HomeTrailIllustration() {
@@ -269,7 +276,7 @@ internal fun CrossroadsHomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Gameplay 2.0 · Playtest v3", color = Ink,
+                    Text("Tactical choices · Experimental", color = Ink,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold)
                     Text("Optional offline tactical rules",
@@ -347,8 +354,7 @@ internal fun CrossroadsHomeScreen(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    if (passAndPlay) "$seats people · Pass & Play · offline"
-                    else "Solo vs AI · $seats racers · offline",
+                    homeRaceSummary(seats, passAndPlay, playtestRules),
                     style = MaterialTheme.typography.labelMedium, color = Muted
                 )
                 Button(
