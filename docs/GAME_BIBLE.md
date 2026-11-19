@@ -1,8 +1,8 @@
 # GRIDMATES: CROSSROADS — GAME BIBLE
 
-**Version:** 0.1 (pre-production living bible)  
-**Date:** 2026-11-16  
-**Status:** Product vision grounded in owner conversations; prototype rules are proposals and not yet playtested.  
+**Version:** 0.2 (living game and UX bible)  
+**Date:** 2026-11-19  
+**Status:** Active Android QA prototypes; rules, artwork, HUD and camera behavior still require owner playtest approval.  
 **Intended platform:** Android; optional local same-Wi-Fi multiplayer; no mandatory account.  
 **Working name:** GridMates: Crossroads (not release-cleared).
 
@@ -22,7 +22,7 @@ A cozy, competitive board-racing game where one shared starting point leads thro
 
 ## 3. GridMates fit
 
-The game should be warm without being childish, modern without being busy, and inviting to solo play or people already in the same room. Traditional tabletop play is the inspiration; good usability and clean native interactions remain non-negotiable. Crossroads belongs next to Sudoku and Word Search because it is **accessible, familiar in spirit, and fun together**. It is not the appropriate home for a heavy action shooter.
+The game should be warm without being childish, modern without being busy, and inviting to solo play or people already in the same room. Traditional tabletop play is the inspiration; good usability and clean native interactions remain non-negotiable. Crossroads belongs next to Sudoku and Word Search because it is **accessible, familiar in spirit, and fun together**, but its in-match UI must **not** copy their app-style pages and buttons. It needs its own immersive board-game world. It is not the appropriate home for a heavy action shooter.
 
 ## 4. Player experience
 
@@ -87,7 +87,7 @@ Events should be quick to read and short to resolve. Prefer one-line effects, or
 
 - Cozy, calm tabletop; recognizable GridMates feel inspired by cream/forest/gold visual direction but not a literal copy of another game's screen.
 - Make paths and choices readable before adding decorative art.
-- Draw paths, tiles, junction highlights, dice and piece markers programmatically wherever practical.
+- Use source-tracked illustrated image assets for scenery and reusable tabletop elements such as paths and pieces; keep dynamic route eligibility, selection highlights, risk labels, hit areas and dice mechanics programmatic and graph-driven.
 - Optional existing animal portraits become circular tabletop tokens; characters have no special stats.
 - Different themes/board shapes later with the same core mechanics.
 - All source assets need an explicit registry/provenance check before import. Never copy another app's saved unlock progress.
@@ -113,4 +113,25 @@ To make the fixed map feel like a little traveling world, the prototype now has 
 
 ## 13. Development rule
 
-**A plain prototype must already be fun.** Test the basic board with colored circles before commissioning more images. Every new feature must improve player decisions, social play, usability or replayability enough to justify code, QA, and maintenance cost.
+**A plain prototype must already be fun.** The original geometry-first playtest informed the later illustrated scene; future assets must serve gameplay and never substitute for it. Every new feature must improve player decisions, social play, usability or replayability enough to justify code, QA, and maintenance cost.
+
+## 14. Locked experience direction — Crossroads is a game world, not a GridMates page (owner direction, November 19, 2026)
+
+The **GridMates brand** may unify home screens, warmth, offline-first access, and visual quality. **Crossroads gameplay is intentionally different from Sudoku and Word Search.** Inside an active match, the illustrated course is the full-screen game environment, not an image card in a vertically scrolling Android screen.
+
+### Active match hierarchy
+1. **Game world first.** Show a correctly proportioned square illustrated course filling the viewport. Crop through a zoomable/pannable camera; never stretch the map to the phone's aspect ratio. Keep graph-defined roads, pieces, events and node hit targets aligned to the artwork.
+2. **Floating HUD, not a page header.** Small, translucent overlays show whose turn it is, seat/color/shield status, current course, pace, and map/settings actions. Avoid taking up the top of the screen with large cards, taglines, instructional paragraphs or full-width solid bars.
+3. **Contextual controls.** Roll, Steady/Push, encounter choice, and target controls appear in a thumb-friendly bottom in-game panel while relevant. Show only the current actionable decision and essential feedback. Extra text (odds, prior actions, explanations) remains discoverable through an Info/Details control, not perpetually stacked below the map.
+4. **Interact with the board.** At a crossroads, highlight only routes currently legal in the authoritative game engine; tapping a highlighted route can choose it. An accessible Compare paths sheet must always offer the same legal options and risk information. Ambiguous taps must never silently choose a route.
+5. **Let the scene breathe.** On a phone, movement should show enough of the landscape and the active piece to feel like travel. Avoid opaque overlays that obstruct every fork or obscure camera follow; zoom and Full map remain separate ways to reorient.
+6. **No loss of clarity.** Preserve readable player numbers, color-independent status, explicit move effects, accessible tap targets, pass-and-play handoff, offline/LAN status and save warnings. Neither animation nor visual style is allowed to alter rules or networking authority.
+
+### Android implementation status and constraints
+- Draft **UI-52 and INPUT-53** moved toward a board-first HUD and direct graph-validated route taps.
+- Draft **UI-54** takes the game immersive/full-screen with a shared camera-aware square world frame.
+- Draft **UI-55** reduces the remaining app-like HUD chrome and adds progressive disclosure for narrative/odds.
+- These are **isolated QA experiments**, not release-approved visual specifications. Physical Android checks for camera reachability, touch alignment, immersive bars, large-font settings, small screens, 2–4 players, LAN and install-over saved progress are required before promotion.
+- Keep the Home/setup experience approachable. Do not impose mandatory accounts, cloud features, timers or a new monetization system merely to mimic other mobile games.
+
+**Design rejection rule:** If the gameplay screen once again resembles a webpage or a list of forms with a decorative board on top, it does not meet the Crossroads identity direction—even if every image asset looks polished.
