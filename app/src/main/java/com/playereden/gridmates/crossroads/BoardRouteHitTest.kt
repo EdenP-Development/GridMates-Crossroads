@@ -7,24 +7,20 @@ import kotlin.math.max
 
 /** Visual-only hit testing. Callers must supply the engine's legal route nodes. */
 internal object BoardRouteHitTest {
-    private const val BOARD_PADDING = 18f
-
     fun screenPosition(
         node: BoardNode,
         canvas: IntSize,
         insetPx: Float,
         zoom: Float,
-        translation: Offset
+        translation: Offset,
+        immersiveWorld: Boolean = false
     ): Offset {
         val cx = canvas.width / 2f
         val cy = canvas.height / 2f
-        val boardX = BOARD_PADDING +
-            node.x * (canvas.width.toFloat() - 2f * BOARD_PADDING)
-        val boardY = BOARD_PADDING +
-            node.y * (canvas.height.toFloat() - 2f * BOARD_PADDING)
+        val boardPoint = BoardWorldViewport.frame(canvas, immersiveWorld).position(node)
         return Offset(
-            insetPx + cx + (boardX - cx) * zoom + translation.x,
-            insetPx + cy + (boardY - cy) * zoom + translation.y
+            insetPx + cx + (boardPoint.x - cx) * zoom + translation.x,
+            insetPx + cy + (boardPoint.y - cy) * zoom + translation.y
         )
     }
 
@@ -41,7 +37,8 @@ internal object BoardRouteHitTest {
         insetPx: Float,
         zoom: Float,
         translation: Offset,
-        touchRadiusPx: Float
+        touchRadiusPx: Float,
+        immersiveWorld: Boolean = false
     ): String? {
         if (destinations.isEmpty() || canvas.width <= 36 || canvas.height <= 36 ||
             !tap.x.isFinite() || !tap.y.isFinite() ||
@@ -49,14 +46,14 @@ internal object BoardRouteHitTest {
             !translation.x.isFinite() || !translation.y.isFinite() ||
             !touchRadiusPx.isFinite() || touchRadiusPx <= 0f) return null
 
-        val start = screenPosition(origin, canvas, insetPx, zoom, translation)
+        val start = screenPosition(origin, canvas, insetPx, zoom, translation, immersiveWorld)
         // The fork itself is shared by all options and must never pick a path.
         if ((tap - start).getDistance() < max(20f, touchRadiusPx * 0.76f)) {
             return null
         }
 
         val matches = destinations.mapNotNull { destination ->
-            val end = screenPosition(destination, canvas, insetPx, zoom, translation)
+            val end = screenPosition(destination, canvas, insetPx, zoom, translation, immersiveWorld)
             val vector = end - start
             val lengthSquared = vector.x * vector.x + vector.y * vector.y
             if (lengthSquared < 1f) return@mapNotNull null
