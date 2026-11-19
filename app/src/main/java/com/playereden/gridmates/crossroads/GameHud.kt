@@ -71,3 +71,22 @@ internal fun gameHudActionHeading(phase: Phase): String = when (phase) {
     Phase.TARGET -> "CHOOSE A TARGET"
     Phase.FINISHED -> "JOURNEY COMPLETE"
 }
+
+/** Compact on-board decisions, with the actual consequences still readable. */
+internal data class EncounterActionCopy(val title: String, val impact: String)
+
+internal fun encounterActionCopy(option: String): EncounterActionCopy = when (option) {
+    "supplies" -> EncounterActionCopy("SUPPLIES", "+2 spaces")
+    "cover" -> EncounterActionCopy("COVER", "+1 & shield")
+    "gamble" -> EncounterActionCopy("GAMBLE", "Face hazard")
+    "brace" -> EncounterActionCopy("BRACE", "Stop & shield")
+    else -> EncounterActionCopy(option.uppercase(), "Choose")
+}
+
+internal fun gameActionDockMaxFraction(phase: Phase): Float = when (phase) {
+    Phase.ROLL -> 0.32f
+    Phase.ROUTE -> 0.32f
+    Phase.ENCOUNTER -> 0.37f
+    Phase.TARGET -> 0.39f
+    Phase.FINISHED -> 0.30f
+}

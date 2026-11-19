@@ -9,6 +9,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateOffsetAsState
@@ -930,6 +931,45 @@ private fun CrossroadsApp(
                     isTurnTransitioning = !turnReady,
                     startAtCurrent = startedFromCheckpoint)
             }
+            // Die anticipation takes place over the world, not in a dialog.
+            // The engine still rolls once after this decorative preview.
+            AnimatedVisibility(
+                visible = rollingDie && state.phase == Phase.ROLL && localIsCurrentSeat,
+                modifier = Modifier.align(Alignment.Center).offset(y = (-82).dp),
+                enter = fadeIn(tween(durationMillis = 95)),
+                exit = fadeOut(tween(durationMillis = 120))
+            ) {
+                Surface(
+                    color = Color(0xF5F5E6CA),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(22.dp),
+                    border = androidx.compose.foundation.BorderStroke(3.dp, Color(0xFFD9B776)),
+                    shadowElevation = 14.dp,
+                    modifier = Modifier.semantics {
+                        contentDescription = "Rolling travel die"
+                    }
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 22.dp, vertical = 15.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        DieFace(rollingFace,
+                            modifier = Modifier.size(66.dp).graphicsLayer {
+                                rotationZ = rollingTilt
+                            },
+                            announceFace = false)
+                        Text(
+                            when (queuedLabRoll) {
+                                LabRoll.STEADY -> "STEADY"
+                                LabRoll.PUSH -> "PUSH"
+                                else -> "ROLLING…"
+                            },
+                            color = Forest, fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+                }
+            }
             // Compact on-board scoreboard and controls, without a page header.
             Column(
                 modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth()
@@ -957,15 +997,20 @@ private fun CrossroadsApp(
                             contentDescription = "Player ${i + 1}, ${player.name}, $seatStatus" +
                                 if (player.shield) ", shielded" else ""
                         },
-                        color = if (isFocused)
-                            Color(0xFFE6E9D6) else Color(0xFFF0E9D9),
-                        shape = MaterialTheme.shapes.medium
+                        color = if (isFocused) Color(0xF0446048)
+                            else Color(0xD9233B2B),
+                        border = androidx.compose.foundation.BorderStroke(
+                            if (isFocused) 1.6.dp else 0.8.dp,
+                            if (isFocused) Color(0xFFF0DDAA) else Color(0x608AB08B)
+                        ),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp)
                     ) {
                         Row(modifier = Modifier.padding(horizontal = 7.dp, vertical = 5.dp),
                             horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.size(12.dp).background(PlayerColors[i], androidx.compose.foundation.shape.CircleShape))
                             Spacer(Modifier.width(5.dp))
-                            Text(player.name, fontSize = 12.sp, fontWeight =
+                            Text(player.name, fontSize = 12.sp,
+                                color = Color(0xFFF9EED5), fontWeight =
                                 if (isFocused) FontWeight.Bold else FontWeight.Normal)
                             if (player.shield) Text(" 🛡", fontSize = 11.sp)
                         }
@@ -980,14 +1025,20 @@ private fun CrossroadsApp(
                 ) {
                     val matchBrand = if (BuildConfig.DEBUG) "CROSSROADS · QA" else "CROSSROADS"
                     Text(
-                        "$matchBrand · ${CrossroadsCourse.title(board.id)}",
-                        modifier = Modifier.weight(1f),
+                        CrossroadsCourse.title(board.id),
+                        modifier = Modifier.weight(1f).semantics {
+                            contentDescription = "$matchBrand · ${CrossroadsCourse.title(board.id)}"
+                        },
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFF8EED7),
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
+                    if (BuildConfig.DEBUG) {
+                        Text("QA", color = Color(0xFFF0D7A5),
+                            style = MaterialTheme.typography.labelSmall)
+                    }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         TextButton(onClick = { inspectBoard = true }) {
                             Text("Full map", color = Color(0xFFF8EED7))
@@ -1133,21 +1184,19 @@ private fun CrossroadsApp(
                 }
 
             }
-            // Context-sensitive action dock, reachable with one thumb. Its
-            // contents scroll as a unit on small phones / large system fonts.
-            val dockMaxFraction = when (state.phase) {
-                Phase.ROLL -> 0.36f
-                Phase.ROUTE -> 0.32f
-                Phase.ENCOUNTER -> 0.49f
-                Phase.TARGET -> 0.43f
-                Phase.FINISHED -> 0.42f
+            // EXPERIENCE-60: controls come BEFORE lengthy explanatory text.
+            // A short, stable action island is more useful than a scrollable form.
+            // Details never push the primary action offscreen.
+            var showTurnDetails by remember(game, state.turn, state.phase) {
+                mutableStateOf(false)
             }
+            val dockMaxFraction = gameActionDockMaxFraction(state.phase)
             Surface(
-                color = Color(0xF4F1E4C8),
-                shadowElevation = 14.dp,
+                color = Color(0xF8F1E4C8),
+                shadowElevation = 12.dp,
                 tonalElevation = 0.dp,
                 border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF967D54)),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(22.dp),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
                 modifier = Modifier.align(Alignment.BottomCenter)
                     .padding(horizontal = 10.dp, vertical = 9.dp)
                     .fillMaxWidth()
@@ -1155,36 +1204,22 @@ private fun CrossroadsApp(
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 14.dp, vertical = 10.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(5.dp)
                 ) {
-                    if (lanRole != LanRole.OFFLINE) {
-                        Text(
-                            if (lanRole == LanRole.HOST) "Nearby game · You are Player 1"
-                            else "Nearby game · You are Player 2",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Forest
-                        )
-                    }
-                    if (lanRole != LanRole.OFFLINE && !lanMessage.isNullOrBlank()) {
-                        Text(lanMessage!!, style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF955B33))
-                    }
                     val round = (state.turn - 1) / state.players.size + 1
                     val currentName = state.players[state.playerIndex].name
                     val trackedName = state.players[
                         cameraTrackIndex.coerceIn(state.players.indices)
                     ].name
                     GameHudTurnStrip(
-                        title = if (state.phase == Phase.FINISHED && !turnReady) "Approaching the finish…"
+                        title = if (state.phase == Phase.FINISHED && !turnReady)
+                            "Approaching the finish…"
                         else if (state.phase == Phase.FINISHED) "Journey complete!"
                         else if (!turnReady && !rollingDie) {
-                            if (state.players[cameraTrackIndex.coerceIn(state.players.indices)].name == "You")
-                                "You're on the move…"
+                            if (trackedName == "You") "You're on the move…"
                             else "$trackedName is on the move…"
-                        }
-                        else if (currentName == "You") "Round $round · Your turn"
+                        } else if (currentName == "You") "Round $round · Your turn"
                         else "Round $round · $currentName's turn",
                         phase = state.phase,
                         moving = !turnReady && !rollingDie,
@@ -1195,88 +1230,94 @@ private fun CrossroadsApp(
                         botTurn = state.players[state.playerIndex].isBot,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    // A single helpful cue replaces any extra Pass & Play
-                    // handoff dialog: next player can roll immediately.
+                    if (recoveryWarning != null) {
+                        Text(recoveryWarning!!, color = Color(0xFF955B33),
+                            style = MaterialTheme.typography.labelSmall)
+                    }
                     if (lanRole == LanRole.OFFLINE &&
                         state.players.all { !it.isBot } && state.turn > 1 &&
                         state.phase == Phase.ROLL && turnReady && !rollingDie
                     ) {
-                        Text(
-                            "Pass the phone to $currentName",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Bark
-                        )
+                        Text("Pass the phone to $currentName",
+                            color = Bark, style = MaterialTheme.typography.labelMedium)
+                    }
+                    if (lanRole != LanRole.OFFLINE && !lanMessage.isNullOrBlank()) {
+                        Text(lanMessage!!, color = Color(0xFF955B33),
+                            style = MaterialTheme.typography.labelSmall, maxLines = 1)
                     }
                     val initialInstructions = state.turn == 1 &&
                         state.phase == Phase.ROLL && state.die == null &&
                         state.encounters.isEmpty()
-                    Text(
-                        if (initialInstructions && game.playtestRules)
-                            "Choose a travel style to begin."
-                        else if (initialInstructions) "Roll to begin."
+                    val actionNote = if (initialInstructions) "Ready for your first move"
                         else turnActionSummary(
                             phase = state.phase,
                             botTurn = state.players[state.playerIndex].isBot,
                             actorName = currentName,
                             latestAction = state.lastMessage
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Bark
-                    )
-                    if (recoveryWarning != null) {
-                        Text(recoveryWarning!!, style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF955B33))
-                    }
-                    if (state.phase != Phase.FINISHED) {
-                        AnimatedContent(
-                            targetState = recentReveal,
-                            transitionSpec = { fadeIn() togetherWith fadeOut() },
-                            label = "encounter-reveal"
-                        ) { note ->
-                            if (note != null) {
-                                EncounterRibbon(note)
-                            }
-                        }
-                    }
-                    // Snapshot is provided by the core module, so cache its nullable
-                    // die value locally for Kotlin's safe smart cast.
-                    val resolvedDie = state.die
-                    if (resolvedDie != null && state.phase != Phase.FINISHED) {
-                        Row(verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            DieFace(resolvedDie, modifier = Modifier.size(34.dp))
+                        )
+                    Text(actionNote, color = Bark,
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    val die = state.die
+                    if (die != null && state.phase != Phase.FINISHED) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(7.dp)
+                        ) {
+                            DieFace(die, modifier = Modifier.size(25.dp))
                             Text(
-                                "${state.remainingSteps} ${if (state.remainingSteps == 1) "step" else "steps"} remaining",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold
+                                "${state.remainingSteps} ${if (state.remainingSteps == 1) "step" else "steps"} to move",
+                                color = Forest,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.labelMedium
                             )
                         }
                     }
-                    if (state.phase == Phase.ROUTE && localIsCurrentSeat &&
-                        !state.players[state.playerIndex].isBot &&
-                        game.availableRoutes().size > 2) {
-                        Text("Tap a highlighted trail or inspect all three paths below",
-                            style = MaterialTheme.typography.labelSmall, color = Bark)
+                    // Expandable information takes only spare height. Primary
+                    // action controls below stay at the bottom and always remain
+                    // reachable, including at larger Android font scales.
+                    if (showTurnDetails) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth()
+                                .weight(1f, fill = false)
+                                .verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            Text(actionNote, style = MaterialTheme.typography.bodySmall,
+                                color = Bark)
+                            when (state.phase) {
+                                Phase.ROLL -> {
+                                    Text(
+                                        if (game.playtestRules && lanRole == LanRole.OFFLINE)
+                                            "Steady moves 4 and blocks one setback. Push: 1–2 stumbles 1 space; 3–6 moves 5–8."
+                                        else "A fair six-sided die decides how many spaces you travel.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Bark
+                                    )
+                                }
+                                Phase.ROUTE -> Text(
+                                    "Tap a highlighted trail, or compare the risk and remaining distance of each legal path.",
+                                    style = MaterialTheme.typography.bodySmall, color = Bark
+                                )
+                                Phase.ENCOUNTER -> Text(
+                                    "Supplies: advance 2. Cover: advance 1 and gain a shield. Gamble: face the hazard. Brace: stop and gain a shield.",
+                                    style = MaterialTheme.typography.bodySmall, color = Bark
+                                )
+                                else -> Unit
+                            }
+                            if (state.phase != Phase.FINISHED && recentReveal != null) {
+                                EncounterRibbon(recentReveal!!)
+                            }
+                        }
                     }
-                    // Keep the turn title and die visible while long choice lists scroll.
-                    Column(
-                        modifier = Modifier.fillMaxWidth().heightIn(
-                            max = if (state.phase == Phase.ROUTE &&
-                                game.availableRoutes().size == 2) 280.dp else 230.dp
-                        ).verticalScroll(actionScroll),
-                        verticalArrangement = Arrangement.spacedBy(7.dp)
-                    ) {
+                    val myAction = localIsCurrentSeat && !state.players[state.playerIndex].isBot
                     if (state.phase == Phase.FINISHED && !turnReady) {
-                        Text("Crossing the finish line…", color = Forest,
-                            style = MaterialTheme.typography.bodyMedium)
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                     } else if (state.phase == Phase.FINISHED) {
-                        val winner = state.winnerIndex?.let { state.players.getOrNull(it)?.name }
-                            ?: "A traveler"
-                        Text(if (winner == "You") "You reached the finish!"
-                            else "$winner reached the finish!",
-                            fontWeight = FontWeight.SemiBold, color = Forest)
-                        Button(onClick = { showResults = true }, modifier = Modifier.fillMaxWidth()) {
-                            Text("View match results")
+                        Button(onClick = { showResults = true },
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
+                            Text("See race results")
                         }
                     } else if (lanRole != LanRole.OFFLINE &&
                         (!lanConnected || lanPendingAction ||
@@ -1284,37 +1325,22 @@ private fun CrossroadsApp(
                     ) {
                         Text(
                             if (!lanConnected) "Waiting for your partner to reconnect…"
-                            else if (lanPendingAction) "Waiting for the host to confirm your move…"
-                            else "Waiting for ${state.players[state.playerIndex].name} to play…",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Bark
+                            else if (lanPendingAction) "Waiting for the host to confirm…"
+                            else "$currentName is taking a turn…",
+                            color = Bark, style = MaterialTheme.typography.bodySmall
                         )
                     } else if (!turnReady && !rollingDie) {
-                        // The next seat can be ready in the engine while the prior
-                        // travel animation still plays. Hide disabled roll/choice
-                        // controls rather than misleading the player.
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                        Text("Finishing the move…",
-                            style = MaterialTheme.typography.bodySmall, color = Bark)
-                    } else if (state.players[state.playerIndex].isBot) {
+                        Text("Following the traveler…",
+                            color = Bark, style = MaterialTheme.typography.labelMedium)
+                    } else if (!myAction) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                        Text("Playing automatically…",
-                            style = MaterialTheme.typography.bodySmall, color = Bark)
+                        Text("Watching $currentName play…",
+                            color = Bark, style = MaterialTheme.typography.labelMedium)
                     } else {
                         when (state.phase) {
                             Phase.ROLL -> {
                                 if (game.playtestRules && lanRole == LanRole.OFFLINE) {
-                                    Text(
-                                        gameHudActionHeading(state.phase),
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = Forest
-                                    )
-                                    Text(
-                                        "Steady: 4 spaces and one setback blocked. " +
-                                            "Push: roll 1–6; 1–2 stumbles 1 space, 3–6 moves 5–8.",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Bark
-                                    )
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1324,163 +1350,173 @@ private fun CrossroadsApp(
                                                 queuedLabRoll = LabRoll.STEADY
                                                 rollingDie = true
                                             },
-                                            enabled = !rollingDie && turnReady,
-                                            modifier = Modifier.weight(1f).heightIn(min = 54.dp),
-                                            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                                            enabled = turnReady && !rollingDie,
+                                            modifier = Modifier.weight(1f).heightIn(min = 56.dp),
+                                            shape = androidx.compose.foundation.shape.RoundedCornerShape(13.dp),
                                             colors = ButtonDefaults.buttonColors(
                                                 containerColor = Forest, contentColor = Color.White
                                             )
                                         ) {
-                                            Text(if (rollingDie && queuedLabRoll == LabRoll.STEADY)
-                                                "Steady…" else "Steady · 4")
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text("STEADY", fontWeight = FontWeight.Bold)
+                                                Text("4 spaces", style = MaterialTheme.typography.labelSmall)
+                                            }
                                         }
                                         Button(
                                             onClick = {
                                                 queuedLabRoll = LabRoll.PUSH
                                                 rollingDie = true
                                             },
-                                            enabled = !rollingDie && turnReady,
-                                            modifier = Modifier.weight(1f).heightIn(min = 54.dp),
-                                            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                                            enabled = turnReady && !rollingDie,
+                                            modifier = Modifier.weight(1f).heightIn(min = 56.dp),
+                                            shape = androidx.compose.foundation.shape.RoundedCornerShape(13.dp),
                                             colors = ButtonDefaults.buttonColors(
                                                 containerColor = Color(0xFFB58A46),
                                                 contentColor = Color(0xFF292B22)
                                             )
                                         ) {
-                                            Text(if (rollingDie && queuedLabRoll == LabRoll.PUSH)
-                                                "Pushing…" else "Push · risky")
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text("PUSH", fontWeight = FontWeight.Bold)
+                                                Text("Risk for speed", style = MaterialTheme.typography.labelSmall)
+                                            }
                                         }
                                     }
                                 } else {
-                                Button(
-                                    onClick = {
-                                        if (touchFeedback) {
-                                            haptics.performHapticFeedback(
-                                                HapticFeedbackType.TextHandleMove
-                                            )
-                                        }
-                                        rollingDie = true
-                                    },
-                                    enabled = !rollingDie && turnReady &&
-                                         (lanRole == LanRole.OFFLINE ||
-                                             (lanConnected && !lanPendingAction)),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    Button(
+                                        onClick = {
+                                            if (touchFeedback) {
+                                                haptics.performHapticFeedback(
+                                                    HapticFeedbackType.TextHandleMove
+                                                )
+                                            }
+                                            rollingDie = true
+                                        },
+                                        enabled = !rollingDie && turnReady &&
+                                            (lanRole == LanRole.OFFLINE ||
+                                                (lanConnected && !lanPendingAction)),
+                                        modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp),
+                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
                                     ) {
                                         DieFace(if (rollingDie) rollingFace else 1,
-                                            modifier = Modifier.size(38.dp).graphicsLayer {
+                                            modifier = Modifier.size(34.dp).graphicsLayer {
                                                 rotationZ = rollingTilt
-                                                scaleX = if (rollingDie) 0.96f else 1f
-                                                scaleY = if (rollingDie) 1.04f else 1f
-                                            },
-                                            announceFace = false)
-                                        Text(if (rollingDie) "Rolling…" else "Roll the die",
-                                            fontWeight = FontWeight.SemiBold)
+                                            }, announceFace = false)
+                                        Spacer(Modifier.width(12.dp))
+                                        Text(if (rollingDie) "ROLLING…" else "ROLL THE DIE",
+                                            fontWeight = FontWeight.Bold)
                                     }
-                                }
                                 }
                             }
                             Phase.ROUTE -> {
                                 val fork = board.forkAt(state.players[state.playerIndex].position)
                                 val routeCount = game.availableRoutes().size
-                                Text(fork?.title ?: "Choose your route",
-                                    fontWeight = FontWeight.SemiBold, color = Forest)
-                                Text(
-                                    "Tap a glowing path on the board to travel. " +
-                                        "Use Compare for distance and risk details.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Bark
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text(fork?.title ?: "Choose a path",
+                                        modifier = Modifier.weight(1f),
+                                        fontWeight = FontWeight.Bold, color = Forest,
+                                        maxLines = 1)
+                                    Text("$routeCount paths", color = Bark,
+                                        style = MaterialTheme.typography.labelSmall)
+                                }
                                 Button(
                                     onClick = { routeDialogDismissed = false },
                                     enabled = turnReady && routeCount >= 2,
-                                    modifier = Modifier.fillMaxWidth()
-                                        .heightIn(min = 48.dp)
-                                ) {
-                                    Text("Compare $routeCount paths")
-                                }
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(13.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Forest,
+                                        contentColor = Color.White
+                                    )
+                                ) { Text("COMPARE OR CHOOSE PATHS") }
                             }
                             Phase.ENCOUNTER -> {
-                                val shelter = game.availableEncounterChoices().contains("supplies")
-                                val illustration = rememberOptionalCrossroadsArt(
+                                val choices = game.availableEncounterChoices()
+                                val shelter = "supplies" in choices
+                                val art = rememberOptionalCrossroadsArt(
                                     if (shelter) CrossroadsArtSlot.EVENT_SHELTER
                                     else CrossroadsArtSlot.EVENT_HAZARD
                                 )
                                 Row(
-                                    modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    if (illustration != null) {
-                                        Image(
-                                            bitmap = illustration,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(62.dp),
-                                            contentScale = ContentScale.Crop
-                                        )
+                                    if (art != null) {
+                                        Image(art, contentDescription = null,
+                                            modifier = Modifier.size(44.dp),
+                                            contentScale = ContentScale.Crop)
                                     }
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(if (shelter) "A shelter along the trail" else "Trouble on the trail",
-                                            fontWeight = FontWeight.SemiBold, color = Forest)
-                                        Text(
-                                            if (shelter)
-                                                "Take supplies to travel farther, or cover to gain a shield."
-                                            else "Gamble on the outcome, or brace to avoid a setback.",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = Bark
-                                        )
-                                    }
+                                    Text(if (shelter) "Trail shelter" else "Trail hazard",
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Forest)
                                 }
-                                game.availableEncounterChoices().forEach { option ->
-                                    val heading = when (option) {
-                                        "supplies" -> "Supplies · advance 2 spaces"
-                                        "cover" -> "Cover · advance 1 + shield"
-                                        "gamble" -> "Gamble · face the hazard"
-                                        "brace" -> "Brace · stop + shield"
-                                        else -> option
+                                choices.chunked(2).forEach { pair ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        pair.forEach { option ->
+                                            val (label, effect) = encounterActionCopy(option)
+                                            Button(
+                                                onClick = { localEncounterChoice(option) },
+                                                enabled = turnReady,
+                                                modifier = Modifier.weight(1f).heightIn(min = 54.dp),
+                                                shape = androidx.compose.foundation.shape.RoundedCornerShape(13.dp),
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = if (option == "gamble" ||
+                                                        option == "supplies") Color(0xFFB58A46)
+                                                        else Forest,
+                                                    contentColor = if (option == "gamble" ||
+                                                        option == "supplies") Color(0xFF292B22)
+                                                        else Color.White
+                                                )
+                                            ) {
+                                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                    Text(label, fontWeight = FontWeight.Bold)
+                                                    Text(effect,
+                                                        style = MaterialTheme.typography.labelSmall)
+                                                }
+                                            }
+                                        }
                                     }
-                                    OutlinedButton(
-                                        onClick = { localEncounterChoice(option) },
-                                        enabled = turnReady,
-                                        modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp)
-                                    ) { Text(heading) }
                                 }
                             }
                             Phase.TARGET -> {
-                                val mischiefArt = rememberOptionalCrossroadsArt(
-                                    CrossroadsArtSlot.EVENT_MISCHIEF
-                                )
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(9.dp)
-                                ) {
-                                    if (mischiefArt != null) {
-                                        Image(mischiefArt, contentDescription = null,
-                                            modifier = Modifier.size(56.dp),
-                                            contentScale = ContentScale.Crop)
-                                    }
-                                    Text("Mischief! Choose an opponent.",
-                                        fontWeight = FontWeight.SemiBold, color = Forest)
-                                }
-                                game.availableTargets().forEach { target ->
-                                    OutlinedButton(onClick = { localAction(LanAction(LanActionType.TARGET, target = target)) },
-                                        enabled = turnReady,
-                                        modifier = Modifier.fillMaxWidth()) {
-                                        Text("Target ${state.players[target].name}${if (state.players[target].shield) " · shielded" else ""}")
+                                Text("Choose a rival", color = Forest, fontWeight = FontWeight.Bold)
+                                game.availableTargets().chunked(2).forEach { pair ->
+                                    Row(modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                                        pair.forEach { target ->
+                                            Button(
+                                                onClick = {
+                                                    localAction(LanAction(
+                                                        LanActionType.TARGET, target = target
+                                                    ))
+                                                },
+                                                enabled = turnReady,
+                                                modifier = Modifier.weight(1f).heightIn(min = 48.dp)
+                                            ) {
+                                                Text("${state.players[target].name}${if (state.players[target].shield) " 🛡" else ""}")
+                                            }
+                                        }
                                     }
                                 }
                             }
                             Phase.FINISHED -> Unit
                         }
                     }
+                    if (state.phase != Phase.FINISHED && (myAction || showTurnDetails)) {
+                        TextButton(
+                            onClick = { showTurnDetails = !showTurnDetails },
+                            modifier = Modifier.align(Alignment.End).heightIn(min = 36.dp)
+                        ) {
+                            Text(if (showTurnDetails) "Less detail" else "Rules & last action",
+                                style = MaterialTheme.typography.labelMedium)
+                        }
                     }
                 }
             }
-
         }
         // One optional, scrollable route-comparison sheet for two or three exits.
         // The primary action remains touching a highlighted trail on the board.
@@ -2328,18 +2364,20 @@ private fun BoardCanvas(
                     drawLine(trail, position(from), position(to), strokeWidth = 3f, cap = StrokeCap.Round)
                 }
             }
-            // A restrained spotlight reduces scenic clutter when a fork
-            // actually requires input. The engine's legal links remain bright.
-            if (immersiveWorld && routeChoiceIds.isNotEmpty() &&
-                state.phase == Phase.ROUTE && !isTurnTransitioning) {
-                drawRect(Color(0xFF15271A).copy(alpha = 0.23f))
-            }
             // Route highlights are ONLY for the current legal human choice.
             // These interactive signs follow the original graph edges exactly;
             // they do not invent paths or displace scenic artwork.
             if (routeChoiceIds.isNotEmpty() && state.phase == Phase.ROUTE &&
                 !isTurnTransitioning) {
                 val start = position(state.players[state.playerIndex].position)
+                drawCircle(
+                    Color(0xFFFFEAC0).copy(alpha = 0.88f),
+                    radius = if (immersiveWorld) 24f else 17f,
+                    center = start,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = if (immersiveWorld) 3.8f else 2.8f
+                    )
+                )
                 routeChoiceIds.forEach { candidate ->
                     val end = position(candidate)
                     val ring = when (board.node(candidate).route) {
@@ -2347,25 +2385,28 @@ private fun BoardCanvas(
                         "mischief" -> Color(0xFF8A6D9B)
                         else -> Color(0xFF4A7650)
                     }
-                    // Thick, high-contrast trails act as on-board buttons.
-                    // Colors are reinforced by the cream outline/endpoint ring.
-                    val glowWidth = if (immersiveWorld) 29f else 8.5f
-                    val inkWidth = if (immersiveWorld) 15f else 3.6f
-                    drawLine(Color(0xFFFFF5D7).copy(alpha = 0.97f), start, end,
-                        strokeWidth = glowWidth, cap = StrokeCap.Round)
-                    drawLine(ring.copy(alpha = 0.94f), start, end,
-                        strokeWidth = inkWidth, cap = StrokeCap.Round)
-                    drawCircle(Color(0xFFFFF8E9),
-                        radius = if (immersiveWorld) 22f else 17.5f,
+                    // Painted map comes first. Only emphasize the first part
+                    // of an available branch: no opaque UI tape across scenery.
+                    val (cueStart, cueEnd) = BoardRouteHitTest.cueSegment(start, end)
+                    val outlineWidth = if (immersiveWorld) 16f else 7.5f
+                    val colorWidth = if (immersiveWorld) 6.5f else 3f
+                    drawLine(Color(0xFFF5E9C8).copy(alpha = 0.72f),
+                        cueStart, cueEnd, strokeWidth = outlineWidth,
+                        cap = StrokeCap.Round)
+                    drawLine(ring.copy(alpha = 0.93f),
+                        cueStart, cueEnd, strokeWidth = colorWidth,
+                        cap = StrokeCap.Round)
+                    drawCircle(Color(0xFFFFF7DD),
+                        radius = if (immersiveWorld) 19f else 15f,
                         center = end,
                         style = androidx.compose.ui.graphics.drawscope.Stroke(
-                            width = if (immersiveWorld) 5.5f else 4f
+                            width = if (immersiveWorld) 4.2f else 3f
                         ))
                     drawCircle(ring,
-                        radius = if (immersiveWorld) 18f else 14f,
+                        radius = if (immersiveWorld) 15f else 12f,
                         center = end,
                         style = androidx.compose.ui.graphics.drawscope.Stroke(
-                            width = if (immersiveWorld) 4f else 2.7f
+                            width = if (immersiveWorld) 3.4f else 2.4f
                         ))
                 }
             }

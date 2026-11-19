@@ -7,6 +7,14 @@ import kotlin.math.max
 
 /** Visual-only hit testing. Callers must supply the engine's legal route nodes. */
 internal object BoardRouteHitTest {
+    /**
+     * Paint just the beginning of each legal branch to keep the original
+     * woodland road visible. Tapping still uses the entire legal graph edge.
+     */
+    fun cueSegment(origin: Offset, end: Offset): Pair<Offset, Offset> =
+        (origin + (end - origin) * 0.14f) to
+            (origin + (end - origin) * 0.70f)
+
     fun screenPosition(
         node: BoardNode,
         canvas: IntSize,
