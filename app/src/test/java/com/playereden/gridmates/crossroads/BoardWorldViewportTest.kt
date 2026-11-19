@@ -1,0 +1,82 @@
+package com.playereden.gridmates.crossroads
+
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.IntSize
+import com.playereden.crossroads.core.BoardNode
+import org.junit.Assert.*
+import org.junit.Test
+
+/** Same square frame must be used for painting, camera focus and legal path taps. */
+class BoardWorldViewportTest {
+    private val origin = BoardNode("fork", "Meadow", "fork",
+        listOf("east", "west"), .5f, .5f)
+    private val west = BoardNode("west", "West", "event", emptyList(), .3f, .35f)
+    private val east = BoardNode("east", "East", "event", emptyList(), .7f, .35f)
+
+    @Test fun portraitWorldFillsViewportWithoutDistortingSquareArtwork() {
+        val scene = BoardWorldViewport.frame(IntSize(400, 800), true)
+        assertEquals(-200f, scene.left, .001f)
+        assertEquals(0f, scene.top, .001f)
+        assertEquals(800f, scene.width, .001f)
+        assertEquals(scene.width, scene.height, .001f)
+        assertEquals(200f, scene.position(.5f, .5f).x, .001f)
+        assertEquals(400f, scene.position(.5f, .5f).y, .001f)
+    }
+
+    @Test fun landscapeWorldAlsoFillsViewportAndPreservesProportions() {
+        val scene = BoardWorldViewport.frame(IntSize(800, 400), true)
+        assertEquals(0f, scene.left, .001f)
+        assertEquals(-200f, scene.top, .001f)
+        assertEquals(800f, scene.width, .001f)
+        assertEquals(800f, scene.height, .001f)
+    }
+
+    @Test fun legacyFullMapFrameKeepsOriginalCoordinateSystem() {
+        val frame = BoardWorldViewport.frame(IntSize(400, 400), false)
+        assertEquals(18f, frame.left, .001f)
+        assertEquals(18f, frame.top, .001f)
+        assertEquals(364f, frame.width, .001f)
+        assertEquals(364f, frame.height, .001f)
+    }
+
+    @Test fun paintedDestinationsAndScreenHitTargetsAgree() {
+        val canvas = IntSize(400, 800)
+        val westScreen = BoardRouteHitTest.screenPosition(
+            west, canvas, 0f, 1f, Offset.Zero, immersiveWorld = true
+        )
+        val frame = BoardWorldViewport.frame(canvas, true)
+        assertEquals(frame.position(west).x, westScreen.x, .001f)
+        assertEquals(frame.position(west).y, westScreen.y, .001f)
+        val selected = BoardRouteHitTest.select(
+            tap = westScreen,
+            origin = origin,
+            destinations = listOf(west, east),
+            canvas = canvas,
+            insetPx = 0f,
+            zoom = 1f,
+            translation = Offset.Zero,
+            touchRadiusPx = 28f,
+            immersiveWorld = true
+        )
+        assertEquals("west", selected)
+    }
+
+    @Test fun cropAndPanStillKeepRouteHitsAccurate() {
+        val canvas = IntSize(400, 800)
+        val pan = Offset(-145f, 22f)
+        val target = BoardRouteHitTest.screenPosition(
+            east, canvas, 0f, 1.5f, pan, immersiveWorld = true
+        )
+        assertEquals("east", BoardRouteHitTest.select(
+            tap = target,
+            origin = origin,
+            destinations = listOf(west, east),
+            canvas = canvas,
+            insetPx = 0f,
+            zoom = 1.5f,
+            translation = pan,
+            touchRadiusPx = 28f,
+            immersiveWorld = true
+        ))
+    }
+}
