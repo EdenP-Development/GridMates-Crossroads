@@ -1186,6 +1186,13 @@ private fun CrossroadsApp(
                             style = MaterialTheme.typography.bodyMedium,
                             color = Bark
                         )
+                    } else if (!turnReady && !rollingDie) {
+                        // The next seat can be ready in the engine while the prior
+                        // travel animation still plays. Hide disabled roll/choice
+                        // controls rather than misleading the player.
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        Text("Finishing the move…",
+                            style = MaterialTheme.typography.bodySmall, color = Bark)
                     } else if (state.players[state.playerIndex].isBot) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                         Text("Playing automatically…",
@@ -1400,6 +1407,7 @@ private fun CrossroadsApp(
             game.availableRoutes().size > 2 && turnReady &&
             !routeDialogDismissed && !inspectBoard && !confirmExit && !showGuide) {
             val junction = board.forkAt(state.players[state.playerIndex].position)
+            val threeWayChoiceScroll = rememberScrollState()
             // Keep all three route options readable, without an Android system
             // purple/lavender dialog. Only the choices scroll on short phones;
             // the title and Inspect full map action stay accessible.
@@ -1438,37 +1446,53 @@ private fun CrossroadsApp(
                             Column(
                                 modifier = Modifier.fillMaxWidth()
                                     .weight(1f, fill = false)
-                                    .verticalScroll(rememberScrollState()),
+                                    .verticalScroll(threeWayChoiceScroll),
                                 verticalArrangement = Arrangement.spacedBy(9.dp)
                             ) {
                                 game.availableRoutes().forEach { route ->
                                     val choice = junction?.choices?.firstOrNull { it.to == route.id }
-                                    OutlinedButton(
-                                        onClick = { localAction(LanAction(LanActionType.ROUTE, route = route.id)) },
+                                    // A clickable Surface sizes to ALL text lines.
+                                    // OutlinedButton's internal layout allowed the final
+                                    // line of Cedar Bridge to paint over its lower border.
+                                    Surface(
+                                        onClick = {
+                                            localAction(LanAction(LanActionType.ROUTE, route = route.id))
+                                        },
+                                        enabled = turnReady,
                                         modifier = Modifier.fillMaxWidth().heightIn(min = 68.dp),
-                                        colors = ButtonDefaults.outlinedButtonColors(
-                                            contentColor = Forest
-                                        ),
+                                        shape = MaterialTheme.shapes.extraLarge,
+                                        color = Cream,
+                                        contentColor = Forest,
                                         border = androidx.compose.foundation.BorderStroke(
                                             1.dp, Color(0xFFB5A88F)
-                                        ),
-                                        contentPadding = PaddingValues(
-                                            horizontal = 11.dp, vertical = 11.dp
                                         )
                                     ) {
-                                        RouteChoiceSummary(
-                                            label = choice?.label ?: route.id,
-                                            description = if (game.playtestRules)
-                                                    DecisionLab.routePreview(
-                                                        board, route.id, choice?.risk,
-                                                        game.steadyTravelChosen,
-                                                        game.routeEncounterAvailable
-                                                    )
-                                                else (choice?.description ?: "Follow this trail"),
-                                            risk = choice?.risk
-                                        )
+                                        Box(
+                                            modifier = Modifier.fillMaxWidth().padding(
+                                                horizontal = 14.dp, vertical = 15.dp
+                                            )
+                                        ) {
+                                            RouteChoiceSummary(
+                                                label = choice?.label ?: route.id,
+                                                description = if (game.playtestRules)
+                                                        DecisionLab.routePreview(
+                                                            board, route.id, choice?.risk,
+                                                            game.steadyTravelChosen,
+                                                            game.routeEncounterAvailable
+                                                        )
+                                                    else (choice?.description ?: "Follow this trail"),
+                                                risk = choice?.risk
+                                            )
+                                        }
                                     }
                                 }
+                            }
+                            if (threeWayChoiceScroll.maxValue > threeWayChoiceScroll.value) {
+                                Text(
+                                    "Scroll for more route details ↓",
+                                    color = Forest,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
                             }
                             OutlinedButton(
                                 // Hide the three-way popup while the full map
