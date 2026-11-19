@@ -1000,7 +1000,7 @@ private fun CrossroadsApp(
                                 )
                                 DropdownMenuItem(
                                     text = {
-                                        Text(if (woodlandPieces) "Pieces: Woodland"
+                                        Text(if (woodlandPieces) "Pieces: Woodland (zoom detail)"
                                             else "Pieces: Standard")
                                     },
                                     onClick = {
@@ -1901,6 +1901,10 @@ private fun BoardCanvas(
         label = "board-camera-zoom"
     )
     val cameraZoom = if (cameraMode == BoardCameraMode.MANUAL) manualZoom else autoZoom
+    val drawWoodlandPortraits = shouldDrawWoodlandPortrait(
+        artAvailable = showWoodlandTokens,
+        cameraZoom = cameraZoom
+    )
     val viewportWidth = canvasDimensions.width.toFloat()
     val viewportHeight = canvasDimensions.height.toFloat()
     val boardPadding = 18f
@@ -2251,7 +2255,7 @@ private fun BoardCanvas(
                 )
                 // Local art lives only inside this token's colored/rimmed seat.
                 // Game-state positions, seat index, and readable number stay authoritative.
-                if (showWoodlandTokens && woodlandTokenAtlas != null && i < 4) {
+                if (drawWoodlandPortraits && woodlandTokenAtlas != null && i < 4) {
                     val diameter = (tokenRadius * 1.88f).toInt().coerceAtLeast(1)
                     drawImage(
                         image = woodlandTokenAtlas,
@@ -2292,14 +2296,14 @@ private fun BoardCanvas(
                         )
                     }
                 }
-                val numberX = if (showWoodlandTokens) marker.x + tokenRadius * 0.58f
+                val numberX = if (drawWoodlandPortraits) marker.x + tokenRadius * 0.58f
                     else marker.x
-                val numberY = if (showWoodlandTokens) marker.y + tokenRadius * 0.62f
+                val numberY = if (drawWoodlandPortraits) marker.y + tokenRadius * 0.62f
                     else marker.y
                 drawIntoCanvas { canvas ->
                     val paint = android.graphics.Paint().apply {
                         color = android.graphics.Color.WHITE
-                        textSize = (if (showWoodlandTokens) 9.4f else 12f) * tokenScale
+                        textSize = (if (drawWoodlandPortraits) 9.4f else 12f) * tokenScale
                         isAntiAlias = true
                         isFakeBoldText = true
                         textAlign = android.graphics.Paint.Align.CENTER
@@ -2307,7 +2311,7 @@ private fun BoardCanvas(
                             android.graphics.Color.argb(110, 40, 34, 24))
                     }
                     canvas.nativeCanvas.drawText("${i + 1}", numberX,
-                        numberY + (if (showWoodlandTokens) 3.2f else 4f) * tokenScale,
+                        numberY + (if (drawWoodlandPortraits) 3.2f else 4f) * tokenScale,
                         paint)
                 }
             }

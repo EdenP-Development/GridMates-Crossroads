@@ -19,4 +19,19 @@ class WoodlandPieceArtTest {
         assertEquals(listOf(0, 128, 256, 384), expectedOffsets)
         assertEquals("token_atlas_v1.png", CrossroadsArtSlot.TOKEN_ATLAS.filename)
     }
+
+    @Test fun fitToBoardAlwaysPrefersLegibleNumberedCoins() {
+        assertFalse(shouldDrawWoodlandPortrait(true, 1f))
+        assertFalse(shouldDrawWoodlandPortrait(true, 1.35f))
+        assertFalse(shouldDrawWoodlandPortrait(true, 1.64f))
+        assertTrue(shouldDrawWoodlandPortrait(true, 1.65f))
+        assertTrue(shouldDrawWoodlandPortrait(true, 3f))
+    }
+
+    @Test fun absentArtAndInvalidZoomNeverRenderTinyFaces() {
+        assertFalse(shouldDrawWoodlandPortrait(false, 3f))
+        assertFalse(shouldDrawWoodlandPortrait(true, Float.NaN))
+        assertFalse(shouldDrawWoodlandPortrait(true, Float.POSITIVE_INFINITY))
+        assertFalse(shouldDrawWoodlandPortrait(true, -1f))
+    }
 }
