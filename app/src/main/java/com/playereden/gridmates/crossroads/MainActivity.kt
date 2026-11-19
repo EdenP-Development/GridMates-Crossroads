@@ -1549,17 +1549,26 @@ private fun CrossroadsApp(
                                     style = MaterialTheme.typography.labelSmall
                                 )
                             }
-                            OutlinedButton(
-                                // Hide the three-way popup while the full map
-                                // is inspected; reopening the decision must
-                                // keep the same authoritative dice and routes.
-                                onClick = { inspectBoard = true },
-                                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                                border = androidx.compose.foundation.BorderStroke(
-                                    1.dp, Color(0xFFB5A88F)
-                                )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Text("Inspect full map")
+                                OutlinedButton(
+                                    onClick = { routeDialogDismissed = true },
+                                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                                    border = androidx.compose.foundation.BorderStroke(
+                                        1.dp, Color(0xFFB5A88F)
+                                    )
+                                ) { Text("Back to board") }
+                                OutlinedButton(
+                                    // Show full map without losing the legal routes
+                                    // or changing the existing turn checkpoint.
+                                    onClick = { inspectBoard = true },
+                                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                                    border = androidx.compose.foundation.BorderStroke(
+                                        1.dp, Color(0xFFB5A88F)
+                                    )
+                                ) { Text("Full map") }
                             }
                         }
                     }
