@@ -330,8 +330,9 @@ private fun CrossroadsApp(
     var transitionDelay by remember(game) { mutableLongStateOf(0L) }
     var turnReady by remember(game) { mutableStateOf(true) }
     var cameraTrackIndex by remember(game) { mutableIntStateOf(game?.currentIndex ?: 0) }
-    var routeDialogDismissed by remember(game) { mutableStateOf(false) }
-    LaunchedEffect(game, state?.revision) { routeDialogDismissed = false }
+    var routeDialogDismissed by remember(game) { mutableStateOf(true) }
+    // Let players first choose directly on the board; the detail sheet is optional.
+    LaunchedEffect(game, state?.revision) { routeDialogDismissed = true }
     fun persistGame(current: GameSession) {
         // Nearby QA does not convert a remote match into an offline
         // pass-the-phone recovery save or change the user's solo record.
@@ -798,13 +799,13 @@ private fun CrossroadsApp(
             (lanRole == LanRole.HOST && state.playerIndex == 0 && lanConnected) ||
             (lanRole == LanRole.GUEST && state.playerIndex == 1 && lanConnected)
     )
-    val threeWayDialogVisible = game != null && state?.phase == Phase.ROUTE &&
+    val routeChoiceSheetVisible = game != null && state?.phase == Phase.ROUTE &&
         localIsCurrentSeat && !state.players[state.playerIndex].isBot &&
-        game.availableRoutes().size > 2 && turnReady &&
+        game.availableRoutes().size >= 2 && turnReady &&
         !routeDialogDismissed && !inspectBoard && !confirmExit && !showGuide
     BackHandler(
         enabled = lanScreen == LanScreen.NONE && game != null && state != null &&
-            !threeWayDialogVisible && !showGuide && !showJournal &&
+            !routeChoiceSheetVisible && !showGuide && !showJournal &&
             !showResults && !inspectBoard && !confirmExit && !showMatchOptions
     ) {
         if (state?.phase == Phase.FINISHED) {
@@ -889,6 +890,20 @@ private fun CrossroadsApp(
                     boardLook = boardLook, trailStyle = trailStyle,
                     woodlandPieces = woodlandPieces,
                     paintedMarkers = paintedMarkers,
+                    routeChoiceIds = if (state.phase == Phase.ROUTE &&
+                        localIsCurrentSeat && turnReady &&
+                        !state.players[state.playerIndex].isBot)
+                        game.availableRoutes().map { it.id } else emptyList(),
+                    onRouteChosen = { destination ->
+                        // Validate against CURRENT engine state before submitting,
+                        // even if a touch started before a turn transition.
+                        if (turnReady && localIsCurrentSeat &&
+                            state.phase == Phase.ROUTE &&
+                            !state.players[state.playerIndex].isBot &&
+                            game.availableRoutes().any { it.id == destination }) {
+                            localAction(LanAction(LanActionType.ROUTE, route = destination))
+                        }
+                    },
                     stepMillis = speed.stepMillis, focusPlayerIndex = cameraTrackIndex,
                     isTurnTransitioning = !turnReady,
                     startAtCurrent = startedFromCheckpoint)
@@ -1208,7 +1223,7 @@ private fun CrossroadsApp(
                     if (state.phase == Phase.ROUTE && localIsCurrentSeat &&
                         !state.players[state.playerIndex].isBot &&
                         game.availableRoutes().size > 2) {
-                        Text("Three paths ahead · choose in the expanded route panel",
+                        Text("Tap a highlighted trail or inspect all three paths below",
                             style = MaterialTheme.typography.labelSmall, color = Bark)
                     }
                     // Keep the turn title and die visible while long choice lists scroll.
@@ -1338,39 +1353,22 @@ private fun CrossroadsApp(
                             }
                             Phase.ROUTE -> {
                                 val fork = board.forkAt(state.players[state.playerIndex].position)
-                                Text(fork?.title ?: "Choose your route", fontWeight = FontWeight.SemiBold, color = Forest)
-                                if (fork != null) {
-                                    Text("Compare the routes before setting off.",
-                                        style = MaterialTheme.typography.bodySmall)
-                                }
-                                if (game.availableRoutes().size > 2) {
-                                    Button(
-                                        onClick = { routeDialogDismissed = false },
-                                        enabled = turnReady,
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) { Text("Choose a path · 3 routes") }
-                                } else {
-                                    game.availableRoutes().forEach { route ->
-                                        val choice = fork?.choices?.firstOrNull { it.to == route.id }
-                                        OutlinedButton(
-                                            onClick = { localAction(LanAction(LanActionType.ROUTE, route = route.id)) },
-                                            enabled = turnReady,
-                                            modifier = Modifier.fillMaxWidth(),
-                                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
-                                        ) {
-                                            RouteChoiceSummary(
-                                                label = choice?.label ?: route.id,
-                                                description = if (game.playtestRules)
-                                                    DecisionLab.routePreview(
-                                                        board, route.id, choice?.risk,
-                                                        game.steadyTravelChosen,
-                                                        game.routeEncounterAvailable
-                                                    )
-                                                else (choice?.description ?: "Follow this trail"),
-                                                risk = choice?.risk
-                                            )
-                                        }
-                                    }
+                                val routeCount = game.availableRoutes().size
+                                Text(fork?.title ?: "Choose your route",
+                                    fontWeight = FontWeight.SemiBold, color = Forest)
+                                Text(
+                                    "Tap a glowing path on the board to travel. " +
+                                        "Use Compare for distance and risk details.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Bark
+                                )
+                                Button(
+                                    onClick = { routeDialogDismissed = false },
+                                    enabled = turnReady && routeCount >= 2,
+                                    modifier = Modifier.fillMaxWidth()
+                                        .heightIn(min = 48.dp)
+                                ) {
+                                    Text("Compare $routeCount paths")
                                 }
                             }
                             Phase.ENCOUNTER -> {
@@ -1448,34 +1446,20 @@ private fun CrossroadsApp(
                         }
                     }
                     }
-                    // The two-route list may still exceed its panel at large
-                    // accessibility font scales. Make that overflow explicit;
-                    // the second legal choice must never look unavailable.
-                    if (state.phase == Phase.ROUTE &&
-                        game.availableRoutes().size == 2 &&
-                        actionScroll.maxValue > 0 &&
-                        actionScroll.value < actionScroll.maxValue
-                    ) {
-                        Text(
-                            "Scroll down for more of this choice ↓",
-                            color = Forest,
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
                 }
             }
 
         }
-        // A dedicated scrollable chooser avoids the third option being hidden
-        // under the fixed action pane on smaller handsets.
+        // One optional, scrollable route-comparison sheet for two or three exits.
+        // The primary action remains touching a highlighted trail on the board.
         if (state.phase == Phase.ROUTE && localIsCurrentSeat &&
             !state.players[state.playerIndex].isBot &&
-            game.availableRoutes().size > 2 && turnReady &&
+            game.availableRoutes().size >= 2 && turnReady &&
             !routeDialogDismissed && !inspectBoard && !confirmExit && !showGuide) {
             val junction = board.forkAt(state.players[state.playerIndex].position)
-            val threeWayChoiceScroll = rememberScrollState()
-            // Keep all three route options readable, without an Android system
-            // purple/lavender dialog. Only the choices scroll on short phones;
+            val routeChoiceScroll = rememberScrollState()
+            // Keep all legal route details readable, without a platform dialog.
+            // Only the choice list scrolls on short phones;
             // the title and Inspect full map action stay accessible.
             Dialog(
                 onDismissRequest = { routeDialogDismissed = true },
@@ -1509,7 +1493,7 @@ private fun CrossroadsApp(
                                 color = Forest
                             )
                             Text(
-                                "Three paths · ${state.remainingSteps} " +
+                                "${game.availableRoutes().size} paths · ${state.remainingSteps} " +
                                     "${if (state.remainingSteps == 1) "step" else "steps"} left",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Bark
@@ -1517,7 +1501,7 @@ private fun CrossroadsApp(
                             Column(
                                 modifier = Modifier.fillMaxWidth()
                                     .weight(1f, fill = false)
-                                    .verticalScroll(threeWayChoiceScroll),
+                                    .verticalScroll(routeChoiceScroll),
                                 verticalArrangement = Arrangement.spacedBy(9.dp)
                             ) {
                                 game.availableRoutes().forEach { route ->
@@ -1558,24 +1542,33 @@ private fun CrossroadsApp(
                                     }
                                 }
                             }
-                            if (threeWayChoiceScroll.maxValue > threeWayChoiceScroll.value) {
+                            if (routeChoiceScroll.maxValue > routeChoiceScroll.value) {
                                 Text(
                                     "Scroll for more route details ↓",
                                     color = Forest,
                                     style = MaterialTheme.typography.labelSmall
                                 )
                             }
-                            OutlinedButton(
-                                // Hide the three-way popup while the full map
-                                // is inspected; reopening the decision must
-                                // keep the same authoritative dice and routes.
-                                onClick = { inspectBoard = true },
-                                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                                border = androidx.compose.foundation.BorderStroke(
-                                    1.dp, Color(0xFFB5A88F)
-                                )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Text("Inspect full map")
+                                OutlinedButton(
+                                    onClick = { routeDialogDismissed = true },
+                                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                                    border = androidx.compose.foundation.BorderStroke(
+                                        1.dp, Color(0xFFB5A88F)
+                                    )
+                                ) { Text("Back to board") }
+                                OutlinedButton(
+                                    // Show full map without losing the legal routes
+                                    // or changing the existing turn checkpoint.
+                                    onClick = { inspectBoard = true },
+                                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                                    border = androidx.compose.foundation.BorderStroke(
+                                        1.dp, Color(0xFFB5A88F)
+                                    )
+                                ) { Text("Full map") }
                             }
                         }
                     }
@@ -1644,7 +1637,7 @@ private fun CrossroadsApp(
                     TextButton(onClick = { inspectBoard = false }) {
                         Text(
                             if (state.phase == Phase.ROUTE &&
-                                localIsCurrentSeat && game.availableRoutes().size > 2 &&
+                                localIsCurrentSeat && game.availableRoutes().size >= 2 &&
                                 !routeDialogDismissed) "Back to route choices"
                             else "Back to game"
                         )
@@ -1803,6 +1796,8 @@ private fun BoardCanvas(
     trailStyle: CrossroadsTrailStyle = CrossroadsTrailStyle.SIMPLE,
     woodlandPieces: Boolean = false,
     paintedMarkers: Boolean = false,
+    routeChoiceIds: List<String> = emptyList(),
+    onRouteChosen: (String) -> Unit = {},
     tokenScale: Float = 1f,
     animateTokens: Boolean = true,
     matchKey: Any? = null,
@@ -1981,9 +1976,19 @@ private fun BoardCanvas(
             boardPadding + active.y * (viewportHeight - 2f * boardPadding).coerceAtLeast(0f) + focusedOffset.y
         )
     )
+    // Pointer handlers persist across Compose recompositions; keep the latest
+    // legal destinations and action callback bound to the latest phase.
+    val liveRouteDestinations by rememberUpdatedState(
+        routeChoiceIds.mapNotNull { board.index[it] }
+    )
+    val liveRouteOrigin by rememberUpdatedState(
+        board.index[state.players[state.playerIndex].position]
+    )
+    val liveRouteChosen by rememberUpdatedState(onRouteChosen)
     val density = LocalDensity.current
     val insetPx = with(density) { 8.dp.toPx() }
     val pieceTapRadiusPx = with(density) { 32.dp.toPx() }
+    val routeTapRadiusPx = with(density) { 26.dp.toPx() }
 
     Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFEDE4D0))) {
         Box(
@@ -2015,8 +2020,22 @@ private fun BoardCanvas(
                             manualTranslation = Offset.Zero
                         },
                         onTap = { tap ->
-                            if (animateTokens) {
-                                // Convert the token's canvas coordinates through the visual transform.
+                            val routeHit = liveRouteOrigin?.let { startNode ->
+                                BoardRouteHitTest.select(
+                                    tap = tap,
+                                    origin = startNode,
+                                    destinations = liveRouteDestinations,
+                                    canvas = liveViewportSize,
+                                    insetPx = insetPx,
+                                    zoom = liveZoom,
+                                    translation = liveTranslation,
+                                    touchRadiusPx = routeTapRadiusPx
+                                )
+                            }
+                            if (routeHit != null) {
+                                liveRouteChosen(routeHit)
+                            } else if (animateTokens) {
+                                // Preserve prior tap-to-recenter behavior outside choices.
                                 val width = liveViewportSize.width.toFloat()
                                 val height = liveViewportSize.height.toFloat()
                                 val renderedPiece = Offset(
@@ -2254,17 +2273,27 @@ private fun BoardCanvas(
                     )
                 }
             }
-            // Highlight the active piece and both available route entrances.
-            if (state.phase == Phase.ROUTE && !isTurnTransitioning) {
-                val fork = board.node(state.players[state.playerIndex].position)
-                fork.next.forEach { candidate ->
+            // Route highlights are ONLY for the current legal human choice.
+            // These interactive signs follow the original graph edges exactly;
+            // they do not invent paths or displace scenic artwork.
+            if (routeChoiceIds.isNotEmpty() && state.phase == Phase.ROUTE &&
+                !isTurnTransitioning) {
+                val start = position(state.players[state.playerIndex].position)
+                routeChoiceIds.forEach { candidate ->
+                    val end = position(candidate)
                     val ring = when (board.node(candidate).route) {
                         "risky" -> Color(0xFFAE773B)
                         "mischief" -> Color(0xFF8A6D9B)
-                        else -> Forest
+                        else -> Color(0xFF4A7650)
                     }
-                    drawCircle(ring, radius = 14f, center = position(candidate),
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f))
+                    drawLine(Color(0xFFFFF5D7).copy(alpha = 0.94f), start, end,
+                        strokeWidth = 8.5f, cap = StrokeCap.Round)
+                    drawLine(ring.copy(alpha = 0.86f), start, end,
+                        strokeWidth = 3.6f, cap = StrokeCap.Round)
+                    drawCircle(Color(0xFFFFF8E9), radius = 17.5f, center = end,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4f))
+                    drawCircle(ring, radius = 14f, center = end,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.7f))
                 }
             }
             // Use animated on-screen coordinates to spread clustered tokens.
