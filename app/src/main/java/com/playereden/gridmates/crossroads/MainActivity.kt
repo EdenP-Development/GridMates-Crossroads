@@ -799,13 +799,13 @@ private fun CrossroadsApp(
             (lanRole == LanRole.HOST && state.playerIndex == 0 && lanConnected) ||
             (lanRole == LanRole.GUEST && state.playerIndex == 1 && lanConnected)
     )
-    val threeWayDialogVisible = game != null && state?.phase == Phase.ROUTE &&
+    val routeChoiceSheetVisible = game != null && state?.phase == Phase.ROUTE &&
         localIsCurrentSeat && !state.players[state.playerIndex].isBot &&
-        game.availableRoutes().size > 2 && turnReady &&
+        game.availableRoutes().size >= 2 && turnReady &&
         !routeDialogDismissed && !inspectBoard && !confirmExit && !showGuide
     BackHandler(
         enabled = lanScreen == LanScreen.NONE && game != null && state != null &&
-            !threeWayDialogVisible && !showGuide && !showJournal &&
+            !routeChoiceSheetVisible && !showGuide && !showJournal &&
             !showResults && !inspectBoard && !confirmExit && !showMatchOptions
     ) {
         if (state?.phase == Phase.FINISHED) {
@@ -1353,39 +1353,22 @@ private fun CrossroadsApp(
                             }
                             Phase.ROUTE -> {
                                 val fork = board.forkAt(state.players[state.playerIndex].position)
-                                Text(fork?.title ?: "Choose your route", fontWeight = FontWeight.SemiBold, color = Forest)
-                                if (fork != null) {
-                                    Text("Tap a highlighted trail on the board, or choose below.",
-                                        style = MaterialTheme.typography.bodySmall)
-                                }
-                                if (game.availableRoutes().size > 2) {
-                                    Button(
-                                        onClick = { routeDialogDismissed = false },
-                                        enabled = turnReady,
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) { Text("Compare all 3 routes") }
-                                } else {
-                                    game.availableRoutes().forEach { route ->
-                                        val choice = fork?.choices?.firstOrNull { it.to == route.id }
-                                        OutlinedButton(
-                                            onClick = { localAction(LanAction(LanActionType.ROUTE, route = route.id)) },
-                                            enabled = turnReady,
-                                            modifier = Modifier.fillMaxWidth(),
-                                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
-                                        ) {
-                                            RouteChoiceSummary(
-                                                label = choice?.label ?: route.id,
-                                                description = if (game.playtestRules)
-                                                    DecisionLab.routePreview(
-                                                        board, route.id, choice?.risk,
-                                                        game.steadyTravelChosen,
-                                                        game.routeEncounterAvailable
-                                                    )
-                                                else (choice?.description ?: "Follow this trail"),
-                                                risk = choice?.risk
-                                            )
-                                        }
-                                    }
+                                val routeCount = game.availableRoutes().size
+                                Text(fork?.title ?: "Choose your route",
+                                    fontWeight = FontWeight.SemiBold, color = Forest)
+                                Text(
+                                    "Tap a glowing path on the board to travel. " +
+                                        "Use Compare for distance and risk details.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Bark
+                                )
+                                Button(
+                                    onClick = { routeDialogDismissed = false },
+                                    enabled = turnReady && routeCount >= 2,
+                                    modifier = Modifier.fillMaxWidth()
+                                        .heightIn(min = 48.dp)
+                                ) {
+                                    Text("Compare $routeCount paths")
                                 }
                             }
                             Phase.ENCOUNTER -> {
@@ -1463,34 +1446,20 @@ private fun CrossroadsApp(
                         }
                     }
                     }
-                    // The two-route list may still exceed its panel at large
-                    // accessibility font scales. Make that overflow explicit;
-                    // the second legal choice must never look unavailable.
-                    if (state.phase == Phase.ROUTE &&
-                        game.availableRoutes().size == 2 &&
-                        actionScroll.maxValue > 0 &&
-                        actionScroll.value < actionScroll.maxValue
-                    ) {
-                        Text(
-                            "Scroll down for more of this choice ↓",
-                            color = Forest,
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
                 }
             }
 
         }
-        // A dedicated scrollable chooser avoids the third option being hidden
-        // under the fixed action pane on smaller handsets.
+        // One optional, scrollable route-comparison sheet for two or three exits.
+        // The primary action remains touching a highlighted trail on the board.
         if (state.phase == Phase.ROUTE && localIsCurrentSeat &&
             !state.players[state.playerIndex].isBot &&
-            game.availableRoutes().size > 2 && turnReady &&
+            game.availableRoutes().size >= 2 && turnReady &&
             !routeDialogDismissed && !inspectBoard && !confirmExit && !showGuide) {
             val junction = board.forkAt(state.players[state.playerIndex].position)
-            val threeWayChoiceScroll = rememberScrollState()
-            // Keep all three route options readable, without an Android system
-            // purple/lavender dialog. Only the choices scroll on short phones;
+            val routeChoiceScroll = rememberScrollState()
+            // Keep all legal route details readable, without a platform dialog.
+            // Only the choice list scrolls on short phones;
             // the title and Inspect full map action stay accessible.
             Dialog(
                 onDismissRequest = { routeDialogDismissed = true },
@@ -1524,7 +1493,7 @@ private fun CrossroadsApp(
                                 color = Forest
                             )
                             Text(
-                                "Three paths · ${state.remainingSteps} " +
+                                "${game.availableRoutes().size} paths · ${state.remainingSteps} " +
                                     "${if (state.remainingSteps == 1) "step" else "steps"} left",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Bark
@@ -1532,7 +1501,7 @@ private fun CrossroadsApp(
                             Column(
                                 modifier = Modifier.fillMaxWidth()
                                     .weight(1f, fill = false)
-                                    .verticalScroll(threeWayChoiceScroll),
+                                    .verticalScroll(routeChoiceScroll),
                                 verticalArrangement = Arrangement.spacedBy(9.dp)
                             ) {
                                 game.availableRoutes().forEach { route ->
@@ -1573,7 +1542,7 @@ private fun CrossroadsApp(
                                     }
                                 }
                             }
-                            if (threeWayChoiceScroll.maxValue > threeWayChoiceScroll.value) {
+                            if (routeChoiceScroll.maxValue > routeChoiceScroll.value) {
                                 Text(
                                     "Scroll for more route details ↓",
                                     color = Forest,
@@ -1659,7 +1628,7 @@ private fun CrossroadsApp(
                     TextButton(onClick = { inspectBoard = false }) {
                         Text(
                             if (state.phase == Phase.ROUTE &&
-                                localIsCurrentSeat && game.availableRoutes().size > 2 &&
+                                localIsCurrentSeat && game.availableRoutes().size >= 2 &&
                                 !routeDialogDismissed) "Back to route choices"
                             else "Back to game"
                         )
