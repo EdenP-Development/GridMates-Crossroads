@@ -11,7 +11,7 @@ class TabletopDiceFinishTest {
             assertEquals("A die's face must have the matching pip count", face, pips.size)
             assertEquals("A die's pips must not overlap exactly", face, pips.distinct().size)
             assertTrue("All pips must stay inside the raised face", pips.all { (x, y) ->
-                x in .20f.. .80f && y in .20f.. .80f
+                x in 0.20f..0.80f && y in 0.20f..0.80f
             })
         }
     }
