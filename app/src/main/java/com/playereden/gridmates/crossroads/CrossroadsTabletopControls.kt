@@ -119,42 +119,71 @@ private fun TabletopDieStamp() {
     }
 }
 
+/**
+ * The same tactile primary action style is reused in the board's route dock.
+ * Keep the action immediately enabled/clickable; feedback never delays input.
+ */
+@Composable
+internal fun TabletopPrimaryActionButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    withDie: Boolean = false
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = CrossroadsTabletopFeedback.scale(pressed && enabled),
+        animationSpec = tween(durationMillis = 95),
+        label = "tabletop-primary-contact"
+    )
+    Surface(
+        onClick = onClick,
+        enabled = enabled,
+        interactionSource = interactionSource,
+        modifier = modifier.heightIn(min = if (withDie) 58.dp else 54.dp)
+            .graphicsLayer { scaleX = scale; scaleY = scale },
+        shape = RoundedCornerShape(16.dp),
+        color = if (enabled) Color(0xFF3D624A) else Color(0xFFDCD6C2),
+        contentColor = if (enabled) Color(0xFFFFF5DA) else Color(0xFF786D5A),
+        shadowElevation = if (enabled) 5.dp else 0.dp,
+        border = BorderStroke(
+            if (enabled) 2.dp else 1.dp,
+            if (enabled) Color(0xFFD6B97A) else Color(0xFFAEA58F)
+        )
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 13.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (withDie) {
+                TabletopDieStamp()
+                androidx.compose.foundation.layout.Spacer(Modifier.size(12.dp))
+            }
+            Text(
+                text,
+                fontWeight = FontWeight.Bold,
+                fontSize = if (withDie) 17.sp else 15.sp,
+                color = if (enabled) Color(0xFFFFF5DA) else Color(0xFF786D5A),
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
 @Composable
 internal fun TabletopStartRaceButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = CrossroadsTabletopFeedback.scale(pressed),
-        animationSpec = tween(durationMillis = 95),
-        label = "start-race-contact"
-    )
-    Surface(
+    TabletopPrimaryActionButton(
+        text = "START RACE",
         onClick = onClick,
-        interactionSource = interactionSource,
-        modifier = modifier.heightIn(min = 58.dp)
-            .graphicsLayer { scaleX = scale; scaleY = scale },
-        shape = RoundedCornerShape(17.dp),
-        color = Color(0xFF3D624A),
-        contentColor = Color(0xFFFFF5DA),
-        shadowElevation = 5.dp,
-        border = BorderStroke(2.dp, Color(0xFFD6B97A))
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp, vertical = 13.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TabletopDieStamp()
-            androidx.compose.foundation.layout.Spacer(Modifier.size(12.dp))
-            Text(
-                "START RACE",
-                fontWeight = FontWeight.Bold,
-                fontSize = 17.sp,
-                color = Color(0xFFFFF5DA)
-            )
-        }
-    }
+        modifier = modifier,
+        withDie = true
+    )
 }
