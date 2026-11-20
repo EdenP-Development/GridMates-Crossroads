@@ -1996,6 +1996,13 @@ private fun BoardCanvas(
     val gamePieceScale = tokenScale * CrossroadsCameraPreset.tokenScale(immersiveWorld)
     val roadVisibilityScale = CrossroadsCameraPreset.trailScale(immersiveWorld)
     val nodeVisibilityScale = CrossroadsCameraPreset.markerScale(immersiveWorld)
+    // Cached nearest-node spacing keeps wooden landing discs apart on dense courses.
+    // The exact graph and node coordinates remain authoritative.
+    val nearestSpaceSpacing = remember(board) {
+        board.nodes.associate { node ->
+            node.id to CrossroadsBoardSpaceGeometry.nearestSpacing(node, board.nodes)
+        }
+    }
     val seatImages = listOf(
         rememberOptionalCrossroadsArt(CrossroadsArtSlot.TOKEN_SEAT_1),
         rememberOptionalCrossroadsArt(CrossroadsArtSlot.TOKEN_SEAT_2),
@@ -2410,20 +2417,39 @@ private fun BoardCanvas(
                             radius = 16.5f, center = center,
                             style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.2f))
                     }
-                    when (effectiveTrails) {
-                        CrossroadsTrailStyle.ARTWORK -> if (trailAtlas != null) {
-                            drawCrossroadsIllustratedJunction(center, radius, trailAtlas)
+                    // QA prototype: regular playable spaces look like carved
+                    // wooden board tokens, not flat white pixels. Draw only on
+                    // the illustrated LIVE board; preserve the full-map overview,
+                    // special fork/event symbols and all existing game logic.
+                    if (BuildConfig.DEBUG && immersiveWorld &&
+                        boardLook == CrossroadsBoardLook.ILLUSTRATED &&
+                        (node.kind == "plain" || node.kind == "merge")
+                    ) {
+                        val diskRadius = CrossroadsBoardSpaceGeometry.radius(
+                            originalRadius = radius,
+                            nearestSpacingNormalized =
+                                nearestSpaceSpacing[node.id] ?: Float.POSITIVE_INFINITY,
+                            squareWorldSidePx = drawWidth,
+                            liveWorld = true
+                        )
+                        drawCrossroadsTactileSpace(center, diskRadius)
+                    } else {
+                        when (effectiveTrails) {
+                            CrossroadsTrailStyle.ARTWORK -> if (trailAtlas != null) {
+                                drawCrossroadsIllustratedJunction(center, radius, trailAtlas)
+                            }
+                            CrossroadsTrailStyle.PRINTED -> {
+                                drawCircle(Color(0xFF334C3C).copy(alpha = 0.66f),
+                                    radius = radius + 3.2f, center = center)
+                                drawCircle(Color(0xFFF7EBD2),
+                                    radius = radius + 1.8f, center = center)
+                            }
+                            CrossroadsTrailStyle.SIMPLE -> Unit
                         }
-                        CrossroadsTrailStyle.PRINTED -> {
-                            drawCircle(Color(0xFF334C3C).copy(alpha = 0.66f),
-                                radius = radius + 3.2f, center = center)
-                            drawCircle(Color(0xFFF7EBD2), radius = radius + 1.8f, center = center)
-                        }
-                        CrossroadsTrailStyle.SIMPLE -> Unit
+                        drawCircle(color, radius, center)
+                        drawCircle(Color(0xFF9E896B), radius, center,
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.3f))
                     }
-                    drawCircle(color, radius, center)
-                    drawCircle(Color(0xFF9E896B), radius, center,
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.3f))
                     if (node.kind == "fork" || node.kind == "start" || node.kind == "finish") {
                         drawIntoCanvas { canvas ->
                             val label = when (node.kind) { "fork" -> "?"; "start" -> "S"; else -> "F" }
