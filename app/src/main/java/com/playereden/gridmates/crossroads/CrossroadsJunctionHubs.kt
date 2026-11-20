@@ -32,7 +32,9 @@ internal object CrossroadsJunctionHubGeometry {
             // Never let one joint consume half the distance to the next space.
             nearestNodeSpacing * worldSide * 0.35f
         } else desired
-        return min(desired, separationCap).coerceAtLeast(0f)
+        val candidate = min(desired, separationCap).coerceAtLeast(0f)
+        // Skip a hub rather than draw a tiny extra coin on cramped nodes.
+        return if (candidate >= 8f) candidate else 0f
     }
 }
 
