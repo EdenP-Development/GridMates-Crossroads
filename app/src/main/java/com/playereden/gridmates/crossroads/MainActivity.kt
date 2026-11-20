@@ -2556,7 +2556,14 @@ private fun BoardCanvas(
                         BoardMotionAccent.hopOffsetPx(hopProgress[i].value, gamePieceScale)
                 )
                 val highlighted = i == highlightedSeat
-                val landingStrength = landingGlow[i].value
+                // Besides the end-of-move ripple, gently signal EACH actual
+                // authored space as the character hops onto it. No additional
+                // animation clock or movement delay is introduced.
+                val stepContact = BoardMotionAccent.stepContactPulse(
+                    hopProgress[i].value,
+                    animateTokens && hopProgress[i].isRunning
+                )
+                val landingStrength = maxOf(landingGlow[i].value, stepContact)
                 val tokenRadius = (if (highlighted) 12.5f else 11f) *
                     gamePieceScale * BoardMotionAccent.arrivalScale(landingStrength)
                 if (landingStrength > 0.001f) {
