@@ -1260,9 +1260,11 @@ private fun CrossroadsApp(
                             actorName = currentName,
                             latestAction = state.lastMessage
                         )
+                    // Long encounter explanations should not be clipped while
+                    // an otherwise empty action dock occupies the bottom.
                     Text(actionNote, color = Bark,
                         style = MaterialTheme.typography.labelSmall,
-                        maxLines = 1,
+                        maxLines = 2,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                     val die = state.die
                     if (die != null && state.phase != Phase.FINISHED) {
@@ -2074,6 +2076,28 @@ private fun BoardCanvas(
     }
     var canvasDimensions by remember(matchKey, board.id, animateTokens) {
         mutableStateOf(IntSize.Zero)
+    }
+    var lastCenteredTurn by remember(matchKey, board.id, animateTokens) {
+        mutableIntStateOf(-1)
+    }
+    // Only re-enter follow mode once a NEW roll is ready. Never interrupt an
+    // ongoing step animation or override a player's pan during that turn.
+    LaunchedEffect(matchKey, board.id, state.turn, state.phase,
+        isTurnTransitioning, immersiveWorld, animateTokens) {
+        if (BoardFollowTurnPolicy.shouldRecenter(
+                phase = state.phase,
+                turn = state.turn,
+                lastCenteredTurn = lastCenteredTurn,
+                immersiveWorld = immersiveWorld,
+                animateTokens = animateTokens,
+                isTurnTransitioning = isTurnTransitioning
+            )
+        ) {
+            cameraMode = BoardCameraMode.FOLLOW
+            manualZoom = 1f
+            manualTranslation = Offset.Zero
+            lastCenteredTurn = state.turn
+        }
     }
     val cameraSubject = focusPlayerIndex.coerceIn(displayed.indices)
     val focusPlayerName = state.players[cameraSubject].name
