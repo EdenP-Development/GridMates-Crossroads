@@ -2375,6 +2375,31 @@ private fun BoardCanvas(
                     }
                 }
             }
+            // Finish the wood roads at real graph junctions instead of letting
+            // multiple painted endcaps pile up into an accidental timber star.
+            // Draw BELOW the existing symbols and pawns; this has no effect on
+            // route geometry, node counts, or pointer hit testing.
+            if (immersiveWorld && boardLook == CrossroadsBoardLook.ILLUSTRATED &&
+                effectiveTrails == CrossroadsTrailStyle.ARTWORK && trailAtlas != null
+            ) {
+                board.nodes.forEach { node ->
+                    if (CrossroadsJunctionHubGeometry.eligible(
+                            kind = node.kind,
+                            immersive = immersiveWorld,
+                            illustrated = true,
+                            paintedRoad = true
+                        )
+                    ) {
+                        val radius = CrossroadsJunctionHubGeometry.radius(
+                            nearestNodeSpacing =
+                                nearestSpaceSpacing[node.id] ?: Float.POSITIVE_INFINITY,
+                            worldSide = drawWidth,
+                            denseCourse = denseBoard
+                        )
+                        drawCrossroadsWoodenJunctionHub(position(node.id), radius)
+                    }
+                }
+            }
             board.nodes.forEach { node ->
                 val center = position(node.id)
                 val color = when (node.kind) {
