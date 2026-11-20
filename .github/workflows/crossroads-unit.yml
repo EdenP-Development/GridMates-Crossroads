@@ -102,3 +102,14 @@ jobs:
             core/build/reports/encounter-lab-v3/v2_vs_v3_mirrored_samples.csv
           if-no-files-found: warn
           retention-days: 30
+      
+      - name: Upload Gameplay 72 tactical-factorial and fork-tradeoff report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-GAMEPLAY-72-${{ github.sha }}
+          path: |
+            core/build/reports/gameplay-72/tactical_factorial_summary.txt
+            core/build/reports/gameplay-72/tactical_factorial_samples.csv
+          if-no-files-found: warn
+          retention-days: 30
