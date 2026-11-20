@@ -1262,10 +1262,18 @@ private fun CrossroadsApp(
                         )
                     // Long encounter explanations should not be clipped while
                     // an otherwise empty action dock occupies the bottom.
-                    Text(actionNote, color = Bark,
-                        style = MaterialTheme.typography.labelSmall,
-                        maxLines = 2,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    // The encounter card itself explains the human's next action.
+                    // Avoid a redundant two-line explanation above it, which
+                    // pushed event choices off shorter portrait screens.
+                    if (state.phase != Phase.ENCOUNTER ||
+                        !localIsCurrentSeat || state.players[state.playerIndex].isBot ||
+                        !turnReady
+                    ) {
+                        Text(actionNote, color = Bark,
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 2,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    }
                     val die = state.die
                     if (die != null && state.phase != Phase.FINISHED) {
                         Row(
@@ -1435,55 +1443,21 @@ private fun CrossroadsApp(
                             }
                             Phase.ENCOUNTER -> {
                                 val choices = game.availableEncounterChoices()
-                                val shelter = "supplies" in choices
                                 val art = rememberOptionalCrossroadsArt(
-                                    if (shelter) CrossroadsArtSlot.EVENT_SHELTER
+                                    if (TabletopEncounterPresentation.isShelter(choices))
+                                        CrossroadsArtSlot.EVENT_SHELTER
                                     else CrossroadsArtSlot.EVENT_HAZARD
                                 )
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    if (art != null) {
-                                        Image(art, contentDescription = null,
-                                            modifier = Modifier.size(44.dp),
-                                            contentScale = ContentScale.Crop)
-                                    }
-                                    Text(if (shelter) "Trail shelter" else "Trail hazard",
-                                        fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = Forest)
-                                }
-                                choices.chunked(2).forEach { pair ->
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        pair.forEach { option ->
-                                            val (label, effect) = encounterActionCopy(option)
-                                            Button(
-                                                onClick = { localEncounterChoice(option) },
-                                                enabled = turnReady,
-                                                modifier = Modifier.weight(1f).heightIn(min = 54.dp),
-                                                shape = androidx.compose.foundation.shape.RoundedCornerShape(13.dp),
-                                                colors = ButtonDefaults.buttonColors(
-                                                    containerColor = if (option == "gamble" ||
-                                                        option == "supplies") Color(0xFFB58A46)
-                                                        else Forest,
-                                                    contentColor = if (option == "gamble" ||
-                                                        option == "supplies") Color(0xFF292B22)
-                                                        else Color.White
-                                                )
-                                            ) {
-                                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                    Text(label, fontWeight = FontWeight.Bold)
-                                                    Text(effect,
-                                                        style = MaterialTheme.typography.labelSmall)
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                                // One compact illustrated tabletop card holds
+                                // the actual legal actions. No extra choice
+                                // screen, copied outcome, or decorative delay.
+                                TabletopEncounterCard(
+                                    choices = choices,
+                                    artwork = art,
+                                    enabled = turnReady,
+                                    onChoose = { option -> localEncounterChoice(option) },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
                             }
                             Phase.TARGET -> {
                                 Text("Choose a rival", color = Forest, fontWeight = FontWeight.Bold)
