@@ -40,6 +40,22 @@ private val PineInk = Color(0xFF48684D)
 private val CocoaInk = Color(0xFF6B5745)
 private val DiceOutline = Color(0xFFB4A285)
 
+/** A pure, repeatable set of pips for the six visible sides; never rolls the game die. */
+internal object TabletopDiePips {
+    fun positions(face: Int): List<Pair<Float, Float>> = when (face.coerceIn(1, 6)) {
+        1 -> listOf(0.5f to 0.5f)
+        2 -> listOf(0.28f to 0.28f, 0.72f to 0.72f)
+        3 -> listOf(0.28f to 0.28f, 0.5f to 0.5f, 0.72f to 0.72f)
+        4 -> listOf(0.28f to 0.28f, 0.72f to 0.28f,
+                    0.28f to 0.72f, 0.72f to 0.72f)
+        5 -> listOf(0.28f to 0.28f, 0.72f to 0.28f,
+                    0.5f to 0.5f, 0.28f to 0.72f, 0.72f to 0.72f)
+        else -> listOf(0.28f to 0.28f, 0.72f to 0.28f,
+                       0.28f to 0.5f, 0.72f to 0.5f,
+                       0.28f to 0.72f, 0.72f to 0.72f)
+    }
+}
+
 /**
  * Presentation-only six-sided die. The real dice value still comes exclusively
  * from GameSession.roll(); the preview frames do not use RNG or influence play.
@@ -62,37 +78,47 @@ internal fun DieFace(
         val side = size.minDimension
         if (side <= 0f) return@Canvas
         val origin = Offset((size.width - side) / 2f, (size.height - side) / 2f)
-        val corner = side * 0.18f
+        // Inset the die so the lower-right carved-wood shadow stays inside
+        // the canvas, even for the small 25dp movement indicator.
+        val faceSide = side * 0.86f
+        val faceOrigin = origin + Offset(side * 0.04f, side * 0.04f)
+        val rim = CornerRadius(side * 0.15f)
         drawRoundRect(
-            color = Color(0xFFFFFCF2),
-            topLeft = origin,
-            size = Size(side, side),
-            cornerRadius = CornerRadius(corner)
+            color = Color(0xFF9E805B),
+            topLeft = faceOrigin + Offset(side * 0.075f, side * 0.085f),
+            size = Size(faceSide, faceSide),
+            cornerRadius = rim
+        )
+        drawRoundRect(
+            color = Color(0xFFF5E7C7),
+            topLeft = faceOrigin,
+            size = Size(faceSide, faceSide),
+            cornerRadius = rim
+        )
+        drawRoundRect(
+            color = Color(0xFFFFF9E9),
+            topLeft = faceOrigin + Offset(side * 0.026f, side * 0.026f),
+            size = Size(faceSide - side * 0.055f, faceSide - side * 0.055f),
+            cornerRadius = CornerRadius(side * 0.122f)
         )
         drawRoundRect(
             color = DiceOutline,
-            topLeft = origin,
-            size = Size(side, side),
-            cornerRadius = CornerRadius(corner),
-            style = Stroke(width = side * 0.035f)
+            topLeft = faceOrigin,
+            size = Size(faceSide, faceSide),
+            cornerRadius = rim,
+            style = Stroke(width = side * 0.029f)
         )
-        val dots: List<Pair<Float, Float>> = when (shown) {
-            1 -> listOf(0.5f to 0.5f)
-            2 -> listOf(0.28f to 0.28f, 0.72f to 0.72f)
-            3 -> listOf(0.28f to 0.28f, 0.5f to 0.5f, 0.72f to 0.72f)
-            4 -> listOf(0.28f to 0.28f, 0.72f to 0.28f,
-                        0.28f to 0.72f, 0.72f to 0.72f)
-            5 -> listOf(0.28f to 0.28f, 0.72f to 0.28f,
-                        0.5f to 0.5f, 0.28f to 0.72f, 0.72f to 0.72f)
-            else -> listOf(0.28f to 0.28f, 0.72f to 0.28f,
-                           0.28f to 0.5f, 0.72f to 0.5f,
-                           0.28f to 0.72f, 0.72f to 0.72f)
-        }
-        dots.forEach { (x, y) ->
+        TabletopDiePips.positions(shown).forEach { (x, y) ->
+            val pip = faceOrigin + Offset(faceSide * x, faceSide * y)
+            drawCircle(
+                color = Color(0xFFC7B28E),
+                radius = faceSide * 0.084f,
+                center = pip + Offset(side * 0.012f, side * 0.015f)
+            )
             drawCircle(
                 color = PineInk,
-                radius = side * 0.070f,
-                center = origin + Offset(side * x, side * y)
+                radius = faceSide * 0.063f,
+                center = pip
             )
         }
     }
