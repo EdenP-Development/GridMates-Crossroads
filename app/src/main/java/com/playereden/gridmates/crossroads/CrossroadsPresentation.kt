@@ -46,10 +46,10 @@ internal object CrossroadsCameraPreset {
     fun followZoom(phase: Phase, turn: Int, animated: Boolean): Float {
         if (!animated || phase == Phase.FINISHED) return 1.0f
         return when (phase) {
-            Phase.ROLL -> if (turn <= 1) 2.15f else 2.36f
-            Phase.ROUTE -> 2.12f // readable fork and outgoing routes without giant crossings
-            Phase.ENCOUNTER -> 2.48f
-            Phase.TARGET -> 2.32f
+            Phase.ROLL -> if (turn <= 1) 1.92f else 2.02f
+            Phase.ROUTE -> 1.82f // show the fork and nearby alternatives, not just a giant junction
+            Phase.ENCOUNTER -> 2.12f
+            Phase.TARGET -> 2.04f
             Phase.FINISHED -> 1.0f
         }
     }
@@ -58,6 +58,7 @@ internal object CrossroadsCameraPreset {
     fun focusHeightFraction(phase: Phase, immersive: Boolean): Float =
         if (!immersive) 0.50f else when (phase) {
             Phase.ENCOUNTER -> 0.38f
+            Phase.ROUTE -> 0.30f // keep the junction above the tall route-choice sheet
             Phase.TARGET -> 0.40f
             else -> 0.43f
         }

@@ -32,18 +32,29 @@ class CrossroadsPresentationTest {
     }
 
     @Test fun liveWorldZoomsIntoActionAndFullMapRemainsWhole() {
-        assertEquals(2.15f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 1, true), 0.0001f)
-        assertEquals(2.12f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 1, true), 0.0001f)
-        assertEquals(2.12f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 12, true), 0.0001f)
-        assertEquals(2.36f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 12, true), 0.0001f)
-        assertEquals(2.48f, CrossroadsCameraPreset.followZoom(Phase.ENCOUNTER, 12, true), 0.0001f)
-        assertEquals(2.32f, CrossroadsCameraPreset.followZoom(Phase.TARGET, 12, true), 0.0001f)
+        assertEquals(1.92f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 1, true), 0.0001f)
+        assertEquals(1.82f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 1, true), 0.0001f)
+        assertEquals(1.82f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 12, true), 0.0001f)
+        assertEquals(2.02f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 12, true), 0.0001f)
+        assertEquals(2.12f, CrossroadsCameraPreset.followZoom(Phase.ENCOUNTER, 12, true), 0.0001f)
+        assertEquals(2.04f, CrossroadsCameraPreset.followZoom(Phase.TARGET, 12, true), 0.0001f)
         assertEquals(1.0f, CrossroadsCameraPreset.followZoom(Phase.FINISHED, 21, true), 0.0001f)
         assertEquals(1.0f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 9, false), 0.0001f)
     }
 
+    @Test fun routeDecisionKeepsJunctionVisibleAboveChoiceSheet() {
+        val focus = CrossroadsCameraPreset.focusHeightFraction(Phase.ROUTE, true)
+        val regular = CrossroadsCameraPreset.focusHeightFraction(Phase.ROLL, true)
+        assertTrue("Route focus should sit higher than ordinary rolling", focus < regular)
+        assertTrue("Route fork should be above an approximately 40% height sheet", focus < .40f)
+        assertTrue("Route camera stays detailed enough for the illustrated board",
+            CrossroadsCameraPreset.followZoom(Phase.ROUTE, 3, true) > 1.5f)
+    }
+
     @Test fun cameraLooksAboveTheBottomDockAndStaysAtFork() {
         assertEquals(0.43f, CrossroadsCameraPreset.focusHeightFraction(Phase.ROLL, true), .0001f)
+        assertEquals(0.30f, CrossroadsCameraPreset.focusHeightFraction(Phase.ROUTE, true), .0001f)
+        assertEquals(0.50f, CrossroadsCameraPreset.focusHeightFraction(Phase.ROUTE, false), .0001f)
         assertEquals(0.38f, CrossroadsCameraPreset.focusHeightFraction(Phase.ENCOUNTER, true), .0001f)
         assertEquals(0.50f, CrossroadsCameraPreset.focusHeightFraction(Phase.ENCOUNTER, false), .0001f)
         val source = androidx.compose.ui.geometry.Offset(.50f, .50f)
