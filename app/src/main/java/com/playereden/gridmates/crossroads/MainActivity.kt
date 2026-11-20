@@ -2454,7 +2454,7 @@ private fun BoardCanvas(
                 val start = position(state.players[state.playerIndex].position)
                 drawCircle(
                     Color(0xFFFFEAC0).copy(alpha = 0.88f),
-                    radius = if (immersiveWorld) 24f else 17f,
+                    radius = if (immersiveWorld) 30f else 17f,
                     center = start,
                     style = androidx.compose.ui.graphics.drawscope.Stroke(
                         width = if (immersiveWorld) 3.8f else 2.8f
@@ -2479,16 +2479,16 @@ private fun BoardCanvas(
                         cueStart, cueEnd, strokeWidth = colorWidth,
                         cap = StrokeCap.Round)
                     drawCircle(Color(0xFFFFF7DD),
-                        radius = if (immersiveWorld) 19f else 15f,
+                        radius = if (immersiveWorld) 25f else 15f,
                         center = end,
                         style = androidx.compose.ui.graphics.drawscope.Stroke(
-                            width = if (immersiveWorld) 4.2f else 3f
+                            width = if (immersiveWorld) 4.8f else 3f
                         ))
                     drawCircle(ring,
-                        radius = if (immersiveWorld) 15f else 12f,
+                        radius = if (immersiveWorld) 21f else 12f,
                         center = end,
                         style = androidx.compose.ui.graphics.drawscope.Stroke(
-                            width = if (immersiveWorld) 3.4f else 2.4f
+                            width = if (immersiveWorld) 3.8f else 2.4f
                         ))
                 }
             }
