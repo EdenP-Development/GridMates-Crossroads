@@ -1426,16 +1426,12 @@ private fun CrossroadsApp(
                                     Text("$routeCount paths", color = Bark,
                                         style = MaterialTheme.typography.labelSmall)
                                 }
-                                Button(
+                                TabletopPrimaryActionButton(
+                                    text = "COMPARE OR CHOOSE PATHS",
                                     onClick = { routeDialogDismissed = false },
                                     enabled = turnReady && routeCount >= 2,
-                                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(13.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Forest,
-                                        contentColor = Color.White
-                                    )
-                                ) { Text("COMPARE OR CHOOSE PATHS") }
+                                    modifier = Modifier.fillMaxWidth()
+                                )
                             }
                             Phase.ENCOUNTER -> {
                                 val choices = game.availableEncounterChoices()
