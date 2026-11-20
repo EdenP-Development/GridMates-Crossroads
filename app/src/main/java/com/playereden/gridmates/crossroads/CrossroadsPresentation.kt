@@ -46,10 +46,10 @@ internal object CrossroadsCameraPreset {
     fun followZoom(phase: Phase, turn: Int, animated: Boolean): Float {
         if (!animated || phase == Phase.FINISHED) return 1.0f
         return when (phase) {
-            Phase.ROLL -> if (turn <= 1) 2.15f else 2.48f
-            Phase.ROUTE -> 2.20f // keep the branch endpoints visible; paths scale independently
-            Phase.ENCOUNTER -> 2.60f
-            Phase.TARGET -> 2.40f
+            Phase.ROLL -> if (turn <= 1) 2.15f else 2.36f
+            Phase.ROUTE -> 2.12f // readable fork and outgoing routes without giant crossings
+            Phase.ENCOUNTER -> 2.48f
+            Phase.TARGET -> 2.32f
             Phase.FINISHED -> 1.0f
         }
     }
@@ -110,7 +110,7 @@ internal object CrossroadsCameraPreset {
     }
 
     /** Only the live playfield gains the stronger visual hierarchy. */
-    fun trailScale(immersive: Boolean) = if (immersive) 1.67f else 1f
+    fun trailScale(immersive: Boolean) = if (immersive) 1.58f else 1f
     fun tokenScale(immersive: Boolean) = if (immersive) 1.91f else 1f
     fun markerScale(immersive: Boolean) = if (immersive) 1.55f else 1f
 }
