@@ -25,7 +25,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.playereden.crossroads.core.Snapshot
 
 private val Evergreen = Color(0xFF48684D)
