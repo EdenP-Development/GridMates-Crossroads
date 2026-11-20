@@ -23,6 +23,22 @@ class BoardMotionAccentTest {
         assertEquals(0f, BoardMotionAccent.hopOffsetPx(.5f, Float.POSITIVE_INFINITY), .001f)
     }
 
+    @Test fun eachAuthoredStepSignalsContactWithoutExtraAnimationTime() {
+        // The existing travel animation goes 0 -> 1 per *real board node*.
+        // A brief signal near arrival should vanish at the exact endpoints.
+        assertEquals(0f, BoardMotionAccent.stepContactPulse(0f, true), .0001f)
+        assertEquals(0f, BoardMotionAccent.stepContactPulse(.70f, true), .0001f)
+        assertTrue(BoardMotionAccent.stepContactPulse(.86f, true) > .46f)
+        assertEquals(0f, BoardMotionAccent.stepContactPulse(1f, true), .0001f)
+        assertEquals(0f, BoardMotionAccent.stepContactPulse(.86f, false), .0001f)
+        assertEquals(0f, BoardMotionAccent.stepContactPulse(Float.NaN, true), .0001f)
+        assertEquals(0f,
+            BoardMotionAccent.stepContactPulse(Float.POSITIVE_INFINITY, true), .0001f)
+        assertEquals(0f, BoardMotionAccent.stepContactPulse(-10f, true), .0001f)
+        assertEquals(0f, BoardMotionAccent.stepContactPulse(10f, true), .0001f)
+        assertTrue(BoardMotionAccent.stepContactPulse(.8f, true) <= .48f)
+    }
+
     @Test fun arrivalPopAndRippleFadeWithoutChangingPositionOrSizeLimits() {
         assertEquals(1f, BoardMotionAccent.arrivalScale(0f), .0001f)
         assertEquals(1.16f, BoardMotionAccent.arrivalScale(1f), .0001f)
