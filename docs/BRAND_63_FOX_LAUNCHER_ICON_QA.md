@@ -8,7 +8,7 @@ The third generated concept was chosen: smiling orange/cream fox as a wooden boa
 ## Resource integration
 - Android launcher manifest remains `@mipmap/ic_launcher` for both normal and round icons.
 - Android adaptive icon `app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml` references `@drawable/ic_crossroads_fox_foreground` against existing `crossroads_icon_background`.
-- **Actual binary image**: `app/src/main/res/drawable-nodpi/ic_crossroads_fox_foreground.webp` (432×432 transparent canvas, approved original illustration scaled to a 272×272 centered tile). Exact Git blob SHA: `cba155af230e2f0af7a61331cff754abc0e24756`.
+- **Actual binary image**: `app/src/main/res/drawable-nodpi/ic_crossroads_fox_foreground.webp` (432×432 transparent canvas, approved original illustration scaled to a 320×320 centered tile with only the source's near-black exterior corners alpha-cleaned so they do not appear as a black square). Exact Git blob SHA: `7b26b8d7f7db5875501b782f1d640b214c00892f`.
 - Main app minSdk 26 supports adaptive icons. No other `ic_launcher` variants were altered; old fallback vector is intentionally kept as unused backup. This is a QA optimization for installing the real artwork; store listing master and optional multi-density fallback artwork are in the separate source package but not needed to test this launcher.
 - Compressed original-style WebP source, not an approximation. Smaller artwork in a transparent canvas is intentional to keep the fox and fork inside common adaptive masks.
 
