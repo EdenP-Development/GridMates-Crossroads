@@ -46,10 +46,10 @@ internal object CrossroadsCameraPreset {
     fun followZoom(phase: Phase, turn: Int, animated: Boolean): Float {
         if (!animated || phase == Phase.FINISHED) return 1.0f
         return when (phase) {
-            Phase.ROLL -> if (turn <= 1) 2.00f else 2.40f
-            Phase.ROUTE -> 2.15f // allow the outgoing forks to read together
-            Phase.ENCOUNTER -> 2.55f
-            Phase.TARGET -> 2.30f
+            Phase.ROLL -> if (turn <= 1) 2.15f else 2.48f
+            Phase.ROUTE -> 2.20f // keep the branch endpoints visible; paths scale independently
+            Phase.ENCOUNTER -> 2.60f
+            Phase.TARGET -> 2.40f
             Phase.FINISHED -> 1.0f
         }
     }
@@ -71,7 +71,7 @@ internal object CrossroadsCameraPreset {
         if (exits.isEmpty()) return source
         val mean = Offset(exits.map { it.x }.average().toFloat(),
             exits.map { it.y }.average().toFloat())
-        val originWeight = if (immersive) 0.72f else 1f / (exits.size + 1f)
+        val originWeight = if (immersive) 0.79f else 1f / (exits.size + 1f)
         return source * originWeight + mean * (1f - originWeight)
     }
 
@@ -110,9 +110,9 @@ internal object CrossroadsCameraPreset {
     }
 
     /** Only the live playfield gains the stronger visual hierarchy. */
-    fun trailScale(immersive: Boolean) = if (immersive) 1.32f else 1f
-    fun tokenScale(immersive: Boolean) = if (immersive) 1.42f else 1f
-    fun markerScale(immersive: Boolean) = if (immersive) 1.18f else 1f
+    fun trailScale(immersive: Boolean) = if (immersive) 1.67f else 1f
+    fun tokenScale(immersive: Boolean) = if (immersive) 1.91f else 1f
+    fun markerScale(immersive: Boolean) = if (immersive) 1.55f else 1f
 }
 
 /**
