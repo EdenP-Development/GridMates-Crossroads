@@ -32,12 +32,12 @@ class CrossroadsPresentationTest {
     }
 
     @Test fun liveWorldZoomsIntoActionAndFullMapRemainsWhole() {
-        assertEquals(2.00f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 1, true), 0.0001f)
-        assertEquals(2.15f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 1, true), 0.0001f)
-        assertEquals(2.15f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 12, true), 0.0001f)
-        assertEquals(2.40f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 12, true), 0.0001f)
-        assertEquals(2.55f, CrossroadsCameraPreset.followZoom(Phase.ENCOUNTER, 12, true), 0.0001f)
-        assertEquals(2.30f, CrossroadsCameraPreset.followZoom(Phase.TARGET, 12, true), 0.0001f)
+        assertEquals(2.15f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 1, true), 0.0001f)
+        assertEquals(2.20f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 1, true), 0.0001f)
+        assertEquals(2.20f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 12, true), 0.0001f)
+        assertEquals(2.48f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 12, true), 0.0001f)
+        assertEquals(2.60f, CrossroadsCameraPreset.followZoom(Phase.ENCOUNTER, 12, true), 0.0001f)
+        assertEquals(2.40f, CrossroadsCameraPreset.followZoom(Phase.TARGET, 12, true), 0.0001f)
         assertEquals(1.0f, CrossroadsCameraPreset.followZoom(Phase.FINISHED, 21, true), 0.0001f)
         assertEquals(1.0f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 9, false), 0.0001f)
     }
@@ -93,9 +93,22 @@ class CrossroadsPresentationTest {
         assertEquals(1.0f, CrossroadsCameraPreset.trailScale(false), .0001f)
         assertEquals(1.0f, CrossroadsCameraPreset.markerScale(false), .0001f)
         assertEquals(1.0f, CrossroadsCameraPreset.tokenScale(false), .0001f)
-        assertTrue(CrossroadsCameraPreset.trailScale(true) > 1.25f)
-        assertTrue(CrossroadsCameraPreset.markerScale(true) > 1.10f)
-        assertTrue(CrossroadsCameraPreset.tokenScale(true) > 1.35f)
+        assertEquals(1.67f, CrossroadsCameraPreset.trailScale(true), .0001f)
+        assertEquals(1.55f, CrossroadsCameraPreset.markerScale(true), .0001f)
+        assertEquals(1.91f, CrossroadsCameraPreset.tokenScale(true), .0001f)
+    }
+
+    @Test fun paintedPiecesAndRoadsArePrioritizedButFullMapIsUntouched() {
+        val trail = CrossroadsCameraPreset.trailScale(true)
+        val token = CrossroadsCameraPreset.tokenScale(true)
+        val marker = CrossroadsCameraPreset.markerScale(true)
+        assertTrue("Painted paths must be dominant, not hairlines", trail >= 1.6f)
+        assertTrue("Traveler portraits should be plainly visible", token >= 1.8f)
+        assertTrue("Branch junctions should be legible", marker >= 1.5f)
+        assertTrue("Pieces must remain larger than their junctions", token > marker)
+        assertEquals(1f, CrossroadsCameraPreset.tokenScale(false), .0001f)
+        assertEquals(1f, CrossroadsCameraPreset.trailScale(false), .0001f)
+        assertEquals(1f, CrossroadsCameraPreset.markerScale(false), .0001f)
     }
 
     @Test fun fourPiecesStaySeparatedAtSharedStartAndFocusOffsetMatchesRendering() {
