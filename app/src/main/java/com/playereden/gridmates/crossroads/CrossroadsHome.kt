@@ -122,13 +122,8 @@ internal fun CrossroadsHomeScreen(
     // Keep the first viewport focused on starting a race. Secondary tools
     // remain available in an explicit, accessible options section.
     var showExtraOptions by remember { mutableStateOf(false) }
-    // Keep both setup selectors in the Woodland palette; Material's default
-    // selected chip tint was lavender on actual Android QA1130 screenshots.
-    val choiceColors = FilterChipDefaults.filterChipColors(
-        selectedContainerColor = Color(0xFFE2EAD9),
-        selectedLabelColor = Ink,
-        labelColor = Muted
-    )
+    // GAMEFEEL-67: all race selectors now share original tactile wooden
+    // controls, rather than Material's generic FilterChips.
 
     // A game-first home screen: art appears immediately and Start stays
     // reachable on short phones, regardless of setup scroll position.
@@ -174,18 +169,16 @@ internal fun CrossroadsHomeScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            FilterChip(
+            TabletopChoicePill(
+                text = "Solo vs AI",
                 selected = !passAndPlay,
                 onClick = { passAndPlay = false },
-                label = { Text("Solo vs AI") },
-                colors = choiceColors,
                 modifier = Modifier.weight(1f)
             )
-            FilterChip(
+            TabletopChoicePill(
+                text = "Pass & Play",
                 selected = passAndPlay,
                 onClick = { passAndPlay = true },
-                label = { Text("Pass & Play") },
-                colors = choiceColors,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -199,11 +192,10 @@ internal fun CrossroadsHomeScreen(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             (2..4).forEach { count ->
-                FilterChip(
+                TabletopChoicePill(
+                    text = "$count players",
                     selected = count == seats,
                     onClick = { seats = count },
-                    label = { Text("$count players", textAlign = TextAlign.Center) },
-                   colors = choiceColors,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -221,11 +213,10 @@ internal fun CrossroadsHomeScreen(
                 CrossroadsCourse.CLASSIC_ID to "Classic",
                 CrossroadsCourse.LONG_ID to "Long"
             ).forEach { (id, label) ->
-                FilterChip(
+                TabletopChoicePill(
+                    text = label,
                     selected = selectedCourseId == id,
                     onClick = { onCourseChange(id) },
-                    label = { Text(label, maxLines = 1) },
-                    colors = choiceColors,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -357,14 +348,10 @@ internal fun CrossroadsHomeScreen(
                     homeRaceSummary(seats, passAndPlay, playtestRules),
                     style = MaterialTheme.typography.labelMedium, color = Muted
                 )
-                Button(
+                TabletopStartRaceButton(
                     onClick = { onStart(seats, passAndPlay) },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
-                    contentPadding = PaddingValues(vertical = 12.dp)
-                ) {
-                    Text("START RACE", style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold)
-                }
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
