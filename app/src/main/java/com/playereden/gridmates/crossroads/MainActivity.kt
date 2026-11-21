@@ -123,7 +123,8 @@ private fun CrossroadsApp(
         val original = listOf(classicBoard, quickBoard, longBoard)
         (original + original.map(DecisionLab::variant) +
             original.map(DecisionLab::variantV2) +
-            original.map(DecisionLab::variantV3)).associateBy { it.id }
+            original.map(DecisionLab::variantV3) +
+            original.map(DecisionLab::variantV4)).associateBy { it.id }
     }
     val context = LocalContext.current
     // Crossroads runs inside its own ComponentActivity. Explicitly observe the
@@ -517,7 +518,7 @@ private fun CrossroadsApp(
     fun start(seats: Int, passAndPlay: Boolean) {
         if (lanRole != LanRole.OFFLINE) leaveGame()
         val humans = if (passAndPlay) (0 until seats).toSet() else setOf(0)
-        val boardId = if (playtestRules) selectedCourseId + DecisionLab.V3_SUFFIX
+        val boardId = if (playtestRules) selectedCourseId + DecisionLab.V4_SUFFIX
             else selectedCourseId
         val newGame = GameSession(knownBoards.getValue(boardId), catalogue, seats = seats,
             seed = java.util.Random().nextInt(), humanIndices = humans)
@@ -1316,7 +1317,9 @@ private fun CrossroadsApp(
                                     style = MaterialTheme.typography.bodySmall, color = Bark
                                 )
                                 Phase.ENCOUNTER -> Text(
-                                    "Supplies: advance 2. Cover: advance 1 and gain a shield. Gamble: face the hazard. Brace: stop and gain a shield.",
+                                    if (game.pendingPushHazardBonus > 0)
+                                        "Supplies: +2. Cover: +1 and shield. Gamble: hazard; successful advance gets +2 Push bonus. Brace: stop and shield."
+                                    else "Supplies: advance 2. Cover: advance 1 and gain a shield. Gamble: face the hazard. Brace: stop and gain a shield.",
                                     style = MaterialTheme.typography.bodySmall, color = Bark
                                 )
                                 else -> Unit
@@ -1455,6 +1458,7 @@ private fun CrossroadsApp(
                                     choices = choices,
                                     artwork = art,
                                     enabled = turnReady,
+                                    pushHazardSuccessBonus = game.pendingPushHazardBonus,
                                     onChoose = { option -> localEncounterChoice(option) },
                                     modifier = Modifier.fillMaxWidth()
                                 )
