@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.playereden.crossroads.core.Snapshot
 import com.playereden.crossroads.core.DecisionLab
+import com.playereden.crossroads.core.FairFinishReceipt
 
 private val Evergreen = Color(0xFF48684D)
 private val Earth = Color(0xFF80664B)
@@ -42,6 +43,24 @@ internal object CrossroadsFinishCopy {
         if (winnerName == "You") "You reached the finish!" else "$winnerName wins!"
 
     fun isLocalWinner(winnerName: String): Boolean = winnerName == "You"
+
+    /** This copy describes the actual finish decision, not a generic rule. */
+    fun fairFinishExplanation(receipt: FairFinishReceipt): String {
+        if (receipt.finishers == 1) {
+            return if (receipt.laterSeatsGotFinalChance)
+                "${receipt.firstFinisherName} crossed first. Later racers had their last turn, " +
+                    "but nobody else reached Finish."
+            else
+                "${receipt.firstFinisherName} crossed from the final seat. " +
+                    "Everyone already had their turn this round."
+        }
+        val steps = receipt.winningUnusedSteps
+        val plural = if (steps == 1) "step" else "steps"
+        val tie = if (receipt.tiedOnWinningSteps)
+            " Tied on unused steps; the earlier of the tied finishers won." else ""
+        return "${receipt.firstFinisherName} crossed first. ${receipt.finishers} racers " +
+            "reached Finish. ${receipt.winnerName} won with $steps unused $plural.$tie"
+    }
 }
 
 /** Original painted finish seal: a tabletop flag medal, not an imported asset. */
@@ -109,7 +128,8 @@ internal fun CrossroadsResultsContent(
     state: Snapshot,
     courseId: String,
     elapsedSeconds: Long,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    finishReceipt: FairFinishReceipt? = null
 ) {
     val winnerIndex = state.winnerIndex
     val winnerName = winnerIndex?.let { state.players.getOrNull(it)?.name } ?: "A player"
@@ -179,9 +199,9 @@ internal fun CrossroadsResultsContent(
         }
         if (equalRound) {
             Text(
-                "Fair finish · Remaining racers completed the round. When more than " +
-                    "one reached Finish, unused movement decided it; equal movement " +
-                    "favored the first arrival.",
+                if (finishReceipt != null)
+                    CrossroadsFinishCopy.fairFinishExplanation(finishReceipt)
+                else "Fair finish · The finishing round is complete.",
                 style = MaterialTheme.typography.bodySmall,
                 color = Earth
             )

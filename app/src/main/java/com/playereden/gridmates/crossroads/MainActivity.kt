@@ -1817,6 +1817,7 @@ private fun CrossroadsApp(
                                 state = state,
                                 courseId = board.id,
                                 elapsedSeconds = finishedElapsedSeconds,
+                                finishReceipt = game.fairFinishReceipt,
                                 modifier = Modifier.weight(1f, fill = false)
                             )
                             Button(

@@ -34,13 +34,18 @@ internal object CrossroadsCourse {
         else -> "Woodland race"
     }
 
-    fun resultLine(boardId: String): String =
-        "First across ${title(boardId)}" +
-            if (boardId.endsWith(DecisionLab.SUFFIX) ||
-                boardId.endsWith(DecisionLab.V2_SUFFIX) ||
-                boardId.endsWith(DecisionLab.V3_SUFFIX) ||
-                boardId.endsWith(DecisionLab.V4_SUFFIX) ||
-                boardId.endsWith(DecisionLab.V5_SUFFIX)) " · Playtest" else ""
+    fun resultLine(boardId: String): String {
+        // A Lab v5 winner may reach Finish AFTER the first arrival.
+        // Calling that winner "first across" would be factually incorrect.
+        val headline = if (boardId.endsWith(DecisionLab.V5_SUFFIX))
+            "Fair finish on ${title(boardId)}" else "First across ${title(boardId)}"
+        val playtest = if (boardId.endsWith(DecisionLab.SUFFIX) ||
+            boardId.endsWith(DecisionLab.V2_SUFFIX) ||
+            boardId.endsWith(DecisionLab.V3_SUFFIX) ||
+            boardId.endsWith(DecisionLab.V4_SUFFIX) ||
+            boardId.endsWith(DecisionLab.V5_SUFFIX)) " · Playtest" else ""
+        return headline + playtest
+    }
 }
 
 /** New-match selection only. Existing checkpoints always supply their own board ID. */
