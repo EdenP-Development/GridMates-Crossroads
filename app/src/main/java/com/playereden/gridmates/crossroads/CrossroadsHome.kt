@@ -107,6 +107,8 @@ internal fun CrossroadsHomeScreen(
     onBoardLookChange: (CrossroadsBoardLook) -> Unit,
     playtestRules: Boolean,
     onPlaytestRulesChange: (Boolean) -> Unit,
+    fairFinishExperiment: Boolean,
+    onFairFinishExperimentChange: (Boolean) -> Unit,
     onNearbyHost: () -> Unit,
     onNearbyJoin: () -> Unit,
     onExportProgress: () -> Unit,
@@ -277,8 +279,37 @@ internal fun CrossroadsHomeScreen(
             }
         }
         if (playtestRules) {
-            Text("Lab v5 · Offline playtest: everyone gets a turn in the finish round. If multiple racers finish, most unused steps wins. Includes the v4 Push risk reward.",
-                style = MaterialTheme.typography.bodySmall, color = Muted)
+            Surface(
+                color = if (fairFinishExperiment) Color(0xFFE4EBD9) else Color(0xFFF2ECDD),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Fair finish · Lab v5",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold, color = Ink)
+                        Text("Let later racers finish the round",
+                            style = MaterialTheme.typography.bodySmall, color = Muted)
+                    }
+                    Switch(
+                        checked = fairFinishExperiment,
+                        onCheckedChange = onFairFinishExperimentChange
+                    )
+                }
+            }
+            Text(
+                if (fairFinishExperiment)
+                    "Lab v5: after the first finish, later seats get one last move. " +
+                        "Most unused steps wins if multiple players finish."
+                else "Lab v4: Steady and Push, interactive encounters and the " +
+                    "successful Push hazard reward; first to Finish wins.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Muted
+            )
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
