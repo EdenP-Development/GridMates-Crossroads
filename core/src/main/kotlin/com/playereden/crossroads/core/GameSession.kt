@@ -645,7 +645,7 @@ class GameSession(
         phase = Phase.FINISHED
         remainingSteps = 0
         lastMessage = if (equalRoundFinishers > 1)
-            "${players[leader].name} wins the final round with the most unused movement!"
+            "${players[leader].name} wins the final round! More unused steps wins; equal steps favor the first arrival."
         else "${players[leader].name} reached FINISH and won after everyone had a turn!"
     }
 
