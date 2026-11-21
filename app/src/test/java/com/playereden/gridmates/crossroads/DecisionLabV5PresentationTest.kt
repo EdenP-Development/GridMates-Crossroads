@@ -18,6 +18,16 @@ class DecisionLabV5PresentationTest {
             CrossroadsCourse.resultLine(base))
     }
 
+    @Test fun newMatchModeCanCompareV4AndV5WithoutChangingLegacy() {
+        val base = CrossroadsCourse.QUICK_ID
+        assertEquals(base, CrossroadsExperimentalMode.boardId(
+            base, tactical = false, fairFinish = true))
+        assertEquals(base + DecisionLab.V4_SUFFIX,
+            CrossroadsExperimentalMode.boardId(base, tactical = true, fairFinish = false))
+        assertEquals(base + DecisionLab.V5_SUFFIX,
+            CrossroadsExperimentalMode.boardId(base, tactical = true, fairFinish = true))
+    }
+
     @Test fun conditionalPushHazardRewardIsStillDisclosedInV5() {
         assertEquals("Success: +2 extra",
             encounterActionCopy("gamble", pushHazardSuccessBonus = 2).impact)
