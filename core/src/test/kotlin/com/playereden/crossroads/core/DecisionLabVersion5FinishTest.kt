@@ -53,6 +53,7 @@ class DecisionLabVersion5FinishTest {
         assertEquals("FINISH", g.players[0].position)
         assertTrue(g.finalRoundPending)
         assertEquals("Player 1", g.leadingFinisherName)
+        assertNull("No winner receipt until the finishing round ends", g.fairFinishReceipt)
         val pending = g.checkpoint("v5-final-pending", epoch)
         val restored = GameSession.restore(g.board, emptyEvents, pending)
         assertEquals(g.snapshot(), restored.snapshot())
@@ -64,8 +65,17 @@ class DecisionLabVersion5FinishTest {
         assertEquals(0, g.winnerIndex)
         assertEquals("A", g.players[1].position)
         assertFalse(g.finalRoundPending)
-        assertEquals(g.snapshot(), GameSession.restore(
-            g.board, emptyEvents, g.checkpoint("v5-final", epoch)).snapshot())
+        val receipt = requireNotNull(g.fairFinishReceipt)
+        assertEquals("Player 1", receipt.firstFinisherName)
+        assertEquals("Player 1", receipt.winnerName)
+        assertEquals(1, receipt.winningUnusedSteps)
+        assertEquals(1, receipt.finishers)
+        assertFalse(receipt.tiedOnWinningSteps)
+        assertTrue(receipt.laterSeatsGotFinalChance)
+        val finishedRestore = GameSession.restore(
+            g.board, emptyEvents, g.checkpoint("v5-final", epoch))
+        assertEquals(g.snapshot(), finishedRestore.snapshot())
+        assertEquals(receipt, finishedRestore.fairFinishReceipt)
     }
 
     @Test fun laterFinisherCanWinWithGreaterUnusedMovement() {
@@ -78,8 +88,16 @@ class DecisionLabVersion5FinishTest {
         assertEquals(1, g.winnerIndex)
         assertEquals("FINISH", g.players[0].position)
         assertEquals("FINISH", g.players[1].position)
-        assertEquals(g.snapshot(), GameSession.restore(
-            g.board, emptyEvents, g.checkpoint("last-seat-overtook", epoch)).snapshot())
+        val receipt = requireNotNull(g.fairFinishReceipt)
+        assertEquals("Player 1", receipt.firstFinisherName)
+        assertEquals("Player 2", receipt.winnerName)
+        assertEquals(2, receipt.finishers)
+        assertTrue(receipt.winningUnusedSteps > 1)
+        assertFalse(receipt.tiedOnWinningSteps)
+        val restored = GameSession.restore(
+            g.board, emptyEvents, g.checkpoint("last-seat-overtook", epoch))
+        assertEquals(g.snapshot(), restored.snapshot())
+        assertEquals(receipt, restored.fairFinishReceipt)
     }
 
     @Test fun tiedUnusedMovementKeepsEarliestArrivalAndAllFourGetTheirTurn() {
@@ -97,8 +115,16 @@ class DecisionLabVersion5FinishTest {
         assertEquals(0, g.winnerIndex)
         assertEquals(4, g.players.count { it.position == "FINISH" })
         assertEquals(4, g.turn)
-        assertEquals(g.snapshot(), GameSession.restore(
-            g.board, emptyEvents, g.checkpoint("v5-tied-finish", epoch)).snapshot())
+        val receipt = requireNotNull(g.fairFinishReceipt)
+        assertEquals(4, receipt.finishers)
+        assertEquals(1, receipt.winningUnusedSteps)
+        assertEquals("Player 1", receipt.firstFinisherName)
+        assertEquals("Player 1", receipt.winnerName)
+        assertTrue(receipt.tiedOnWinningSteps)
+        val restored = GameSession.restore(
+            g.board, emptyEvents, g.checkpoint("v5-tied-finish", epoch))
+        assertEquals(g.snapshot(), restored.snapshot())
+        assertEquals(receipt, restored.fairFinishReceipt)
     }
 
     @Test fun lastSeatFinishingFirstEndsTheMatchWithoutFakeExtraRound() {
@@ -114,6 +140,11 @@ class DecisionLabVersion5FinishTest {
         assertEquals(Phase.FINISHED, g.phase)
         assertEquals(3, g.winnerIndex)
         assertEquals(4, g.turn)
+        val receipt = requireNotNull(g.fairFinishReceipt)
+        assertEquals("Player 4", receipt.firstFinisherName)
+        assertEquals("Player 4", receipt.winnerName)
+        assertEquals(1, receipt.finishers)
+        assertFalse(receipt.laterSeatsGotFinalChance)
     }
 
     @Test fun oldV4StillStopsImmediatelyOnFirstFinish() {
@@ -122,6 +153,7 @@ class DecisionLabVersion5FinishTest {
         assertEquals(Phase.FINISHED, g.phase)
         assertEquals(0, g.winnerIndex)
         assertFalse(g.finalRoundPending)
+        assertNull(g.fairFinishReceipt)
     }
 
     @Test fun allPriorBoardIdentitiesAndCheckpointsRemainSeparate() {
