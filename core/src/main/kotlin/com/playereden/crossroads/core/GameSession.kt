@@ -19,10 +19,15 @@ class GameSession(
     // Reconstructed entirely from actions during checkpoint replay. Neither
     // this transient guard nor UI animation enters the saved snapshot.
     private var steadyFooting = false
+    private var pushedThisTurn = false
     /** Live, replay-derived travel stance; used only to describe Lab route choices. */
     val steadyTravelChosen: Boolean get() = playtestRules && steadyFooting
     /** At most one on-entry encounter (and v2 shelter bonus) per entire turn. */
     val routeEncounterAvailable: Boolean get() = playtestRules && !eventTriggeredThisTurn
+    /** Accurate preview for the currently pending v4 hazard; no RNG or effect yet. */
+    val pendingPushHazardBonus: Int get() =
+        if (phase == Phase.ENCOUNTER && pendingEncounterPool == "hazard")
+            DecisionLab.pushHazardSuccessBonus(board, pushedThisTurn) else 0
     private val originalHumanIndices = humanIndices.toSortedSet()
     private val acceptedActions = mutableListOf<MatchAction>()
     // A bot turn executes one nested legal roll/route/target internally; the
@@ -204,6 +209,7 @@ class GameSession(
         require(playtestRules) { "Travel tactics are not available in classic rules" }
         require(phase == Phase.ROLL) { "Not waiting for a roll" }
         steadyFooting = steady
+        pushedThisTurn = !steady
         if (steady) {
             die = 4
             remainingSteps = 4
@@ -243,9 +249,9 @@ class GameSession(
         record(MatchAction(MatchActionKind.ROUTE, routeId = id))
     }
 
-    /** Optional Lab v3 response. Never surfaced for older rule variants. */
+    /** Optional Lab v3/v4 response. Never surfaced for older rule variants. */
     fun availableEncounterChoices(): List<String> {
-        if (!DecisionLab.isV3(board) || phase != Phase.ENCOUNTER) return emptyList()
+        if (!DecisionLab.hasInteractiveEncounter(board) || phase != Phase.ENCOUNTER) return emptyList()
         return when (pendingEncounterPool) {
             "shelter" -> listOf("supplies", "cover")
             "hazard" -> listOf("gamble", "brace")
@@ -254,7 +260,7 @@ class GameSession(
     }
 
     fun chooseEncounter(choice: String) {
-        require(phase == Phase.ENCOUNTER && DecisionLab.isV3(board)) {
+        require(phase == Phase.ENCOUNTER && DecisionLab.hasInteractiveEncounter(board)) {
             "No encounter decision is pending"
         }
         require(choice in availableEncounterChoices()) { "Unavailable encounter choice" }
@@ -299,9 +305,12 @@ class GameSession(
                 val title = event.description.ifBlank { event.id.replace('_', ' ') }
                 when (event.effect.type) {
                     "advance" -> {
-                        remainingSteps += event.effect.spaces
-                        lastMessage = "${players[currentIndex].name} risked $route: $title! +${event.effect.spaces} steps."
-                        recordEncounter(title, "Risk succeeded: +${event.effect.spaces} steps", "benefit")
+                        val successBonus = DecisionLab.pushHazardSuccessBonus(board, pushedThisTurn)
+                        val gained = event.effect.spaces + successBonus
+                        remainingSteps += gained
+                        val bonusCopy = if (successBonus > 0) " (Push risk bonus +$successBonus)" else ""
+                        lastMessage = "${players[currentIndex].name} risked $route: $title! +$gained steps$bonusCopy."
+                        recordEncounter(title, "Risk succeeded: +$gained steps$bonusCopy", "benefit")
                         progress()
                     }
                     "retreat" -> {
@@ -464,7 +473,7 @@ class GameSession(
             else 0
         remainingSteps += steadyShelterBonus
         val bonusMessage = if (steadyShelterBonus > 0) " · Steady trail +1" else ""
-        if (DecisionLab.isV3(board) && poolName in listOf("shelter", "hazard")) {
+        if (DecisionLab.hasInteractiveEncounter(board) && poolName in listOf("shelter", "hazard")) {
             pendingEncounterPool = poolName
             pendingEncounterRegion = entered.region
             pendingEncounterRoute = choice.label
@@ -613,6 +622,7 @@ class GameSession(
         pendingEncounterRegion = ""
         pendingEncounterRoute = ""
         steadyFooting = false
+        pushedThisTurn = false
     }
 
     private fun distanceToFinish(id: String, seen: Set<String> = emptySet()): Int {
