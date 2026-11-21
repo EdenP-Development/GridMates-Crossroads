@@ -135,3 +135,14 @@ jobs:
             core/build/reports/gameplay-74/finish_order_fairness_samples.csv
           if-no-files-found: warn
           retention-days: 30
+
+      - name: Upload v4-v5 equal-turn finish comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-GAMEPLAY-75-${{ github.sha }}
+          path: |
+            core/build/reports/gameplay-75/v4_v5_equal_turn_summary.txt
+            core/build/reports/gameplay-75/v4_v5_equal_turn_samples.csv
+          if-no-files-found: warn
+          retention-days: 30
