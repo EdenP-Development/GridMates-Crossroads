@@ -3,6 +3,21 @@ package com.playereden.crossroads.core
 import kotlin.random.Random
 
 /**
+ * Truthful, reconstructed finish receipt for Lab v5 only.
+ *
+ * This is derived from authoritative action replay; it is NOT a serialized
+ * Snapshot/checkpoint field, so prior board identities and save formats stay intact.
+ */
+data class FairFinishReceipt(
+    val firstFinisherName: String,
+    val winnerName: String,
+    val winningUnusedSteps: Int,
+    val finishers: Int,
+    val tiedOnWinningSteps: Boolean,
+    val laterSeatsGotFinalChance: Boolean
+)
+
+/**
  * Small deterministic local rules engine. No sockets, UI, account or Android dependency.
  * Dice/events are sourced from one seeded PRNG owned by the session.
  */
@@ -25,6 +40,23 @@ class GameSession(
     private var equalRoundLeader: Int? = null
     private var equalRoundLeadExcess: Int = -1
     private var equalRoundFinishers: Int = 0
+    private var equalRoundFirstFinisher: Int? = null
+    private var equalRoundBestExcessTies: Int = 0
+
+    /** Present only after a completed v5 game; always restored by action replay. */
+    val fairFinishReceipt: FairFinishReceipt? get() {
+        if (!DecisionLab.isV5(board) || phase != Phase.FINISHED) return null
+        val first = equalRoundFirstFinisher ?: return null
+        val leader = equalRoundLeader ?: return null
+        return FairFinishReceipt(
+            firstFinisherName = players[first].name,
+            winnerName = players[leader].name,
+            winningUnusedSteps = equalRoundLeadExcess,
+            finishers = equalRoundFinishers,
+            tiedOnWinningSteps = equalRoundBestExcessTies > 1,
+            laterSeatsGotFinalChance = first < players.lastIndex
+        )
+    }
     val finalRoundPending: Boolean get() =
         DecisionLab.finishRoundEqually(board) && equalRoundLeader != null && phase != Phase.FINISHED
     val leadingFinisherName: String? get() =
@@ -622,11 +654,15 @@ class GameSession(
 
         val finishedName = players[currentIndex].name
         val excess = remainingSteps.coerceAtLeast(0)
+        if (equalRoundFirstFinisher == null) equalRoundFirstFinisher = currentIndex
         // Higher unused movement wins if multiple reach FINISH this round.
-        // Equal excess preserves earliest finish as the documented tie-break.
+        // Equal excess preserves earliest of those tied for the highest score.
         if (equalRoundLeader == null || excess > equalRoundLeadExcess) {
             equalRoundLeader = currentIndex
             equalRoundLeadExcess = excess
+            equalRoundBestExcessTies = 1
+        } else if (excess == equalRoundLeadExcess) {
+            equalRoundBestExcessTies++
         }
         equalRoundFinishers++
         if (currentIndex == players.lastIndex) {
