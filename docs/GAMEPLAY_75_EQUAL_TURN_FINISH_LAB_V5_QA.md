@@ -10,7 +10,7 @@ GAMEPLAY-73's v4 Push + successful Gamble reward remains unapproved: under poole
 
 ## V5 rule: one final chance, not a prolonged extra round
 
-- The existing **Tactical choices · Experimental** toggle starts an offline Lab v5 race for *new* matches; the default OFF still starts the original unmodified rules. Nearby Host/Join remains the original classic race.
+- In the existing **Tactical choices · Experimental** section, **Fair finish · Lab v5** is a separate OFF-by-default switch. With Tactical ON and Fair Finish OFF, new matches use v4; with both ON, new offline matches use v5. Tactical OFF still starts original unmodified rules. Nearby Host/Join remains original Classic. The Fair Finish preference is stored separately from active-game checkpoints.
 - The *first* traveler who reaches the real FINISH starts the **Final Round** only when later seat indices have not yet had their turn in that round. That traveler stays at FINISH and does not roll again. Remaining later seats get exactly their current-round turn, with unchanged dice, encounters and routes.
 - If a later traveler also reaches FINISH, compare **unused movement steps on the finishing roll or route move**: the most unused wins. If tied, the traveler who reached FINISH first wins. This is visible before starting and on the final receipt, not a hidden catch-up effect.
 - If no later racer finishes, the first traveler wins normally. If the first finisher is the last seat, the match ends immediately. The game does **not** start another entire round or let previous seats roll again.
@@ -34,8 +34,8 @@ GAMEPLAY-73's v4 Push + successful Gamble reward remains unapproved: under poole
 
 ## Physical Android playtest
 
-1. From successful v5 QA, install over QA1571 **without deleting data**. Verify existing stats/backup and an older v4 checkpoint still resume; do not create a v5 active checkpoint before installing an older APK.
-2. Start original Quick with experimental OFF: race still ends on first arrival. In new v5 Quick with toggle ON: first-seat finisher triggers the final chance for later seats with a clear turn title.
+1. From successful v5 QA, install over QA1571 **without deleting data**. Verify existing stats/backup and an older v4 checkpoint still resume. Tactical ON/Fair Finish OFF starts v4; toggling Fair Finish ON starts v5. Do not create a v5 active checkpoint before installing an older APK.
+2. Start original Quick with Tactical OFF: race still ends on first arrival. With Tactical ON/Fair Finish OFF, v4 also ends on first arrival; with both ON, a v5 Quick first-seat finisher triggers the final chance for later seats with a clear turn title.
 3. Two-player Pass & Play: have seat 1 finish and seat 2 fail; then have both finish in a round and verify unused-step tie rule. On four-player Pass & Play, each later seat gets a chance, no earlier seat gets another turn.
 4. Save, force-stop, reopen during pending final chance. The same active seat and prior first finisher must return; playing through produces a single result and no duplicate official stats.
 5. Confirm the result receipt distinguishes `Final-round winner` and `Reached Finish`, including when the later seat wins.
