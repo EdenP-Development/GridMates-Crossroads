@@ -124,3 +124,14 @@ jobs:
             core/build/reports/gameplay-73/lab_v3_vs_v4_samples.csv
           if-no-files-found: warn
           retention-days: 30
+
+      - name: Upload identical-bot finish-order fairness report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-GAMEPLAY-74-${{ github.sha }}
+          path: |
+            core/build/reports/gameplay-74/finish_order_fairness_summary.txt
+            core/build/reports/gameplay-74/finish_order_fairness_samples.csv
+          if-no-files-found: warn
+          retention-days: 30
