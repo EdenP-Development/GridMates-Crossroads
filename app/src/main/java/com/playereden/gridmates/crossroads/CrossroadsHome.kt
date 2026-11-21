@@ -277,7 +277,7 @@ internal fun CrossroadsHomeScreen(
             }
         }
         if (playtestRules) {
-            Text("Choose Steady or Push. Shelter and hazard roads offer a response choice; Steady + Shelter gains a step. Experimental balance.",
+            Text("Lab v4: Steady + Shelter gains a step. Push + a successful Gamble on a hazard earns 2 extra steps; setbacks still apply. Offline playtest only.",
                 style = MaterialTheme.typography.bodySmall, color = Muted)
         }
         Row(
