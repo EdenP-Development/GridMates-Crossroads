@@ -277,7 +277,7 @@ internal fun CrossroadsHomeScreen(
             }
         }
         if (playtestRules) {
-            Text("Lab v4: Steady + Shelter gains a step. Push + a successful Gamble on a hazard earns 2 extra steps; setbacks still apply. Offline playtest only.",
+            Text("Lab v5 · Offline playtest: everyone gets a turn in the finish round. If multiple racers finish, most unused steps wins. Includes the v4 Push risk reward.",
                 style = MaterialTheme.typography.bodySmall, color = Muted)
         }
         Row(
