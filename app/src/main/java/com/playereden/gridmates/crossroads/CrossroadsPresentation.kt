@@ -43,6 +43,13 @@ internal object CrossroadsCourse {
                 boardId.endsWith(DecisionLab.V5_SUFFIX)) " · Playtest" else ""
 }
 
+/** New-match selection only. Existing checkpoints always supply their own board ID. */
+internal object CrossroadsExperimentalMode {
+    fun boardId(baseId: String, tactical: Boolean, fairFinish: Boolean): String =
+        if (!tactical) baseId
+        else baseId + if (fairFinish) DecisionLab.V5_SUFFIX else DecisionLab.V4_SUFFIX
+}
+
 /**
  * Cinematic camera presets for the active, portrait game world.
  * The old 1.15–1.28x framing made pieces and trails illegible on real phones.
