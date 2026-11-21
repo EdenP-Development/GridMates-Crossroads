@@ -124,7 +124,8 @@ private fun CrossroadsApp(
         (original + original.map(DecisionLab::variant) +
             original.map(DecisionLab::variantV2) +
             original.map(DecisionLab::variantV3) +
-            original.map(DecisionLab::variantV4)).associateBy { it.id }
+            original.map(DecisionLab::variantV4) +
+            original.map(DecisionLab::variantV5)).associateBy { it.id }
     }
     val context = LocalContext.current
     // Crossroads runs inside its own ComponentActivity. Explicitly observe the
@@ -173,6 +174,14 @@ private fun CrossroadsApp(
     }
     var playtestRules by remember {
         mutableStateOf(initialRecovery.match?.game?.playtestRules ?: false)
+    }
+    // Only users who explicitly choose Fair Finish start Lab v5.
+    // Existing saved Lab v4/v5 games always restore their own version.
+    var fairFinishExperiment by remember {
+        mutableStateOf(
+            initialRecovery.match?.game?.board?.id?.endsWith(DecisionLab.V5_SUFFIX) == true ||
+                prefs.getBoolean("lab_v5_equal_round_opt_in_v1", false)
+        )
     }
     var activeMatchId by remember { mutableStateOf(initialRecovery.match?.matchId ?: "") }
     var matchStartedAtEpochMillis by remember {
@@ -518,8 +527,9 @@ private fun CrossroadsApp(
     fun start(seats: Int, passAndPlay: Boolean) {
         if (lanRole != LanRole.OFFLINE) leaveGame()
         val humans = if (passAndPlay) (0 until seats).toSet() else setOf(0)
-        val boardId = if (playtestRules) selectedCourseId + DecisionLab.V4_SUFFIX
-            else selectedCourseId
+        val boardId = CrossroadsExperimentalMode.boardId(
+            selectedCourseId, playtestRules, fairFinishExperiment
+        )
         val newGame = GameSession(knownBoards.getValue(boardId), catalogue, seats = seats,
             seed = java.util.Random().nextInt(), humanIndices = humans)
         activeMatchId = java.util.UUID.randomUUID().toString()
@@ -874,6 +884,11 @@ private fun CrossroadsApp(
             },
             playtestRules = playtestRules,
             onPlaytestRulesChange = { playtestRules = it },
+            fairFinishExperiment = fairFinishExperiment,
+            onFairFinishExperimentChange = {
+                fairFinishExperiment = it
+                prefs.edit().putBoolean("lab_v5_equal_round_opt_in_v1", it).apply()
+            },
             onNearbyHost = {
                 lanMessage = null
                 lanRole = LanRole.HOST
@@ -1222,6 +1237,7 @@ private fun CrossroadsApp(
                         title = if (state.phase == Phase.FINISHED && !turnReady)
                             "Approaching the finish…"
                         else if (state.phase == Phase.FINISHED) "Journey complete!"
+                        else if (game.finalRoundPending) "FINAL CHANCE · $currentName"
                         else if (!turnReady && !rollingDie) {
                             if (trackedName == "You") "You're on the move…"
                             else "$trackedName is on the move…"
@@ -1254,7 +1270,9 @@ private fun CrossroadsApp(
                     val initialInstructions = state.turn == 1 &&
                         state.phase == Phase.ROLL && state.die == null &&
                         state.encounters.isEmpty()
-                    val actionNote = if (initialInstructions) "Ready for your first move"
+                    val actionNote = if (game.finalRoundPending)
+                            "Final round · ${game.leadingFinisherName} is at Finish. Remaining racers get one last turn."
+                        else if (initialInstructions) "Ready for your first move"
                         else turnActionSummary(
                             phase = state.phase,
                             botTurn = state.players[state.playerIndex].isBot,

@@ -20,6 +20,15 @@ class GameSession(
     // this transient guard nor UI animation enters the saved snapshot.
     private var steadyFooting = false
     private var pushedThisTurn = false
+    // V5 finish-line contenders are reconstructed solely from actions on checkpoint replay.
+    // There is no new serialized schema field and older rule versions never touch them.
+    private var equalRoundLeader: Int? = null
+    private var equalRoundLeadExcess: Int = -1
+    private var equalRoundFinishers: Int = 0
+    val finalRoundPending: Boolean get() =
+        DecisionLab.finishRoundEqually(board) && equalRoundLeader != null && phase != Phase.FINISHED
+    val leadingFinisherName: String? get() =
+        if (finalRoundPending) equalRoundLeader?.let { players[it].name } else null
     /** Live, replay-derived travel stance; used only to describe Lab route choices. */
     val steadyTravelChosen: Boolean get() = playtestRules && steadyFooting
     /** At most one on-entry encounter (and v2 shelter bonus) per entire turn. */
@@ -603,13 +612,51 @@ class GameSession(
     }
 
     private fun declareWinner() {
-        winnerIndex = currentIndex
+        if (!DecisionLab.finishRoundEqually(board)) {
+            winnerIndex = currentIndex
+            phase = Phase.FINISHED
+            remainingSteps = 0
+            lastMessage = "${players[currentIndex].name} reached the finish and won!"
+            return
+        }
+
+        val finishedName = players[currentIndex].name
+        val excess = remainingSteps.coerceAtLeast(0)
+        // Higher unused movement wins if multiple reach FINISH this round.
+        // Equal excess preserves earliest finish as the documented tie-break.
+        if (equalRoundLeader == null || excess > equalRoundLeadExcess) {
+            equalRoundLeader = currentIndex
+            equalRoundLeadExcess = excess
+        }
+        equalRoundFinishers++
+        if (currentIndex == players.lastIndex) {
+            finishEqualRound()
+        } else {
+            finishTurn()
+            lastMessage = "$finishedName reached FINISH! Final round: remaining racers get one last turn."
+        }
+    }
+
+    private fun finishEqualRound() {
+        val leader = requireNotNull(equalRoundLeader)
+        check(DecisionLab.finishRoundEqually(board))
+        winnerIndex = leader
+        currentIndex = leader
         phase = Phase.FINISHED
         remainingSteps = 0
-        lastMessage = "${players[currentIndex].name} reached the finish and won!"
+        lastMessage = if (equalRoundFinishers > 1)
+            "${players[leader].name} wins the final round! More unused steps wins; equal steps favor the first arrival."
+        else "${players[leader].name} reached FINISH and won after everyone had a turn!"
     }
 
     private fun finishTurn() {
+        // A first finish never denies the last seat its current-round action.
+        // Resolve only AFTER the last seat completes a legal turn or reaches FINISH.
+        if (DecisionLab.finishRoundEqually(board) &&
+            equalRoundLeader != null && currentIndex == players.lastIndex) {
+            finishEqualRound()
+            return
+        }
         currentIndex = (currentIndex + 1) % players.size
         phase = Phase.ROLL
         remainingSteps = 0

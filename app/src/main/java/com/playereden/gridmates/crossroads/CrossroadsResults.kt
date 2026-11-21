@@ -26,6 +26,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.playereden.crossroads.core.Snapshot
+import com.playereden.crossroads.core.DecisionLab
 
 private val Evergreen = Color(0xFF48684D)
 private val Earth = Color(0xFF80664B)
@@ -100,8 +101,8 @@ private fun ResultStat(label: String, value: String, modifier: Modifier = Modifi
  * outcome without the "Last recorded encounter" details disappearing behind
  * a fixed footer. Short or large-font devices can scroll the full receipt.
  *
- * Never assign second/third/fourth positions: only the winner completed the
- * route when the engine ended the race.
+ * Never invent second/third/fourth placements. Lab v5 may let multiple
+ * travelers reach FINISH during the last round; show those finishes honestly.
  */
 @Composable
 internal fun CrossroadsResultsContent(
@@ -113,6 +114,8 @@ internal fun CrossroadsResultsContent(
     val winnerIndex = state.winnerIndex
     val winnerName = winnerIndex?.let { state.players.getOrNull(it)?.name } ?: "A player"
     val roundCount = (state.turn - 1) / state.players.size + 1
+    val equalRound = courseId.endsWith(DecisionLab.V5_SUFFIX)
+    val winnerFinishNode = winnerIndex?.let { state.players.getOrNull(it)?.position }
     val lastEncounter = state.encounters.lastOrNull()
 
     val victoryArtwork = rememberOptionalCrossroadsArt(CrossroadsArtSlot.RESULT_VICTORY)
@@ -174,6 +177,15 @@ internal fun CrossroadsResultsContent(
                 }
             }
         }
+        if (equalRound) {
+            Text(
+                "Fair finish · Remaining racers completed the round. When more than " +
+                    "one reached Finish, unused movement decided it; equal movement " +
+                    "favored the first arrival.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Earth
+            )
+        }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -224,7 +236,12 @@ internal fun CrossroadsResultsContent(
                 Text(player.name, modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.bodyMedium)
                 Text(
-                    if (index == winnerIndex) "Finished first" else "On the trail",
+                    when {
+                        index == winnerIndex && equalRound -> "Final-round winner"
+                        index == winnerIndex -> "Finished first"
+                        equalRound && player.position == winnerFinishNode -> "Reached Finish"
+                        else -> "On the trail"
+                    },
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = if (index == winnerIndex) FontWeight.Bold
                         else FontWeight.Normal,

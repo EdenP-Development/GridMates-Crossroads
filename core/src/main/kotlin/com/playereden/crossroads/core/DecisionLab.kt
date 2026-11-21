@@ -12,10 +12,12 @@ object DecisionLab {
     const val V2_SUFFIX = "__decision_lab_v2"
     const val V3_SUFFIX = "__decision_lab_v3"
     const val V4_SUFFIX = "__decision_lab_v4"
+    const val V5_SUFFIX = "__decision_lab_v5"
 
     fun enabled(board: BoardDefinition): Boolean =
         board.id.endsWith(SUFFIX) || board.id.endsWith(V2_SUFFIX) ||
-            board.id.endsWith(V3_SUFFIX) || board.id.endsWith(V4_SUFFIX)
+            board.id.endsWith(V3_SUFFIX) || board.id.endsWith(V4_SUFFIX) ||
+            board.id.endsWith(V5_SUFFIX)
 
     fun isV2(board: BoardDefinition): Boolean = board.id.endsWith(V2_SUFFIX)
 
@@ -23,18 +25,23 @@ object DecisionLab {
 
     fun isV4(board: BoardDefinition): Boolean = board.id.endsWith(V4_SUFFIX)
 
+    fun isV5(board: BoardDefinition): Boolean = board.id.endsWith(V5_SUFFIX)
+
+    /** Only v5 finishes the current round after a traveler reaches FINISH. */
+    fun finishRoundEqually(board: BoardDefinition): Boolean = isV5(board)
+
     /** Both versions require a real encounter response; v1/v2 remain automatic. */
-    fun hasInteractiveEncounter(board: BoardDefinition): Boolean = isV3(board) || isV4(board)
+    fun hasInteractiveEncounter(board: BoardDefinition): Boolean = isV3(board) || isV4(board) || isV5(board)
 
     /** V4-only, +2 on a successful Push + hazard Gamble advance event. */
     fun pushHazardSuccessBonus(board: BoardDefinition, pushChosen: Boolean): Int =
-        if (isV4(board) && pushChosen) 2 else 0
+        if ((isV4(board) || isV5(board)) && pushChosen) 2 else 0
 
     fun supportsSteadyShelterBonus(board: BoardDefinition): Boolean =
-        isV2(board) || isV3(board) || isV4(board)
+        isV2(board) || isV3(board) || isV4(board) || isV5(board)
 
     fun baseId(id: String): String =
-        id.removeSuffix(V4_SUFFIX).removeSuffix(V3_SUFFIX).removeSuffix(V2_SUFFIX).removeSuffix(SUFFIX)
+        id.removeSuffix(V5_SUFFIX).removeSuffix(V4_SUFFIX).removeSuffix(V3_SUFFIX).removeSuffix(V2_SUFFIX).removeSuffix(SUFFIX)
 
     /** Legacy experimental rules, retained for existing QA1312 checkpoints. */
     fun variant(board: BoardDefinition): BoardDefinition {
@@ -58,6 +65,12 @@ object DecisionLab {
     fun variantV4(board: BoardDefinition): BoardDefinition {
         require(!enabled(board)) { "Already a Decision Lab board" }
         return board.copy(id = board.id + V4_SUFFIX)
+    }
+
+    /** V5 keeps v4 tactics but finishes all remaining seats in the current round. */
+    fun variantV5(board: BoardDefinition): BoardDefinition {
+        require(!enabled(board)) { "Already a Decision Lab board" }
+        return board.copy(id = board.id + V5_SUFFIX)
     }
 
     /** Visible shortest graph distance, not a forecast of dice, bonuses or events. */
@@ -95,7 +108,7 @@ object DecisionLab {
         else ""
         val interactive = if (hasInteractiveEncounter(board) && risk in listOf("low", "high"))
             " · Make an encounter choice" else ""
-        val riskReward = if (isV4(board) && risk == "high" && !steadyChosen)
+        val riskReward = if ((isV4(board) || isV5(board)) && risk == "high" && !steadyChosen)
             " · Push + successful Gamble: +2 extra" else ""
         return "Min $shortest spaces left · $encounter$synergy$interactive$riskReward"
     }

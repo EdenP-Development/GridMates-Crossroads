@@ -17,7 +17,9 @@ internal object CrossroadsCourse {
         else -> "Woodland Crossing"
     }
 
-    fun subtitle(boardId: String): String = if (boardId.endsWith(DecisionLab.V4_SUFFIX))
+    fun subtitle(boardId: String): String = if (boardId.endsWith(DecisionLab.V5_SUFFIX))
+        "Gameplay 2.0 · Lab v5"
+    else if (boardId.endsWith(DecisionLab.V4_SUFFIX))
         "Gameplay 2.0 · Lab v4"
     else if (boardId.endsWith(DecisionLab.V3_SUFFIX))
         "Gameplay 2.0 · Lab v3"
@@ -37,7 +39,15 @@ internal object CrossroadsCourse {
             if (boardId.endsWith(DecisionLab.SUFFIX) ||
                 boardId.endsWith(DecisionLab.V2_SUFFIX) ||
                 boardId.endsWith(DecisionLab.V3_SUFFIX) ||
-                boardId.endsWith(DecisionLab.V4_SUFFIX)) " · Playtest" else ""
+                boardId.endsWith(DecisionLab.V4_SUFFIX) ||
+                boardId.endsWith(DecisionLab.V5_SUFFIX)) " · Playtest" else ""
+}
+
+/** New-match selection only. Existing checkpoints always supply their own board ID. */
+internal object CrossroadsExperimentalMode {
+    fun boardId(baseId: String, tactical: Boolean, fairFinish: Boolean): String =
+        if (!tactical) baseId
+        else baseId + if (fairFinish) DecisionLab.V5_SUFFIX else DecisionLab.V4_SUFFIX
 }
 
 /**
