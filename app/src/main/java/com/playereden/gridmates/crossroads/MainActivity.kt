@@ -175,6 +175,14 @@ private fun CrossroadsApp(
     var playtestRules by remember {
         mutableStateOf(initialRecovery.match?.game?.playtestRules ?: false)
     }
+    // Only users who explicitly choose Fair Finish start Lab v5.
+    // Existing saved Lab v4/v5 games always restore their own version.
+    var fairFinishExperiment by remember {
+        mutableStateOf(
+            initialRecovery.match?.game?.board?.id?.endsWith(DecisionLab.V5_SUFFIX) == true ||
+                prefs.getBoolean("lab_v5_equal_round_opt_in_v1", false)
+        )
+    }
     var activeMatchId by remember { mutableStateOf(initialRecovery.match?.matchId ?: "") }
     var matchStartedAtEpochMillis by remember {
         mutableLongStateOf(initialRecovery.match?.startedAtEpochMillis ?: 0L)
@@ -519,8 +527,9 @@ private fun CrossroadsApp(
     fun start(seats: Int, passAndPlay: Boolean) {
         if (lanRole != LanRole.OFFLINE) leaveGame()
         val humans = if (passAndPlay) (0 until seats).toSet() else setOf(0)
-        val boardId = if (playtestRules) selectedCourseId + DecisionLab.V5_SUFFIX
-            else selectedCourseId
+        val boardId = CrossroadsExperimentalMode.boardId(
+            selectedCourseId, playtestRules, fairFinishExperiment
+        )
         val newGame = GameSession(knownBoards.getValue(boardId), catalogue, seats = seats,
             seed = java.util.Random().nextInt(), humanIndices = humans)
         activeMatchId = java.util.UUID.randomUUID().toString()
@@ -875,6 +884,11 @@ private fun CrossroadsApp(
             },
             playtestRules = playtestRules,
             onPlaytestRulesChange = { playtestRules = it },
+            fairFinishExperiment = fairFinishExperiment,
+            onFairFinishExperimentChange = {
+                fairFinishExperiment = it
+                prefs.edit().putBoolean("lab_v5_equal_round_opt_in_v1", it).apply()
+            },
             onNearbyHost = {
                 lanMessage = null
                 lanRole = LanRole.HOST
