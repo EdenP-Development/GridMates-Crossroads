@@ -53,7 +53,8 @@ internal fun TabletopEncounterCard(
     artwork: ImageBitmap?,
     enabled: Boolean,
     onChoose: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    pushHazardSuccessBonus: Int = 0
 ) {
     val shelter = TabletopEncounterPresentation.isShelter(choices)
     Surface(
@@ -128,7 +129,7 @@ internal fun TabletopEncounterCard(
                     horizontalArrangement = Arrangement.spacedBy(7.dp)
                 ) {
                     pair.forEach { option ->
-                        val copy = encounterActionCopy(option)
+                        val copy = encounterActionCopy(option, pushHazardSuccessBonus)
                         val warm = option == "supplies" || option == "gamble"
                         val bg = if (warm) Color(0xFFB58B4A) else Color(0xFF40664D)
                         val ink = if (warm) Color(0xFF26261D) else Color(0xFFFFF5DD)

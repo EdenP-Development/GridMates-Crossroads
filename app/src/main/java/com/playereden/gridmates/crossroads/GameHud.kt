@@ -76,10 +76,11 @@ internal fun gameHudActionHeading(phase: Phase): String = when (phase) {
 /** Compact on-board decisions, with the actual consequences still readable. */
 internal data class EncounterActionCopy(val title: String, val impact: String)
 
-internal fun encounterActionCopy(option: String): EncounterActionCopy = when (option) {
+internal fun encounterActionCopy(option: String, pushHazardSuccessBonus: Int = 0): EncounterActionCopy = when (option) {
     "supplies" -> EncounterActionCopy("SUPPLIES", "+2 spaces")
     "cover" -> EncounterActionCopy("COVER", "+1 & shield")
-    "gamble" -> EncounterActionCopy("GAMBLE", "Face hazard")
+    "gamble" -> EncounterActionCopy("GAMBLE",
+        if (pushHazardSuccessBonus > 0) "Success: +$pushHazardSuccessBonus extra" else "Face hazard")
     "brace" -> EncounterActionCopy("BRACE", "Stop & shield")
     else -> EncounterActionCopy(option.uppercase(), "Choose")
 }

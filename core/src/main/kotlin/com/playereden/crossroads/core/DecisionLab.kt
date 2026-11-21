@@ -11,20 +11,30 @@ object DecisionLab {
     const val SUFFIX = "__decision_lab_v1" // Compatibility: never rename v1.
     const val V2_SUFFIX = "__decision_lab_v2"
     const val V3_SUFFIX = "__decision_lab_v3"
+    const val V4_SUFFIX = "__decision_lab_v4"
 
     fun enabled(board: BoardDefinition): Boolean =
         board.id.endsWith(SUFFIX) || board.id.endsWith(V2_SUFFIX) ||
-            board.id.endsWith(V3_SUFFIX)
+            board.id.endsWith(V3_SUFFIX) || board.id.endsWith(V4_SUFFIX)
 
     fun isV2(board: BoardDefinition): Boolean = board.id.endsWith(V2_SUFFIX)
 
     fun isV3(board: BoardDefinition): Boolean = board.id.endsWith(V3_SUFFIX)
 
+    fun isV4(board: BoardDefinition): Boolean = board.id.endsWith(V4_SUFFIX)
+
+    /** Both versions require a real encounter response; v1/v2 remain automatic. */
+    fun hasInteractiveEncounter(board: BoardDefinition): Boolean = isV3(board) || isV4(board)
+
+    /** V4-only, +2 on a successful Push + hazard Gamble advance event. */
+    fun pushHazardSuccessBonus(board: BoardDefinition, pushChosen: Boolean): Int =
+        if (isV4(board) && pushChosen) 2 else 0
+
     fun supportsSteadyShelterBonus(board: BoardDefinition): Boolean =
-        isV2(board) || isV3(board)
+        isV2(board) || isV3(board) || isV4(board)
 
     fun baseId(id: String): String =
-        id.removeSuffix(V3_SUFFIX).removeSuffix(V2_SUFFIX).removeSuffix(SUFFIX)
+        id.removeSuffix(V4_SUFFIX).removeSuffix(V3_SUFFIX).removeSuffix(V2_SUFFIX).removeSuffix(SUFFIX)
 
     /** Legacy experimental rules, retained for existing QA1312 checkpoints. */
     fun variant(board: BoardDefinition): BoardDefinition {
@@ -42,6 +52,12 @@ object DecisionLab {
     fun variantV3(board: BoardDefinition): BoardDefinition {
         require(!enabled(board)) { "Already a Decision Lab board" }
         return board.copy(id = board.id + V3_SUFFIX)
+    }
+
+    /** V4 changes only the payoff on a successful Push + hazard Gamble event. */
+    fun variantV4(board: BoardDefinition): BoardDefinition {
+        require(!enabled(board)) { "Already a Decision Lab board" }
+        return board.copy(id = board.id + V4_SUFFIX)
     }
 
     /** Visible shortest graph distance, not a forecast of dice, bonuses or events. */
@@ -77,8 +93,10 @@ object DecisionLab {
         val synergy = if (supportsSteadyShelterBonus(board) && risk == "low" && steadyChosen)
             " · Steady trail bonus +1"
         else ""
-        val interactive = if (isV3(board) && risk in listOf("low", "high"))
+        val interactive = if (hasInteractiveEncounter(board) && risk in listOf("low", "high"))
             " · Make an encounter choice" else ""
-        return "Min $shortest spaces left · $encounter$synergy$interactive"
+        val riskReward = if (isV4(board) && risk == "high" && !steadyChosen)
+            " · Push + successful Gamble: +2 extra" else ""
+        return "Min $shortest spaces left · $encounter$synergy$interactive$riskReward"
     }
 }

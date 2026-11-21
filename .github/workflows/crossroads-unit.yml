@@ -113,3 +113,14 @@ jobs:
             core/build/reports/gameplay-72/tactical_factorial_samples.csv
           if-no-files-found: warn
           retention-days: 30
+
+      - name: Upload Lab v3/v4 push-hazard balance comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-GAMEPLAY-73-${{ github.sha }}
+          path: |
+            core/build/reports/gameplay-73/lab_v3_vs_v4_summary.txt
+            core/build/reports/gameplay-73/lab_v3_vs_v4_samples.csv
+          if-no-files-found: warn
+          retention-days: 30

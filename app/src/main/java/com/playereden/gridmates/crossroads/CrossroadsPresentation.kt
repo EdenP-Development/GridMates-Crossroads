@@ -17,7 +17,9 @@ internal object CrossroadsCourse {
         else -> "Woodland Crossing"
     }
 
-    fun subtitle(boardId: String): String = if (boardId.endsWith(DecisionLab.V3_SUFFIX))
+    fun subtitle(boardId: String): String = if (boardId.endsWith(DecisionLab.V4_SUFFIX))
+        "Gameplay 2.0 · Lab v4"
+    else if (boardId.endsWith(DecisionLab.V3_SUFFIX))
         "Gameplay 2.0 · Lab v3"
     else if (boardId.endsWith(DecisionLab.V2_SUFFIX))
         "Gameplay 2.0 · Lab v2"
@@ -34,7 +36,8 @@ internal object CrossroadsCourse {
         "First across ${title(boardId)}" +
             if (boardId.endsWith(DecisionLab.SUFFIX) ||
                 boardId.endsWith(DecisionLab.V2_SUFFIX) ||
-                boardId.endsWith(DecisionLab.V3_SUFFIX)) " · Playtest" else ""
+                boardId.endsWith(DecisionLab.V3_SUFFIX) ||
+                boardId.endsWith(DecisionLab.V4_SUFFIX)) " · Playtest" else ""
 }
 
 /**
