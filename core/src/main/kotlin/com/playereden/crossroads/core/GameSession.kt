@@ -27,7 +27,7 @@ class GameSession(
     private var equalRoundFinishers: Int = 0
     val finalRoundPending: Boolean get() =
         DecisionLab.finishRoundEqually(board) && equalRoundLeader != null && phase != Phase.FINISHED
-    val firstFinisherName: String? get() =
+    val leadingFinisherName: String? get() =
         if (finalRoundPending) equalRoundLeader?.let { players[it].name } else null
     /** Live, replay-derived travel stance; used only to describe Lab route choices. */
     val steadyTravelChosen: Boolean get() = playtestRules && steadyFooting
