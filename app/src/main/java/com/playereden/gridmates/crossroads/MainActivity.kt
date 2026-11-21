@@ -1271,7 +1271,7 @@ private fun CrossroadsApp(
                         state.phase == Phase.ROLL && state.die == null &&
                         state.encounters.isEmpty()
                     val actionNote = if (game.finalRoundPending)
-                            "Final round · ${game.firstFinisherName} is at Finish. Remaining racers get one last turn."
+                            "Final round · ${game.leadingFinisherName} is at Finish. Remaining racers get one last turn."
                         else if (initialInstructions) "Ready for your first move"
                         else turnActionSummary(
                             phase = state.phase,
