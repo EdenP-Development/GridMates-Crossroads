@@ -52,12 +52,12 @@ class DecisionLabVersion5FinishTest {
         assertNull(g.winnerIndex)
         assertEquals("FINISH", g.players[0].position)
         assertTrue(g.finalRoundPending)
-        assertEquals("Player 1", g.firstFinisherName)
+        assertEquals("Player 1", g.leadingFinisherName)
         val pending = g.checkpoint("v5-final-pending", epoch)
         val restored = GameSession.restore(g.board, emptyEvents, pending)
         assertEquals(g.snapshot(), restored.snapshot())
         assertTrue(restored.finalRoundPending)
-        assertEquals(g.firstFinisherName, restored.firstFinisherName)
+        assertEquals(g.leadingFinisherName, restored.leadingFinisherName)
 
         g.rollBold() // Stumble: 1 step, cannot reach finish.
         assertEquals(Phase.FINISHED, g.phase)
