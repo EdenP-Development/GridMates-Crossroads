@@ -126,9 +126,21 @@ class CrossroadsPresentationTest {
         assertEquals(1.0f, CrossroadsCameraPreset.trailScale(false), .0001f)
         assertEquals(1.0f, CrossroadsCameraPreset.markerScale(false), .0001f)
         assertEquals(1.0f, CrossroadsCameraPreset.tokenScale(false), .0001f)
-        assertEquals(1.58f, CrossroadsCameraPreset.trailScale(true), .0001f)
-        assertEquals(1.55f, CrossroadsCameraPreset.markerScale(true), .0001f)
-        assertEquals(1.91f, CrossroadsCameraPreset.tokenScale(true), .0001f)
+        assertEquals(1.896f, CrossroadsCameraPreset.trailScale(true), .0001f)
+        assertEquals(1.86f, CrossroadsCameraPreset.markerScale(true), .0001f)
+        assertEquals(2.292f, CrossroadsCameraPreset.tokenScale(true), .0001f)
+    }
+
+    @Test fun physicalArtAndGameplaySymbolsGrowTogether() {
+        val scale = BoardWorldViewport.LIVE_ART_SCALE
+        assertTrue("Enlarged art must actually occupy more screen pixels", scale > 1f)
+        assertEquals(1.58f * scale, CrossroadsCameraPreset.trailScale(true), .0001f)
+        assertEquals(1.91f * scale, CrossroadsCameraPreset.tokenScale(true), .0001f)
+        assertEquals(1.55f * scale, CrossroadsCameraPreset.markerScale(true), .0001f)
+        // Never let a close-up in normal racing change the Full Map's scale.
+        assertEquals(1f, CrossroadsCameraPreset.trailScale(false), .0001f)
+        assertEquals(1f, CrossroadsCameraPreset.tokenScale(false), .0001f)
+        assertEquals(1f, CrossroadsCameraPreset.markerScale(false), .0001f)
     }
 
     @Test fun paintedPiecesAndRoadsArePrioritizedButFullMapIsUntouched() {
