@@ -1,5 +1,5 @@
 # Crossroads APK Update & Delivery Policy — Proposed
-**Status:** proposed long-term policy; first implementation prototype now has an Android QA Gradle configuration and build workflow, and the first verified install-over/stats-preservation emulator test passed (QA1008→1009). Later schema changes, actual owner handset and production signer remain untested.
+**Status (November 22, 2026):** proposed long-term policy, with a now **verified signed QA1607→QA1613 install-over on an Android 15 emulator**, including an actual one-roll, replay-backed offline checkpoint, preserved completed/win counters and successful launch under the new APK. See [QA-79 exact-head evidence](QA_79_REAL_APK_INSTALL_OVER_RECOVERY.md). Earlier QA1008→1009 and QA1051→1057 update tests are historical. **Owner-phone upgrade, two-phone LAN, production/private signing, public-store disclosure and QA→production transfer remain unverified.**
 **Evidence:** [Sibling repository audit](GRIDMATES_SIBLING_REPO_APK_AUDIT_2026-11-16.md) and official Android/GitHub docs therein.
 
 ## Goal
@@ -60,7 +60,8 @@ Install: back up if needed; install over existing QA app; do not uninstall/clear
 - [x] Stable **public test-only** QA certificate pinned to reviewed Word Search source; **not** a privately owned production/QA key.
 - [ ] One canonical QA build workflow with centrally controlled version codes.
 - [ ] Final APK preflight (package/signature/code/hash) implemented.
-- [x] Actual independent QA1008→QA1009 install-over test on Android 15 emulator preserving **seeded profile statistics XML**; [evidence](QA_RECEIPT_V0_1_2026_11_16.md). Future unfinished-match/cosmetic save compatibility and physical handset remain open.
+- [x] Historical QA1008→QA1009 emulator install-over preserved seeded stats; [original evidence](QA_RECEIPT_V0_1_2026_11_16.md).
+- [x] **Current QA1607→QA1613 emulator install-over with actual saved Woven Trail checkpoint + 7 completed/3 wins**, stable identity and receipt; [QA-79 evidence](QA_79_REAL_APK_INSTALL_OVER_RECOVERY.md). Other pending/finished choices, cross-package transfers and owner handset acceptance are separate gates.
 - [ ] Verified owner phone install; repeated update without clearing data.
 - [ ] Artifact/receipt download works; publicly shareable prerelease only after explicit owner approval.
 - [ ] Documentation points to a single latest accepted QA version and prior fallback.
