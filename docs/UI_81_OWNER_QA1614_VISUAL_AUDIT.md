@@ -12,7 +12,7 @@
 
 ## Follow-up clarification from owner
 
-The close-up images **were produced by manual pinch-to-zoom**. The owner explained that the default view still makes the artwork and scenery feel too small to enjoy. This is a direct request for a closer default, **not evidence of a camera that zooms in unexpectedly**. The camera should feel like moving through the illustrated woodland while leaving a wider view when choosing a fork.
+The close-up images **were produced by manual pinch-to-zoom**. The owner clarified emphatically that the problem is **actual on-screen scale**: painted scenery, trails and traveler pieces look physically too small to enjoy, even when the camera is following. This requires larger rendering of the unified live board, **not merely moving or retargeting a camera**. The gameplay experience should showcase the art, with a separate whole-course overview when needed.
 
 ## Highest-value corrections made
 
@@ -20,11 +20,13 @@ The close-up images **were produced by manual pinch-to-zoom**. The owner explain
 2. **Switch colors:** apply one explicit, coherent woodland material palette to the Tactical and Fair Finish switches in **both states**. Forest-green/cream ON, cream and muted bark/gold OFF. This eliminates the default Material lavender off-state visible on the actual phone.
 3. **Toggle accessibility:** give the two experimental switches explicit screen-reader descriptions. The options remain optional, exactly the same state/setting keys and rules; no modal onboarding or extra step.
 
-4. **Closer automatic Follow after clarified owner feedback:** original Follow magnification was about **1.82–2.12×**, which still motivated repeated manual pinching. New default is **2.42× on the first ROLL, 2.52× while traveling, 2.62× at an ENCOUNTER and 2.48× when targeting**. A ROUTE decision stays slightly wider at **2.16×** so fork exits and choices are not swallowed by scenery. The 1× inspection map and 1–3× pinch gestures remain untouched. Add unit guards for phase hierarchy, zoom bound and static overview.
+4. **Bigger default Follow camera:** original Follow magnification was about **1.82–2.12×**, which motivated repeated manual pinching. Current test candidate is **2.42× on first ROLL, 2.52× on later ROLL, 2.62× at ENCOUNTER, 2.48× on TARGET, and deliberately wider 2.16× at a ROUTE fork**. Phase-preserving unit tests are in place.
+5. **Bigger ACTUAL illustrated world:** the live board now renders its complete square painted backdrop and all route coordinates into a **1.20× larger square** via the shared `BoardWorldViewport.frame`, rather than squeezing the whole art scene into the viewport's long axis. Wooden roads, numbered animal traveler tokens and event/route markers use that same 1.20× scale. The enlarged art, camera focus, route taps and painted waypoints share the *same* coordinate frame. No saved route geometry changes. The independent unanimated Full Map is the old compact 1× view.
+6. **More close inspection:** the existing pinch zoom ceiling increases from **3× to 4×**, with unchanged centroid-anchored pan and translation mathematics. Tests verify clipping/bounds, identical legal-route tap selection at maximum manual zoom, 1× Full Map, and corresponding token/trail scales.
 
 ## Open visual/playtest questions — do not mistake these for confirmed bugs
 
-- **Live camera acceptance:** the owner pinched manually because the prior default looked too small. The source now offers a closer Follow framing, but **this new framing has not yet been visually accepted on the owner's phone**. During the next test confirm player visibility near Start/Finish and all 2-/3-way forks above the action dock; validate that no art or route highlights are cut off when turns change. Avoid further camera changes until this test is reviewed.
+- **Closeup acceptance:** the owner confirmed previous art was genuinely too small. The new source enlarges both painted scenery and interactive visual symbols (plus follow zoom). **This combined increase is not yet verified on the owner's phone**. During the next test check artwork readability, character and route marker sizing, 2-/3-way fork awareness, start/finish visibility, recenter and manual 4× pan without losing the route-choice dock. If excessively cropped at some phases, adjust the scenic scale independently from the fork overview; do not secretly revert the art-size correction.
 - **Board topology readability:** some colored trails and node badges are fairly fine in the overview. Check whether first-time players can point to the two meaningful alternate routes and understand the amber/green/purple legend without already knowing the map.
 - **Full-map panel:** both top `Close map` and bottom `BACK TO THE TRAIL` dismiss. This is minor redundancy, not a gameplay blocker; the lower action is reachable for one-handed use. Defer removal until real usability feedback.
 - **Gameplay copy:** `Lab v5` is appropriate while experimental, but avoid exposing internal version numbers on a future first-run public surface if Fair Finish becomes an approved product choice.
@@ -32,6 +34,6 @@ The close-up images **were produced by manual pinch-to-zoom**. The owner explain
 
 ## Exact scope and acceptance
 
-- Scope: **home options caption, two switch themes/semantics, presentation-only Follow zoom presets**, related unit tests and this audit. No Android package, signer, game engine, RNG, graph/board coordinates, gesture mathematics, LAN, checkpoint, progress schema, or user profile changes.
+- Scope: **home options caption, two switch themes/semantics, live-world scene/art/roads/pieces/markers scale, presentation-only Follow zoom presets, manual zoom limit**, targeted geometry/unit tests and this audit. No Android package, signer, game engine, RNG, stored normalized graph coordinates, gesture centroid math, LAN, checkpoint, progress schema, or user profile changes.
 - Gate: design data workflow and Android build/tests/lint at exact UI-81 SHA; visual screenshot still needs owner confirmation. Do not claim a new test APK until a real signed artifact is available and verified.
 - Build lineage: QA1614 / consolidated [RC1 #80](https://github.com/PlayerEden/GridMates-Crossroads/pull/80) as last verified signed owner build; UI-81 draft stacked on it, `main` untouched.
