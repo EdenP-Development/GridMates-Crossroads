@@ -26,6 +26,12 @@ internal data class BoardSceneFrame(
 }
 
 internal object BoardWorldViewport {
+    // On a phone, a 1536x1536 painted course still looks miniature when its
+    // entire square is packed into the view height. Make the actual *live
+    // world* larger (art, legal routes, nodes and hit geometry together).
+    // Full Map remains an independent, unscaled overview.
+    const val LIVE_ART_SCALE = 1.20f
+
     fun frame(size: IntSize, immersive: Boolean): BoardSceneFrame {
         if (size.width <= 0 || size.height <= 0) {
             return BoardSceneFrame(0f, 0f, 0f, 0f)
@@ -38,9 +44,11 @@ internal object BoardWorldViewport {
                 (size.height - 36f).coerceAtLeast(0f)
             )
         }
-        // Square illustrated 1536x1536 boards crop to the device viewport,
-        // like a camera looking into a larger playfield.
-        val side = max(size.width, size.height).toFloat()
+        // The live square is intentionally 20% larger than the viewport's
+        // longest axis: the real illustrated scenery is enlarged, not merely
+        // a HUD icon or fixed-distance camera offset. The same enlarged frame
+        // is used by painting, Follow/gesture camera and route hit-testing.
+        val side = max(size.width, size.height).toFloat() * LIVE_ART_SCALE
         return BoardSceneFrame(
             left = (size.width - side) * 0.5f,
             top = (size.height - side) * 0.5f,
