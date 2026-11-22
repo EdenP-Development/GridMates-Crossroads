@@ -989,8 +989,8 @@ private fun CrossroadsApp(
             // Compact on-board scoreboard and controls, without a page header.
             Column(
                 modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth()
-                    .background(Color(0xDD233B2B))
-                    .padding(top = 5.dp, bottom = 4.dp),
+                    .background(Color(0xED352C20))
+                    .padding(top = 6.dp, bottom = 5.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
             val displayedSeat = (if (!turnReady) cameraTrackIndex else state.playerIndex)
@@ -1008,29 +1008,15 @@ private fun CrossroadsApp(
                         isFocused -> "current player"
                         else -> "waiting"
                     }
-                    Surface(
-                        modifier = Modifier.weight(1f).semantics(mergeDescendants = true) {
-                            contentDescription = "Player ${i + 1}, ${player.name}, $seatStatus" +
-                                if (player.shield) ", shielded" else ""
-                        },
-                        color = if (isFocused) Color(0xF0446048)
-                            else Color(0xD9233B2B),
-                        border = androidx.compose.foundation.BorderStroke(
-                            if (isFocused) 1.6.dp else 0.8.dp,
-                            if (isFocused) Color(0xFFF0DDAA) else Color(0x608AB08B)
-                        ),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp)
-                    ) {
-                        Row(modifier = Modifier.padding(horizontal = 7.dp, vertical = 5.dp),
-                            horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(12.dp).background(PlayerColors[i], androidx.compose.foundation.shape.CircleShape))
-                            Spacer(Modifier.width(5.dp))
-                            Text(player.name, fontSize = 12.sp,
-                                color = Color(0xFFF9EED5), fontWeight =
-                                if (isFocused) FontWeight.Bold else FontWeight.Normal)
-                            if (player.shield) Text(" 🛡", fontSize = 11.sp)
-                        }
-                    }
+                    TabletopSeatPlate(
+                        seatIndex = i,
+                        name = player.name,
+                        seatColor = PlayerColors[i],
+                        active = isFocused,
+                        shielded = player.shield,
+                        status = seatStatus,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
 
@@ -1207,12 +1193,7 @@ private fun CrossroadsApp(
                 mutableStateOf(false)
             }
             val dockMaxFraction = gameActionDockMaxFraction(state.phase)
-            Surface(
-                color = Color(0xF8F1E4C8),
-                shadowElevation = 12.dp,
-                tonalElevation = 0.dp,
-                border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF967D54)),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+            TabletopActionTray(
                 modifier = Modifier.align(Alignment.BottomCenter)
                     .padding(horizontal = 10.dp, vertical = 9.dp)
                     .fillMaxWidth()
@@ -2672,6 +2653,12 @@ private fun BoardCanvas(
                         paint)
                 }
             }
+            }
+            // VISUAL-82: the static slim wooden board edge sits OUTSIDE the
+            // camera transform. It frames the illustrated world like a
+            // tabletop game without moving routes or intercepting gestures.
+            if (immersiveWorld) {
+                TabletopBoardRim()
             }
             // A conventional game-camera control floats above the world.
             // It never changes engine state, route selection, or saved matches.
