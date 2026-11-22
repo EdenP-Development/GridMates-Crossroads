@@ -1,0 +1,61 @@
+name: Crossroads Woven art A-B emulator screenshots
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/crossroads-board-visual-qa.yml"
+      - ".github/scripts/crossroads_board_visual_qa.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: crossroads-visual85-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  same-match-visual-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    env:
+      QA_CODE: "1672"
+      QA_SHA: "f4a27d23a7ac9ba9a8efef6b5c1fdb441c7b236bf2200398ebe95edac44ffeba"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download immutable signed VISUAL-84 QA1672 (not a fresh or production APK)
+        uses: actions/download-artifact@v4
+        with:
+          run-id: "45072993375"
+          name: Crossroads-Android-QA-1672-3f642a372625e1616dca2222cae55d15c8f5d42b
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: qa-archives/current
+      - name: Verify immutable APK SHA-256
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "$QA_SHA  qa-archives/current/GridMates-Crossroads-QA-$QA_CODE.apk" | sha256sum -c
+          python3 -m py_compile .github/scripts/crossroads_board_visual_qa.py
+      - name: Enable KVM
+        shell: bash
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Capture one exact Woven race in Storybook and Overhead
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_4
+          disable-animations: true
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot
+          script: python3 .github/scripts/crossroads_board_visual_qa.py
+      - name: Publish machine-matched Android screenshots and QA receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-VISUAL85-same-game-art-comparison-${{ github.sha }}
+          path: |
+            qa-evidence/*.png
+            qa-evidence/*.json
+          if-no-files-found: ignore
+          retention-days: 14

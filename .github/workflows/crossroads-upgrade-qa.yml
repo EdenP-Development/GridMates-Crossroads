@@ -48,6 +48,9 @@ concurrency:
   cancel-in-progress: true
 jobs:
   update-preserves-profile:
+    # VISUAL-85's push uses this established runner solely to capture the
+    # already-built exact QA1672 art pair; regular QA upgrade stays unchanged.
+    if: github.ref != 'refs/heads/feature/visual-85-exact-apk-overhead-screenshot-qa'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -99,6 +102,55 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Crossroads-Upgrade-Emulator-${{ env.BASE_CODE }}-to-${{ env.NEXT_CODE }}-${{ github.sha }}
+          path: |
+            qa-evidence/*.png
+            qa-evidence/*.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+  exact-art-compare:
+    if: github.ref == 'refs/heads/feature/visual-85-exact-apk-overhead-screenshot-qa'
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    env:
+      QA_CODE: "1672"
+      QA_SHA: "f4a27d23a7ac9ba9a8efef6b5c1fdb441c7b236bf2200398ebe95edac44ffeba"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download signed exact-head QA1672 artifact
+        uses: actions/download-artifact@v4
+        with:
+          run-id: "45072993375"
+          name: Crossroads-Android-QA-1672-3f642a372625e1616dca2222cae55d15c8f5d42b
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: qa-archives/current
+      - name: Verify immutable source-matched QA APK and syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "$QA_SHA  qa-archives/current/GridMates-Crossroads-QA-$QA_CODE.apk" | sha256sum -c
+          python3 -m py_compile .github/scripts/crossroads_board_visual_qa.py
+      - name: Enable emulator KVM
+        shell: bash
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Capture identical saved race in Storybook and Overhead
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_4
+          disable-animations: true
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot
+          script: python3 .github/scripts/crossroads_board_visual_qa.py
+      - name: Upload actual Android screenshots and comparison receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-VISUAL85-exact-QA1672-art-compare-${{ github.sha }}
           path: |
             qa-evidence/*.png
             qa-evidence/*.json
