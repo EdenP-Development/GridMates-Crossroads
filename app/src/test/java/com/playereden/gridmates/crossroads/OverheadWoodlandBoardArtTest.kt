@@ -13,6 +13,27 @@ class OverheadWoodlandBoardArtTest {
         BoardNode("finish", "village", "finish", emptyList(), .92f, .14f)
     )
 
+    @Test fun overheadPrintIsOnlyAnOptInWovenQaPreview() {
+        assertTrue(useOverheadBoardPreview(
+            "woodland_woven_trail_v02", true, true, true
+        ))
+        assertFalse(useOverheadBoardPreview(
+            "woodland_woven_trail_v02", false, true, true
+        ))
+        assertFalse(useOverheadBoardPreview(
+            "woodland_woven_trail_v02", true, false, true
+        ))
+        assertFalse(useOverheadBoardPreview(
+            "woodland_woven_trail_v02", true, true, false
+        ))
+        assertFalse(useOverheadBoardPreview(
+            "woodland_brookside_quick_v01", true, true, true
+        ))
+        assertFalse(useOverheadBoardPreview(
+            "woodland_cedarwood_long_v01", true, true, true
+        ))
+    }
+
     @Test fun overheadFeaturesStayAwayFromRealRoadsAndMarkers() {
         assertFalse(OverheadScenery.clearOfPlay(.48f, .50f, graph, .067f))
         assertFalse(OverheadScenery.clearOfPlay(.30f, .64f, graph, .067f))
