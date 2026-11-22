@@ -1103,8 +1103,8 @@ private fun CrossroadsApp(
                                 DropdownMenuItem(
                                     text = {
                                         Text(if (topDownBoardPreview)
-                                            "Board scene: Overhead tabletop (QA)"
-                                        else "Board scene: Storybook landscape (QA)")
+                                            "Woven board art: Overhead (QA)"
+                                        else "Woven board art: Storybook (QA)")
                                     },
                                     onClick = {
                                         topDownBoardPreview = !topDownBoardPreview
@@ -1940,8 +1940,13 @@ private fun BoardCanvas(
 ) {
     // The scene is data-independent: scenery and optional illustrated pawns
     // are drawn beneath the authoritative routes and numeric seat labels.
+    val useOverheadArtwork = useOverheadBoardPreview(
+        boardId = board.id, debug = BuildConfig.DEBUG,
+        requested = topDownPreview,
+        illustrated = boardLook == CrossroadsBoardLook.ILLUSTRATED
+    )
     val boardBackdrop = rememberOptionalCrossroadsArt(
-        if (boardLook == CrossroadsBoardLook.ILLUSTRATED && !topDownPreview)
+        if (boardLook == CrossroadsBoardLook.ILLUSTRATED && !useOverheadArtwork)
             CrossroadsArtCatalog.backplate(board.id) else null
     )
     val trailAtlas = rememberOptionalCrossroadsArt(
@@ -1974,9 +1979,8 @@ private fun BoardCanvas(
     )
     // Pure, fixed overhead scenery positions are remembered per authored
     // graph; no per-frame random generation or fake game path data.
-    val overheadDecor = remember(board, topDownPreview) {
-        if (BuildConfig.DEBUG && topDownPreview)
-            OverheadScenery.plan(board.nodes) else emptyList()
+    val overheadDecor = remember(board, useOverheadArtwork) {
+        if (useOverheadArtwork) OverheadScenery.plan(board.nodes) else emptyList()
     }
     // The live world magnifies interactive art; the full-map inspector keeps
     // its previous compact geometry for legibility and path overview.
@@ -2302,8 +2306,7 @@ private fun BoardCanvas(
             // Artwork is strictly below all navigable routes, nodes, pieces and
             // hit targets. A missing art slot preserves the tested ART-08 drawing.
             // Both use the same normalized board frame and camera transform.
-            if (BuildConfig.DEBUG && topDownPreview &&
-                boardLook == CrossroadsBoardLook.ILLUSTRATED) {
+            if (useOverheadArtwork) {
                 // Same graph, different VIEWPOINT: overhead trees, rock,
                 // rooftops and clearings rather than a landscape horizon.
                 drawOverheadWoodlandPrint(
