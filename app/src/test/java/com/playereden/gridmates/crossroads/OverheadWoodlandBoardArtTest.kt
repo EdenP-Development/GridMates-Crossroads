@@ -38,6 +38,32 @@ class OverheadWoodlandBoardArtTest {
         }
     }
 
+    @Test fun WovenStreamBridgesOnlyActualLegalRoutes() {
+        val bridges = OverheadScenery.bridges(wovenBoard.nodes)
+        assertEquals("Two streams must cross real graph edges", 2, bridges.size)
+        assertEquals(bridges, OverheadScenery.bridges(wovenBoard.nodes))
+        val crossings = listOf(
+            "F4" to "V1",
+            "F4" to "O1"
+        )
+        val byId = wovenBoard.nodes.associateBy { it.id }
+        bridges.forEach { bridge ->
+            assertTrue(bridge.x in 0f..1f && bridge.y in 0f..1f)
+            assertEquals(1f, kotlin.math.hypot(
+                bridge.directionX, bridge.directionY
+            ), .001f)
+            assertTrue("A bridge cannot create a new path or node",
+                crossings.any { (a, b) ->
+                    val from = requireNotNull(byId[a])
+                    val to = requireNotNull(byId[b])
+                    OverheadScenery.distanceToEdge(
+                        bridge.x, bridge.y, from.x, from.y, to.x, to.y
+                    ) < .008f
+                })
+        }
+        assertTrue(OverheadScenery.bridges(emptyList()).isEmpty())
+    }
+
     @Test fun optionalOverheadPerspectiveAppliesToSavedWovenLabVersionsOnly() {
         for (suffix in listOf(
             DecisionLab.SUFFIX, DecisionLab.V2_SUFFIX, DecisionLab.V3_SUFFIX,
