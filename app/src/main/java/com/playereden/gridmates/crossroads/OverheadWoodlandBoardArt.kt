@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import com.playereden.crossroads.core.BoardNode
+import com.playereden.crossroads.core.DecisionLab
 import kotlin.math.min
 import kotlin.math.sqrt
 
@@ -19,6 +20,17 @@ import kotlin.math.sqrt
  * camera math, hit detection and saves come from the EXISTING engine.
  * The scenery planner deliberately avoids playable links and spaces.
  */
+internal fun useOverheadBoardPreview(
+    boardId: String,
+    debug: Boolean,
+    requested: Boolean,
+    illustrated: Boolean
+): Boolean =
+    debug && requested && illustrated &&
+        DecisionLab.baseId(boardId) == "woodland_woven_trail_v02"
+
+// First review only Woven Trail. Reusing one scenic composition for Brookside
+// and Cedarwood would incorrectly erase what makes each course distinct.
 internal enum class OverheadDecoration { TREE, FLOWERS, ROCK, COTTAGE }
 internal data class OverheadFeature(val x: Float, val y: Float, val kind: OverheadDecoration)
 
