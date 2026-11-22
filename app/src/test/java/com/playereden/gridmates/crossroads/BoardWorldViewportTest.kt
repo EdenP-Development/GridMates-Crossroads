@@ -15,9 +15,10 @@ class BoardWorldViewportTest {
 
     @Test fun portraitWorldFillsViewportWithoutDistortingSquareArtwork() {
         val scene = BoardWorldViewport.frame(IntSize(400, 800), true)
-        assertEquals(-200f, scene.left, .001f)
-        assertEquals(0f, scene.top, .001f)
-        assertEquals(800f, scene.width, .001f)
+        assertEquals(1.20f, BoardWorldViewport.LIVE_ART_SCALE, .001f)
+        assertEquals(-280f, scene.left, .001f)
+        assertEquals(-80f, scene.top, .001f)
+        assertEquals(960f, scene.width, .001f)
         assertEquals(scene.width, scene.height, .001f)
         assertEquals(200f, scene.position(.5f, .5f).x, .001f)
         assertEquals(400f, scene.position(.5f, .5f).y, .001f)
@@ -25,10 +26,24 @@ class BoardWorldViewportTest {
 
     @Test fun landscapeWorldAlsoFillsViewportAndPreservesProportions() {
         val scene = BoardWorldViewport.frame(IntSize(800, 400), true)
-        assertEquals(0f, scene.left, .001f)
-        assertEquals(-200f, scene.top, .001f)
-        assertEquals(800f, scene.width, .001f)
-        assertEquals(800f, scene.height, .001f)
+        assertEquals(-80f, scene.left, .001f)
+        assertEquals(-280f, scene.top, .001f)
+        assertEquals(960f, scene.width, .001f)
+        assertEquals(960f, scene.height, .001f)
+    }
+
+    @Test fun illustratedWorldIsLargerButCenteredOnTheSameGraphPoint() {
+        val viewport = IntSize(400, 800)
+        val frame = BoardWorldViewport.frame(viewport, true)
+        val regular = 800f
+        assertTrue("Artwork must occupy more actual screen pixels than before",
+            frame.width > regular)
+        assertEquals("Graph center remains screen center",
+            viewport.width / 2f, frame.position(.5f, .5f).x, .001f)
+        assertEquals("Graph center remains screen center",
+            viewport.height / 2f, frame.position(.5f, .5f).y, .001f)
+        // This is an independent miniature view, NEVER a scaled live closeup.
+        assertTrue(BoardWorldViewport.frame(viewport, false).width < frame.width)
     }
 
     @Test fun legacyFullMapFrameKeepsOriginalCoordinateSystem() {
@@ -59,6 +74,31 @@ class BoardWorldViewportTest {
             immersiveWorld = true
         )
         assertEquals("west", selected)
+    }
+
+    @Test fun enlargedArtStillMatchesLegalRouteTapsAtFullManualZoom() {
+        val canvas = IntSize(400, 800)
+        val zoom = 4f
+        val pan = Offset(-175f, 88f)
+        val scene = BoardWorldViewport.frame(canvas, true)
+        assertEquals(960f, scene.width, .001f)
+        val westTap = BoardRouteHitTest.screenPosition(
+            west, canvas, 0f, zoom, pan, immersiveWorld = true
+        )
+        assertEquals("west", BoardRouteHitTest.select(
+            tap = westTap, origin = origin,
+            destinations = listOf(west, east),
+            canvas = canvas, insetPx = 0f,
+            zoom = zoom, translation = pan,
+            touchRadiusPx = 28f, immersiveWorld = true
+        ))
+        assertNull("The old unscaled artwork coordinate must not count as a tap",
+            BoardRouteHitTest.select(
+                tap = Offset(20f, 15f), origin = origin,
+                destinations = listOf(west, east),
+                canvas = canvas, insetPx = 0f, zoom = zoom,
+                translation = pan, touchRadiusPx = 28f, immersiveWorld = true
+            ))
     }
 
     @Test fun cropAndPanStillKeepRouteHitsAccurate() {

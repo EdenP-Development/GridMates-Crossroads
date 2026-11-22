@@ -57,17 +57,23 @@ internal object CrossroadsExperimentalMode {
 
 /**
  * Cinematic camera presets for the active, portrait game world.
- * The old 1.15–1.28x framing made pieces and trails illegible on real phones.
- * Full-map inspection is a separate unanimated 1x canvas, not this camera.
+ *
+ * Owner QA1614: the player repeatedly pinched IN because the default
+ * 1.82–2.12x view still made the woodland scenery feel too small to enjoy.
+ * Bring the scenery closer automatically, without making a route choice an
+ * extreme close-up. Route framing stays wider than ordinary traveling.
+ *
+ * Manual pinch/pan and the independent unanimated 1x Full Map are unchanged.
+ * Camera affects presentation only; no dice, movement, graph or save changes.
  */
 internal object CrossroadsCameraPreset {
     fun followZoom(phase: Phase, turn: Int, animated: Boolean): Float {
         if (!animated || phase == Phase.FINISHED) return 1.0f
         return when (phase) {
-            Phase.ROLL -> if (turn <= 1) 1.92f else 2.02f
-            Phase.ROUTE -> 1.82f // show the fork and nearby alternatives, not just a giant junction
-            Phase.ENCOUNTER -> 2.12f
-            Phase.TARGET -> 2.04f
+            Phase.ROLL -> if (turn <= 1) 2.42f else 2.52f
+            Phase.ROUTE -> 2.16f // preserve context around fork exits and the route-choice dock
+            Phase.ENCOUNTER -> 2.62f // enjoy the region art while reading the event card
+            Phase.TARGET -> 2.48f
             Phase.FINISHED -> 1.0f
         }
     }
@@ -128,10 +134,18 @@ internal object CrossroadsCameraPreset {
             else (min + max) * 0.5f
     }
 
-    /** Only the live playfield gains the stronger visual hierarchy. */
-    fun trailScale(immersive: Boolean) = if (immersive) 1.58f else 1f
-    fun tokenScale(immersive: Boolean) = if (immersive) 1.91f else 1f
-    fun markerScale(immersive: Boolean) = if (immersive) 1.55f else 1f
+    /**
+     * Trails, traveler pawns and node art must grow WITH the bigger painted
+     * world. Otherwise increasing the backing scene size spreads nodes out
+     * while leaving their symbols and wooden roads unnaturally thin.
+     * Full Map continues to render its original 1x compact graphic.
+     */
+    fun trailScale(immersive: Boolean): Float =
+        if (immersive) 1.58f * BoardWorldViewport.LIVE_ART_SCALE else 1f
+    fun tokenScale(immersive: Boolean): Float =
+        if (immersive) 1.91f * BoardWorldViewport.LIVE_ART_SCALE else 1f
+    fun markerScale(immersive: Boolean): Float =
+        if (immersive) 1.55f * BoardWorldViewport.LIVE_ART_SCALE else 1f
 }
 
 /**

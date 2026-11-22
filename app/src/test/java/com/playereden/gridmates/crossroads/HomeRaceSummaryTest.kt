@@ -6,6 +6,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class HomeRaceSummaryTest {
+
+    @Test fun secondaryOptionsHaveConcisePortraitFriendlyLabels() {
+        assertEquals("More options ↓", homeOptionsToggleLabel(expanded = false))
+        assertEquals("Hide more options ↑", homeOptionsToggleLabel(expanded = true))
+    }
     @Test fun defaultSoloSummaryRemainsSimple() {
         val text = homeRaceSummary(2, passAndPlay = false, tactical = false)
         assertEquals("Solo vs AI · 2 racers · offline", text)

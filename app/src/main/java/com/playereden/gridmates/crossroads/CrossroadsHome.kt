@@ -16,6 +16,8 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -42,6 +44,10 @@ internal fun homeRaceSummary(
         else -> " · Tactical rules ON"
     }
 }
+
+/** A short single-line disclosure on compact portrait phones. */
+internal fun homeOptionsToggleLabel(expanded: Boolean): String =
+    if (expanded) "Hide more options ↑" else "More options ↓"
 
 /** An original miniature travel motif, not an interactive or alternate board. */
 @Composable
@@ -135,6 +141,16 @@ internal fun CrossroadsHomeScreen(
     // Keep the first viewport focused on starting a race. Secondary tools
     // remain available in an explicit, accessible options section.
     var showExtraOptions by remember { mutableStateOf(false) }
+    // Materials' default inactive switch is lavender; make BOTH experimental
+    // controls use the same woodland palette at every on/off state.
+    val woodlandSwitchColors = SwitchDefaults.colors(
+        checkedThumbColor = Color(0xFFF7F0DE),
+        checkedTrackColor = Color(0xFF48684D),
+        checkedBorderColor = Color(0xFF48684D),
+        uncheckedThumbColor = Color(0xFF897958),
+        uncheckedTrackColor = Color(0xFFF2ECDD),
+        uncheckedBorderColor = Color(0xFFA39170)
+    )
     // GAMEFEEL-67: all race selectors now share original tactile wooden
     // controls, rather than Material's generic FilterChips.
 
@@ -251,8 +267,7 @@ internal fun CrossroadsHomeScreen(
             onClick = { showExtraOptions = !showExtraOptions },
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
         ) {
-            Text(if (showExtraOptions) "Hide more options ↑"
-                else "Nearby play · Appearance · More options ↓")
+            Text(homeOptionsToggleLabel(showExtraOptions))
         }
         if (showExtraOptions) {
         Row(
@@ -286,7 +301,14 @@ internal fun CrossroadsHomeScreen(
                     Text("Optional offline tactical rules",
                         style = MaterialTheme.typography.bodySmall, color = Muted)
                 }
-                Switch(checked = playtestRules, onCheckedChange = onPlaytestRulesChange)
+                Switch(
+                    checked = playtestRules,
+                    onCheckedChange = onPlaytestRulesChange,
+                    colors = woodlandSwitchColors,
+                    modifier = Modifier.semantics {
+                        contentDescription = "Tactical choices, experimental rules"
+                    }
+                )
             }
         }
         if (playtestRules) {
@@ -308,7 +330,11 @@ internal fun CrossroadsHomeScreen(
                     }
                     Switch(
                         checked = fairFinishExperiment,
-                        onCheckedChange = onFairFinishExperimentChange
+                        onCheckedChange = onFairFinishExperimentChange,
+                        colors = woodlandSwitchColors,
+                        modifier = Modifier.semantics {
+                            contentDescription = "Fair finish, experimental Lab v5"
+                        }
                     )
                 }
             }
