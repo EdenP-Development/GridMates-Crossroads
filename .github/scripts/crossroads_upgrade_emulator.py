@@ -64,8 +64,25 @@ def ui_xml():
     return ET.fromstring(adb("shell", "cat", "/sdcard/crossroads-window.xml"))
 
 def tap_required(label):
-    for attempt in range(5):
+    for attempt in range(7):
         tree = ui_xml()
+        # Android shows a system-owned first-run immersive-mode notice when
+        # this game first enters its fullscreen board. Dismiss that specific
+        # "Got it" prompt, never an ANR/crash dialog or game decision.
+        system_hint = next((
+            node for node in tree.iter("node")
+            if node.get("package") == "android"
+            and node.get("resource-id") == "android:id/ok"
+            and node.get("text", "").strip().lower() == "got it"
+        ), None)
+        if system_hint is not None:
+            bounds = re.search(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]",
+                               system_hint.get("bounds", ""))
+            assert bounds is not None, "Android immersive prompt had no bounds"
+            x1, y1, x2, y2 = map(int, bounds.groups())
+            adb("shell", "input", "tap", str((x1 + x2) // 2), str((y1 + y2) // 2))
+            time.sleep(1)
+            continue
         for node in tree.iter("node"):
             txt = (node.get("text", "") + " " + node.get("content-desc", "")).upper()
             if label.upper() not in txt:
