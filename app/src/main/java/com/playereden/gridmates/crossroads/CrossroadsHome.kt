@@ -45,6 +45,10 @@ internal fun homeRaceSummary(
     }
 }
 
+/** A short single-line disclosure on compact portrait phones. */
+internal fun homeOptionsToggleLabel(expanded: Boolean): String =
+    if (expanded) "Hide more options ↑" else "More options ↓"
+
 /** An original miniature travel motif, not an interactive or alternate board. */
 @Composable
 private fun HomeTrailIllustration() {
@@ -263,8 +267,7 @@ internal fun CrossroadsHomeScreen(
             onClick = { showExtraOptions = !showExtraOptions },
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
         ) {
-            Text(if (showExtraOptions) "Hide more options ↑"
-                else "More options ↓")
+            Text(homeOptionsToggleLabel(showExtraOptions))
         }
         if (showExtraOptions) {
         Row(
