@@ -1,4 +1,8 @@
-> **Current planning entrypoint (Nov 19, 2026):** [Project State](PROJECT_STATE_2026_11_19.md) and [EXPERIENCE-60 Complete Turn QA](EXPERIENCE_60_COMPLETE_TURN_QA.md). The art slots and QA1270 descriptions below are **historical snapshots**; illustrated art is now physically installed in later draft branches, and QA1479 plus movement #59 have passed Android CI. Neither is a public release. No game code is merged to `main`.
+> **Current planning entrypoint (Nov 22, 2026):** [Current Status](CURRENT_STATUS.md) → [RC1 Consolidated Integration Review](RC1_INTEGRATION_REVIEW_2026_11_22.md) → [QA-79 signed APK emulator upgrade](QA_79_REAL_APK_INSTALL_OVER_RECOVERY.md). Signed QA1613, cross-version recovery stress and a real QA1607→QA1613 emulator install-over have passed automated QA. Physical owner-phone tests, two-phone Wi-Fi LAN, human playtime/balance and public signing/privacy acceptance are **not complete**. RC1 remains draft/unmerged.
+
+**Working next:** audit the entire source candidate as one cohesive game, preserve the original rules as default, fix only player-facing or release-gate inconsistencies, then conduct focused device playtests when hardware is available. Avoid new currencies, accounts or unnecessary features.
+
+Everything below this divider records **historical development stages**, not the latest verified build.
 
 ---
 
