@@ -19,7 +19,7 @@ This finding is from source art, **not** a claim that an image is blurry, unlice
 
 The code contains a QA-only alternative backdrop called **Woven board art: Overhead** in the in-match `⋯` menu. It is a composition trial, **not** an approved PNG replacement.
 
-- An original vector-drawn overhead printed environment: earth/paper, meadow/forest/village clearings, top-view tree canopies, rooftop tiles, rocks, flowers and a blue/teal stream that cannot be mistaken for the brown wooden roads.
+- An original vector-drawn overhead printed environment: earth/paper, meadow/forest/village clearings, **enlarged layered tree canopies, detailed rooftops, rocks and flower clusters** and a blue/teal stream that cannot be mistaken for the brown wooden roads. Two distinct village rooftops now identify the destination region; all ornaments remain graph-cleared.
 - Static features are calculated **once per board** from a fixed lattice and removed when they would collide with any real node or directed graph segment. Decorative scenery cannot create a fake route, obscure a junction or become a tap target.
 - The existing high-resolution carved gameplay roads from VISUAL-83, action/state symbols, numbered animal traveler tokens, 1.2× live art frame, camera, pan and hit testing all work over the new composition without changing graph coordinates.
 - Unlike the existing landscape, this new art has **no horizon or upright building elevation**. It is drawn from above, matching the paths and pieces.
@@ -33,6 +33,12 @@ The code contains a QA-only alternative backdrop called **Woven board art: Overh
 2. Decide whether overhead composition **actually solves the relationship between art and navigation**. This code-drawn preview deliberately prioritizes perspective and readability over the final polish of a bespoke illustrated PNG.
 3. If accepted, produce and review a **new 1536×1536 overhead illustrated Woven backplate** in the existing flat-cut-paper Woodland palette, using the actual course graph as a planning overlay but with **no paths or symbols baked into the finished image**. Test the replacement against an exact-head QA APK and record provenance/hashes before marking it approved.
 4. Then design distinct overhead boards for Brookside (brighter creek/willows) and Cedarwood (dense forest/expedition camp), preserving both their own event/region identity and their own verified route geometry. Do not simply recolor or reuse the same composition.
+
+## CI/runtime budget correction
+
+The previous Android runs at `42894ff` ended prematurely in the build step without a usable APK (cancelled job/failure-status run; no compiler error log was retrievable). They were **not passes**. The branch now avoids redundant Android APK jobs on both `push` and `pull_request` for each feature-PR commit: the Android workflow keeps the PR job as its exact-head QA gate, `workflow_dispatch` for manual tests, and standalone design-branch push testing. Design-data QA remains independent. Do not infer an Android defect or success solely from those aborted CI runs.
+
+The newest art changes enlarge the actual decorative features themselves, rather than only camera zoom. The fixed authored Woven graph now yields **20** graph-cleared decorative features (**10 trees, four rocks, four flower clusters and two village rooftops**), with tests enforcing this manuscript count and the no-road-overlap constraint. This is a visual comparison prototype, not a final commissioned backplate or game asset license approval.
 
 ## Automated quality gates
 
