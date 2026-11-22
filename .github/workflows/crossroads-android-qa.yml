@@ -1,8 +1,10 @@
 name: Crossroads Android QA APK
 on:
   workflow_dispatch:
+  # Draft feature branches are checked by pull_request (one build per head).
+  # Keep push CI only for standalone design branches and manual dispatch.
   push:
-    branches: ["design/**", "feature/**"]
+    branches: ["design/**"]
     paths:
       - "app/**"
       - "core/**"
