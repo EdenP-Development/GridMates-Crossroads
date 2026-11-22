@@ -1332,10 +1332,11 @@ private fun CrossroadsApp(
                     if (state.phase == Phase.FINISHED && !turnReady) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                     } else if (state.phase == Phase.FINISHED) {
-                        Button(onClick = { showResults = true },
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
-                            Text("See race results")
-                        }
+                        TabletopPrimaryActionButton(
+                            text = "SEE RACE RESULTS",
+                            onClick = { showResults = true },
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     } else if (lanRole != LanRole.OFFLINE &&
                         (!lanConnected || lanPendingAction ||
                             state.playerIndex != (if (lanRole == LanRole.HOST) 0 else 1))
@@ -1543,11 +1544,12 @@ private fun CrossroadsApp(
                                         },
                                         enabled = turnReady,
                                         modifier = Modifier.fillMaxWidth().heightIn(min = 68.dp),
-                                        shape = MaterialTheme.shapes.extraLarge,
-                                        color = Cream,
+                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(15.dp),
+                                        color = TabletopMaterials.paper,
                                         contentColor = Forest,
+                                        shadowElevation = 3.dp,
                                         border = androidx.compose.foundation.BorderStroke(
-                                            1.dp, Color(0xFFB5A88F)
+                                            2.dp, TabletopMaterials.brass
                                         )
                                     ) {
                                         Box(
