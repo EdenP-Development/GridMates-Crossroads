@@ -2,6 +2,8 @@ package com.playereden.gridmates.crossroads
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -13,8 +15,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -23,10 +30,12 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -152,6 +161,63 @@ internal fun TabletopSeatPlate(
             if (shielded) {
                 Spacer(Modifier.width(2.dp))
                 Text("◆", color = Color(0xFFF6D48D), fontSize = 10.sp)
+            }
+        }
+    }
+}
+
+/**
+ * Tactile action tiles used by the die/risk choices. The whole tile is a
+ * readable target, not a two-line Android form button. One shared style keeps
+ * movement, route and opponent choices in the same tabletop language.
+ */
+@Composable
+internal fun TabletopActionTile(
+    title: String,
+    detail: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    warm: Boolean = false,
+    enabled: Boolean = true
+) {
+    val interactions = remember { MutableInteractionSource() }
+    val pressed by interactions.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = CrossroadsTabletopFeedback.scale(pressed && enabled),
+        animationSpec = tween(95),
+        label = "tabletop-tile-contact"
+    )
+    val bg = if (warm) Color(0xFFB68A48) else Color(0xFF3D624A)
+    val ink = if (warm) Color(0xFF30291F) else Color(0xFFFFF3D6)
+    Surface(
+        onClick = onClick,
+        enabled = enabled,
+        interactionSource = interactions,
+        modifier = modifier.heightIn(min = 56.dp)
+            .graphicsLayer { scaleX = scale; scaleY = scale },
+        shape = RoundedCornerShape(13.dp),
+        color = if (enabled) bg else Color(0xFFD5CEBC),
+        border = BorderStroke(2.dp,
+            if (enabled) TabletopMaterials.brass else Color(0xFFB2A58B)),
+        shadowElevation = if (enabled) 4.dp else 0.dp
+    ) {
+        Box(
+            modifier = Modifier.padding(horizontal = 5.dp, vertical = 8.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            androidx.compose.foundation.layout.Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(title, color = if (enabled) ink else Color(0xFF786C59),
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.labelLarge,
+                    textAlign = TextAlign.Center, maxLines = 1,
+                    overflow = TextOverflow.Ellipsis)
+                Text(detail, color = if (enabled) ink else Color(0xFF786C59),
+                    style = MaterialTheme.typography.labelSmall,
+                    textAlign = TextAlign.Center, maxLines = 1,
+                    overflow = TextOverflow.Ellipsis)
             }
         }
     }
