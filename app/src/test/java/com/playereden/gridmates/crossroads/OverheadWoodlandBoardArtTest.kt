@@ -28,7 +28,9 @@ class OverheadWoodlandBoardArtTest {
         assertEquals(38, board.nodes.size)
         val ornaments = OverheadScenery.plan(board.nodes)
         assertEquals("Changing route topology requires new scenic placement QA",
-            19, ornaments.size)
+            20, ornaments.size)
+        assertEquals("Village should read as a destination, not a solitary icon",
+            2, ornaments.count { it.kind == OverheadDecoration.COTTAGE })
         ornaments.forEach { p ->
             val margin = if (p.kind == OverheadDecoration.COTTAGE) .084f else .067f
             assertTrue("Scenery at ${p.x},${p.y} overlaps Woven graph",
