@@ -1,8 +1,16 @@
-# Current status pointer — November 19, 2026
+# Current development status — November 21, 2026
 
-The newest verified project summary is **[PROJECT_STATE_2026_11_19.md](PROJECT_STATE_2026_11_19.md)**. In brief: three illustrated courses, Solo/Pass & Play, save/replay, experimental offline decisions, and LAN prototype exist in a stacked unmerged draft. Owner testing of **QA1479** confirmed marked gameplay visibility improvement; #59 movement visuals passed Android QA; #60 integrated action HUD is still under review. **None of these constitute an approved public release or a real two-phone LAN test.** Historical milestone receipts below are retained for traceability.
+**Newest exact-head verified Android baseline:** signed **QA1603** from stacked draft **GAMEFEEL-76 / PR #76**, [Android run 44962249584](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44962249584), plus [rules run 44962249574](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/44962249574); both passed. The build includes the earlier M70 wider camera, M71 die/result feel, M72–M75 experimental tactical/fair-finish variants and M76 truthful finish receipts. **This is CI evidence, NOT new owner-phone, two-phone LAN or production approval.**
+
+- **Current feature state:** three handcrafted illustrated courses; Solo AI; 2–4-human Pass & Play; local action-replay saves/progress export; Android camera/action HUD; original first-to-finish race; opt-in offline Tactical Lab v4 and independently selectable Lab v5 fair-finish. v5 is experimental only. Normal and Nearby races use original rules. The user cannot phone-test right now, so no new physical-device acceptance is inferred.
+- **M74 identical-bot audit:** 2,160 races exposed Quick first-seat bias of 81.7% in both tactical v3 and v4. **M75 equal-turn** v4/v5 comparison: 2-player Quick first-seat wins improved to 62.5% under v5; 2,160 deterministic comparison races passed. This does not prove human balance.
+- **Current in-development draft LAN-77:** [private-room and reconnect QA](LAN_77_PRIVATE_ROOM_RECONNECT_QA.md) adds actual loopback socket tests and a specific join-error feedback fix. It remains **source-only until its own exact-head rules/Android CI passes**; real two-phone Wi-Fi discovery, cross-device gameplay, reconnect and security are still OPEN.
+- **Branch policy:** all milestones are stacked unmerged draft PRs, including #72–#76; **`main` is untouched**. Do not present a signed QA artifact as an approved public APK, and never describe JVM loopback as real same-Wi-Fi phone acceptance.
+- **Longer-running reference:** [PROJECT_STATE_2026_11_19.md](PROJECT_STATE_2026_11_19.md) remains the longer product/design assessment; its QA1479/PR #60 “current” entries are historical now. Owner-phone feedback, accessible controls, real APK install-over/save preservation and two-phone LAN remain necessary before release.
 
 ---
+
+## Historical milestone receipts (retained)
 
 # LAN-22 — Major feature pivot: two-phone Nearby Play (November 17, 2026)
 
