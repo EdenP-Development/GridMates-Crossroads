@@ -64,6 +64,67 @@ class CrossroadsProgressCodecTest {
         assertInvalid(CrossroadsProgressCodec.encode(wrongReceipt))
     }
 
+    @Test fun finishedLabOnlyProfileCanExportWithoutInventedOfficialWin() {
+        val versions = listOf(
+            DecisionLab.variant(quick), DecisionLab.variantV2(quick),
+            DecisionLab.variantV3(quick), DecisionLab.variantV4(quick),
+            DecisionLab.variantV5(quick)
+        )
+        val known = boards + versions.associateBy { it.id }
+        for (lab in versions) {
+            val game = GameSession(lab, events, seats = 2, seed = 71,
+                humanIndices = emptySet())
+            var commands = 0
+            while (game.phase != Phase.FINISHED && commands++ < 1500) game.botStep()
+            assertEquals("Unfinished ${lab.id}", Phase.FINISHED, game.phase)
+            val cp = game.checkpoint("only-lab-${lab.id}", 1794931200000L)
+            val backup = CrossroadsProgressBundle(
+                completed = 0, wins = 0, activeMatch = cp,
+                lastCompletedMatchId = cp.matchId,
+                lastFinishedAtEpochMillis = 1794931260000L
+            )
+            val verified = CrossroadsProgressCodec.verify(
+                CrossroadsProgressCodec.encode(backup), known, events)
+            assertEquals(0, verified.bundle.completed)
+            assertEquals(0, verified.bundle.wins)
+            assertEquals(game.snapshot(), verified.restoredMatch!!.snapshot())
+            assertEquals(game.fairFinishReceipt, verified.restoredMatch.fairFinishReceipt)
+            // An experimental finish still MUST have an idempotent completion receipt.
+            assertInvalidFor(backup.copy(lastCompletedMatchId = null,
+                lastFinishedAtEpochMillis = 0L), known)
+            assertInvalidFor(backup.copy(lastCompletedMatchId = "wrong-finish"),
+                known)
+        }
+    }
+
+    @Test fun normalFinishedGameStillRequiresRecordedOfficialCompletion() {
+        val game = GameSession(quick, events, 2, 41, emptySet())
+        var actions = 0
+        while (game.phase != Phase.FINISHED && actions++ < 1500) game.botStep()
+        assertEquals(Phase.FINISHED, game.phase)
+        val cp = game.checkpoint("official-finish", 1794931200000L)
+        val withoutRecord = CrossroadsProgressBundle(
+            completed = 0, wins = 0, activeMatch = cp,
+            lastCompletedMatchId = cp.matchId,
+            lastFinishedAtEpochMillis = 1794931260000L
+        )
+        assertInvalidFor(withoutRecord, boards)
+        val withRecord = withoutRecord.copy(completed = 1)
+        assertEquals(game.snapshot(), CrossroadsProgressCodec.verify(
+            CrossroadsProgressCodec.encode(withRecord), boards, events)
+            .restoredMatch!!.snapshot())
+    }
+
+    private fun assertInvalidFor(
+        bundle: CrossroadsProgressBundle, known: Map<String, BoardDefinition>
+    ) {
+        try {
+            CrossroadsProgressCodec.verify(
+                CrossroadsProgressCodec.encode(bundle), known, events)
+            fail("Accepted invalid finished-match receipt")
+        } catch (_: IllegalArgumentException) { }
+    }
+
     @Test fun importsRejectBadCountersWrongCourseAndTamperedCheckpoints() {
         assertInvalid(Json.encodeToString(
             CrossroadsProgressBundle(completed = 2, wins = 3)))

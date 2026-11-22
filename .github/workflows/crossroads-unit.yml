@@ -146,3 +146,14 @@ jobs:
             core/build/reports/gameplay-75/v4_v5_equal_turn_samples.csv
           if-no-files-found: warn
           retention-days: 30
+
+      - name: Upload cross-version save/recovery stress audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-SAVE-78-${{ github.sha }}
+          path: |
+            core/build/reports/save-78/cross_version_recovery_summary.txt
+            core/build/reports/save-78/cross_version_recovery_samples.csv
+          if-no-files-found: warn
+          retention-days: 30

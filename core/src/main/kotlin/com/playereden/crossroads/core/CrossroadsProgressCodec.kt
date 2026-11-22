@@ -84,7 +84,11 @@ object CrossroadsProgressCodec {
                     value.lastFinishedAtEpochMillis >= checkpoint.startedAtEpochMillis) {
                     "Finished match receipt is missing or inconsistent"
                 }
-                require(value.completed > 0)
+                // Experimental Lab races are deliberately excluded from official
+                // completion/win totals. Their finished checkpoint + matching
+                // receipt are still valid even for a brand-new profile with zero
+                // official races. Original-rules finishes still require a count.
+                if (!restored.playtestRules) require(value.completed > 0)
             }
             restored
         }
