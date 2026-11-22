@@ -2395,6 +2395,23 @@ private fun BoardCanvas(
                     denseBoard && node.kind == "event" -> 6.25f
                     else -> 7f
                 }) * nodeVisibilityScale
+                // VISUAL-83: Start and Finish feel like physical sockets for
+                // the travelers, not two ordinary dots. Shared graph centers
+                // and the original S/F labels remain authoritative.
+                if (immersiveWorld &&
+                    boardLook == CrossroadsBoardLook.ILLUSTRATED &&
+                    (node.kind == "start" || node.kind == "finish")) {
+                    drawCarvedStartFinishBase(
+                        center = center,
+                        radius = CarvedWaypointGeometry.socketRadius(
+                            baseRadius = radius * 1.1f,
+                            neighborDistanceNormalized =
+                                nearestSpaceSpacing[node.id] ?: Float.POSITIVE_INFINITY,
+                            worldSide = drawWidth
+                        ),
+                        isFinish = node.kind == "finish"
+                    )
+                }
                 // The painted artwork is purely decorative. Unknown nodes,
                 // start/finish, and missing art retain the exact old marker.
                 val paintedType = if (showPaintedMarkers)
