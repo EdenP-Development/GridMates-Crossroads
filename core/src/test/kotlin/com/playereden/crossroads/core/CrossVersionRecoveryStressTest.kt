@@ -116,13 +116,17 @@ class CrossVersionRecoveryStressTest {
                             sawFinalChance = sawFinalChance || active.finalRoundPending
                             assertEquals("Before action $ticks: $matchId",
                                 active.snapshot(), mirror.snapshot())
+                            val pendingBefore = active.finalRoundPending
                             performOneLegalAction(active, seed, ticks)
                             performOneLegalAction(mirror, seed, ticks)
                             ticks++
                             assertEquals("RNG/route drift at action $ticks: $matchId",
                                 active.snapshot(), mirror.snapshot())
                             if (ticks <= 2 || ticks % 7 == 0 ||
-                                active.phase != mirror.phase || active.phase == Phase.FINISHED
+                                active.phase == Phase.ENCOUNTER ||
+                                active.phase == Phase.TARGET ||
+                                (active.finalRoundPending && !pendingBefore) ||
+                                active.phase == Phase.FINISHED
                             ) {
                                 val encoded = MatchCheckpointCodec.encode(
                                     active.checkpoint(matchId, start))
@@ -169,8 +173,8 @@ class CrossVersionRecoveryStressTest {
         assertTrue("No interactive encounter was exercised", records.any { it.sawEncounter })
         assertTrue("No pending final chance was captured",
             records.filter { it.version == "lab-v5" }.any { it.sawFinalChance })
-        assertTrue("Unexpected target-phase coverage data",
-            records.count { it.sawTarget } <= records.size)
+        // TARGET is event-dependent. Record occurrences rather than invent
+        // guaranteed target coverage from stochastic regional card draws.
 
         val dir = File(root, "core/build/reports/save-78")
         check(dir.exists() || dir.mkdirs())
