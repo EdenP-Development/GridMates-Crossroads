@@ -221,6 +221,45 @@ class LanConnectionLifecycleTest {
         }
     }
 
+    @Test fun deniedGuestSeesSpecificRoomCodeErrorExactlyOnce() {
+        val game = race()
+        val host = CrossroadsLanHost(
+            game.checkpoint("code-check", started),
+            requiresCode = true
+        )
+        val reported = java.util.concurrent.CopyOnWriteArrayList<String>()
+        val firstError = CountDownLatch(1)
+        val secondError = CountDownLatch(2)
+        val receivedState = AtomicInteger(0)
+        val guest = CrossroadsLanGuest(
+            onState = { receivedState.incrementAndGet() },
+            onConnection = { connected, note ->
+                if (!connected) {
+                    reported.add(note.orEmpty())
+                    firstError.countDown()
+                    secondError.countDown()
+                }
+            }
+        )
+        try {
+            // A three-letter code cannot accidentally equal the six-digit code.
+            guest.connect("127.0.0.1", host.port, code = "bad")
+            assertTrue("Guest did not surface a join rejection",
+                firstError.await(5, TimeUnit.SECONDS))
+            assertFalse("A generic disconnect overwrote the real rejection",
+                secondError.await(400, TimeUnit.MILLISECONDS))
+            assertEquals(1, reported.size)
+            assertTrue("Lost the reason for refusal: ${reported.single()}",
+                reported.single().contains("room code", ignoreCase = true))
+            assertEquals(0, receivedState.get())
+            assertFalse(guest.connected)
+            assertTrue(guest.rejoinToken.isEmpty())
+        } finally {
+            guest.close()
+            host.close()
+        }
+    }
+
     @Test fun invalidRoomIdentityDisconnectsWithoutExecutingGuestTurn() {
         val game = race(393)
         advanceHostToGuest(game)
