@@ -165,6 +165,7 @@ class CrossroadsLanGuest(
             val link = try { socketFactory() } catch (_: Exception) {
                 onConnection(false, "Connect both devices to the same Wi-Fi."); return@execute
             }
+            var failureReported = false
             try {
                 link.connect(InetSocketAddress(host, port), 5000)
                 link.soTimeout = 20000
@@ -204,13 +205,20 @@ class CrossroadsLanGuest(
                     }
                 }
             } catch (e: Exception) {
-                if (running) onConnection(false,
-                    e.message?.take(200) ?: "Connection interrupted. Rejoin to continue.")
+                if (running) {
+                    // Preserve the host's specific rejection (wrong room code,
+                    // occupied seat, incompatible room) instead of immediately
+                    // replacing it with the generic disconnect notice below.
+                    failureReported = true
+                    onConnection(false,
+                        e.message?.take(200) ?: "Connection interrupted. Rejoin to continue.")
+                }
             } finally {
                 connected = false
                 if (socket === link) socket = null
                 runCatching { link.close() }
-                if (running) onConnection(false, "Disconnected. Rejoin the host to continue.")
+                if (running && !failureReported)
+                    onConnection(false, "Disconnected. Rejoin the host to continue.")
             }
         }
     }
