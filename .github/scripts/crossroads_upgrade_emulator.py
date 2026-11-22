@@ -70,7 +70,7 @@ def tap_required(label):
             txt = (node.get("text", "") + " " + node.get("content-desc", "")).upper()
             if label.upper() not in txt:
                 continue
-            match = re.search(r"\\[(\\d+),(\\d+)\\]\\[(\\d+),(\\d+)\\]", node.get("bounds", ""))
+            match = re.search(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]", node.get("bounds", ""))
             if match:
                 x1, y1, x2, y2 = map(int, match.groups())
                 adb("shell", "input", "tap", str((x1 + x2) // 2), str((y1 + y2) // 2))
@@ -139,6 +139,9 @@ on_screen = " ".join(
 assert "START RACE" not in on_screen, (
     "Updated APK fell back to the menu instead of resuming a valid saved match"
 )
+assert any(mark in on_screen for mark in ("ROLL THE DIE", "ROUND", "TURN", "CHOOSE")), (
+    "Updated app did not expose a recognizable resumed game HUD"
+)
 adb("shell", "am", "force-stop", PKG)
 after_launch = values(read_prefs())
 assert after_launch["active_match_checkpoint_v1"] == original["active_match_checkpoint_v1"], (
@@ -150,47 +153,30 @@ time.sleep(2)
 print(f"PASS: QA {BASE_CODE} -> QA {NEXT_CODE} real emulator install-over; "
       "original roll/checkpoint restored and stats preserved.")
 
-# Collect screenshot evidence for UI review (not a full layout acceptance test).
+# Evidence includes a real emulator screenshot and a verifiable, nonsecret
+# upgrade receipt; neither substitutes for owner-phone install-over acceptance.
 evidence = ROOT / "qa-evidence"
 evidence.mkdir(exist_ok=True)
-def screenshot(name):
+with (evidence / f"crossroads-{NEXT_CODE}-resumed-game.png").open("wb") as out:
     subprocess.run(["adb", "exec-out", "screencap", "-p"],
-                   check=True, timeout=60, stdout=(evidence / name).open("wb"))
-screenshot(f"crossroads-{NEXT_CODE}-menu.png")
-try:
-    # Android UIAutomator exposes merged Compose button labels; tap the 2-player button.
-    import xml.etree.ElementTree as ET
-    def dump_ui():
-        adb("shell", "uiautomator", "dump", "/sdcard/crossroads-window.xml")
-        xml = adb("shell", "cat", "/sdcard/crossroads-window.xml")
-        return ET.fromstring(xml)
-    def tap_text(label):
-        tree = dump_ui()
-        for node in tree.iter("node"):
-            if label in (node.attrib.get("text", "") + " " + node.attrib.get("content-desc", "")):
-                m = re.search(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]", node.attrib.get("bounds", ""))
-                if m:
-                    x1,y1,x2,y2=map(int,m.groups())
-                    adb("shell","input","tap",str((x1+x2)//2),str((y1+y2)//2))
-                    return True
-        return False
-    if tap_text("2 players"):
-        time.sleep(2)
-        screenshot(f"crossroads-{NEXT_CODE}-board.png")
-        if tap_text("Overview"):
-            time.sleep(0.8)
-            screenshot(f"crossroads-{NEXT_CODE}-overview.png")
-        if tap_text("Follow"):
-            time.sleep(0.8)
-            screenshot(f"crossroads-{NEXT_CODE}-follow.png")
-        if tap_text("Zoom in board"):
-            time.sleep(0.8)
-            screenshot(f"crossroads-{NEXT_CODE}-zoom-in.png")
-            tap_text("Follow")
-        if tap_text("Roll the die"):
-            time.sleep(2)
-            screenshot(f"crossroads-{NEXT_CODE}-first-roll.png")
-    else:
-        print("INFO: Could not match Compose button in UIAutomator; main-menu screenshot is still available.")
-except Exception as exc:
-    print("INFO: Non-gating screenshot interaction unavailable:", repr(exc))
+                   check=True, timeout=60, stdout=out)
+(evidence / f"crossroads-{BASE_CODE}-to-{NEXT_CODE}-upgrade.json").write_text(
+    json.dumps({
+        "status": "PASS",
+        "emulator_api": 35,
+        "baseline_version": BASE_CODE,
+        "candidate_version": NEXT_CODE,
+        "baseline_source_commit": receipts[0]["source_commit"],
+        "candidate_source_commit": receipts[1]["source_commit"],
+        "same_test_signer": True,
+        "active_checkpoint_sha256": hashlib.sha256(
+            original["active_match_checkpoint_v1"].encode("utf-8")
+        ).hexdigest(),
+        "saved_action_count": len(checkpoint["actions"]),
+        "board_id": checkpoint["boardId"],
+        "stats_completed": int(after_launch["completed"]),
+        "stats_wins": int(after_launch["wins"]),
+        "resumed_in_game": True,
+        "owner_phone_verified": False,
+    }, indent=2) + "\\n"
+)
