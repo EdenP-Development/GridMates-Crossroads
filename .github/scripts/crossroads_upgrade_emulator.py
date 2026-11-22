@@ -178,5 +178,5 @@ with (evidence / f"crossroads-{NEXT_CODE}-resumed-game.png").open("wb") as out:
         "stats_wins": int(after_launch["wins"]),
         "resumed_in_game": True,
         "owner_phone_verified": False,
-    }, indent=2) + "\\n"
+    }, indent=2) + "\n"
 )
