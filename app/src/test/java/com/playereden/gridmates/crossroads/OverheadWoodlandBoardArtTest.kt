@@ -1,6 +1,9 @@
 package com.playereden.gridmates.crossroads
 
 import com.playereden.crossroads.core.BoardNode
+import com.playereden.crossroads.core.GameData
+import com.playereden.crossroads.core.DecisionLab
+import java.io.File
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -12,6 +15,40 @@ class OverheadWoodlandBoardArtTest {
         BoardNode("risky", "forest", "event", listOf("finish"), .67f, .66f),
         BoardNode("finish", "village", "finish", emptyList(), .92f, .14f)
     )
+
+    private val wovenBoard by lazy {
+        val root = listOf(File("data"), File("../data"))
+            .first { File(it, "boards/woodland_woven_trail.json").isFile }
+        GameData.board(File(root, "boards/woodland_woven_trail.json").readText())
+    }
+
+    @Test fun fullAuthoredWovenGraphKeepsOrnamentsClearOfEveryRealPath() {
+        // Real course review, not just the five-node synthetic test fixture.
+        val board = wovenBoard
+        assertEquals(38, board.nodes.size)
+        val ornaments = OverheadScenery.plan(board.nodes)
+        assertEquals("Changing route topology requires new scenic placement QA",
+            19, ornaments.size)
+        ornaments.forEach { p ->
+            val margin = if (p.kind == OverheadDecoration.COTTAGE) .084f else .067f
+            assertTrue("Scenery at ${p.x},${p.y} overlaps Woven graph",
+                OverheadScenery.clearOfPlay(p.x, p.y, board.nodes, margin))
+        }
+    }
+
+    @Test fun optionalOverheadPerspectiveAppliesToSavedWovenLabVersionsOnly() {
+        for (suffix in listOf(
+            DecisionLab.SUFFIX, DecisionLab.V2_SUFFIX, DecisionLab.V3_SUFFIX,
+            DecisionLab.V4_SUFFIX, DecisionLab.V5_SUFFIX
+        )) {
+            assertTrue(useOverheadBoardPreview(
+                "woodland_woven_trail_v02" + suffix, true, true, true
+            ))
+            assertFalse(useOverheadBoardPreview(
+                "woodland_brookside_quick_v01" + suffix, true, true, true
+            ))
+        }
+    }
 
     @Test fun overheadPrintIsOnlyAnOptInWovenQaPreview() {
         assertTrue(useOverheadBoardPreview(
