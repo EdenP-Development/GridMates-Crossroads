@@ -26,10 +26,21 @@ private val Muted = Color(0xFF80664B)
 private val Paper = Color(0xFFF7F0DE)
 
 /** Keep important experimental-rule state visible even with options collapsed. */
-internal fun homeRaceSummary(seats: Int, passAndPlay: Boolean, tactical: Boolean): String {
+internal fun homeRaceSummary(
+    seats: Int,
+    passAndPlay: Boolean,
+    tactical: Boolean,
+    fairFinish: Boolean = false
+): String {
     val summary = if (passAndPlay) "$seats people · Pass & Play · offline"
         else "Solo vs AI · $seats racers · offline"
-    return summary + if (tactical) " · Tactical rules ON" else ""
+    // Only tactical + Fair Finish activates Lab v5; a remembered v5 preference
+    // by itself does not change an original-rules race.
+    return summary + when {
+        !tactical -> ""
+        fairFinish -> " · Tactical + Fair Finish ON"
+        else -> " · Tactical rules ON"
+    }
 }
 
 /** An original miniature travel motif, not an interactive or alternate board. */
@@ -376,7 +387,7 @@ internal fun CrossroadsHomeScreen(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    homeRaceSummary(seats, passAndPlay, playtestRules),
+                    homeRaceSummary(seats, passAndPlay, playtestRules, fairFinishExperiment),
                     style = MaterialTheme.typography.labelMedium, color = Muted
                 )
                 TabletopStartRaceButton(
