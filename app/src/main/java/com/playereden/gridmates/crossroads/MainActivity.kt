@@ -156,6 +156,12 @@ private fun CrossroadsApp(
             CrossroadsBoardLook.fromStored(prefs.getString("board_look_v1", null))
         )
     }
+    // VISUAL-84: QA-only A/B art perspective. An overhead board should be
+    // judged next to the existing storybook landscapes before any replacement.
+    // This is a local appearance preference, never a save or LAN rule.
+    var topDownBoardPreview by remember {
+        mutableStateOf(BuildConfig.DEBUG && prefs.getBoolean("qa_overhead_board_v1", false))
+    }
     val recoveryStore = remember(prefs, classicBoard, quickBoard, longBoard, catalogue) {
         MatchRecoveryStore(prefs, classicBoard, catalogue, knownBoards)
     }
@@ -929,6 +935,7 @@ private fun CrossroadsApp(
                     boardLook = boardLook, trailStyle = trailStyle,
                     woodlandPieces = woodlandPieces,
                     paintedMarkers = paintedMarkers,
+                    topDownPreview = topDownBoardPreview,
                     routeChoiceIds = if (state.phase == Phase.ROUTE &&
                         localIsCurrentSeat && turnReady &&
                         !state.players[state.playerIndex].isBot)
@@ -1093,6 +1100,20 @@ private fun CrossroadsApp(
                             }
                             HorizontalDivider()
                             if (BuildConfig.DEBUG) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(if (topDownBoardPreview)
+                                            "Board scene: Overhead tabletop (QA)"
+                                        else "Board scene: Storybook landscape (QA)")
+                                    },
+                                    onClick = {
+                                        topDownBoardPreview = !topDownBoardPreview
+                                        prefs.edit().putBoolean(
+                                            "qa_overhead_board_v1", topDownBoardPreview
+                                        ).apply()
+                                        showMatchOptions = false
+                                    }
+                                )
                                 DropdownMenuItem(
                                     text = {
                                         Text("Trail style: ${trailStyle.label}")
@@ -1701,7 +1722,8 @@ private fun CrossroadsApp(
                                             animateTokens = false, matchKey = game,
                                             boardLook = boardLook, trailStyle = trailStyle,
                                             woodlandPieces = woodlandPieces,
-                                            paintedMarkers = paintedMarkers
+                                            paintedMarkers = paintedMarkers,
+                                            topDownPreview = topDownBoardPreview
                                         )
                                     }
                                 }
@@ -1905,6 +1927,7 @@ private fun BoardCanvas(
     trailStyle: CrossroadsTrailStyle = CrossroadsTrailStyle.SIMPLE,
     woodlandPieces: Boolean = false,
     paintedMarkers: Boolean = false,
+    topDownPreview: Boolean = false,
     routeChoiceIds: List<String> = emptyList(),
     onRouteChosen: (String) -> Unit = {},
     tokenScale: Float = 1f,
@@ -1918,7 +1941,7 @@ private fun BoardCanvas(
     // The scene is data-independent: scenery and optional illustrated pawns
     // are drawn beneath the authoritative routes and numeric seat labels.
     val boardBackdrop = rememberOptionalCrossroadsArt(
-        if (boardLook == CrossroadsBoardLook.ILLUSTRATED)
+        if (boardLook == CrossroadsBoardLook.ILLUSTRATED && !topDownPreview)
             CrossroadsArtCatalog.backplate(board.id) else null
     )
     val trailAtlas = rememberOptionalCrossroadsArt(
@@ -1949,6 +1972,12 @@ private fun BoardCanvas(
         atlasLoaded = markerAtlas != null,
         illustratedBoard = boardLook == CrossroadsBoardLook.ILLUSTRATED
     )
+    // Pure, fixed overhead scenery positions are remembered per authored
+    // graph; no per-frame random generation or fake game path data.
+    val overheadDecor = remember(board, topDownPreview) {
+        if (BuildConfig.DEBUG && topDownPreview)
+            OverheadScenery.plan(board.nodes) else emptyList()
+    }
     // The live world magnifies interactive art; the full-map inspector keeps
     // its previous compact geometry for legibility and path overview.
     val gamePieceScale = tokenScale * CrossroadsCameraPreset.tokenScale(immersiveWorld)
@@ -2273,7 +2302,16 @@ private fun BoardCanvas(
             // Artwork is strictly below all navigable routes, nodes, pieces and
             // hit targets. A missing art slot preserves the tested ART-08 drawing.
             // Both use the same normalized board frame and camera transform.
-            if (boardBackdrop == null) {
+            if (BuildConfig.DEBUG && topDownPreview &&
+                boardLook == CrossroadsBoardLook.ILLUSTRATED) {
+                // Same graph, different VIEWPOINT: overhead trees, rock,
+                // rooftops and clearings rather than a landscape horizon.
+                drawOverheadWoodlandPrint(
+                    nodes = board.nodes,
+                    features = overheadDecor,
+                    left = left, top = top, width = drawWidth, height = drawHeight
+                )
+            } else if (boardBackdrop == null) {
                 drawWoodlandBoardArt(
                     boardId = board.id,
                     left = left, top = top, width = drawWidth, height = drawHeight
