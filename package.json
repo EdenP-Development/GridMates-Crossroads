@@ -1,0 +1,11 @@
+{
+  "name": "gridmates-crossroads-design",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Pre-production design data checks (not a playable game)",
+  "scripts": {
+    "test": "node --test scripts/tests/*.test.mjs",
+    "validate": "node scripts/validate_design.mjs"
+  }
+}

@@ -1,0 +1,159 @@
+name: Crossroads rules and design tests
+on:
+  push:
+    branches: ["main", "design/**", "feature/**", "fix/**"]
+    paths:
+      - "core/**"
+      - "data/**"
+      - "scripts/**"
+      - "package.json"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - ".github/workflows/crossroads-unit.yml"
+  pull_request:
+    paths:
+      - "core/**"
+      - "data/**"
+      - "scripts/**"
+      - "package.json"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - ".github/workflows/crossroads-unit.yml"
+permissions:
+  contents: read
+concurrency:
+  group: crossroads-unit-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify design fixtures
+        run: npm test && npm run validate
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.11.1"
+      - name: Run JVM rules tests
+        run: gradle --no-daemon :core:test --console=plain
+      - name: Upload reproducible gameplay balance report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-BALANCE-28-${{ github.sha }}
+          path: |
+            core/build/reports/balance/crossroads_balance_summary.txt
+            core/build/reports/balance/crossroads_balance_samples.csv
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload gameplay agency / decision-leverage audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-AGENCY-34-${{ github.sha }}
+          path: |
+            core/build/reports/agency/crossroads_agency_summary.txt
+            core/build/reports/agency/crossroads_agency_samples.csv
+            core/build/reports/agency/crossroads_strategy_summary.txt
+            core/build/reports/agency/crossroads_strategy_samples.csv
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload Gameplay 2.0 policy-comparison report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-GAMEPLAY-35-${{ github.sha }}
+          path: |
+            core/build/reports/decision-lab/lab_vs_legacy_summary.txt
+            core/build/reports/decision-lab/lab_vs_legacy_samples.csv
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload Gameplay v2 seat-mirrored comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-GAMEPLAY-36-${{ github.sha }}
+          path: |
+            core/build/reports/decision-lab-v2/v1_vs_v2_mirrored_seat_summary.txt
+            core/build/reports/decision-lab-v2/v1_vs_v2_mirrored_seat_samples.csv
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload Gameplay v3 encounter-agency comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-GAMEPLAY-37-${{ github.sha }}
+          path: |
+            core/build/reports/encounter-lab-v3/v2_vs_v3_mirrored_summary.txt
+            core/build/reports/encounter-lab-v3/v2_vs_v3_mirrored_samples.csv
+          if-no-files-found: warn
+          retention-days: 30
+      
+      - name: Upload Gameplay 72 tactical-factorial and fork-tradeoff report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-GAMEPLAY-72-${{ github.sha }}
+          path: |
+            core/build/reports/gameplay-72/tactical_factorial_summary.txt
+            core/build/reports/gameplay-72/tactical_factorial_samples.csv
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload Lab v3/v4 push-hazard balance comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-GAMEPLAY-73-${{ github.sha }}
+          path: |
+            core/build/reports/gameplay-73/lab_v3_vs_v4_summary.txt
+            core/build/reports/gameplay-73/lab_v3_vs_v4_samples.csv
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload identical-bot finish-order fairness report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-GAMEPLAY-74-${{ github.sha }}
+          path: |
+            core/build/reports/gameplay-74/finish_order_fairness_summary.txt
+            core/build/reports/gameplay-74/finish_order_fairness_samples.csv
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload v4-v5 equal-turn finish comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-GAMEPLAY-75-${{ github.sha }}
+          path: |
+            core/build/reports/gameplay-75/v4_v5_equal_turn_summary.txt
+            core/build/reports/gameplay-75/v4_v5_equal_turn_samples.csv
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload cross-version save/recovery stress audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-SAVE-78-${{ github.sha }}
+          path: |
+            core/build/reports/save-78/cross_version_recovery_summary.txt
+            core/build/reports/save-78/cross_version_recovery_samples.csv
+          if-no-files-found: warn
+          retention-days: 30
