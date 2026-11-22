@@ -134,10 +134,18 @@ internal object CrossroadsCameraPreset {
             else (min + max) * 0.5f
     }
 
-    /** Only the live playfield gains the stronger visual hierarchy. */
-    fun trailScale(immersive: Boolean) = if (immersive) 1.58f else 1f
-    fun tokenScale(immersive: Boolean) = if (immersive) 1.91f else 1f
-    fun markerScale(immersive: Boolean) = if (immersive) 1.55f else 1f
+    /**
+     * Trails, traveler pawns and node art must grow WITH the bigger painted
+     * world. Otherwise increasing the backing scene size spreads nodes out
+     * while leaving their symbols and wooden roads unnaturally thin.
+     * Full Map continues to render its original 1x compact graphic.
+     */
+    fun trailScale(immersive: Boolean): Float =
+        if (immersive) 1.58f * BoardWorldViewport.LIVE_ART_SCALE else 1f
+    fun tokenScale(immersive: Boolean): Float =
+        if (immersive) 1.91f * BoardWorldViewport.LIVE_ART_SCALE else 1f
+    fun markerScale(immersive: Boolean): Float =
+        if (immersive) 1.55f * BoardWorldViewport.LIVE_ART_SCALE else 1f
 }
 
 /**
