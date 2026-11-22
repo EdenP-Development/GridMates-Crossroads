@@ -95,6 +95,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Crossroads-Upgrade-Emulator-${{ env.BASE_CODE }}-to-${{ env.NEXT_CODE }}-${{ github.sha }}
-          path: qa-evidence/*.png
+          path: |
+            qa-evidence/*.png
+            qa-evidence/*.json
           if-no-files-found: ignore
           retention-days: 14
