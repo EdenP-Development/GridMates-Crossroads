@@ -32,14 +32,36 @@ class CrossroadsPresentationTest {
     }
 
     @Test fun liveWorldZoomsIntoActionAndFullMapRemainsWhole() {
-        assertEquals(1.92f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 1, true), 0.0001f)
-        assertEquals(1.82f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 1, true), 0.0001f)
-        assertEquals(1.82f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 12, true), 0.0001f)
-        assertEquals(2.02f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 12, true), 0.0001f)
-        assertEquals(2.12f, CrossroadsCameraPreset.followZoom(Phase.ENCOUNTER, 12, true), 0.0001f)
-        assertEquals(2.04f, CrossroadsCameraPreset.followZoom(Phase.TARGET, 12, true), 0.0001f)
+        assertEquals(2.42f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 1, true), 0.0001f)
+        assertEquals(2.16f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 1, true), 0.0001f)
+        assertEquals(2.16f, CrossroadsCameraPreset.followZoom(Phase.ROUTE, 12, true), 0.0001f)
+        assertEquals(2.52f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 12, true), 0.0001f)
+        assertEquals(2.62f, CrossroadsCameraPreset.followZoom(Phase.ENCOUNTER, 12, true), 0.0001f)
+        assertEquals(2.48f, CrossroadsCameraPreset.followZoom(Phase.TARGET, 12, true), 0.0001f)
         assertEquals(1.0f, CrossroadsCameraPreset.followZoom(Phase.FINISHED, 21, true), 0.0001f)
         assertEquals(1.0f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 9, false), 0.0001f)
+    }
+
+    @Test fun ownerPhoneCloseupIsDefaultYetNeverHidesDecisionOverview() {
+        val firstRoll = CrossroadsCameraPreset.followZoom(Phase.ROLL, 1, true)
+        val laterRoll = CrossroadsCameraPreset.followZoom(Phase.ROLL, 8, true)
+        val atFork = CrossroadsCameraPreset.followZoom(Phase.ROUTE, 8, true)
+        val event = CrossroadsCameraPreset.followZoom(Phase.ENCOUNTER, 8, true)
+        val target = CrossroadsCameraPreset.followZoom(Phase.TARGET, 8, true)
+
+        assertTrue("First roll should showcase illustrated scenery", firstRoll >= 2.4f)
+        assertTrue("Later turns should remain close to the action", laterRoll > firstRoll)
+        assertTrue("A fork needs more route context than the traveling camera", atFork < firstRoll)
+        assertTrue("At least some scenery stays visible beyond the chosen path",
+            atFork >= 2.0f)
+        assertTrue("Event art should be readable without manual pinching", event > laterRoll)
+        assertTrue("Targeting is a closer view than choosing a fork", target > atFork)
+        for (zoom in listOf(firstRoll, laterRoll, atFork, event, target)) {
+            assertTrue("Auto zoom stays below manual-pinch maximum",
+                zoom < com.playereden.crossroads.core.CameraGeometry.MAX_ZOOM)
+        }
+        assertEquals("Read-only map must always remain 1x",
+            1f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 8, false), .0001f)
     }
 
     @Test fun routeDecisionKeepsJunctionVisibleAboveChoiceSheet() {
