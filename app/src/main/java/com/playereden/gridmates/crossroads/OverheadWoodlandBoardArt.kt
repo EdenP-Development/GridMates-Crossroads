@@ -94,6 +94,16 @@ internal object OverheadScenery {
                     add(OverheadFeature(x, y, kind))
                 }
             }
+            // A second village roof anchors the real north-east Woven region
+            // without moving or hiding the final route graph. Keep this
+            // additional landmark Woven-specific via the call-site preview gate.
+            val village = OverheadFeature(.80f, .16f, OverheadDecoration.COTTAGE)
+            if (clearOfPlay(village.x, village.y, nodes, .084f) &&
+                candidates.none {
+                    distanceToEdge(village.x, village.y, it.x, it.y, it.x, it.y) < .09f
+                }) {
+                add(village)
+            }
         }
         return candidates
     }
@@ -163,42 +173,59 @@ internal fun DrawScope.drawOverheadWoodlandPrint(
         val c = at(feature.x, feature.y)
         when (feature.kind) {
             OverheadDecoration.TREE -> {
-                val r = u * (1.35f + (feature.x * 10f % 3f) * .19f)
-                drawCircle(Color(0xFF324B37).copy(alpha = .23f),
-                    r * 1.23f, c + Offset(u * .19f, u * .31f))
-                // A canopy viewed from ABOVE: scalloped leaves and a single
-                // engraved stem, not a side-on tree silhouette.
-                drawCircle(Color(0xFF4F7152), r * 1.10f, c)
-                drawCircle(Color(0xFF78935D), r * .70f, c - Offset(r * .29f, r * .20f))
-                drawCircle(Color(0xFFA5B77D), r * .37f, c - Offset(r * .39f, r * .39f))
-                drawCircle(Color(0xFF415F45), r * .46f, c + Offset(r * .40f, r * .15f))
-                drawCircle(Color(0xFF9D774B), r * .13f, c)
+                // Larger layered canopy shapes carry the visual detail at
+                // normal phone zoom rather than appearing as tiny circles.
+                val r = u * (2.00f + (feature.x * 10f % 3f) * .24f)
+                drawCircle(Color(0xFF233E30).copy(alpha = .24f),
+                    r * 1.19f, c + Offset(u * .26f, u * .40f))
+                drawCircle(Color(0xFF33543A), r * 1.11f, c)
+                for ((dx, dy) in listOf(
+                    -.48f to -.29f, .22f to -.49f, .56f to .08f,
+                    .15f to .53f, -.49f to .35f
+                )) {
+                    drawCircle(Color(0xFF57794E), r * .57f,
+                        c + Offset(r * dx, r * dy))
+                }
+                drawCircle(Color(0xFF83A366), r * .53f,
+                    c - Offset(r * .23f, r * .23f))
+                drawCircle(Color(0xFFB9C686).copy(alpha = .83f), r * .22f,
+                    c - Offset(r * .40f, r * .43f))
+                drawCircle(Color(0xFF314C38).copy(alpha = .43f), r * .15f,
+                    c + Offset(r * .33f, r * .23f))
             }
             OverheadDecoration.FLOWERS -> {
                 val colors = listOf(Color(0xFFF4E9C8), Color(0xFFEDD2A3),
                     Color(0xFFF6F1DA))
                 for (i in 0 until 4) {
-                    val p = c + Offset((i % 2 - .5f) * u * 1.7f,
-                        (i / 2 - .5f) * u * 1.6f)
-                    drawCircle(Color(0xFF648054).copy(alpha = .35f), u * .47f, p)
-                    drawCircle(colors[i % colors.size], u * .36f, p)
-                    drawCircle(Color(0xFFD5B064), u * .15f, p)
+                    val p = c + Offset((i % 2 - .5f) * u * 2.6f,
+                        (i / 2 - .5f) * u * 2.5f)
+                    drawCircle(Color(0xFF648054).copy(alpha = .34f), u * .78f, p)
+                    for ((dx, dy) in listOf(
+                        .42f to 0f, -.42f to 0f, 0f to .42f, 0f to -.42f
+                    )) {
+                        drawCircle(colors[i % colors.size], u * .32f,
+                            p + Offset(dx * u, dy * u))
+                    }
+                    drawCircle(Color(0xFFD5B064), u * .20f, p)
                 }
             }
             OverheadDecoration.ROCK -> {
-                drawOval(Color(0xFF52604F).copy(alpha = .24f),
-                    topLeft = c - Offset(u * 1.15f, u * .35f),
-                    size = Size(u * 2.8f, u * 1.65f))
-                drawOval(Color(0xFFADB198),
-                    topLeft = c - Offset(u * 1.17f, u * .88f),
-                    size = Size(u * 2.25f, u * 1.62f))
-                drawOval(Color(0xFFD9D5B5).copy(alpha = .75f),
-                    topLeft = c - Offset(u * .78f, u * .61f),
-                    size = Size(u * .95f, u * .40f))
+                drawOval(Color(0xFF52604F).copy(alpha = .28f),
+                    topLeft = c - Offset(u * 1.68f, u * .33f),
+                    size = Size(u * 3.9f, u * 2.20f))
+                drawOval(Color(0xFF9CA695),
+                    topLeft = c - Offset(u * 1.65f, u * 1.32f),
+                    size = Size(u * 3.18f, u * 2.32f))
+                drawOval(Color(0xFFD9D5B5).copy(alpha = .79f),
+                    topLeft = c - Offset(u * 1.10f, u * .93f),
+                    size = Size(u * 1.42f, u * .60f))
+                drawOval(Color(0xFF74836E).copy(alpha = .54f),
+                    topLeft = c + Offset(u * .52f, -u * .48f),
+                    size = Size(u * .72f, u * .91f))
             }
             OverheadDecoration.COTTAGE -> {
-                val rx = u * 1.82f
-                val ry = u * 1.55f
+                val rx = u * 2.38f
+                val ry = u * 2.14f
                 drawRoundRect(Color(0xFF4D513D).copy(alpha = .30f),
                     topLeft = c - Offset(rx, ry) + Offset(u * .24f, u * .29f),
                     size = Size(rx * 2.1f, ry * 2.1f))
@@ -207,12 +234,24 @@ internal fun DrawScope.drawOverheadWoodlandPrint(
                 drawRoundRect(Color(0xFFC18E58),
                     topLeft = c - Offset(rx * .81f, ry * .78f),
                     size = Size(rx * 1.62f, ry * 1.56f))
-                drawLine(Color(0xFFF2D89C),
-                    c - Offset(rx * .68f, 0f), c + Offset(rx * .68f, 0f),
-                    strokeWidth = u * .27f, cap = StrokeCap.Round)
+                // Top-view roof ridge and tile lines read as a miniature
+                // cottage instead of a generic rectangular map icon.
+                drawLine(Color(0xFFF4DEAF),
+                    c - Offset(rx * .70f, 0f), c + Offset(rx * .70f, 0f),
+                    strokeWidth = u * .28f, cap = StrokeCap.Round)
+                for (i in -1..1) {
+                    val yy = i * ry * .45f
+                    drawLine(Color(0xFF916641).copy(alpha = .45f),
+                        c + Offset(-rx * .71f, yy),
+                        c + Offset(rx * .71f, yy),
+                        strokeWidth = u * .13f, cap = StrokeCap.Round)
+                }
                 drawRoundRect(Color(0xFFEFDFB7),
                     topLeft = c + Offset(rx * .39f, -ry * .64f),
-                    size = Size(u * .45f, u * .50f))
+                    size = Size(u * .64f, u * .62f))
+                drawRoundRect(Color(0xFF799762).copy(alpha = .76f),
+                    topLeft = c + Offset(-rx * .80f, ry * .86f),
+                    size = Size(rx * 1.60f, ry * .36f))
             }
         }
     }
