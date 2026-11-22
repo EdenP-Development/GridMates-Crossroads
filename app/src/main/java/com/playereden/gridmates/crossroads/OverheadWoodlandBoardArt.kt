@@ -33,8 +33,79 @@ internal fun useOverheadBoardPreview(
 // and Cedarwood would incorrectly erase what makes each course distinct.
 internal enum class OverheadDecoration { TREE, FLOWERS, ROCK, COTTAGE }
 internal data class OverheadFeature(val x: Float, val y: Float, val kind: OverheadDecoration)
+internal data class OverheadBridge(
+    val x: Float, val y: Float, val directionX: Float, val directionY: Float
+)
 
 internal object OverheadScenery {
+    private fun cubic(
+        a: Offset, b: Offset, c: Offset, d: Offset, t: Float
+    ): Offset {
+        val q = 1f - t
+        return a * (q * q * q) + b * (3f * q * q * t) +
+            c * (3f * q * t * t) + d * (t * t * t)
+    }
+
+    private fun segmentCrossing(
+        a: Offset, b: Offset, c: Offset, d: Offset
+    ): Offset? {
+        val ab = b - a
+        val cd = d - c
+        val det = ab.x * cd.y - ab.y * cd.x
+        if (!det.isFinite() || kotlin.math.abs(det) < 0.0000001f) return null
+        val ac = c - a
+        val t = (ac.x * cd.y - ac.y * cd.x) / det
+        val u = (ac.x * ab.y - ac.y * ab.x) / det
+        if (t !in 0f..1f || u !in 0f..1f) return null
+        return a + ab * t
+    }
+
+    /**
+     * Cosmetic bridges only where the decorative stream crosses an ACTUAL
+     * board graph edge. Sample the same two cubic sections used to paint the
+     * water. Never add routes or bridge nodes to the rules model.
+     */
+    fun bridges(nodes: List<BoardNode>): List<OverheadBridge> {
+        if (nodes.isEmpty()) return emptyList()
+        val a = Offset(.70f, -.05f)
+        val b = Offset(.64f, .16f)
+        val c = Offset(.87f, .25f)
+        val d = Offset(.75f, .48f)
+        val e = Offset(.62f, .64f)
+        val f = Offset(.90f, .72f)
+        val g = Offset(.80f, 1.05f)
+        val stream = buildList {
+            for (i in 0..32) add(cubic(a, b, c, d, i / 32f))
+            for (i in 1..32) add(cubic(d, e, f, g, i / 32f))
+        }
+        val byId = nodes.associateBy { it.id }
+        return buildList {
+            for (node in nodes) {
+                val from = Offset(node.x, node.y)
+                for (id in node.next) {
+                    val next = byId[id] ?: continue
+                    val to = Offset(next.x, next.y)
+                    val delta = to - from
+                    val length = delta.getDistance()
+                    if (!length.isFinite() || length <= 0.0001f) continue
+                    for (i in 1 until stream.size) {
+                        val point = segmentCrossing(from, to, stream[i - 1], stream[i])
+                            ?: continue
+                        if (point.x !in 0f..1f || point.y !in 0f..1f) continue
+                        if (none { existing ->
+                            kotlin.math.hypot(
+                                existing.x - point.x, existing.y - point.y
+                            ) < .018f
+                        }) {
+                            add(OverheadBridge(
+                                point.x, point.y, delta.x / length, delta.y / length
+                            ))
+                        }
+                    }
+                }
+            }
+        }
+    }
     fun distanceToEdge(
         x: Float, y: Float,
         x1: Float, y1: Float,
@@ -112,6 +183,7 @@ internal object OverheadScenery {
 internal fun DrawScope.drawOverheadWoodlandPrint(
     nodes: List<BoardNode>,
     features: List<OverheadFeature>,
+    bridges: List<OverheadBridge>,
     left: Float,
     top: Float,
     width: Float,
@@ -159,6 +231,37 @@ internal fun DrawScope.drawOverheadWoodlandPrint(
         style = Stroke(width = u * 4.4f, cap = StrokeCap.Round))
     drawPath(stream, color = Color(0xFFC4D9BC).copy(alpha = .65f),
         style = Stroke(width = u * 1.0f, cap = StrokeCap.Round))
+
+    // These little plank bridges line up with the graph, not with arbitrary
+    // decorative map coordinates. Actual wooden roads still draw above them;
+    // their side rails remain visible beyond the route as physical joinery.
+    bridges.forEach { bridge ->
+        val middle = at(bridge.x, bridge.y)
+        val along = Offset(bridge.directionX, bridge.directionY)
+        val normal = Offset(-along.y, along.x)
+        val half = u * 3.8f
+        drawLine(Color(0xFF3D3C2C).copy(alpha = .37f),
+            middle - along * half + Offset(0f, u * .35f),
+            middle + along * half + Offset(0f, u * .35f),
+            strokeWidth = u * 6.5f, cap = StrokeCap.Round)
+        drawLine(Color(0xFF75533A),
+            middle - along * half, middle + along * half,
+            strokeWidth = u * 6.0f, cap = StrokeCap.Round)
+        drawLine(Color(0xFFE1BF83),
+            middle - along * half, middle + along * half,
+            strokeWidth = u * 5.2f, cap = StrokeCap.Round)
+        for (side in listOf(-1f, 1f)) {
+            val railOffset = normal * (side * u * 3.4f)
+            drawLine(Color(0xFF4D3A2D),
+                middle - along * half + railOffset,
+                middle + along * half + railOffset,
+                strokeWidth = u * .60f, cap = StrokeCap.Round)
+            for (end in listOf(-1f, 1f)) {
+                drawCircle(Color(0xFFF1D29A), radius = u * .39f,
+                    center = middle + along * (half * end) + railOffset)
+            }
+        }
+    }
 
     // Paper speckle is fixed by row/column instead of runtime randomness;
     // keep it faint and distant from the existing graph symbols.
