@@ -97,9 +97,9 @@ internal object OverheadScenery {
             // A second village roof anchors the real north-east Woven region
             // without moving or hiding the final route graph. Keep this
             // additional landmark Woven-specific via the call-site preview gate.
-            val village = OverheadFeature(.80f, .16f, OverheadDecoration.COTTAGE)
+            val village = OverheadFeature(.80f, .18f, OverheadDecoration.COTTAGE)
             if (clearOfPlay(village.x, village.y, nodes, .084f) &&
-                candidates.none {
+                none {
                     distanceToEdge(village.x, village.y, it.x, it.y, it.x, it.y) < .09f
                 }) {
                 add(village)
