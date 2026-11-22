@@ -1100,6 +1100,8 @@ private fun CrossroadsApp(
                             }
                             HorizontalDivider()
                             if (BuildConfig.DEBUG) {
+                                if (DecisionLab.baseId(board.id) == "woodland_woven_trail_v02" &&
+                                    boardLook == CrossroadsBoardLook.ILLUSTRATED) {
                                 DropdownMenuItem(
                                     text = {
                                         Text(if (topDownBoardPreview)
@@ -1114,6 +1116,7 @@ private fun CrossroadsApp(
                                         showMatchOptions = false
                                     }
                                 )
+                                }
                                 DropdownMenuItem(
                                     text = {
                                         Text("Trail style: ${trailStyle.label}")
