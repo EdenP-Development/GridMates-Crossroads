@@ -6,7 +6,7 @@ package com.playereden.crossroads.core
  */
 object CameraGeometry {
     const val MIN_ZOOM = 1f
-    const val MAX_ZOOM = 3.0f
+    const val MAX_ZOOM = 4.0f // owner phone: inspect the illustrated world beyond the old 3x ceiling
 
     fun zoom(value: Float): Float =
         if (value.isFinite()) value.coerceIn(MIN_ZOOM, MAX_ZOOM) else MIN_ZOOM
