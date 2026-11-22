@@ -1985,6 +1985,9 @@ private fun BoardCanvas(
     val overheadDecor = remember(board, useOverheadArtwork) {
         if (useOverheadArtwork) OverheadScenery.plan(board.nodes) else emptyList()
     }
+    val overheadBridges = remember(board, useOverheadArtwork) {
+        if (useOverheadArtwork) OverheadScenery.bridges(board.nodes) else emptyList()
+    }
     // The live world magnifies interactive art; the full-map inspector keeps
     // its previous compact geometry for legibility and path overview.
     val gamePieceScale = tokenScale * CrossroadsCameraPreset.tokenScale(immersiveWorld)
@@ -2315,6 +2318,7 @@ private fun BoardCanvas(
                 drawOverheadWoodlandPrint(
                     nodes = board.nodes,
                     features = overheadDecor,
+                    bridges = overheadBridges,
                     left = left, top = top, width = drawWidth, height = drawHeight
                 )
             } else if (boardBackdrop == null) {
