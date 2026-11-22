@@ -989,8 +989,8 @@ private fun CrossroadsApp(
             // Compact on-board scoreboard and controls, without a page header.
             Column(
                 modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth()
-                    .background(Color(0xDD233B2B))
-                    .padding(top = 5.dp, bottom = 4.dp),
+                    .background(Color(0xED352C20))
+                    .padding(top = 6.dp, bottom = 5.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
             val displayedSeat = (if (!turnReady) cameraTrackIndex else state.playerIndex)
@@ -1008,29 +1008,15 @@ private fun CrossroadsApp(
                         isFocused -> "current player"
                         else -> "waiting"
                     }
-                    Surface(
-                        modifier = Modifier.weight(1f).semantics(mergeDescendants = true) {
-                            contentDescription = "Player ${i + 1}, ${player.name}, $seatStatus" +
-                                if (player.shield) ", shielded" else ""
-                        },
-                        color = if (isFocused) Color(0xF0446048)
-                            else Color(0xD9233B2B),
-                        border = androidx.compose.foundation.BorderStroke(
-                            if (isFocused) 1.6.dp else 0.8.dp,
-                            if (isFocused) Color(0xFFF0DDAA) else Color(0x608AB08B)
-                        ),
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp)
-                    ) {
-                        Row(modifier = Modifier.padding(horizontal = 7.dp, vertical = 5.dp),
-                            horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(12.dp).background(PlayerColors[i], androidx.compose.foundation.shape.CircleShape))
-                            Spacer(Modifier.width(5.dp))
-                            Text(player.name, fontSize = 12.sp,
-                                color = Color(0xFFF9EED5), fontWeight =
-                                if (isFocused) FontWeight.Bold else FontWeight.Normal)
-                            if (player.shield) Text(" 🛡", fontSize = 11.sp)
-                        }
-                    }
+                    TabletopSeatPlate(
+                        seatIndex = i,
+                        name = player.name,
+                        seatColor = PlayerColors[i],
+                        active = isFocused,
+                        shielded = player.shield,
+                        status = seatStatus,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
 
@@ -1207,12 +1193,7 @@ private fun CrossroadsApp(
                 mutableStateOf(false)
             }
             val dockMaxFraction = gameActionDockMaxFraction(state.phase)
-            Surface(
-                color = Color(0xF8F1E4C8),
-                shadowElevation = 12.dp,
-                tonalElevation = 0.dp,
-                border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF967D54)),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+            TabletopActionTray(
                 modifier = Modifier.align(Alignment.BottomCenter)
                     .padding(horizontal = 10.dp, vertical = 9.dp)
                     .fillMaxWidth()
@@ -1351,10 +1332,11 @@ private fun CrossroadsApp(
                     if (state.phase == Phase.FINISHED && !turnReady) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                     } else if (state.phase == Phase.FINISHED) {
-                        Button(onClick = { showResults = true },
-                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
-                            Text("See race results")
-                        }
+                        TabletopPrimaryActionButton(
+                            text = "SEE RACE RESULTS",
+                            onClick = { showResults = true },
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     } else if (lanRole != LanRole.OFFLINE &&
                         (!lanConnected || lanPendingAction ||
                             state.playerIndex != (if (lanRole == LanRole.HOST) 0 else 1))
@@ -1381,44 +1363,31 @@ private fun CrossroadsApp(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        Button(
+                                        TabletopActionTile(
+                                            title = "STEADY",
+                                            detail = "4 spaces",
                                             onClick = {
                                                 queuedLabRoll = LabRoll.STEADY
                                                 rollingDie = true
                                             },
                                             enabled = turnReady && !rollingDie,
-                                            modifier = Modifier.weight(1f).heightIn(min = 56.dp),
-                                            shape = androidx.compose.foundation.shape.RoundedCornerShape(13.dp),
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = Forest, contentColor = Color.White
-                                            )
-                                        ) {
-                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                Text("STEADY", fontWeight = FontWeight.Bold)
-                                                Text("4 spaces", style = MaterialTheme.typography.labelSmall)
-                                            }
-                                        }
-                                        Button(
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        TabletopActionTile(
+                                            title = "PUSH",
+                                            detail = "Risk for speed",
+                                            warm = true,
                                             onClick = {
                                                 queuedLabRoll = LabRoll.PUSH
                                                 rollingDie = true
                                             },
                                             enabled = turnReady && !rollingDie,
-                                            modifier = Modifier.weight(1f).heightIn(min = 56.dp),
-                                            shape = androidx.compose.foundation.shape.RoundedCornerShape(13.dp),
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = Color(0xFFB58A46),
-                                                contentColor = Color(0xFF292B22)
-                                            )
-                                        ) {
-                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                Text("PUSH", fontWeight = FontWeight.Bold)
-                                                Text("Risk for speed", style = MaterialTheme.typography.labelSmall)
-                                            }
-                                        }
+                                            modifier = Modifier.weight(1f)
+                                        )
                                     }
                                 } else {
-                                    Button(
+                                    TabletopPrimaryActionButton(
+                                        text = if (rollingDie) "ROLLING…" else "ROLL THE DIE",
                                         onClick = {
                                             if (touchFeedback) {
                                                 haptics.performHapticFeedback(
@@ -1431,16 +1400,8 @@ private fun CrossroadsApp(
                                             (lanRole == LanRole.OFFLINE ||
                                                 (lanConnected && !lanPendingAction)),
                                         modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp),
-                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
-                                    ) {
-                                        DieFace(if (rollingDie) rollingFace else 1,
-                                            modifier = Modifier.size(34.dp).graphicsLayer {
-                                                rotationZ = rollingTilt
-                                            }, announceFace = false)
-                                        Spacer(Modifier.width(12.dp))
-                                        Text(if (rollingDie) "ROLLING…" else "ROLL THE DIE",
-                                            fontWeight = FontWeight.Bold)
-                                    }
+                                        withDie = true
+                                    )
                                 }
                             }
                             Phase.ROUTE -> {
@@ -1487,17 +1448,18 @@ private fun CrossroadsApp(
                                     Row(modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                                         pair.forEach { target ->
-                                            Button(
+                                            TabletopActionTile(
+                                                title = state.players[target].name,
+                                                detail = if (state.players[target].shield)
+                                                    "Shielded" else "Choose rival",
                                                 onClick = {
                                                     localAction(LanAction(
                                                         LanActionType.TARGET, target = target
                                                     ))
                                                 },
                                                 enabled = turnReady,
-                                                modifier = Modifier.weight(1f).heightIn(min = 48.dp)
-                                            ) {
-                                                Text("${state.players[target].name}${if (state.players[target].shield) " 🛡" else ""}")
-                                            }
+                                                modifier = Modifier.weight(1f)
+                                            )
                                         }
                                     }
                                 }
@@ -1582,11 +1544,12 @@ private fun CrossroadsApp(
                                         },
                                         enabled = turnReady,
                                         modifier = Modifier.fillMaxWidth().heightIn(min = 68.dp),
-                                        shape = MaterialTheme.shapes.extraLarge,
-                                        color = Cream,
+                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(15.dp),
+                                        color = TabletopMaterials.paper,
                                         contentColor = Forest,
+                                        shadowElevation = 3.dp,
                                         border = androidx.compose.foundation.BorderStroke(
-                                            1.dp, Color(0xFFB5A88F)
+                                            2.dp, TabletopMaterials.brass
                                         )
                                     ) {
                                         Box(
@@ -2672,6 +2635,12 @@ private fun BoardCanvas(
                         paint)
                 }
             }
+            }
+            // VISUAL-82: the static slim wooden board edge sits OUTSIDE the
+            // camera transform. It frames the illustrated world like a
+            // tabletop game without moving routes or intercepting gestures.
+            if (immersiveWorld) {
+                TabletopBoardRim()
             }
             // A conventional game-camera control floats above the world.
             // It never changes engine state, route selection, or saved matches.
