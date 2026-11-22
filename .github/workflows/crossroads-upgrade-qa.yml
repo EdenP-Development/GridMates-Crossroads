@@ -42,6 +42,10 @@ on:
 permissions:
   contents: read
   actions: read
+# Save CI minutes when an in-progress upgrade check is superseded on this branch.
+concurrency:
+  group: crossroads-upgrade-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   update-preserves-profile:
     runs-on: ubuntu-latest
