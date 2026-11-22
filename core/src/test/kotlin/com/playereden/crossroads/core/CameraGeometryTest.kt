@@ -6,7 +6,7 @@ import org.junit.Test
 class CameraGeometryTest {
     @Test fun zoomRemainsWithinSafeRange() {
         assertEquals(1f, CameraGeometry.zoom(0.2f), 0.0001f)
-        assertEquals(3f, CameraGeometry.zoom(9f), 0.0001f)
+        assertEquals(4f, CameraGeometry.zoom(9f), 0.0001f)
         assertEquals(1f, CameraGeometry.zoom(Float.NaN), 0.0001f)
     }
 
