@@ -26,13 +26,17 @@ The existing `.github/workflows/crossroads-upgrade-qa.yml` now uses these exact 
 5. Launch QA1613. Require the process to survive, a recognizable game HUD to appear instead of START RACE setup, then stop and check that the checkpoint and official counters are still unchanged.
 6. Upload the resumed-screen screenshot and an independently inspectable JSON receipt with source SHAs, signer equality, checkpoint hash, action count, course, previous/new code, and explicit `owner_phone_verified=false`.
 
-## Exact-head gates
+## Verified exact-head gates — November 22, 2026
 
-- [ ] Existing source-level design validation passes at QA-79 PR SHA.
-- [ ] Emulator install-over workflow completes successfully at the exact QA-79 PR SHA.
-- [ ] An uploaded JSON receipt has `status=PASS`, `resumed_in_game=true`, official counts 7 / 3, and `saved_action_count >= 1`.
-- [ ] Evidence screenshot shows an in-progress match on the newer APK.
-- [ ] No code changes to original/fair-finish rules, save schema, app ID, QA signer, Android permissions or `main`.
+**Result:** [QA-79 source head `ae114fd218e0c9323c4827bf540cfc71591bd8da`](https://github.com/PlayerEden/GridMates-Crossroads/pull/79) completed [emulator workflow 45031430316](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/45031430316) **successfully**. [Design-data QA 45031430364](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/45031430364) passed at that same SHA.
+
+- [x] Source-level design validation passes on QA-79 head.
+- [x] Android 15 emulator install-over workflow passes on QA-79 head.
+- [x] Uploaded JSON receipt reports `status=PASS`, `resumed_in_game=true`, **7 completed / 3 wins**, and **one real saved action**.
+- [x] Source-matched emulator screenshot of an in-progress Woven Trail match under QA1613 is available in the run artifact.
+- [x] Test-only changes did not alter racing rules, save format, APK ID/signer, Android permissions or `main`.
+
+**Evidence artifact:** `Crossroads-Upgrade-Emulator-1607-to-1613-ae114fd218e0c9323c4827bf540cfc71591bd8da` from the passing workflow. Earlier red/cancelled SHA runs reflected UIAutomator coordinate parsing and the system-owned fullscreen permissionless `Got it` overlay; do not confuse those superseded test-harness failures with the final verified run.
 
 ## Critical limits
 
