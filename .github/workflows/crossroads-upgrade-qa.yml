@@ -10,59 +10,63 @@ on:
       base_run:
         description: "Previous QA run ID"
         type: string
-        default: "44011268890"
+        default: "44971128199"
       base_name:
         description: "Previous artifact name"
         type: string
-        default: "Crossroads-Android-QA-1051-9fa0836db9f3666de34bef57eb4a14f142c97943"
+        default: "Crossroads-Android-QA-1607-324cf2b4232df4d36287c4134ae0ae143c172b4f"
       base_code:
         description: "Previous Android versionCode"
         type: string
-        default: "1051"
+        default: "1607"
       base_sha:
         description: "Previous exact APK SHA-256"
         type: string
-        default: "4a9728a48551cac471ee384ebe7fa7282c36ed86f97e4fd6e9b6457b937361d7"
+        default: "b926e01bc0066a5e71140f9241f4b21f49e6aa799acaca2fef180b0679086dca"
       next_run:
         description: "Candidate QA run ID"
         type: string
-        default: "44013937297"
+        default: "45027345072"
       next_name:
         description: "Candidate artifact name"
         type: string
-        default: "Crossroads-Android-QA-1057-b30f5769659e8d08a4e7865a26d15b56ab6c3728"
+        default: "Crossroads-Android-QA-1613-4924a8862d23e0ac9ad53f2357a9bac69043fb8e"
       next_code:
         description: "Candidate Android versionCode"
         type: string
-        default: "1057"
+        default: "1613"
       next_sha:
         description: "Candidate exact APK SHA-256"
         type: string
-        default: "b42d6218d389238abcc79e1f1bbd6db05d308c1e3a01e4563f21234cbeceb180"
+        default: "c42054e446c35e0b805ac69950e1ee478c39eb0058d32ff0290e8389f0f94779"
 permissions:
   contents: read
   actions: read
+# Save CI minutes when an in-progress upgrade check is superseded on this branch.
+concurrency:
+  group: crossroads-upgrade-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   update-preserves-profile:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      BASE_CODE: ${{ inputs.base_code || '1051' }}
-      NEXT_CODE: ${{ inputs.next_code || '1057' }}
-      BASE_SHA: ${{ inputs.base_sha || '4a9728a48551cac471ee384ebe7fa7282c36ed86f97e4fd6e9b6457b937361d7' }}
-      NEXT_SHA: ${{ inputs.next_sha || 'b42d6218d389238abcc79e1f1bbd6db05d308c1e3a01e4563f21234cbeceb180' }}
+      BASE_CODE: ${{ inputs.base_code || '1607' }}
+      NEXT_CODE: ${{ inputs.next_code || '1613' }}
+      BASE_SHA: ${{ inputs.base_sha || 'b926e01bc0066a5e71140f9241f4b21f49e6aa799acaca2fef180b0679086dca' }}
+      NEXT_SHA: ${{ inputs.next_sha || 'c42054e446c35e0b805ac69950e1ee478c39eb0058d32ff0290e8389f0f94779' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: ${{ inputs.base_name || 'Crossroads-Android-QA-1051-9fa0836db9f3666de34bef57eb4a14f142c97943' }}
-          run-id: ${{ inputs.base_run || '44011268890' }}
+          name: ${{ inputs.base_name || 'Crossroads-Android-QA-1607-324cf2b4232df4d36287c4134ae0ae143c172b4f' }}
+          run-id: ${{ inputs.base_run || '44971128199' }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: qa-archives/base
       - uses: actions/download-artifact@v4
         with:
-          name: ${{ inputs.next_name || 'Crossroads-Android-QA-1057-b30f5769659e8d08a4e7865a26d15b56ab6c3728' }}
-          run-id: ${{ inputs.next_run || '44013937297' }}
+          name: ${{ inputs.next_name || 'Crossroads-Android-QA-1613-4924a8862d23e0ac9ad53f2357a9bac69043fb8e' }}
+          run-id: ${{ inputs.next_run || '45027345072' }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: qa-archives/next
       - name: Verify distinct prior and candidate APK identity/checksums
@@ -80,7 +84,7 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Install previous APK, seed stats, update APK, capture Woven Trail
+      - name: Install QA1607, roll genuine match, update to QA1613 and verify recovery
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -95,6 +99,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Crossroads-Upgrade-Emulator-${{ env.BASE_CODE }}-to-${{ env.NEXT_CODE }}-${{ github.sha }}
-          path: qa-evidence/*.png
+          path: |
+            qa-evidence/*.png
+            qa-evidence/*.json
           if-no-files-found: ignore
           retention-days: 14
