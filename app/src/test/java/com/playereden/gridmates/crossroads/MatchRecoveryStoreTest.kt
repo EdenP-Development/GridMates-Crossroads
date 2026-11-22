@@ -335,6 +335,118 @@ class MatchRecoveryStoreTest {
         assertTrue(stored.availableEncounterChoices().isEmpty())
     }
 
+    @Test fun firstCompletedMatchMayBeAnExperimentalLabRaceAndStillExport() {
+        val labs = listOf(
+            DecisionLab.variant(quick), DecisionLab.variantV2(quick),
+            DecisionLab.variantV3(quick), DecisionLab.variantV4(quick),
+            DecisionLab.variantV5(quick)
+        )
+        val known = (listOf(board, quick, cedarwood) + labs).associateBy { it.id }
+        for (lab in labs) {
+            val prefs = MemoryPreferences()
+            val store = MatchRecoveryStore(prefs, board, events, known)
+            val started = System.currentTimeMillis() - 60_000L
+            val match = GameSession(lab, events, 2, seed = 62,
+                humanIndices = emptySet())
+            var actions = 0
+            while (match.phase != Phase.FINISHED && actions++ < 1500) {
+                match.botStep()
+            }
+            assertEquals("Never finished ${lab.id}", Phase.FINISHED, match.phase)
+            assertTrue(store.persist(match, "lab-only-${lab.id}", started))
+            assertEquals(0, prefs.getInt("completed", 0))
+            assertEquals(0, prefs.getInt("wins", 0))
+
+            val backup = store.exportProgress()
+            val freshPrefs = MemoryPreferences()
+            val fresh = MatchRecoveryStore(freshPrefs, board, events, known)
+            val preview = fresh.previewImport(backup)
+            assertEquals(0, preview.bundle.completed)
+            assertEquals(0, preview.bundle.wins)
+            assertTrue(fresh.importProgress(preview))
+            val restored = requireNotNull(fresh.load().match).game
+            assertEquals(match.snapshot(), restored.snapshot())
+            assertEquals(match.fairFinishReceipt, restored.fairFinishReceipt)
+            val timestamp = freshPrefs.getLong("last_completed_at_epoch_millis_v1", 0L)
+            assertTrue(timestamp >= started)
+            repeat(3) {
+                assertTrue(fresh.persist(restored, "lab-only-${lab.id}", started))
+                assertEquals(0, freshPrefs.getInt("completed", 0))
+                assertEquals(0, freshPrefs.getInt("wins", 0))
+                assertEquals(timestamp,
+                    freshPrefs.getLong("last_completed_at_epoch_millis_v1", 0L))
+            }
+        }
+    }
+
+    @Test fun fairFinishPendingAndCompletedTransferPreservesReceiptAndZeroStats() {
+        // Three links to FINISH: Steady leaves exactly one unused step.
+        val base = BoardDefinition(
+            "save78-finish", "START", "FINISH", listOf(
+                BoardNode("START", "meadow", "start", listOf("A"), 0f, 0f),
+                BoardNode("A", "meadow", "plain", listOf("B"), .2f, .1f),
+                BoardNode("B", "meadow", "plain", listOf("FINISH"), .4f, .1f),
+                BoardNode("FINISH", "meadow", "finish", emptyList(), .6f, .1f)
+            )
+        )
+        val v4 = DecisionLab.variantV4(base)
+        val v5 = DecisionLab.variantV5(base)
+        val known = mapOf(board.id to board, v4.id to v4, v5.id to v5)
+        val initial = MemoryPreferences()
+        val oldApp = MatchRecoveryStore(initial, board, events, known)
+        val start = System.currentTimeMillis() - 15_000L
+        val game = GameSession(v5, events, 2, seed = 13,
+            humanIndices = setOf(0, 1))
+        game.rollSteady()
+        assertEquals(Phase.ROLL, game.phase)
+        assertTrue(game.finalRoundPending)
+        assertNull(game.fairFinishReceipt)
+        assertTrue(oldApp.persist(game, "pending-final-round", start))
+        val waiting = requireNotNull(oldApp.load().match).game
+        assertTrue(waiting.finalRoundPending)
+        assertEquals(game.snapshot(), waiting.snapshot())
+        assertNull(waiting.fairFinishReceipt)
+
+        val newPrefs = MemoryPreferences()
+        val newApp = MatchRecoveryStore(newPrefs, board, events, known)
+        assertTrue(newApp.importProgress(newApp.previewImport(oldApp.exportProgress())))
+        val resumed = requireNotNull(newApp.load().match).game
+        assertTrue(resumed.finalRoundPending)
+        assertEquals(game.snapshot(), resumed.snapshot())
+
+        resumed.rollSteady() // Tie: first arrival, seat 0, wins.
+        assertEquals(Phase.FINISHED, resumed.phase)
+        assertEquals(0, resumed.winnerIndex)
+        assertEquals(2, resumed.fairFinishReceipt?.finishers)
+        assertTrue(resumed.fairFinishReceipt?.tiedOnWinningSteps == true)
+        assertTrue(newApp.persist(resumed, "pending-final-round", start))
+        assertEquals(0, newPrefs.getInt("completed", 0))
+        assertEquals(0, newPrefs.getInt("wins", 0))
+        val receipt = requireNotNull(resumed.fairFinishReceipt)
+        val recordedFinish = newPrefs.getLong("last_completed_at_epoch_millis_v1", 0L)
+        val archived = newApp.exportProgress()
+        val another = MatchRecoveryStore(MemoryPreferences(), board, events, known)
+        assertTrue(another.importProgress(another.previewImport(archived)))
+        val reopened = requireNotNull(another.load().match).game
+        assertEquals(resumed.snapshot(), reopened.snapshot())
+        assertEquals(receipt, reopened.fairFinishReceipt)
+        repeat(3) {
+            assertTrue(newApp.persist(resumed, "pending-final-round", start))
+            assertEquals(recordedFinish,
+                newPrefs.getLong("last_completed_at_epoch_millis_v1", 0L))
+            assertEquals(0, newPrefs.getInt("completed", 0))
+        }
+        // Lab v4's established first-to-finish behavior is untouched.
+        val prior = GameSession(v4, events, 2, seed = 13, humanIndices = setOf(0, 1))
+        prior.rollSteady()
+        assertEquals(Phase.FINISHED, prior.phase)
+        assertNull(prior.fairFinishReceipt)
+        assertEquals(prior.snapshot(),
+            GameSession.restore(v4, events,
+                MatchCheckpointCodec.decode(MatchCheckpointCodec.encode(
+                    prior.checkpoint("existing-v4", start)))).snapshot())
+    }
+
     @Test fun olderFinishedCheckpointGetsOneTimeElapsedFallback() {
         val prefs = MemoryPreferences()
         val store = MatchRecoveryStore(prefs, board, events)
