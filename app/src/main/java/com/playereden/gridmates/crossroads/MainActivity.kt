@@ -2314,7 +2314,21 @@ private fun BoardCanvas(
                         node.route != "neutral" -> node.route
                         else -> "neutral"
                     }
-                    if (effectiveTrails == CrossroadsTrailStyle.ARTWORK && trailAtlas != null) {
+                    if (effectiveTrails == CrossroadsTrailStyle.ARTWORK && trailAtlas != null &&
+                        immersiveWorld && boardLook == CrossroadsBoardLook.ILLUSTRATED) {
+                        // VISUAL-83: actual live roads are carved at Canvas resolution,
+                        // not stretched from a 128x32 atlas at 2-4x zoom.
+                        // Original coordinates, route colors and tap hit geometry stay identical.
+                        drawCrossroadsCarvedTrail(
+                            from = from,
+                            to = position(dest),
+                            route = route,
+                            dense = denseBoard,
+                            visibilityScale = roadVisibilityScale
+                        )
+                    } else if (effectiveTrails == CrossroadsTrailStyle.ARTWORK && trailAtlas != null) {
+                        // The miniature Full Map deliberately keeps its earlier
+                        // detailed route atlas for a consistent whole-course overview.
                         drawCrossroadsIllustratedTrail(
                             from = from,
                             to = position(dest),
