@@ -76,6 +76,31 @@ class BoardWorldViewportTest {
         assertEquals("west", selected)
     }
 
+    @Test fun enlargedArtStillMatchesLegalRouteTapsAtFullManualZoom() {
+        val canvas = IntSize(400, 800)
+        val zoom = 4f
+        val pan = Offset(-175f, 88f)
+        val scene = BoardWorldViewport.frame(canvas, true)
+        assertEquals(960f, scene.width, .001f)
+        val westTap = BoardRouteHitTest.screenPosition(
+            west, canvas, 0f, zoom, pan, immersiveWorld = true
+        )
+        assertEquals("west", BoardRouteHitTest.select(
+            tap = westTap, origin = origin,
+            destinations = listOf(west, east),
+            canvas = canvas, insetPx = 0f,
+            zoom = zoom, translation = pan,
+            touchRadiusPx = 28f, immersiveWorld = true
+        ))
+        assertNull("The old unscaled artwork coordinate must not count as a tap",
+            BoardRouteHitTest.select(
+                tap = Offset(20f, 15f), origin = origin,
+                destinations = listOf(west, east),
+                canvas = canvas, insetPx = 0f, zoom = zoom,
+                translation = pan, touchRadiusPx = 28f, immersiveWorld = true
+            ))
+    }
+
     @Test fun cropAndPanStillKeepRouteHitsAccurate() {
         val canvas = IntSize(400, 800)
         val pan = Offset(-145f, 22f)
