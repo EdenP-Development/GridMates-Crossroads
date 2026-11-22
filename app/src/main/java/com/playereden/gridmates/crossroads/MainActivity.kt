@@ -2314,7 +2314,21 @@ private fun BoardCanvas(
                         node.route != "neutral" -> node.route
                         else -> "neutral"
                     }
-                    if (effectiveTrails == CrossroadsTrailStyle.ARTWORK && trailAtlas != null) {
+                    if (effectiveTrails == CrossroadsTrailStyle.ARTWORK && trailAtlas != null &&
+                        immersiveWorld && boardLook == CrossroadsBoardLook.ILLUSTRATED) {
+                        // VISUAL-83: actual live roads are carved at Canvas resolution,
+                        // not stretched from a 128x32 atlas at 2-4x zoom.
+                        // Original coordinates, route colors and tap hit geometry stay identical.
+                        drawCrossroadsCarvedTrail(
+                            from = from,
+                            to = position(dest),
+                            route = route,
+                            dense = denseBoard,
+                            visibilityScale = roadVisibilityScale
+                        )
+                    } else if (effectiveTrails == CrossroadsTrailStyle.ARTWORK && trailAtlas != null) {
+                        // The miniature Full Map deliberately keeps its earlier
+                        // detailed route atlas for a consistent whole-course overview.
                         drawCrossroadsIllustratedTrail(
                             from = from,
                             to = position(dest),
@@ -2381,6 +2395,23 @@ private fun BoardCanvas(
                     denseBoard && node.kind == "event" -> 6.25f
                     else -> 7f
                 }) * nodeVisibilityScale
+                // VISUAL-83: Start and Finish feel like physical sockets for
+                // the travelers, not two ordinary dots. Shared graph centers
+                // and the original S/F labels remain authoritative.
+                if (immersiveWorld &&
+                    boardLook == CrossroadsBoardLook.ILLUSTRATED &&
+                    (node.kind == "start" || node.kind == "finish")) {
+                    drawCarvedStartFinishBase(
+                        center = center,
+                        radius = CarvedWaypointGeometry.socketRadius(
+                            baseRadius = radius * 1.1f,
+                            neighborDistanceNormalized =
+                                nearestSpaceSpacing[node.id] ?: Float.POSITIVE_INFINITY,
+                            worldSide = drawWidth
+                        ),
+                        isFinish = node.kind == "finish"
+                    )
+                }
                 // The painted artwork is purely decorative. Unknown nodes,
                 // start/finish, and missing art retain the exact old marker.
                 val paintedType = if (showPaintedMarkers)
