@@ -56,9 +56,16 @@ class OverheadWoodlandBoardArtTest {
                 crossings.any { (a, b) ->
                     val from = requireNotNull(byId[a])
                     val to = requireNotNull(byId[b])
-                    OverheadScenery.distanceToEdge(
+                    val onSegment = OverheadScenery.distanceToEdge(
                         bridge.x, bridge.y, from.x, from.y, to.x, to.y
                     ) < .008f
+                    val endpointBuffer = .050f
+                    val awayFromStops = kotlin.math.hypot(
+                        bridge.x - from.x, bridge.y - from.y
+                    ) > endpointBuffer && kotlin.math.hypot(
+                        bridge.x - to.x, bridge.y - to.y
+                    ) > endpointBuffer
+                    onSegment && awayFromStops
                 })
         }
         assertTrue(OverheadScenery.bridges(emptyList()).isEmpty())
