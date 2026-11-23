@@ -21,6 +21,16 @@ class GameHudTextTest {
         assertEquals(EncounterActionCopy("OTHER", "Choose"), encounterActionCopy("other"))
     }
 
+    @Test fun crossroadsNarrationIsAvailableInDetailsWithoutTakingBoardSpace() {
+        assertEquals(false, showCollapsedActionNote(Phase.ROUTE, false))
+        assertEquals(false, showCollapsedActionNote(Phase.ROUTE, true))
+        assertEquals(false, showCollapsedActionNote(Phase.ENCOUNTER, true))
+        assertEquals(true, showCollapsedActionNote(Phase.ENCOUNTER, false))
+        assertEquals(true, showCollapsedActionNote(Phase.ROLL, false))
+        assertEquals(true, showCollapsedActionNote(Phase.TARGET, false))
+        assertEquals(true, showCollapsedActionNote(Phase.FINISHED, false))
+    }
+
     @Test fun theCompactDockStillFitsAllPrimaryActionsOnShortPhones() {
         assertTrue(gameActionDockMinimumHeight(Phase.ROLL).value >= 200f)
         assertTrue(gameActionDockMinimumHeight(Phase.ROUTE).value >= 240f)
