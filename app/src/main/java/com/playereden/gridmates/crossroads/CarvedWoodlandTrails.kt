@@ -5,7 +5,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import kotlin.math.floor
-import kotlin.math.min
 
 /**
  * VISUAL-83: High-resolution, carved wooden road sections for the actual
@@ -22,6 +21,13 @@ internal data class CarvedRoadLayout(
 )
 
 /**
+ * QA1672 phone review: cream-wide roads covered too much of the painted
+ * wilderness. Reduce visual road *ink*, not the graph, map, pawn size or
+ * route tapping radius. The color-coded edge remains readable.
+ */
+internal const val CARVED_ROAD_INK_RATIO = 0.79f
+
+/**
  * Decorative joinery is sparse on short/dense graph edges. It must never
  * become a false stepping stone, extra selectable node or confusing grid.
  * Entirely deterministic and independent of gameplay seed / die values.
@@ -35,9 +41,12 @@ internal fun carvedRoadLayout(
         !visibilityScale.isFinite() || visibilityScale <= 0f) {
         return CarvedRoadLayout(0f, emptyList())
     }
-    val weight = (if (dense) 0.87f else 1f) * visibilityScale
-    val seamEvery = 65f * weight
-    val sections = floor(lengthPx / seamEvery).toInt().coerceIn(0, 7)
+    val weight = (if (dense) 0.87f else 1f) *
+        visibilityScale * CARVED_ROAD_INK_RATIO
+    // Make wood joints fewer rather than densely tiled across every scene.
+    // Use actual screen-space magnification, not reduced stroke weight.
+    val seamEvery = 95f * visibilityScale
+    val sections = floor(lengthPx / seamEvery).toInt().coerceIn(0, 5)
     val seams = if (sections == 0) emptyList() else
         (1..sections).map { it.toFloat() / (sections + 1) }
     return CarvedRoadLayout(weight, seams)
@@ -74,8 +83,8 @@ internal fun DrawScope.drawCrossroadsCarvedTrail(
     // A real physical object sits just above the painted ground: its soft
     // offset shadow is visible even over light yellow meadow scenery.
     drawLine(
-        Color(0xFF1C3327).copy(alpha = 0.34f),
-        from + Offset(0f, 3.6f * w), to + Offset(0f, 3.6f * w),
+        Color(0xFF1C3327).copy(alpha = 0.24f),
+        from + Offset(0f, 2.8f * w), to + Offset(0f, 2.8f * w),
         strokeWidth = 24f * w, cap = StrokeCap.Round
     )
     drawLine(Color(0xFF42372A), from, to,
@@ -85,17 +94,19 @@ internal fun DrawScope.drawCrossroadsCarvedTrail(
     // Distinctive green/amber/purple inlay is structural, not just a label.
     drawLine(risk, from, to,
         strokeWidth = 17.3f * w, cap = StrokeCap.Round)
-    drawLine(Color(0xFFD9BA82), from, to,
-        strokeWidth = 14.3f * w, cap = StrokeCap.Round)
-    drawLine(Color(0xFFEBD3A2), from - normal * (1.1f * w),
+    // Warmer, narrower wood deck exposes more scenic illustration and
+    // lets the green/amber/purple inlay read as a deliberate route marking.
+    drawLine(Color(0xFFC5A374), from, to,
+        strokeWidth = 12.8f * w, cap = StrokeCap.Round)
+    drawLine(Color(0xFFE0C18C), from - normal * (1.1f * w),
         to - normal * (1.1f * w),
-        strokeWidth = 9.6f * w, cap = StrokeCap.Round)
+        strokeWidth = 7.2f * w, cap = StrokeCap.Round)
 
     // Fine engraved grain instead of magnified blurry atlas pixels.
-    drawLine(Color(0xFFF6E3BC).copy(alpha = 0.72f),
+    drawLine(Color(0xFFF2DBAB).copy(alpha = 0.56f),
         from - normal * (3.4f * w), to - normal * (3.4f * w),
         strokeWidth = 0.85f * w, cap = StrokeCap.Round)
-    drawLine(Color(0xFF795936).copy(alpha = 0.42f),
+    drawLine(Color(0xFF795936).copy(alpha = 0.35f),
         from + normal * (4.5f * w), to + normal * (4.5f * w),
         strokeWidth = 1.1f * w, cap = StrokeCap.Round)
 
