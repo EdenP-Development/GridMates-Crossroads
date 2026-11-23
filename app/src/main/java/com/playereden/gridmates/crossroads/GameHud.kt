@@ -93,6 +93,24 @@ internal fun gameActionDockMaxFraction(phase: Phase): Float = when (phase) {
     Phase.FINISHED -> 0.30f
 }
 
+/**
+ * In a fork, the die/remaining-steps and named junction already communicate
+ * the immediate choice. Repeating the last-action sentence above them took
+ * up valuable painted-board space on the owner's QA1672 phone.
+ *
+ * The original narration is still available through "Rules & last action".
+ * Encounter actions need their illustration/choices; other phases keep
+ * their normal context line.
+ */
+internal fun showCollapsedActionNote(
+    phase: Phase,
+    humanEncounterChoiceReady: Boolean
+): Boolean = when (phase) {
+    Phase.ROUTE -> false
+    Phase.ENCOUNTER -> !humanEncounterChoiceReady
+    else -> true
+}
+
 /** Protect the primary button group from being clipped on short handsets. */
 internal fun gameActionDockMinimumHeight(phase: Phase): Dp = when (phase) {
     Phase.ROLL -> 204.dp
