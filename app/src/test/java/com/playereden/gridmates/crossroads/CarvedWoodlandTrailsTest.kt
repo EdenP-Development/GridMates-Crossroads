@@ -8,10 +8,26 @@ class CarvedWoodlandTrailsTest {
         val a = carvedRoadLayout(420f, dense = false, visibilityScale = 1.9f)
         val b = carvedRoadLayout(420f, dense = false, visibilityScale = 1.9f)
         assertEquals(a, b)
-        assertEquals(1.9f, a.weight, .0001f)
-        assertTrue(a.seamFractions.size in 1..7)
+        assertEquals(1.9f * CARVED_ROAD_INK_RATIO, a.weight, .0001f)
+        assertTrue(a.seamFractions.size in 1..5)
         assertTrue(a.seamFractions.zipWithNext().all { (first, second) -> second > first })
         assertTrue(a.seamFractions.all { it > 0f && it < 1f })
+    }
+
+    @Test fun artworkStaysSharpWithoutCoveringTheWoodlandScenery() {
+        // Previously a full-bright trail at 1.9 zoom occupied 45.6px
+        // (24 * 1.9); the owner phone screen showed rails overwhelming art.
+        val originalOuterWidth = 24f * 1.9f
+        val tunedOuterWidth = 24f * carvedRoadLayout(420f, false, 1.9f).weight
+        assertTrue(tunedOuterWidth < originalOuterWidth * .85f)
+        assertTrue(tunedOuterWidth > originalOuterWidth * .70f)
+        assertTrue("The road remains readable instead of turning into a hairline",
+            tunedOuterWidth > 30f)
+        assertTrue("The joinery must not produce fake nodes",
+            carvedRoadLayout(420f, false, 1.9f).seamFractions.size <= 3)
+        assertTrue("Quick/Classic and denser Cedarwood should stay distinct",
+            carvedRoadLayout(420f, true, 1.9f).weight <
+                carvedRoadLayout(420f, false, 1.9f).weight)
     }
 
     @Test fun shortAndDenseCourseEdgesDoNotGainFakeSteppingSpaces() {
