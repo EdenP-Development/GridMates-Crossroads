@@ -1230,8 +1230,8 @@ private fun CrossroadsApp(
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     val round = (state.turn - 1) / state.players.size + 1
                     val currentName = state.players[state.playerIndex].name
@@ -1289,9 +1289,14 @@ private fun CrossroadsApp(
                     // The encounter card itself explains the human's next action.
                     // Avoid a redundant two-line explanation above it, which
                     // pushed event choices off shorter portrait screens.
-                    if (state.phase != Phase.ENCOUNTER ||
-                        !localIsCurrentSeat || state.players[state.playerIndex].isBot ||
-                        !turnReady
+                    if (showCollapsedActionNote(
+                            phase = state.phase,
+                            humanEncounterChoiceReady =
+                                state.phase == Phase.ENCOUNTER &&
+                                localIsCurrentSeat &&
+                                !state.players[state.playerIndex].isBot &&
+                                turnReady
+                        )
                     ) {
                         Text(actionNote, color = Bark,
                             style = MaterialTheme.typography.labelSmall,
