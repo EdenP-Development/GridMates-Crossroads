@@ -1,3 +1,7 @@
+# Verified signed APK checkpoint
+
+Build 2002 (0.1.0), source 86120c37c1f175349b4ead4529e944e111b4347e, [run 45488059431](https://github.com/EdenP-Development/GridMates-Crossroads/actions/runs/45488059431) passed compilation, tests, lint, APK signing and certificate/package verification. [Candidate ZIP](https://github.com/EdenP-Development/GridMates-Crossroads/actions/runs/45488059431/artifacts/14964897190) expires Dec 8 2026. Package com.playereden.gridmates.crossroads; pinned cert e13d5b336c01a7ca4f29e83072ac304adc3a4233cf484b43268a88aec3f28914. ZIP digest 9cd71696785a8d4c0cc9a1abc919c689d328ff8702b0b6039d35d7ea6fc034a6; exact APK checksum not independently retrieved. Owner acceptance, physical installation, upgrade and backup custody remain unverified. No public release. QA channel unchanged.
+
 # Current signing checkpoint
 
 Organization secrets and pinned private-key preflight passed [run 45486186420](https://github.com/EdenP-Development/GridMates-Crossroads/actions/runs/45486186420). First actual APK build [run 45486977715](https://github.com/EdenP-Development/GridMates-Crossroads/actions/runs/45486977715) failed before signing: sdkmanager not on PATH (exit 127). Corrected SDK discovery using existing QA workflow procedure; fresh build pending. No credential changes, no verified beta APK yet. Existing QA remains unchanged. Owner backup custody unverified.
