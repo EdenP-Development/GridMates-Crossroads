@@ -70,6 +70,16 @@ class CrossVersionRecoveryStressTest {
         }
     }
 
+    @Test fun unfinishedRaceCannotCreateRematch() {
+        val active = GameSession(originals.first(), events)
+        try {
+            active.freshRematch(44)
+            fail("Unfinished race accepted a rematch")
+        } catch (_: IllegalArgumentException) {
+            assertEquals(Phase.ROLL, active.phase)
+        }
+    }
+
     data class Record(
         val baseCourse: String,
         val version: String,
@@ -159,6 +169,19 @@ class CrossVersionRecoveryStressTest {
                             active.checkpoint(matchId, start)))
                         assertEquals(active.snapshot(),
                             GameSession.restore(board, events, finished).snapshot())
+                        val restoredFinish = GameSession.restore(board, events, finished)
+                        val nextSeed = seed + 10000
+                        val rematch = restoredFinish.freshRematch(nextSeed)
+                        val expectedFresh = GameSession(board, events, seats, nextSeed, humans)
+                        assertEquals(expectedFresh.snapshot(), rematch.snapshot())
+                        val freshCheckpoint = rematch.checkpoint("$matchId-rematch", start + 1)
+                        assertEquals(board.id, freshCheckpoint.boardId)
+                        assertEquals(humans.sorted(), freshCheckpoint.humanIndices)
+                        assertEquals(nextSeed, freshCheckpoint.seed)
+                        assertTrue(freshCheckpoint.actions.isEmpty())
+                        assertEquals(rematch.snapshot(), GameSession.restore(
+                            board, events, freshCheckpoint).snapshot())
+                        assertEquals(Phase.FINISHED, restoredFinish.phase)
                         totalRecoveries += recoveries
                         records += Record(base.id, version, seats, mode, seed,
                             ticks, recoveries, peakChars, sawRoute, sawTarget,
