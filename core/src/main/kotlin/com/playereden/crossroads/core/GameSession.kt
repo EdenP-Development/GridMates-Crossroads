@@ -219,6 +219,16 @@ class GameSession(
         }
     }
 
+    /**
+     * Start a fresh race with the exact completed course, rules version and
+     * human seats. A new seed is supplied by the caller. Never reuse match
+     * progress or reinterpret a restored match through home preferences.
+     */
+    fun freshRematch(seed: Int): GameSession {
+        require(phase == Phase.FINISHED) { "Finish the current race before rematching" }
+        return GameSession(board, catalogue, players.size, seed, originalHumanIndices)
+    }
+
     fun snapshot(): Snapshot = Snapshot(
         revision, phase, currentIndex,
         players.map { it.copy(traversed = it.traversed.toMutableList()) },
