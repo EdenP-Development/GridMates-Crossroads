@@ -36,7 +36,12 @@ jobs:
         run: |
           set -euo pipefail
           python3 -m py_compile .github/scripts/crossroads_integrated_art_qa.py
-          sdkmanager "build-tools;35.0.0"
+          sdkmanager_bin="$(command -v sdkmanager || true)"
+          if [[ -z "$sdkmanager_bin" && -n "${ANDROID_HOME:-}" ]]; then
+            sdkmanager_bin="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager -print -quit || true)"
+          fi
+          [[ -n "$sdkmanager_bin" ]] || { echo "Android SDK cmdline tools unavailable"; exit 1; }
+          "$sdkmanager_bin" "build-tools;35.0.0"
       - name: Enable KVM
         shell: bash
         run: |
