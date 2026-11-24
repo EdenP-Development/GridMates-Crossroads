@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "reference": "docs/ARTREADY_38_ASSET_BIBLE_AND_IMPORT_QA.md",
+  "style": {
+    "palette": {
+      "parchment": "#F7F0DE",
+      "forest": "#48684D",
+      "bark": "#80664B",
+      "gold": "#D9B872",
+      "creek": "#8FBCC3"
+    },
+    "view": "overhead or near-overhead scenery; editorial cut-paper contours",
+    "exclude": [
+      "text",
+      "fake playable paths",
+      "game markers",
+      "watermarks",
+      "baked shadows outside cell"
+    ]
+  },
+  "atlas": {
+    "filename": "environment_atlas_v2.png",
+    "width": 1024,
+    "height": 1024,
+    "cell": 256,
+    "gutter": 12,
+    "cells": [
+      "oak",
+      "flowers",
+      "rock",
+      "cottage",
+      "meadow_clearing",
+      "fir_grove",
+      "orchard",
+      "bush",
+      "fir",
+      "mushrooms",
+      "fence",
+      "reeds",
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "state": "planned_not_packaged",
+  "acceptance": [
+    "exact RGBA dimensions",
+    "transparent gutters and reserved cells",
+    "each active cell nonempty",
+    "provenance and SHA256",
+    "side-by-side visual review",
+    "actual phone review"
+  ]
+}
