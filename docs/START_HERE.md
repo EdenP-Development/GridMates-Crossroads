@@ -1,3 +1,7 @@
+> **Current entrypoint: [Beta 1 integration](BETA_1_INTEGRATION.md).** Latest verified QA1680; VISUAL-95 and integrated candidate verification pending. All earlier status below is historical. No public release or main merge.
+
+---
+
 > **Current planning entrypoint (Nov 22, 2026):** [Current Status](CURRENT_STATUS.md) → [RC1 Consolidated Integration Review](RC1_INTEGRATION_REVIEW_2026_11_22.md) → [QA-79 signed APK emulator upgrade](QA_79_REAL_APK_INSTALL_OVER_RECOVERY.md). Signed QA1613, cross-version recovery stress and a real QA1607→QA1613 emulator install-over have passed automated QA. Physical owner-phone tests, two-phone Wi-Fi LAN, human playtime/balance and public signing/privacy acceptance are **not complete**. RC1 remains draft/unmerged.
 
 **Working next:** audit the entire source candidate as one cohesive game, preserve the original rules as default, fix only player-facing or release-gate inconsistencies, then conduct focused device playtests when hardware is available. Avoid new currencies, accounts or unnecessary features.
