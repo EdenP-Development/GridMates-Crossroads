@@ -190,6 +190,18 @@
       "license": "generated",
       "sha256": "2d5e32e9621b8af9699e541797c4f5b1da1385bed0e05e56de859051ad9a812a",
       "reviewStatus": "qa-preview-only-not-owner-approved"
+    },
+    {
+      "id": "ENVIRONMENT_ATLAS",
+      "filename": "environment_atlas_v1.png",
+      "width": 1024,
+      "height": 1024,
+      "requiresAlpha": true,
+      "purpose": "QA-only reusable overhead scenery atlas; 4x4 cells of 256px. Row 0: oak, flowers, rock, cottage. Row 1: meadow clearing, fir grove, orchard, bush. Row 2: fir, mushrooms, fence, reeds. Row 3 reserved. Decorative only; bridges remain graph-aligned.",
+      "status": "planned",
+      "origin": null,
+      "license": null,
+      "sha256": null
     }
   ]
 }
