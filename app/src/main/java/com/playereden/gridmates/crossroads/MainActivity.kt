@@ -1944,7 +1944,8 @@ private fun BoardCanvas(
         illustrated = boardLook == CrossroadsBoardLook.ILLUSTRATED
     )
     val boardBackdrop = rememberOptionalCrossroadsArt(
-        if (boardLook == CrossroadsBoardLook.ILLUSTRATED && !useOverheadArtwork)
+        if (boardLook == CrossroadsBoardLook.ILLUSTRATED &&
+            (!useOverheadArtwork || CourseOverheadStyle.forBoard(board.id) != CourseOverheadStyle.WOVEN))
             CrossroadsArtCatalog.backplate(board.id) else null
     )
     val environmentAtlas = rememberOptionalCrossroadsArt(
