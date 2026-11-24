@@ -187,7 +187,7 @@ internal object OverheadScenery {
     ): List<OverheadFeature> {
         if (nodes.isEmpty()) return emptyList()
         val authored = listOf(
-            OverheadFeature(.29f, .56f, OverheadDecoration.MEADOW_BLOOM),
+            OverheadFeature(.28f, .49f, OverheadDecoration.MEADOW_BLOOM),
             OverheadFeature(.60f, .68f, OverheadDecoration.FIR_GROVE),
             OverheadFeature(.94f, .83f, OverheadDecoration.ORCHARD)
         )
