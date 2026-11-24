@@ -337,17 +337,18 @@ internal fun CrossroadsHomeScreen(
         Text("Two phones on the same Wi-Fi", style = MaterialTheme.typography.bodySmall,
             color = Muted)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TabletopUtilityButton("Host nearby", onNearbyHost, Modifier.weight(1f))
-            TabletopUtilityButton("Join nearby", onNearbyJoin, Modifier.weight(1f))
+            TabletopUtilityButton("Host nearby", onNearbyHost, Modifier.weight(1f), icon = TabletopIconArt.MULTIPLAYER)
+            TabletopUtilityButton("Join nearby", onNearbyJoin, Modifier.weight(1f), icon = TabletopIconArt.MULTIPLAYER)
         }
         TabletopUtilityButton(
             text = "How to play", onClick = { showGuide = true },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(), icon = TabletopIconArt.JOURNAL
         )
         TabletopUtilityButton(
             text = homeOptionsToggleLabel(showExtraOptions),
             onClick = { showExtraOptions = !showExtraOptions },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            icon = if (showExtraOptions) TabletopIconArt.COLLAPSE else TabletopIconArt.EXPAND
         )
         if (showExtraOptions) {
         Row(
@@ -430,7 +431,7 @@ internal fun CrossroadsHomeScreen(
         }
         TabletopUtilityButton(
             text = "About & data", onClick = { showAbout = true },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(), icon = TabletopIconArt.SETTINGS
         )
         Card(
             colors = CardDefaults.cardColors(containerColor = Color(0xFFEAE1CA)),
