@@ -12,3 +12,16 @@ local.properties
 *.aab
 *.log
 !docs/*.log
+
+# Eden standards: never commit local signing material or private backups.
+*.p12
+*.pfx
+*.key
+*.pem
+*.jceks
+keystore.properties
+signing.properties
+qa-signing/
+private-backups/
+.env
+.env.*
