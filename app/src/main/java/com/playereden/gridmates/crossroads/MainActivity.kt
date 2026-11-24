@@ -1995,6 +1995,10 @@ private fun BoardCanvas(
     val overheadDecor = remember(board, useOverheadArtwork) {
         if (useOverheadArtwork) OverheadScenery.plan(board.nodes) else emptyList()
     }
+    val environmentAccents = remember(board, overheadDecor, useOverheadArtwork) {
+        if (useOverheadArtwork) WovenEnvironmentAccents.plan(board.nodes, overheadDecor)
+        else emptyList()
+    }
     val overheadBridges = remember(board, useOverheadArtwork) {
         if (useOverheadArtwork) OverheadScenery.bridges(board.nodes) else emptyList()
     }
@@ -2340,7 +2344,8 @@ private fun BoardCanvas(
                     features = overheadDecor,
                     bridges = overheadBridges,
                     left = left, top = top, width = drawWidth, height = drawHeight,
-                    environmentAtlas = environmentAtlas
+                    environmentAtlas = environmentAtlas,
+                    environmentAccents = environmentAccents
                 )
             } else if (boardBackdrop == null) {
                 drawWoodlandBoardArt(
