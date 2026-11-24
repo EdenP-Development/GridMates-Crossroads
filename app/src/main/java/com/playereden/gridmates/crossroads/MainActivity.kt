@@ -1674,9 +1674,9 @@ private fun CrossroadsApp(
                     contentAlignment = Alignment.Center
                 ) {
                     Surface(
-                        modifier = Modifier.fillMaxWidth()
-                            .padding(horizontal = 12.dp)
-                            .heightIn(max = (maxHeight - 24.dp).coerceAtLeast(220.dp)),
+                        modifier = Modifier.widthIn(max = 680.dp).fillMaxWidth()
+                            .padding(horizontal = 4.dp)
+                            .heightIn(max = (maxHeight - 12.dp).coerceAtLeast(220.dp)),
                         color = Cream,
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(25.dp),
                         border = androidx.compose.foundation.BorderStroke(
@@ -1685,8 +1685,8 @@ private fun CrossroadsApp(
                         shadowElevation = 16.dp
                     ) {
                         Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(9.dp)
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 9.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -1709,7 +1709,7 @@ private fun CrossroadsApp(
                                 modifier = Modifier.fillMaxWidth()
                                     .weight(1f, fill = false)
                                     .verticalScroll(rememberScrollState()),
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Surface(
                                     modifier = Modifier.fillMaxWidth(),
@@ -1720,10 +1720,12 @@ private fun CrossroadsApp(
                                     )
                                 ) {
                                     BoxWithConstraints(
-                                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                        modifier = Modifier.fillMaxWidth().padding(3.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        val mapHeight = maxWidth.coerceIn(200.dp, 540.dp)
+                                        // Fill the available inner width with a square board. The
+                                        // scroll container still supports short/landscape screens.
+                                        val mapHeight = maxWidth
                                         BoardCanvas(
                                             board, state,
                                             height = mapHeight, tokenScale = 1.35f,
@@ -1737,7 +1739,7 @@ private fun CrossroadsApp(
                                 }
                                 Text("Amber: hazard  •  Green: shelter  •  Purple: mischief",
                                     style = MaterialTheme.typography.bodySmall, color = Bark)
-                                Text("Full course overview · inspection only",
+                                Text("Pinch to inspect · drag to explore",
                                     style = MaterialTheme.typography.labelSmall, color = Bark)
                             }
                             Button(
