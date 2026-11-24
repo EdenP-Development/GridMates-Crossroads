@@ -1,3 +1,7 @@
+> **Current checkpoint: [Crossroads development handoff](CROSSROADS_CURRENT_HANDOFF.md).** Active branch integration/beta-1-polish; QA1698 Android passed. New environment and UI binaries remain external; physical acceptance pending. Earlier records below are historical. No main merge or public release.
+
+---
+
 # Beta 1 Polish — unified Woodland Experience, November 24, 2026
 
 **Latest verified QA1696:** [signed Android archive](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/45443761764/artifacts/14945831693), [Android workflow](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/45443761764). All workflow steps passed. Source 289c29cbb4c13b51eeaf87a5ef03c10ee07926d8; built merge commit 881cdfb6fc962fd7031df8ee4dfd520f4c3a36f1. Archive expires December 8, 2026. Dedicated integration/beta-1-polish fast-forwarded from verified QA1695 source by four commits, no divergence. Original integration/beta-1 and main unchanged.
