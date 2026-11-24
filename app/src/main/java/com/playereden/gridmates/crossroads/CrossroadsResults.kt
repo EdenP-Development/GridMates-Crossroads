@@ -1,5 +1,6 @@
 package com.playereden.gridmates.crossroads
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.Canvas
@@ -100,10 +101,12 @@ private fun CrossroadsFinishSeal(modifier: Modifier = Modifier) {
 
 @Composable
 private fun ResultStat(label: String, value: String, modifier: Modifier = Modifier) {
-    Surface(
+    TabletopPanel(
         modifier = modifier,
         color = Parchment,
-        shape = MaterialTheme.shapes.medium
+        corner = 12.dp,
+        border = BorderStroke(1.dp, TabletopMaterials.brass.copy(alpha = .45f)),
+        elevation = 0.dp
     ) {
         Column(Modifier.padding(horizontal = 10.dp, vertical = 9.dp),
             verticalArrangement = Arrangement.spacedBy(1.dp)) {

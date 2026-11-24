@@ -57,14 +57,7 @@ internal fun TabletopEncounterCard(
     pushHazardSuccessBonus: Int = 0
 ) {
     val shelter = TabletopEncounterPresentation.isShelter(choices)
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = Color(0xFFF7EDD7),
-        contentColor = Color(0xFF3B5841),
-        shape = RoundedCornerShape(15.dp),
-        border = BorderStroke(1.5.dp, Color(0xFFB59B6C)),
-        shadowElevation = 3.dp
-    ) {
+    TabletopPanel(modifier = modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.fillMaxWidth()
                 .padding(horizontal = 9.dp, vertical = 8.dp),

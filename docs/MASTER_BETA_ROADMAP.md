@@ -26,3 +26,6 @@ Follow https://github.com/PlayerEden/Eden-Development-Standards and local EDEN_S
 
 ## Evidence and next work
 QA1706 source head 638f6b65fc26a9b5897548ea04d04fbe3e710b17, built merge 6743a8f1b021bb6b77cb41ac53ec1f8ba596330c; Android run 45467623391 success. Artifact 14957455551 expires Dec 8. APK hash not independently retrieved; archive digest is not APK digest. Prior QA1705 passed shared controls. 36 new artwork binaries remain external; see IDENTITY_10_ART_IMPORT.md. Latest physical acceptance and upgrade unverified. No measured completion percentage.
+
+## Owner direction — launcher icon
+Owner clarified that Crossroads already has its approved launcher icon. Retain existing launcher assets; no redesign or new icon generation required. Continue actual artwork integration and visual QA.
