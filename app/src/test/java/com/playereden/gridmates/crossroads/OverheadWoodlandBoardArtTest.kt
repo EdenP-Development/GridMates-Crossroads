@@ -126,7 +126,7 @@ class OverheadWoodlandBoardArtTest {
         assertTrue(OverheadScenery.bridges(emptyList()).isEmpty())
     }
 
-    @Test fun optionalOverheadPerspectiveAppliesToSavedWovenLabVersionsOnly() {
+    @Test fun optionalOverheadPerspectiveAppliesToKnownSavedLabVersions() {
         for (suffix in listOf(
             DecisionLab.SUFFIX, DecisionLab.V2_SUFFIX, DecisionLab.V3_SUFFIX,
             DecisionLab.V4_SUFFIX, DecisionLab.V5_SUFFIX
@@ -134,13 +134,13 @@ class OverheadWoodlandBoardArtTest {
             assertTrue(useOverheadBoardPreview(
                 "woodland_woven_trail_v02" + suffix, true, true, true
             ))
-            assertFalse(useOverheadBoardPreview(
+            assertTrue(useOverheadBoardPreview(
                 "woodland_brookside_quick_v01" + suffix, true, true, true
             ))
         }
     }
 
-    @Test fun overheadPrintIsOnlyAnOptInWovenQaPreview() {
+    @Test fun overheadPrintIsOnlyAnOptInKnownCourseQaPreview() {
         assertTrue(useOverheadBoardPreview(
             "woodland_woven_trail_v02", true, true, true
         ))
@@ -153,10 +153,10 @@ class OverheadWoodlandBoardArtTest {
         assertFalse(useOverheadBoardPreview(
             "woodland_woven_trail_v02", true, true, false
         ))
-        assertFalse(useOverheadBoardPreview(
+        assertTrue(useOverheadBoardPreview(
             "woodland_brookside_quick_v01", true, true, true
         ))
-        assertFalse(useOverheadBoardPreview(
+        assertTrue(useOverheadBoardPreview(
             "woodland_cedarwood_long_v01", true, true, true
         ))
     }
