@@ -37,6 +37,44 @@ internal object EnvironmentAtlas {
     }
 }
 
+/** Extra atlas-only details; the original procedural scene stays intact if art is absent. */
+internal data class EnvironmentAccent(
+    val x: Float, val y: Float, val sprite: EnvironmentSprite
+)
+
+internal object WovenEnvironmentAccents {
+    fun plan(
+        nodes: List<com.playereden.crossroads.core.BoardNode>,
+        features: List<OverheadFeature>
+    ): List<EnvironmentAccent> {
+        if (nodes.isEmpty()) return emptyList()
+        val candidates = listOf(
+            EnvironmentAccent(.25f, .62f, EnvironmentSprite.BUSH),
+            EnvironmentAccent(.56f, .31f, EnvironmentSprite.FIR),
+            EnvironmentAccent(.69f, .19f, EnvironmentSprite.REEDS),
+            EnvironmentAccent(.61f, .94f, EnvironmentSprite.FIR),
+            EnvironmentAccent(.29f, .95f, EnvironmentSprite.MUSHROOMS),
+            EnvironmentAccent(.70f, .90f, EnvironmentSprite.REEDS),
+            EnvironmentAccent(.83f, .06f, EnvironmentSprite.FENCE)
+        )
+        return buildList {
+            for (p in candidates) {
+                val radius = p.sprite.diameter * kotlin.math.sqrt(2f) / 2f
+                if (p.x !in radius..(1f - radius) ||
+                    p.y !in radius..(1f - radius)) continue
+                if (!OverheadScenery.clearOfPlay(p.x, p.y, nodes, .067f)) continue
+                if (features.any { q ->
+                    kotlin.math.hypot(p.x - q.x, p.y - q.y) < .077f
+                }) continue
+                if (any { q: EnvironmentAccent ->
+                    kotlin.math.hypot(p.x - q.x, p.y - q.y) < .077f
+                }) continue
+                add(p)
+            }
+        }
+    }
+}
+
 /** Draw only decorative art below the playable graph; false means draw fallback. */
 internal fun DrawScope.tryDrawEnvironmentSprite(
     atlas: ImageBitmap?,
