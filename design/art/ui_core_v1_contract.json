@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "status": "external_review_candidates_not_packaged",
+  "sourceGenerations": [
+    "026cd301-a5a1-4b0d-bdd3-5bb7e6100e6f",
+    "6534e1c6-196e-4a55-b83c-57dafe4b1a60"
+  ],
+  "assets": [
+    {
+      "id": "primary_normal",
+      "width": 384,
+      "height": 144,
+      "family": "button",
+      "filename": "primary_normal.png"
+    },
+    {
+      "id": "primary_highlight",
+      "width": 384,
+      "height": 144,
+      "family": "button",
+      "filename": "primary_highlight.png"
+    },
+    {
+      "id": "primary_pressed",
+      "width": 384,
+      "height": 144,
+      "family": "button",
+      "filename": "primary_pressed.png"
+    },
+    {
+      "id": "primary_disabled",
+      "width": 384,
+      "height": 144,
+      "family": "button",
+      "filename": "primary_disabled.png"
+    },
+    {
+      "id": "secondary_normal",
+      "width": 384,
+      "height": 144,
+      "family": "button",
+      "filename": "secondary_normal.png"
+    },
+    {
+      "id": "secondary_highlight",
+      "width": 384,
+      "height": 144,
+      "family": "button",
+      "filename": "secondary_highlight.png"
+    },
+    {
+      "id": "secondary_pressed",
+      "width": 384,
+      "height": 144,
+      "family": "button",
+      "filename": "secondary_pressed.png"
+    },
+    {
+      "id": "secondary_disabled",
+      "width": 384,
+      "height": 144,
+      "family": "button",
+      "filename": "secondary_disabled.png"
+    },
+    {
+      "id": "wood_normal",
+      "width": 384,
+      "height": 144,
+      "family": "button",
+      "filename": "wood_normal.png"
+    },
+    {
+      "id": "wood_highlight",
+      "width": 384,
+      "height": 144,
+      "family": "button",
+      "filename": "wood_highlight.png"
+    },
+    {
+      "id": "wood_pressed",
+      "width": 384,
+      "height": 144,
+      "family": "button",
+      "filename": "wood_pressed.png"
+    },
+    {
+      "id": "wood_disabled",
+      "width": 384,
+      "height": 144,
+      "family": "button",
+      "filename": "wood_disabled.png"
+    },
+    {
+      "id": "icon_home",
+      "width": 128,
+      "height": 128,
+      "family": "icon",
+      "filename": "icon_home.png"
+    },
+    {
+      "id": "icon_multiplayer",
+      "width": 128,
+      "height": 128,
+      "family": "icon",
+      "filename": "icon_multiplayer.png"
+    },
+    {
+      "id": "icon_map",
+      "width": 128,
+      "height": 128,
+      "family": "icon",
+      "filename": "icon_map.png"
+    },
+    {
+      "id": "icon_journal",
+      "width": 128,
+      "height": 128,
+      "family": "icon",
+      "filename": "icon_journal.png"
+    },
+    {
+      "id": "icon_settings",
+      "width": 128,
+      "height": 128,
+      "family": "icon",
+      "filename": "icon_settings.png"
+    },
+    {
+      "id": "icon_sound",
+      "width": 128,
+      "height": 128,
+      "family": "icon",
+      "filename": "icon_sound.png"
+    },
+    {
+      "id": "icon_music",
+      "width": 128,
+      "height": 128,
+      "family": "icon",
+      "filename": "icon_music.png"
+    },
+    {
+      "id": "icon_dice",
+      "width": 128,
+      "height": 128,
+      "family": "icon",
+      "filename": "icon_dice.png"
+    },
+    {
+      "id": "icon_zoom_in",
+      "width": 128,
+      "height": 128,
+      "family": "icon",
+      "filename": "icon_zoom_in.png"
+    },
+    {
+      "id": "icon_zoom_out",
+      "width": 128,
+      "height": 128,
+      "family": "icon",
+      "filename": "icon_zoom_out.png"
+    },
+    {
+      "id": "icon_expand",
+      "width": 128,
+      "height": 128,
+      "family": "icon",
+      "filename": "icon_expand.png"
+    },
+    {
+      "id": "icon_collapse",
+      "width": 128,
+      "height": 128,
+      "family": "icon",
+      "filename": "icon_collapse.png"
+    }
+  ],
+  "requirements": [
+    "native text and accessibility",
+    "no baked labels",
+    "consistent state bounds before replacement",
+    "validate stretch regions and contrast",
+    "package only used assets",
+    "retain native fallback"
+  ]
+}
