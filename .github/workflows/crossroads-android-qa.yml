@@ -4,7 +4,7 @@ on:
   # Draft feature branches are checked by pull_request (one build per head).
   # Keep push CI only for standalone design branches and manual dispatch.
   push:
-    branches: ["design/**"]
+    branches: ["design/**", "feature/identity-17-art-import"]
     paths:
       - "app/**"
       - "core/**"
@@ -39,6 +39,21 @@ jobs:
       - uses: actions/checkout@v4
       - name: Public-facing release surface preflight
         run: python3 scripts/check_release_surface.py
+      - name: Verify and import original artwork if candidate archives are present
+        shell: bash
+        run: |
+          set -euo pipefail
+          dir=design/art/imports
+          if [[ -e "$dir/crossroads_environment_v2.zip" || -e "$dir/crossroads_ui_core_v1.zip" ]]; then
+            (cd "$dir" && sha256sum -c <<'EOF'
+          c14294767e47a1489baa4f4415bd18232310ed1c9295a9fbdcc13d7112e3c1cb  crossroads_environment_v2.zip
+          80e8030c5520dde93eeb4a45eb56137b407a57a2c83d65fc0a944df0ff437085  crossroads_ui_core_v1.zip
+          EOF
+            )
+            python3 tools/import_environment_v2.py "$dir/crossroads_environment_v2.zip"
+            python3 tools/import_ui_core_v1.py "$dir/crossroads_ui_core_v1.zip"
+            echo "Original environment atlas and UI source archive verified." >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Validate optional woodland art, provenance and size budget
         run: python3 tools/check_crossroads_art_pack.py
       - uses: actions/setup-java@v4
@@ -104,6 +119,9 @@ jobs:
           grep -iF '75cc3c896247d71fbd51f7a3ed41f90c8218a8a5a70df8c0f6b494b5cc23d419' /tmp/crossroads-certs.txt
           "$TOOLS/aapt" dump badging "$APK" | grep -F "name='com.playereden.gridmates.crossroads.qa' versionCode='$QA_CODE'"
           "$TOOLS/aapt" dump badging "$APK" | grep -F "application-label:'Crossroads QA'"
+          if [[ -f design/art/imports/crossroads_environment_v2.zip ]]; then
+            unzip -p "$APK" assets/art/v1/environment_atlas_v2.png | sha256sum -c <(echo "779c42c21558a24ef9eb56f341d465ddeae68061389149bfe17fa00fe53525ab  -")
+          fi
           cp "$APK" "GridMates-Crossroads-QA-$QA_CODE.apk"
           sha256sum "GridMates-Crossroads-QA-$QA_CODE.apk" > "GridMates-Crossroads-QA-$QA_CODE.apk.sha256"
           python3 - <<'PY'
