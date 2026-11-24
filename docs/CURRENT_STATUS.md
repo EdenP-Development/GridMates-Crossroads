@@ -1,3 +1,7 @@
+> **Current checkpoint: [Crossroads development handoff](CROSSROADS_CURRENT_HANDOFF.md).** Active branch integration/beta-1-polish; QA1698 Android passed. New environment and UI binaries remain external; physical acceptance pending. Earlier records below are historical. No main merge or public release.
+
+---
+
 # Beta 1 integration — current checkpoint
 
 See [Beta 1 integration](BETA_1_INTEGRATION.md) for active source, QA1680 evidence, pending candidate checks and physical-device gates. The previous RC1 status below is historical, not the latest APK.
