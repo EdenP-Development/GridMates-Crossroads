@@ -1,3 +1,7 @@
+> **Current checkpoint: [Crossroads development handoff](CROSSROADS_CURRENT_HANDOFF.md).** Active branch integration/beta-1-polish; QA1698 Android passed. New environment and UI binaries remain external; physical acceptance pending. Earlier records below are historical. No main merge or public release.
+
+---
+
 > **Current entrypoint: [Beta 1 integration](BETA_1_INTEGRATION.md).** Latest verified QA1680; VISUAL-95 and integrated candidate verification pending. All earlier status below is historical. No public release or main merge.
 
 ---
