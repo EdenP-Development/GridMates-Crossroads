@@ -530,6 +530,15 @@ private fun CrossroadsApp(
             showResults = true
         }
     }
+    fun beginOfflineRace(newGame: GameSession) {
+        activeMatchId = java.util.UUID.randomUUID().toString()
+        matchStartedAtEpochMillis = System.currentTimeMillis()
+        startedFromCheckpoint = false
+        persistGame(newGame)
+        session = newGame
+        revision++
+    }
+
     fun start(seats: Int, passAndPlay: Boolean) {
         if (lanRole != LanRole.OFFLINE) leaveGame()
         val humans = if (passAndPlay) (0 until seats).toSet() else setOf(0)
@@ -538,12 +547,7 @@ private fun CrossroadsApp(
         )
         val newGame = GameSession(knownBoards.getValue(boardId), catalogue, seats = seats,
             seed = java.util.Random().nextInt(), humanIndices = humans)
-        activeMatchId = java.util.UUID.randomUUID().toString()
-        matchStartedAtEpochMillis = System.currentTimeMillis()
-        startedFromCheckpoint = false
-        persistGame(newGame)
-        session = newGame
-        revision++
+        beginOfflineRace(newGame)
     }
 
     fun startLanHost(requireCode: Boolean, seats: Int) {
@@ -796,10 +800,10 @@ private fun CrossroadsApp(
 
     fun rematch() {
         val current = session ?: return
+        if (current.phase != Phase.FINISHED) return
         if (lanRole == LanRole.HOST) {
             if (!lanConnected) return
-            val next = GameSession(current.board, catalogue, seats = current.players.size,
-                seed = java.util.Random().nextInt(), humanIndices = setOf(0, 1))
+            val next = current.freshRematch(java.util.Random().nextInt())
             activeMatchId = java.util.UUID.randomUUID().toString()
             matchStartedAtEpochMillis = System.currentTimeMillis()
             startedFromCheckpoint = false
@@ -807,7 +811,7 @@ private fun CrossroadsApp(
             lanHost?.publish(next.checkpoint(activeMatchId, matchStartedAtEpochMillis))
             revision++
         } else if (lanRole == LanRole.OFFLINE) {
-            start(current.players.size, current.players.count { !it.isBot } > 1)
+            beginOfflineRace(current.freshRematch(java.util.Random().nextInt()))
         }
     }
 
