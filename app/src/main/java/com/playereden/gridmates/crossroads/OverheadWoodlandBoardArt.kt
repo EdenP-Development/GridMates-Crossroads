@@ -208,7 +208,8 @@ internal fun DrawScope.drawOverheadWoodlandPrint(
     top: Float,
     width: Float,
     height: Float,
-    environmentAtlas: ImageBitmap? = null
+    environmentAtlas: ImageBitmap? = null,
+    environmentAccents: List<EnvironmentAccent> = emptyList()
 ) {
     if (width <= 0f || height <= 0f) return
     fun at(x: Float, y: Float) = Offset(left + width * x, top + height * y)
@@ -291,6 +292,13 @@ internal fun DrawScope.drawOverheadWoodlandPrint(
         val fy = ((i * 23 + 11) % 47 + .5f) / 47f
         drawCircle(Color(0xFF5E784F).copy(alpha = .08f),
             radius = (.28f + (i % 3) * .21f) * u, center = at(fx, fy))
+    }
+
+    // Smaller atlas-only ornaments use the same camera and normalized frame.
+    // Missing art leaves the original procedural scene unchanged.
+    environmentAccents.forEach { accent ->
+        tryDrawEnvironmentSprite(environmentAtlas, accent.sprite,
+            at(accent.x, accent.y), min(width, height))
     }
 
     features.forEach { feature ->
