@@ -60,3 +60,11 @@ internal fun DrawScope.drawCrossroadsWoodenJunctionHub(center: Offset, radius: F
         style = Stroke(width = (radius * .045f).coerceAtLeast(.7f))
     )
 }
+
+/** Matte trail junction beneath the existing authoritative marker. */
+internal fun DrawScope.drawCrossroadsEarthenJunction(center: Offset, radius: Float) {
+    if (!radius.isFinite() || radius < 8f) return
+    drawCircle(Color(0xFF52613B).copy(alpha = .25f), radius * .90f, center)
+    drawCircle(Color(0xFF66543A), radius * .75f, center)
+    drawCircle(Color(0xFFC4A575), radius * .62f, center)
+}
