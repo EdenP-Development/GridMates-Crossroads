@@ -2409,7 +2409,7 @@ private fun BoardCanvas(
                         // VISUAL-83: actual live roads are carved at Canvas resolution,
                         // not stretched from a 128x32 atlas at 2-4x zoom.
                         // Original coordinates, route colors and tap hit geometry stay identical.
-                        drawCrossroadsCarvedTrail(
+                        drawCrossroadsEarthenTrail(
                             from = from,
                             to = position(dest),
                             route = route,
