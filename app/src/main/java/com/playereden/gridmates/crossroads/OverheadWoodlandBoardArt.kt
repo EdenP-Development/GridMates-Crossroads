@@ -209,7 +209,8 @@ internal fun DrawScope.drawOverheadWoodlandPrint(
     width: Float,
     height: Float,
     environmentAtlas: ImageBitmap? = null,
-    environmentAccents: List<EnvironmentAccent> = emptyList()
+    environmentAccents: List<EnvironmentAccent> = emptyList(),
+    groundcover: List<GroundcoverPatch> = emptyList()
 ) {
     if (width <= 0f || height <= 0f) return
     fun at(x: Float, y: Float) = Offset(left + width * x, top + height * y)
@@ -223,6 +224,7 @@ internal fun DrawScope.drawOverheadWoodlandPrint(
         size = Size(width, height)
     )
     drawWovenTerrain(left, top, width, height)
+    drawWoodlandGroundcover(groundcover, left, top, width, height)
 
     // Winding teal WATER, explicitly not another beige or wood-colored
     // navigable path. The real wooden graph is rendered over this layer.
