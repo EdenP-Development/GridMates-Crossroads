@@ -28,7 +28,7 @@ class OverheadWoodlandBoardArtTest {
         assertEquals(38, board.nodes.size)
         val ornaments = OverheadScenery.plan(board.nodes)
         assertEquals("Changing route topology requires new scenic placement QA",
-            20, ornaments.size)
+            23, ornaments.size)
         assertEquals("Village should read as a destination, not a solitary icon",
             2, ornaments.count { it.kind == OverheadDecoration.COTTAGE })
         ornaments.forEach { p ->
@@ -36,6 +36,32 @@ class OverheadWoodlandBoardArtTest {
             assertTrue("Scenery at ${p.x},${p.y} overlaps Woven graph",
                 OverheadScenery.clearOfPlay(p.x, p.y, board.nodes, margin))
         }
+    }
+
+    @Test fun WovenHasThreeDistinctRegionalLandmarksInSafeClearings() {
+        val ornaments = OverheadScenery.plan(wovenBoard.nodes)
+        val kinds = setOf(OverheadDecoration.MEADOW_BLOOM,
+            OverheadDecoration.FIR_GROVE, OverheadDecoration.ORCHARD)
+        val landmarks = ornaments.filter { it.kind in kinds }
+        assertEquals(3, landmarks.size)
+        assertEquals(kinds, landmarks.map { it.kind }.toSet())
+        landmarks.forEach { p ->
+            assertTrue(OverheadScenery.clearOfPlay(p.x, p.y, wovenBoard.nodes, .09f))
+            assertTrue(ornaments.filter { it != p }.all { q ->
+                kotlin.math.hypot(p.x - q.x, p.y - q.y) >= .085f
+            })
+        }
+        assertEquals(landmarks, OverheadScenery.regionalLandmarks(
+            wovenBoard.nodes, ornaments.filter { it.kind !in kinds }
+        ))
+        // A moved playable node must suppress the decoration, never vice versa.
+        val bloom = landmarks.first { it.kind == OverheadDecoration.MEADOW_BLOOM }
+        val blocked = wovenBoard.nodes + BoardNode(
+            "qa_blocker", "meadow", "plain", emptyList(), bloom.x, bloom.y
+        )
+        assertFalse(OverheadScenery.regionalLandmarks(blocked, emptyList())
+            .any { it.kind == OverheadDecoration.MEADOW_BLOOM })
+        assertTrue(OverheadScenery.regionalLandmarks(emptyList(), emptyList()).isEmpty())
     }
 
     @Test fun WovenStreamBridgesOnlyActualLegalRoutes() {
@@ -124,7 +150,7 @@ class OverheadWoodlandBoardArtTest {
         val a = OverheadScenery.plan(graph)
         val b = OverheadScenery.plan(graph)
         assertEquals(a, b)
-        assertTrue(a.size <= 49)
+        assertTrue(a.size <= 53)
         assertEquals(a.size, a.distinct().size)
         assertTrue(a.all { it.x in 0f..1f && it.y in 0f..1f })
         assertTrue(OverheadScenery.plan(emptyList()).isEmpty())
