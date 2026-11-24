@@ -198,10 +198,11 @@
       "height": 1024,
       "requiresAlpha": true,
       "purpose": "QA-only reusable overhead scenery atlas; 4x4 cells of 256px. Row 0: oak, flowers, rock, cottage. Row 1: meadow clearing, fir grove, orchard, bush. Row 2: fir, mushrooms, fence, reeds. Row 3 reserved. Decorative only; bridges remain graph-aligned.",
-      "status": "planned",
-      "origin": null,
-      "license": null,
-      "sha256": null
+      "status": "approved",
+      "origin": "Original code-authored cut-paper-style overhead illustrations, VISUAL-91, rendered offline from tools/create_environment_atlas.js. No third-party images or mockup pixels.",
+      "license": "original",
+      "sha256": "19819a342ecaf9249500406ded7d9ebcda3d101874168e8ec777846985cc8a49",
+      "reviewStatus": "qa-preview-only-not-owner-approved"
     }
   ]
 }
