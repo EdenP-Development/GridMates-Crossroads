@@ -1100,13 +1100,13 @@ private fun CrossroadsApp(
                             }
                             HorizontalDivider()
                             if (BuildConfig.DEBUG) {
-                                if (DecisionLab.baseId(board.id) == "woodland_woven_trail_v02" &&
+                                if (CourseOverheadStyle.forBoard(board.id) != null &&
                                     boardLook == CrossroadsBoardLook.ILLUSTRATED) {
                                 DropdownMenuItem(
                                     text = {
                                         Text(if (topDownBoardPreview)
-                                            "Woven board art: Overhead (QA)"
-                                        else "Woven board art: Storybook (QA)")
+                                            "${if (CourseOverheadStyle.forBoard(board.id) == CourseOverheadStyle.WOVEN) "Woven" else "Course"} board art: Overhead (QA)"
+                                        else "${if (CourseOverheadStyle.forBoard(board.id) == CourseOverheadStyle.WOVEN) "Woven" else "Course"} board art: Storybook (QA)")
                                     },
                                     onClick = {
                                         topDownBoardPreview = !topDownBoardPreview
@@ -1980,15 +1980,21 @@ private fun BoardCanvas(
     )
     // Pure, fixed overhead scenery positions are remembered per authored
     // graph; no per-frame random generation or fake game path data.
-    val overheadDecor = remember(board, useOverheadArtwork) {
-        if (useOverheadArtwork) OverheadScenery.plan(board.nodes) else emptyList()
+    val courseOverheadStyle = CourseOverheadStyle.forBoard(board.id)
+    val wovenOverhead = useOverheadArtwork && courseOverheadStyle == CourseOverheadStyle.WOVEN
+    val siblingAccents = remember(board, courseOverheadStyle, useOverheadArtwork) {
+        if (useOverheadArtwork && courseOverheadStyle != null)
+            CourseOverheadScenery.plan(courseOverheadStyle, board.nodes) else emptyList()
     }
-    val environmentAccents = remember(board, overheadDecor, useOverheadArtwork) {
-        if (useOverheadArtwork) WovenEnvironmentAccents.plan(board.nodes, overheadDecor)
+    val overheadDecor = remember(board, wovenOverhead) {
+        if (wovenOverhead) OverheadScenery.plan(board.nodes) else emptyList()
+    }
+    val environmentAccents = remember(board, overheadDecor, wovenOverhead) {
+        if (wovenOverhead) WovenEnvironmentAccents.plan(board.nodes, overheadDecor)
         else emptyList()
     }
-    val overheadBridges = remember(board, useOverheadArtwork) {
-        if (useOverheadArtwork) OverheadScenery.bridges(board.nodes) else emptyList()
+    val overheadBridges = remember(board, wovenOverhead) {
+        if (wovenOverhead) OverheadScenery.bridges(board.nodes) else emptyList()
     }
     // The live world magnifies interactive art; the full-map inspector keeps
     // its previous compact geometry for legibility and path overview.
@@ -2324,7 +2330,11 @@ private fun BoardCanvas(
             // Artwork is strictly below all navigable routes, nodes, pieces and
             // hit targets. A missing art slot preserves the tested ART-08 drawing.
             // Both use the same normalized board frame and camera transform.
-            if (useOverheadArtwork) {
+            if (useOverheadArtwork && !wovenOverhead && courseOverheadStyle != null &&
+                environmentAtlas != null && EnvironmentAtlas.validDimensions(environmentAtlas.width, environmentAtlas.height)) {
+                drawSiblingCourseOverhead(courseOverheadStyle, siblingAccents, environmentAtlas,
+                    left, top, drawWidth, drawHeight)
+            } else if (wovenOverhead) {
                 // Same graph, different VIEWPOINT: overhead trees, rock,
                 // rooftops and clearings rather than a landscape horizon.
                 drawOverheadWoodlandPrint(
