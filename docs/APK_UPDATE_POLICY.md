@@ -1,3 +1,5 @@
+> **Current standards (November 24, 2026):** [Eden Development Standards](https://github.com/PlayerEden/Eden-Development-Standards) adopted. Read [Crossroads signing, recovery and release audit](EDEN_STANDARDS_ADOPTION.md) first for QA1700 identity and pending custody/upgrade gates. Existing packages/signers unchanged; no production signing or public release authorized. Historical status below is retained.
+
 # Crossroads APK Update & Delivery Policy — Proposed
 **Status (November 22, 2026):** proposed long-term policy, with a now **verified signed QA1607→QA1613 install-over on an Android 15 emulator**, including an actual one-roll, replay-backed offline checkpoint, preserved completed/win counters and successful launch under the new APK. See [QA-79 exact-head evidence](QA_79_REAL_APK_INSTALL_OVER_RECOVERY.md). Earlier QA1008→1009 and QA1051→1057 update tests are historical. **Owner-phone upgrade, two-phone LAN, production/private signing, public-store disclosure and QA→production transfer remain unverified.**
 **Evidence:** [Sibling repository audit](GRIDMATES_SIBLING_REPO_APK_AUDIT_2026-11-16.md) and official Android/GitHub docs therein.
