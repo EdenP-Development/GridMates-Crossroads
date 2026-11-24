@@ -9,6 +9,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -126,6 +128,45 @@ private fun HomeSectionHeading(label: String) {
             drawLine(Color(0xFFBBA371), Offset(0f,y), Offset(size.width,y), 1.dp.toPx())
             val r = 3.dp.toPx()
             drawCircle(Color(0xFFBBA371),r,Offset(size.width-r,y))
+        }
+    }
+}
+
+/** Course artwork is a decorative preview, not a second navigable board. */
+@Composable
+private fun HomeCourseCard(id: String, label: String, selected: Boolean,
+    onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val art = rememberOptionalCrossroadsArt(CrossroadsArtCatalog.backplate(id))
+    Surface(
+        onClick = onClick,
+        modifier = modifier.semantics {
+            this.selected = selected
+            contentDescription = CrossroadsCourse.title(id) + ", " + label
+        },
+        shape = MaterialTheme.shapes.medium,
+        color = if (selected) Color(0xFF3D624A) else Color(0xFFECE2CA),
+        border = androidx.compose.foundation.BorderStroke(
+            if (selected) 2.dp else 1.dp,
+            if (selected) Color(0xFFE8CE94) else Color(0xFFAA9672)),
+        shadowElevation = if (selected) 3.dp else 1.dp
+    ) {
+        Column(Modifier.padding(4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(Modifier.fillMaxWidth().height(48.dp)
+                .clip(MaterialTheme.shapes.small)) {
+                if (art != null) {
+                    Image(art, contentDescription = null, modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop)
+                } else {
+                    Canvas(Modifier.fillMaxSize()) {
+                        drawWoodlandBoardArt(id, 0f, 0f, size.width, size.height)
+                    }
+                }
+            }
+            Text(label, modifier = Modifier.padding(vertical = 5.dp),
+                color = if (selected) Color(0xFFFFF5DA) else Ink,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                textAlign = TextAlign.Center)
         }
     }
 }
@@ -271,8 +312,8 @@ internal fun CrossroadsHomeScreen(
                 CrossroadsCourse.CLASSIC_ID to "Classic",
                 CrossroadsCourse.LONG_ID to "Long"
             ).forEach { (id, label) ->
-                TabletopChoicePill(
-                    text = label,
+                HomeCourseCard(
+                    id = id, label = label,
                     selected = selectedCourseId == id,
                     onClick = { onCourseChange(id) },
                     modifier = Modifier.weight(1f)
