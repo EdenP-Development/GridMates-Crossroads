@@ -15,16 +15,39 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /** Only explicitly promoted runtime art is loaded; source library is not bundled. */
+internal enum class TabletopArtFamily(val stem: String) {
+    PRIMARY("primary"), SECONDARY("secondary")
+}
+
 internal object TabletopButtonArt {
     fun filename(enabled: Boolean, pressed: Boolean): String =
-        if (!enabled) "primary_disabled.png" else if (pressed) "primary_pressed.png"
-        else "primary_normal.png"
+        filename(TabletopArtFamily.PRIMARY, enabled, pressed, false)
+
+    fun filename(family: TabletopArtFamily, enabled: Boolean, pressed: Boolean, selected: Boolean): String {
+        val state = when {
+            !enabled -> "disabled"
+            pressed -> "pressed"
+            selected -> "highlight"
+            else -> "normal"
+        }
+        return "${family.stem}_$state.png"
+    }
 }
 
 @Composable
 internal fun BoxScope.OptionalPrimaryButtonArt(enabled: Boolean, pressed: Boolean) {
+    OptionalTabletopButtonArt(TabletopArtFamily.PRIMARY, enabled, pressed)
+}
+
+@Composable
+internal fun BoxScope.OptionalTabletopButtonArt(
+    family: TabletopArtFamily,
+    enabled: Boolean = true,
+    pressed: Boolean = false,
+    selected: Boolean = false
+) {
     val context = LocalContext.current.applicationContext
-    val filename = TabletopButtonArt.filename(enabled, pressed)
+    val filename = TabletopButtonArt.filename(family, enabled, pressed, selected)
     // Key the produced value as well as the effect to avoid showing a stale state.
     val image = androidx.compose.runtime.key(context, filename) {
         val bitmap by produceState<ImageBitmap?>(null, context, filename) {
