@@ -2144,9 +2144,14 @@ private fun BoardCanvas(
     )
     val autoZoom by animateFloatAsState(
         targetValue = when (cameraMode) {
-            BoardCameraMode.FOLLOW -> forkPreview?.zoom ?: CrossroadsCameraPreset.followZoom(
-                state.phase, state.turn, animateTokens
-            )
+            BoardCameraMode.FOLLOW -> {
+                val preset = forkPreview?.zoom ?: CrossroadsCameraPreset.followZoom(
+                    state.phase, state.turn, animateTokens
+                )
+                if (immersiveWorld) CrossroadsCameraPreset.portraitContextZoom(
+                    preset, viewportWidth, viewportHeight
+                ) else preset
+            }
             BoardCameraMode.MANUAL -> manualZoom
         },
         animationSpec = tween(durationMillis = 330),
