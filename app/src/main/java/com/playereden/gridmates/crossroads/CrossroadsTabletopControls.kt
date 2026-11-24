@@ -175,6 +175,42 @@ internal fun TabletopPrimaryActionButton(
     }
 }
 
+/** Compact, tactile secondary action with the same brass and parchment vocabulary. */
+@Composable
+internal fun TabletopUtilityButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    dark: Boolean = false
+) {
+    val interactions = remember { MutableInteractionSource() }
+    val pressed by interactions.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = CrossroadsTabletopFeedback.scale(pressed),
+        animationSpec = tween(95),
+        label = "tabletop-utility-contact"
+    )
+    Surface(
+        onClick = onClick,
+        interactionSource = interactions,
+        modifier = modifier.heightIn(min = 48.dp)
+            .graphicsLayer { scaleX = scale; scaleY = scale },
+        shape = RoundedCornerShape(11.dp),
+        color = if (dark) Color(0xFF385945) else TabletopMaterials.paper,
+        contentColor = if (dark) Color(0xFFFFF3D6) else Color(0xFF385945),
+        border = BorderStroke(1.dp, if (dark) TabletopMaterials.brass else Color(0xFFAA9672)),
+        shadowElevation = 1.dp
+    ) {
+        Box(
+            modifier = Modifier.padding(horizontal = 9.dp, vertical = 8.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text, style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
+        }
+    }
+}
+
 @Composable
 internal fun TabletopStartRaceButton(
     onClick: () -> Unit,
