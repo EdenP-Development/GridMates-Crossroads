@@ -1,3 +1,9 @@
+# Beta 1 integration — current checkpoint
+
+See [Beta 1 integration](BETA_1_INTEGRATION.md) for active source, QA1680 evidence, pending candidate checks and physical-device gates. The previous RC1 status below is historical, not the latest APK.
+
+---
+
 # Current development status — November 22, 2026
 
 **Verified signed Android baseline:** **QA1613 / SAVE-78**, [Android build 45027345072](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/45027345072) plus [JVM rules/recovery suite 45027345005](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/45027345005). All passed. The [144-match cross-version recovery report](SAVE_78_CROSS_VERSION_RECOVERY_STRESS_QA.md) covered six immutable rule versions across Quick, Classic and Long. No original rules, match format or signing identity was changed.
