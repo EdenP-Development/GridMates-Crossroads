@@ -1,0 +1,79 @@
+name: Crossroads signed beta candidate
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/edenp-beta-signing]
+    paths: ['.github/workflows/crossroads-beta-apk.yml']
+permissions:
+  contents: read
+jobs:
+  beta:
+    if: github.repository == 'EdenP-Development/GridMates-Crossroads' && github.ref == 'refs/heads/feature/edenp-beta-signing'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Build unsigned candidate and validate source
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_RUN_ATTEMPT" == 1 ]]
+          code=$((2000 + GITHUB_RUN_NUMBER))
+          echo "BETA_CODE=$code" >> "$GITHUB_ENV"
+          sdkmanager_bin="$(command -v sdkmanager || true)"
+          if [[ -z "$sdkmanager_bin" && -n "${ANDROID_HOME:-}" ]]; then
+            sdkmanager_bin="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager -print -quit || true)"
+          fi
+          [[ -n "$sdkmanager_bin" ]] || { echo "Android SDK cmdline tools unavailable"; exit 1; }
+          "$sdkmanager_bin" 'platforms;android-35' 'build-tools;35.0.0'
+          python3 scripts/check_release_surface.py
+          python3 tools/check_crossroads_art_pack.py
+          gradle --no-daemon :core:test :app:testDebugUnitTest :app:lintRelease :app:assembleRelease "-PcrossroadsQaVersionCode=$code" --console=plain
+      - name: Sign and verify candidate
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.GRIDMATES_CROSSROADS_BETA_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.GRIDMATES_CROSSROADS_BETA_KEYSTORE_PASSWORD }}
+          EXPECTED_CERT_SHA256: e13d5b336c01a7ca4f29e83072ac304adc3a4233cf484b43268a88aec3f28914
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ -n "$KEYSTORE_BASE64" && -n "$KEYSTORE_PASSWORD" ]]
+          private_dir=$(mktemp -d)
+          trap 'rm -rf "$private_dir"' EXIT
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$private_dir/key.p12"
+          keytool -exportcert -alias crossroadsBeta -storetype PKCS12 -storepass:env KEYSTORE_PASSWORD -keystore "$private_dir/key.p12" -file "$private_dir/cert.der"
+          [[ "$(sha256sum "$private_dir/cert.der" | awk '{print $1}')" == "$EXPECTED_CERT_SHA256" ]]
+          tools="$ANDROID_HOME/build-tools/35.0.0"
+          unsigned=app/build/outputs/apk/release/app-release-unsigned.apk
+          test -s "$unsigned"
+          "$tools/zipalign" -f -p 4 "$unsigned" "$private_dir/aligned.apk"
+          mkdir -p beta-output
+          apk="beta-output/GridMates-Crossroads-Beta-$BETA_CODE.apk"
+          "$tools/apksigner" sign --ks "$private_dir/key.p12" --ks-type PKCS12 --ks-key-alias crossroadsBeta --ks-pass env:KEYSTORE_PASSWORD --key-pass env:KEYSTORE_PASSWORD --out "$apk" "$private_dir/aligned.apk"
+          "$tools/apksigner" verify --verbose --print-certs "$apk" | tee "$private_dir/verified.txt"
+          grep -Fx "Signer #1 certificate SHA-256 digest: $EXPECTED_CERT_SHA256" "$private_dir/verified.txt"
+          "$tools/aapt" dump badging "$apk" | tee "$private_dir/badging.txt"
+          grep -F "package: name='com.playereden.gridmates.crossroads' versionCode='$BETA_CODE' versionName='0.1.0'" "$private_dir/badging.txt"
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          p=next(pathlib.Path("beta-output").glob("*.apk"))
+          digest=hashlib.sha256(p.read_bytes()).hexdigest()
+          p.with_suffix(".apk.sha256").write_text(digest+"  "+p.name+"\n")
+          pathlib.Path("beta-output/receipt.json").write_text(json.dumps(dict(channel="itch-beta-candidate",application_id="com.playereden.gridmates.crossroads",version_code=int(os.environ["BETA_CODE"]),version_name="0.1.0",signer_cert_sha256=os.environ["EXPECTED_CERT_SHA256"],apk_sha256=digest,source_commit=os.environ["GITHUB_SHA"],owner_accepted=False,install_over_tested=False),indent=2)+"\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-private-beta-candidate-${{ env.BETA_CODE }}
+          path: beta-output/
+          retention-days: 14
+          if-no-files-found: error

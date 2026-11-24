@@ -1,0 +1,42 @@
+name: Crossroads private beta signing preflight
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/edenp-beta-signing]
+    paths: ['.github/workflows/crossroads-beta-signing-preflight.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    if: github.repository == 'EdenP-Development/GridMates-Crossroads' && github.ref == 'refs/heads/feature/edenp-beta-signing'
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Verify pinned certificate and actual private-key signing
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.GRIDMATES_CROSSROADS_BETA_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.GRIDMATES_CROSSROADS_BETA_KEYSTORE_PASSWORD }}
+          EXPECTED_CERT_SHA256: e13d5b336c01a7ca4f29e83072ac304adc3a4233cf484b43268a88aec3f28914
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ -n "$KEYSTORE_BASE64" && -n "$KEYSTORE_PASSWORD" ]] || { echo "Required organization secrets unavailable"; exit 1; }
+          private_dir=$(mktemp -d)
+          trap 'rm -rf "$private_dir"' EXIT
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$private_dir/original.p12"
+          keytool -exportcert -alias crossroadsBeta -storetype PKCS12 -storepass:env KEYSTORE_PASSWORD -keystore "$private_dir/original.p12" -file "$private_dir/cert.der"
+          actual=$(sha256sum "$private_dir/cert.der" | awk '{print $1}')
+          [[ "$actual" == "$EXPECTED_CERT_SHA256" ]] || { echo "Certificate mismatch"; exit 1; }
+          printf 'Crossroads private signing verification\n' > "$private_dir/probe.txt"
+          (cd "$private_dir"; jar cf probe.jar probe.txt)
+          jarsigner -keystore "$private_dir/original.p12" -storetype PKCS12 -storepass:env KEYSTORE_PASSWORD -keypass:env KEYSTORE_PASSWORD "$private_dir/probe.jar" crossroadsBeta
+          jarsigner -verify "$private_dir/probe.jar" | tee "$private_dir/verify.txt"
+          grep -Fx 'jar verified.' "$private_dir/verify.txt"
+          echo "Pinned certificate and private-key signature verified. No APK published." >> "$GITHUB_STEP_SUMMARY"
+
+# Owner reports restricted organization secrets configured; fresh verification requested.
