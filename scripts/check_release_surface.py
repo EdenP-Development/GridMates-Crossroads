@@ -58,7 +58,12 @@ for p in (icon, vector, colors):
 home = (root / "app/src/main/java/com/playereden/gridmates/crossroads/CrossroadsHome.kt").read_text()
 lobby = (root / "app/src/main/java/com/playereden/gridmates/crossroads/CrossroadsLanLobby.kt").read_text()
 activity = (root / "app/src/main/java/com/playereden/gridmates/crossroads/MainActivity.kt").read_text()
-require('Text("About & data")' in home,
+# The entrypoint may use the shared tabletop control instead of a bare Text.
+require(('Text("About & data")' in home or
+         'text = "About & data", onClick = { showAbout = true }' in home)
+        and 'if (showAbout)' in home
+        and 'SAVING YOUR PROGRESS' in home
+        and 'The current nearby connection is not encrypted' in home,
         "Home must disclose local saves and nearby play")
 require('if (BuildConfig.DEBUG)' in home and 'if (BuildConfig.DEBUG)' in lobby,
         "QA screen footers must be debug-only")
