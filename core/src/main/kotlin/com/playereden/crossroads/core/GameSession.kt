@@ -718,10 +718,7 @@ class GameSession(
         pushedThisTurn = false
     }
 
-    private fun distanceToFinish(id: String, seen: Set<String> = emptySet()): Int {
-        if (id == board.finish) return 0
-        if (id in seen) return 100_000 // Guard against an invalid cycle.
-        val next = board.node(id).next
-        return if (next.isEmpty()) 100_000 else 1 + next.minOf { distanceToFinish(it, seen + id) }
-    }
+    private val botDistances by lazy { BotRouteDistances(board) }
+
+    private fun distanceToFinish(id: String): Int = botDistances.distance(id)
 }
