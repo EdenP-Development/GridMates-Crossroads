@@ -1,3 +1,7 @@
+# Current signing checkpoint
+
+Organization secrets and pinned private-key preflight passed [run 45486186420](https://github.com/EdenP-Development/GridMates-Crossroads/actions/runs/45486186420). First actual APK build [run 45486977715](https://github.com/EdenP-Development/GridMates-Crossroads/actions/runs/45486977715) failed before signing: sdkmanager not on PATH (exit 127). Corrected SDK discovery using existing QA workflow procedure; fresh build pending. No credential changes, no verified beta APK yet. Existing QA remains unchanged. Owner backup custody unverified.
+
 # First private itch.io beta identity — 2026-11-24
 
 Owner confirmed no prior public Crossroads distribution. Existing internal QA identity unchanged. Reserved beta package com.playereden.gridmates.crossroads. First private beta PKCS12 key generated locally, RSA 3072, SHA256withRSA, 10958-day validity. Local signing probe passed and base64 round trip verified. Public certificate SHA256: e13d5b336c01a7ca4f29e83072ac304adc3a4233cf484b43268a88aec3f28914. Alias crossroadsBeta (non-secret).
