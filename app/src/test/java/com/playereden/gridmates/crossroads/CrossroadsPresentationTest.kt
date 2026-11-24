@@ -64,6 +64,47 @@ class CrossroadsPresentationTest {
             1f, CrossroadsCameraPreset.followZoom(Phase.ROLL, 8, false), .0001f)
     }
 
+    @Test fun adaptiveForkPreviewKeepsCompactForksCloseAndWidensSpreadOutForks() {
+        val source = androidx.compose.ui.geometry.Offset(.5f, .5f)
+        val compact = listOf(
+            androidx.compose.ui.geometry.Offset(.52f, .48f),
+            androidx.compose.ui.geometry.Offset(.48f, .52f)
+        )
+        val broad = listOf(
+            androidx.compose.ui.geometry.Offset(.25f, .5f),
+            androidx.compose.ui.geometry.Offset(.75f, .5f),
+            androidx.compose.ui.geometry.Offset(.5f, .7f)
+        )
+        val frame = BoardSceneFrame(-280f, -80f, 960f, 960f)
+        val tight = CrossroadsCameraPreset.forkPreview(source, compact, frame, 400f, 800f)
+        val wide = CrossroadsCameraPreset.forkPreview(source, broad, frame, 400f, 800f)
+        assertEquals(2.16f, tight.zoom, .0001f)
+        assertTrue(wide.zoom < tight.zoom)
+        assertTrue(wide.zoom >= 1.65f)
+        assertEquals(.5f, wide.focus.x, .0001f)
+        assertEquals(.56f, wide.focus.y, .0001f)
+        assertTrue(CrossroadsCameraPreset.FORK_PREVIEW_HEIGHT < .40f)
+    }
+
+    @Test fun adaptiveForkPreviewRespondsToAspectRatioAndMissingViewport() {
+        val source = androidx.compose.ui.geometry.Offset(.5f, .5f)
+        val exits = listOf(
+            androidx.compose.ui.geometry.Offset(.38f, .5f),
+            androidx.compose.ui.geometry.Offset(.62f, .5f)
+        )
+        val frame = BoardSceneFrame(0f, 0f, 960f, 960f)
+        val narrow = CrossroadsCameraPreset.forkPreview(source, exits, frame, 300f, 800f)
+        val wide = CrossroadsCameraPreset.forkPreview(source, exits, frame, 600f, 800f)
+        assertTrue(narrow.zoom < wide.zoom)
+        assertEquals(2.16f, wide.zoom, .0001f)
+        val fallback = CrossroadsCameraPreset.forkPreview(source, exits, frame, 0f, 800f)
+        assertEquals(2.16f, fallback.zoom, .0001f)
+        assertEquals(CrossroadsCameraPreset.forkAnchor(source, exits, true), fallback.focus)
+        assertEquals(source, CrossroadsCameraPreset.forkPreview(
+            source, emptyList(), frame, 400f, 800f
+        ).focus)
+    }
+
     @Test fun routeDecisionKeepsJunctionVisibleAboveChoiceSheet() {
         val focus = CrossroadsCameraPreset.focusHeightFraction(Phase.ROUTE, true)
         val regular = CrossroadsCameraPreset.focusHeightFraction(Phase.ROLL, true)

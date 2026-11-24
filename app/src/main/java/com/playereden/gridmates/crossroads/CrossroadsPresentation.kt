@@ -78,6 +78,42 @@ internal object CrossroadsCameraPreset {
         }
     }
 
+    /**
+     * Frame the hub and the opening 60% of each authentic exit. The close
+     * travel camera is intentionally unchanged. At a broad fork the player
+     * gets more context instead of a large close-up of a single road.
+     * The lower zoom bound preserves the illustrated pawn treatment.
+     */
+    data class ForkPreview(val focus: Offset, val zoom: Float)
+
+    fun forkPreview(
+        source: Offset,
+        exits: List<Offset>,
+        frame: BoardSceneFrame,
+        viewportWidth: Float,
+        viewportHeight: Float
+    ): ForkPreview {
+        val preset = followZoom(Phase.ROUTE, 1, true)
+        if (exits.isEmpty() || viewportWidth <= 0f || viewportHeight <= 0f ||
+            frame.width <= 0f || frame.height <= 0f) {
+            return ForkPreview(forkAnchor(source, exits, true), preset)
+        }
+        val points = exits.map { source + (it - source) * .60f } + source
+        val minX = points.minOf { it.x }
+        val maxX = points.maxOf { it.x }
+        val minY = points.minOf { it.y }
+        val maxY = points.maxOf { it.y }
+        val focus = Offset((minX + maxX) * .5f, (minY + maxY) * .5f)
+        val spanX = (maxX - minX) * frame.width
+        val spanY = (maxY - minY) * frame.height
+        val fitX = if (spanX > 0f) viewportWidth * .78f / spanX else preset
+        val fitY = if (spanY > 0f) viewportHeight * .32f / spanY else preset
+        return ForkPreview(focus, minOf(preset, fitX, fitY).coerceAtLeast(1.65f))
+    }
+
+    // Centre of the decision's visible area between HUD and route dock.
+    const val FORK_PREVIEW_HEIGHT = .36f
+
     /** Keep the piece above the context dock, not at the viewport's covered midpoint. */
     fun focusHeightFraction(phase: Phase, immersive: Boolean): Float =
         if (!immersive) 0.50f else when (phase) {
