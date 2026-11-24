@@ -157,3 +157,17 @@ jobs:
             core/build/reports/save-78/cross_version_recovery_samples.csv
           if-no-files-found: warn
           retention-days: 30
+
+      - name: Upload Beta pacing baseline
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-BETA-PACING-${{ github.sha }}
+          path: |
+            core/build/reports/beta-pacing/baseline.csv
+            core/build/reports/beta-pacing/summary.txt
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Display Beta pacing summary
+        if: success()
+        run: cat core/build/reports/beta-pacing/summary.txt
