@@ -1,3 +1,11 @@
+# Current visual checkpoint — QA1709
+
+Board navigation and shared panel PRs 118–119 passed Android QA; six commits fast-forwarded to integration/beta-1-polish, zero divergence. QA1709 [run](https://github.com/EdenP-Development/GridMates-Crossroads/actions/runs/45494047473), [artifact](https://github.com/EdenP-Development/GridMates-Crossroads/actions/runs/45494047473/artifacts/14967623369). Original launcher icon retained per owner. Private beta 2002 remains owner playtest baseline.
+
+Exact artwork archives recovered and SHA256 verified in local session: environment ZIP c14294767e47a1489baa4f4415bd18232310ed1c9295a9fbdcc13d7112e3c1cb; UI ZIP 80e8030c5520dde93eeb4a45eb56137b407a57a2c83d65fc0a944df0ff437085. Local container cannot resolve GitHub and GitHub connector only accepts literal binary base64, not file path. Transfer not yet completed. Use trusted checkout or owner upload of exact archives on dedicated art branch, then existing importers and runtime promotion; do not commit signing credentials. Artwork not yet rendered in APK. No main merge or public release.
+
+---
+
 # Active checkpoint — private beta transition (2026-11-24)
 
 Owner reports successful installation/import of private beta candidate 2002 (0.1.0), package com.playereden.gridmates.crossroads, signer e13d5b336c01a7ca4f29e83072ac304adc3a4233cf484b43268a88aec3f28914. [Verified signed candidate](https://github.com/EdenP-Development/GridMates-Crossroads/actions/runs/45488059431/artifacts/14964897190); source 86120c37c1f175349b4ead4529e944e111b4347e. Owner report is physical import evidence, not a byte-level comparison or subsequent install-over test. Private beta is now preferred owner playtest channel; preserve exact package/signer and increasing version codes. QA remains independent for engineering. No public release or deletion of old installation inferred. Private backup custody unverified. [Signing PR117](https://github.com/EdenP-Development/GridMates-Crossroads/pull/117) remains separate; consolidate only verified changes and retain trusted signing branch restrictions. Next: board navigation, panels and exact artwork transfer, then course depth. Main untouched.
