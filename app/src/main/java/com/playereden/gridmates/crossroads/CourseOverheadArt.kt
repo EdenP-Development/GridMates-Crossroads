@@ -86,7 +86,8 @@ internal object CourseOverheadScenery {
 /** Course-specific printed terrain with shared atlas. No artificial paths or bridge claims. */
 internal fun DrawScope.drawSiblingCourseOverhead(
     style: CourseOverheadStyle, accents: List<EnvironmentAccent>,
-    atlas: ImageBitmap, left: Float, top: Float, width: Float, height: Float
+    atlas: ImageBitmap, left: Float, top: Float, width: Float, height: Float,
+    groundcover: List<GroundcoverPatch> = emptyList()
 ) {
     if (width <= 0f || height <= 0f) return
     val unit = min(width,height)
@@ -111,6 +112,7 @@ internal fun DrawScope.drawSiblingCourseOverhead(
             val center=at(f.x,f.y)
             drawCircle(tint,radius=f.size*unit*.42f,center=center)
         }
+        drawWoodlandGroundcover(groundcover, left, top, width, height)
         accents.forEach { a -> tryDrawEnvironmentSprite(atlas,a.sprite,at(a.x,a.y),unit) }
     }
 }
