@@ -1959,6 +1959,9 @@ private fun BoardCanvas(
         if (boardLook == CrossroadsBoardLook.ILLUSTRATED && !useOverheadArtwork)
             CrossroadsArtCatalog.backplate(board.id) else null
     )
+    val environmentAtlas = rememberOptionalCrossroadsArt(
+        if (useOverheadArtwork) CrossroadsArtSlot.ENVIRONMENT_ATLAS else null
+    )
     val trailAtlas = rememberOptionalCrossroadsArt(
         if (BuildConfig.DEBUG && boardLook == CrossroadsBoardLook.ILLUSTRATED)
             CrossroadsArtSlot.TRAIL_ATLAS else null
@@ -2336,7 +2339,8 @@ private fun BoardCanvas(
                     nodes = board.nodes,
                     features = overheadDecor,
                     bridges = overheadBridges,
-                    left = left, top = top, width = drawWidth, height = drawHeight
+                    left = left, top = top, width = drawWidth, height = drawHeight,
+                    environmentAtlas = environmentAtlas
                 )
             } else if (boardBackdrop == null) {
                 drawWoodlandBoardArt(

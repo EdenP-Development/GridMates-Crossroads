@@ -37,7 +37,8 @@ internal enum class CrossroadsArtSlot(val filename: String) {
     TOKEN_SEAT_4("token_seat_4.png"),
     TRAIL_ATLAS("trail_atlas_v1.png"),
     TOKEN_ATLAS("token_atlas_v1.png"),
-    MARKER_ATLAS("marker_atlas_v1.png");
+    MARKER_ATLAS("marker_atlas_v1.png"),
+    ENVIRONMENT_ATLAS("environment_atlas_v1.png");
 
     val packagedPath: String get() = "art/v1/$filename"
 }

@@ -3,6 +3,7 @@ package com.playereden.gridmates.crossroads
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -206,7 +207,8 @@ internal fun DrawScope.drawOverheadWoodlandPrint(
     left: Float,
     top: Float,
     width: Float,
-    height: Float
+    height: Float,
+    environmentAtlas: ImageBitmap? = null
 ) {
     if (width <= 0f || height <= 0f) return
     fun at(x: Float, y: Float) = Offset(left + width * x, top + height * y)
@@ -293,6 +295,10 @@ internal fun DrawScope.drawOverheadWoodlandPrint(
 
     features.forEach { feature ->
         val c = at(feature.x, feature.y)
+        if (tryDrawEnvironmentSprite(environmentAtlas,
+                EnvironmentAtlas.spriteFor(feature.kind), c, min(width, height))) {
+            return@forEach
+        }
         when (feature.kind) {
             OverheadDecoration.TREE -> {
                 // Larger layered canopy shapes carry the visual detail at
