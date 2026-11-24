@@ -111,6 +111,21 @@ internal object CrossroadsCameraPreset {
         return ForkPreview(focus, minOf(preset, fitX, fitY).coerceAtLeast(1.65f))
     }
 
+    /**
+     * On narrow portrait screens the old cinematic preset crops almost all
+     * adjacent scenery. Keep its close detail on wider displays, but cap
+     * normal follow zoom using the actual viewport aspect ratio.
+     * Manual zoom and the Full Map are independent.
+     */
+    fun portraitContextZoom(preset: Float, width: Float, height: Float): Float {
+        if (preset <= 1f || !width.isFinite() || !height.isFinite() ||
+            width <= 0f || height <= 0f) return preset
+        val aspect = width / height
+        val blend = ((aspect - .44f) / .26f).coerceIn(0f, 1f)
+        val cap = 1.88f + (preset - 1.88f).coerceAtLeast(0f) * blend
+        return minOf(preset, cap)
+    }
+
     // Centre of the decision's visible area between HUD and route dock.
     const val FORK_PREVIEW_HEIGHT = .36f
 
