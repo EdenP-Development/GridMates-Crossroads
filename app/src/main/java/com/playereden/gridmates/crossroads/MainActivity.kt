@@ -1520,6 +1520,9 @@ private fun CrossroadsApp(
             !routeDialogDismissed && !inspectBoard && !confirmExit && !showGuide) {
             val junction = board.forkAt(state.players[state.playerIndex].position)
             val routeChoiceScroll = rememberScrollState()
+            val routeDistances = remember(board, state.players[state.playerIndex].position) {
+                RouteDecisionClarity.compare(board, state.players[state.playerIndex].position)
+            }
             // Keep all legal route details readable, without a platform dialog.
             // Only the choice list scrolls on short phones;
             // the title and Inspect full map action stay accessible.
@@ -1599,7 +1602,8 @@ private fun CrossroadsApp(
                                                             game.routeEncounterAvailable
                                                         )
                                                     else (choice?.description ?: "Follow this trail"),
-                                                risk = choice?.risk
+                                                risk = choice?.risk,
+                                                distance = if (game.playtestRules) null else routeDistances[route.id]
                                             )
                                         }
                                     }
