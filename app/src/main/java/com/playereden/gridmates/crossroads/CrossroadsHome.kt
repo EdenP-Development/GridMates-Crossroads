@@ -114,6 +114,22 @@ private fun HomeTrailIllustration() {
     }
 }
 
+/** A small brass-and-ink heading, visually separating setup groups. */
+@Composable
+private fun HomeSectionHeading(label: String) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+        Text(label, style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold, color = Ink)
+        Canvas(Modifier.weight(1f).height(10.dp)) {
+            val y = size.height / 2f
+            drawLine(Color(0xFFBBA371), Offset(0f,y), Offset(size.width,y), 1.dp.toPx())
+            val r = 3.dp.toPx()
+            drawCircle(Color(0xFFBBA371),r,Offset(size.width-r,y))
+        }
+    }
+}
+
 @Composable
 internal fun CrossroadsHomeScreen(
     wins: Int,
@@ -157,11 +173,25 @@ internal fun CrossroadsHomeScreen(
 
     // A game-first home screen: art appears immediately and Start stays
     // reachable on short phones, regardless of setup scroll position.
+    val homeScroll = rememberScrollState()
     Column(Modifier.fillMaxSize().background(Paper)
         .windowInsetsPadding(WindowInsets.safeDrawing)) {
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+        Canvas(Modifier.matchParentSize()) {
+            val spacing = 13.dp.toPx()
+            val columns = (size.width / spacing).toInt()
+            val rows = (size.height / spacing).toInt()
+            for (y in 0..rows) for (x in 0..columns) {
+                val i = y * (columns+1)+x
+                val p = Offset((x+.2f+(i*13%7)*.08f)*spacing,
+                    (y+.2f+(i*17%5)*.1f)*spacing)
+                drawLine(Color(0xFF9F8860).copy(alpha=.075f),p,
+                    p+Offset(2.dp.toPx(),1.dp.toPx()),.65.dp.toPx(),StrokeCap.Round)
+            }
+        }
         Column(
-            modifier = Modifier.weight(1f)
-                .verticalScroll(rememberScrollState())
+            modifier = Modifier.fillMaxSize()
+                .verticalScroll(homeScroll)
                 .padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -193,8 +223,7 @@ internal fun CrossroadsHomeScreen(
                 )
             }
         }
-        Text("PLAY", style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold, color = Ink)
+        HomeSectionHeading("PLAY")
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -230,8 +259,7 @@ internal fun CrossroadsHomeScreen(
                 )
             }
         }
-        Text("Choose your course", style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold, color = Ink)
+        HomeSectionHeading("Choose your course")
         // Short labels keep all three race lengths on one comfortable row
         // at the owner's real-device font size; the description names the map.
         Row(
@@ -264,8 +292,7 @@ internal fun CrossroadsHomeScreen(
         )
         // The menu's next decision is Start. All secondary controls are
         // reachable but no longer make its first screen a long settings form.
-        Text("PLAY TOGETHER", style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Bold, color = Ink)
+        HomeSectionHeading("PLAY TOGETHER")
         Text("Two phones on the same Wi-Fi", style = MaterialTheme.typography.bodySmall,
             color = Muted)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -393,6 +420,23 @@ internal fun CrossroadsHomeScreen(
                 style = MaterialTheme.typography.labelSmall, color = Muted)
         }
         } // End optional setup, nearby and record information
+        }
+        // A narrow decorative scrollbar signals additional content without extra words.
+        if (homeScroll.maxValue > 0 && homeScroll.maxValue != Int.MAX_VALUE) {
+            Canvas(Modifier.align(Alignment.CenterEnd).fillMaxHeight()
+                .width(7.dp).padding(vertical = 10.dp)) {
+                val content = size.height + homeScroll.maxValue
+                val thumb = (size.height * size.height / content).coerceAtLeast(18.dp.toPx())
+                    .coerceAtMost(size.height)
+                val travel = (size.height-thumb).coerceAtLeast(0f)
+                val y = travel * homeScroll.value / homeScroll.maxValue
+                val x = size.width / 2f
+                drawLine(Color(0xFFBBA371).copy(alpha=.28f),Offset(x,0f),Offset(x,size.height),
+                    2.dp.toPx(),StrokeCap.Round)
+                drawLine(Ink.copy(alpha=.58f),Offset(x,y),Offset(x,y+thumb),
+                    3.dp.toPx(),StrokeCap.Round)
+            }
+        }
         }
         // The primary action remains visible as players browse course and
         // multiplayer settings; decorative assets never push it below the fold.
