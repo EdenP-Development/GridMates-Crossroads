@@ -129,7 +129,8 @@ internal fun DieFace(
  * Never imply an exact reward or outcome beyond the published route metadata.
  */
 @Composable
-internal fun RouteChoiceSummary(label: String, description: String, risk: String?) {
+internal fun RouteChoiceSummary(label: String, description: String, risk: String?,
+                                distance: RouteDistance? = null) {
     val name = when (risk) {
         "high" -> "High risk"
         "medium" -> "Medium risk"
@@ -172,6 +173,11 @@ internal fun RouteChoiceSummary(label: String, description: String, risk: String
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
                 )
             }
+        }
+        if (distance != null) {
+            Text(distance.label(), color = PineInk,
+                fontWeight = FontWeight.Medium,
+                style = MaterialTheme.typography.bodySmall)
         }
         Text(
             description,
