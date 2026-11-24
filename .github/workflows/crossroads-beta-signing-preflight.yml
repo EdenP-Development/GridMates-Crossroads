@@ -38,3 +38,5 @@ jobs:
           jarsigner -verify "$private_dir/probe.jar" | tee "$private_dir/verify.txt"
           grep -Fx 'jar verified.' "$private_dir/verify.txt"
           echo "Pinned certificate and private-key signature verified. No APK published." >> "$GITHUB_STEP_SUMMARY"
+
+# Owner reports restricted organization secrets configured; fresh verification requested.
