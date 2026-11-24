@@ -28,7 +28,7 @@ internal fun useOverheadBoardPreview(
     illustrated: Boolean
 ): Boolean =
     debug && requested && illustrated &&
-        DecisionLab.baseId(boardId) == "woodland_woven_trail_v02"
+        CourseOverheadStyle.forBoard(boardId) != null
 
 // First review only Woven Trail. Reusing one scenic composition for Brookside
 // and Cedarwood would incorrectly erase what makes each course distinct.
