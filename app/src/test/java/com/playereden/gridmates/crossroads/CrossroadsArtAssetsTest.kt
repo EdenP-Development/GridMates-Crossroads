@@ -8,8 +8,11 @@ import org.junit.Test
 class CrossroadsArtAssetsTest {
     @Test fun artSlotPathsAreStableLocalAndUnique() {
         val slots = CrossroadsArtSlot.entries
-        assertEquals(16, slots.size)
+        assertEquals(17, slots.size)
         assertTrue(slots.contains(CrossroadsArtSlot.ENVIRONMENT_ATLAS))
+        assertEquals("environment_atlas_v1.png", CrossroadsArtSlot.ENVIRONMENT_ATLAS.filename)
+        assertEquals("environment_atlas_v2.png", CrossroadsArtSlot.ENVIRONMENT_ATLAS_V2.filename)
+        assertTrue(slots.contains(CrossroadsArtSlot.ENVIRONMENT_ATLAS_V2))
         assertTrue("Illustrated shared trail atlas must be registered",
             slots.contains(CrossroadsArtSlot.TRAIL_ATLAS))
         assertTrue("Original woodland token atlas must be registered",
