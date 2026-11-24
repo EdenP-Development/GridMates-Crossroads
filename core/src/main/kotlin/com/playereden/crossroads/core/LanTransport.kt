@@ -62,10 +62,14 @@ class CrossroadsLanHost(
     ))
 
     private fun send(packet: LanPacket) {
-        writer.execute {
-            val current = peer ?: return@execute
+        val current = peer ?: return
+        if (!running) return
+        try { writer.execute {
+            if (!running || peer !== current || current.isClosed) return@execute
             try { LanWire.write(current.getOutputStream(), packet) }
             catch (_: Exception) { drop(current, "Connection interrupted. Rejoin to continue.") }
+        } } catch (_: java.util.concurrent.RejectedExecutionException) {
+            // Closing the room can race with a queued heartbeat or publish.
         }
     }
 
@@ -167,6 +171,10 @@ class CrossroadsLanGuest(
             }
             var failureReported = false
             try {
+                synchronized(this) {
+                    if (!running) return@execute
+                    socket = link
+                }
                 link.connect(InetSocketAddress(host, port), 5000)
                 link.soTimeout = 20000
                 link.tcpNoDelay = true
@@ -177,12 +185,14 @@ class CrossroadsLanGuest(
                 if (welcome.type != "welcome" || welcome.checkpoint == null ||
                     welcome.token.isBlank() || welcome.roomId.isBlank()
                 ) throw IOException("The host is using an incompatible room.")
-                socket = link
-                roomId = welcome.roomId
-                rejoinToken = welcome.token
-                connected = true
-                onState(welcome.checkpoint)
-                onConnection(true, null)
+                synchronized(this) {
+                    if (!running || socket !== link) return@execute
+                    roomId = welcome.roomId
+                    rejoinToken = welcome.token
+                    connected = true
+                    onState(welcome.checkpoint)
+                    if (running) onConnection(true, null)
+                }
                 var lastRevision = welcome.checkpoint.expected.revision
                 var lastMatchId = welcome.checkpoint.matchId
                 while (running && !link.isClosed) {
@@ -229,17 +239,24 @@ class CrossroadsLanGuest(
     }
 
     private fun send(frame: LanPacket) {
-        writer.execute {
-            val link = socket ?: return@execute
+        val link = socket ?: return
+        if (!running || !connected) return
+        try { writer.execute {
+            if (!running || !connected || socket !== link || link.isClosed) return@execute
             try { LanWire.write(link.getOutputStream(), frame) }
             catch (_: Exception) { runCatching { link.close() } }
+        } } catch (_: java.util.concurrent.RejectedExecutionException) {
+            // The guest was closed while a send was being scheduled.
         }
     }
 
     override fun close() {
-        running = false
-        connected = false
-        runCatching { socket?.close() }
+        val link = synchronized(this) {
+            running = false
+            connected = false
+            socket.also { socket = null }
+        }
+        runCatching { link?.close() }
         worker.shutdownNow()
         writer.shutdownNow()
     }
