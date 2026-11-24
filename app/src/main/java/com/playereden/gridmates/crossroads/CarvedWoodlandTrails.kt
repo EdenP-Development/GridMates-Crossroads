@@ -64,6 +64,38 @@ internal fun carvedRoadRiskColor(route: String): Color = when (route) {
  * highlighting and travelers. Every layer shares the existing camera
  * transform and no touch event is owned by this decoration.
  */
+/**
+ * A matte, earthy path with a single colored margin rather than parallel
+ * polished rails. The centerline is still the exact legal board edge.
+ */
+internal fun DrawScope.drawCrossroadsEarthenTrail(
+    from: Offset, to: Offset, route: String, dense: Boolean,
+    visibilityScale: Float = 1f
+) {
+    val delta = to - from
+    val length = delta.getDistance()
+    val w = carvedRoadLayout(length, dense, visibilityScale).weight
+    if (w <= 0f) return
+    val normal = Offset(-delta.y / length, delta.x / length)
+    drawLine(Color(0xFF52613B).copy(alpha = .25f), from, to,
+        strokeWidth = 25f*w, cap = StrokeCap.Round)
+    drawLine(Color(0xFF66543A), from, to,
+        strokeWidth = 19f*w, cap = StrokeCap.Round)
+    drawLine(carvedRoadRiskColor(route), from, to,
+        strokeWidth = 16f*w, cap = StrokeCap.Round)
+    drawLine(Color(0xFFC4A575), from, to,
+        strokeWidth = 11f*w, cap = StrokeCap.Round)
+    // Small broken flecks suggest packed earth, never transverse plank joints.
+    val count = (length / (13f * visibilityScale)).toInt().coerceIn(1, 36)
+    for (i in 1..count) {
+        val t = i.toFloat() / (count + 1)
+        val p = from + delta*t + normal*((i*7%5-2)*1.3f*w)
+        val tint = if (i%2==0) Color(0xFFEDCF95) else Color(0xFF92734B)
+        drawLine(tint.copy(alpha=.40f),p,p+delta/length*(2.2f*w),
+            strokeWidth=1.2f*w,cap=StrokeCap.Round)
+    }
+}
+
 internal fun DrawScope.drawCrossroadsCarvedTrail(
     from: Offset,
     to: Offset,
