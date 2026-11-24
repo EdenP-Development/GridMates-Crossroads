@@ -260,6 +260,47 @@ class LanConnectionLifecycleTest {
         }
     }
 
+    @Test fun cancellingGuestDuringHandshakeClosesPendingSocket() {
+        val listener = java.net.ServerSocket(0)
+        val receivedHello = CountDownLatch(1)
+        val peerClosed = CountDownLatch(1)
+        val callbacks = AtomicInteger(0)
+        val failure = AtomicReference<Throwable?>(null)
+        val reader = Thread {
+            try {
+                listener.accept().use { link ->
+                    link.soTimeout = 4000
+                    assertEquals("hello", LanWire.read(link.getInputStream()).type)
+                    receivedHello.countDown()
+                    // Deliberately withhold welcome while the user cancels.
+                    assertEquals(-1, link.getInputStream().read())
+                    peerClosed.countDown()
+                }
+            } catch (e: Throwable) {
+                failure.set(e)
+            }
+        }.apply { isDaemon = true; start() }
+        val guest = CrossroadsLanGuest(
+            onState = { callbacks.incrementAndGet() },
+            onConnection = { _, _ -> callbacks.incrementAndGet() }
+        )
+        try {
+            guest.connect("127.0.0.1", listener.localPort)
+            assertTrue("Guest did not send hello", receivedHello.await(4, TimeUnit.SECONDS))
+            guest.close()
+            assertTrue("Cancel did not close handshake socket", peerClosed.await(3, TimeUnit.SECONDS))
+            reader.join(1000)
+            assertNull(failure.get())
+            assertFalse(guest.connected)
+            assertEquals(0, callbacks.get())
+            assertTrue(guest.rejoinToken.isEmpty())
+        } finally {
+            guest.close()
+            listener.close()
+            reader.join(5000)
+        }
+    }
+
     @Test fun invalidRoomIdentityDisconnectsWithoutExecutingGuestTurn() {
         val game = race(393)
         advanceHostToGuest(game)
