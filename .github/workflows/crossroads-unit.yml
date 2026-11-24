@@ -166,8 +166,10 @@ jobs:
           path: |
             core/build/reports/beta-pacing/baseline.csv
             core/build/reports/beta-pacing/summary.txt
+            core/build/reports/beta-pacing/expanded-woven.csv
+            core/build/reports/beta-pacing/expanded-woven.txt
           if-no-files-found: warn
           retention-days: 30
       - name: Display Beta pacing summary
         if: success()
-        run: cat core/build/reports/beta-pacing/summary.txt
+        run: cat core/build/reports/beta-pacing/summary.txt core/build/reports/beta-pacing/expanded-woven.txt
