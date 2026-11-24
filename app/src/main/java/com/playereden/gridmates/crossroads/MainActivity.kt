@@ -1066,8 +1066,16 @@ private fun CrossroadsApp(
                         DropdownMenu(
                             expanded = showMatchOptions,
                             onDismissRequest = { showMatchOptions = false },
-                            containerColor = Cream
+                            containerColor = Cream,
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, TabletopMaterials.brass),
+                            shadowElevation = 8.dp
                         ) {
+                            Text("MATCH OPTIONS", color = Forest,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.labelMedium,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                            HorizontalDivider(color = TabletopMaterials.brass.copy(alpha = .65f))
                             DropdownMenuItem(
                                 text = {
                                     Text(if (speed == PresentationSpeed.COZY)
@@ -1223,7 +1231,7 @@ private fun CrossroadsApp(
             val dockMaxFraction = gameActionDockMaxFraction(state.phase)
             TabletopActionTray(
                 modifier = Modifier.align(Alignment.BottomCenter)
-                    .padding(horizontal = 10.dp, vertical = 9.dp)
+                    .padding(horizontal = 8.dp, vertical = 5.dp)
                     .fillMaxWidth()
                     .heightIn(
                         max = maxOf(
@@ -1234,8 +1242,8 @@ private fun CrossroadsApp(
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
                     val round = (state.turn - 1) / state.players.size + 1
                     val currentName = state.players[state.playerIndex].name
@@ -1432,7 +1440,7 @@ private fun CrossroadsApp(
                                         enabled = !rollingDie && turnReady &&
                                             (lanRole == LanRole.OFFLINE ||
                                                 (lanConnected && !lanPendingAction)),
-                                        modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp),
+                                        modifier = Modifier.fillMaxWidth(),
                                         withDie = true
                                     )
                                 }
@@ -1503,7 +1511,8 @@ private fun CrossroadsApp(
                     if (state.phase != Phase.FINISHED && (myAction || showTurnDetails)) {
                         TextButton(
                             onClick = { showTurnDetails = !showTurnDetails },
-                            modifier = Modifier.align(Alignment.End).heightIn(min = 36.dp)
+                            modifier = Modifier.align(Alignment.End),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
                         ) {
                             Text(if (showTurnDetails) "Less detail" else "Rules & last action",
                                 style = MaterialTheme.typography.labelMedium)

@@ -44,13 +44,13 @@ internal fun GameHudTurnStrip(
         shadowElevation = 2.dp
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().heightIn(min = 46.dp)
-                .padding(horizontal = 11.dp, vertical = 7.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp)
+                .padding(horizontal = 10.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(9.dp)
         ) {
             Box(
-                modifier = Modifier.width(5.dp).height(30.dp)
+                modifier = Modifier.width(5.dp).height(26.dp)
                     .background(seatColor, RoundedCornerShape(4.dp))
             )
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
