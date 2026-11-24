@@ -1066,8 +1066,16 @@ private fun CrossroadsApp(
                         DropdownMenu(
                             expanded = showMatchOptions,
                             onDismissRequest = { showMatchOptions = false },
-                            containerColor = Cream
+                            containerColor = Cream,
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, TabletopMaterials.brass),
+                            shadowElevation = 8.dp
                         ) {
+                            Text("MATCH OPTIONS", color = Forest,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.labelMedium,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                            HorizontalDivider(color = TabletopMaterials.brass.copy(alpha = .65f))
                             DropdownMenuItem(
                                 text = {
                                     Text(if (speed == PresentationSpeed.COZY)
