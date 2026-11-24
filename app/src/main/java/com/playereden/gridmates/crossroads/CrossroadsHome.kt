@@ -32,13 +32,14 @@ internal fun homeRaceSummary(
     seats: Int,
     passAndPlay: Boolean,
     tactical: Boolean,
-    fairFinish: Boolean = false
+    fairFinish: Boolean = false,
+    courseName: String? = null
 ): String {
     val summary = if (passAndPlay) "$seats people · Pass & Play · offline"
         else "Solo vs AI · $seats racers · offline"
     // Only tactical + Fair Finish activates Lab v5; a remembered v5 preference
     // by itself does not change an original-rules race.
-    return summary + when {
+    return (if (courseName.isNullOrBlank()) summary else "$courseName · $summary") + when {
         !tactical -> ""
         fairFinish -> " · Tactical + Fair Finish ON"
         else -> " · Tactical rules ON"
@@ -156,12 +157,12 @@ internal fun CrossroadsHomeScreen(
 
     // A game-first home screen: art appears immediately and Start stays
     // reachable on short phones, regardless of setup scroll position.
-    Box(Modifier.fillMaxSize().background(Paper)) {
+    Column(Modifier.fillMaxSize().background(Paper)
+        .windowInsetsPadding(WindowInsets.safeDrawing)) {
         Column(
-            modifier = Modifier.fillMaxSize()
-                .windowInsetsPadding(WindowInsets.safeDrawing)
+            modifier = Modifier.weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 126.dp),
+                .padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
         Text("GRIDMATES · BOARD GAMES",
@@ -263,12 +264,23 @@ internal fun CrossroadsHomeScreen(
         )
         // The menu's next decision is Start. All secondary controls are
         // reachable but no longer make its first screen a long settings form.
-        OutlinedButton(
-            onClick = { showExtraOptions = !showExtraOptions },
-            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
-        ) {
-            Text(homeOptionsToggleLabel(showExtraOptions))
+        Text("PLAY TOGETHER", style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold, color = Ink)
+        Text("Two phones on the same Wi-Fi", style = MaterialTheme.typography.bodySmall,
+            color = Muted)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TabletopUtilityButton("Host nearby", onNearbyHost, Modifier.weight(1f))
+            TabletopUtilityButton("Join nearby", onNearbyJoin, Modifier.weight(1f))
         }
+        TabletopUtilityButton(
+            text = "How to play", onClick = { showGuide = true },
+            modifier = Modifier.fillMaxWidth()
+        )
+        TabletopUtilityButton(
+            text = homeOptionsToggleLabel(showExtraOptions),
+            onClick = { showExtraOptions = !showExtraOptions },
+            modifier = Modifier.fillMaxWidth()
+        )
         if (showExtraOptions) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -348,26 +360,10 @@ internal fun CrossroadsHomeScreen(
                 color = Muted
             )
         }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            OutlinedButton(
-                onClick = onNearbyHost,
-                modifier = Modifier.weight(1f).heightIn(min = 48.dp)
-            ) { Text("Host nearby") }
-            OutlinedButton(
-                onClick = onNearbyJoin,
-                modifier = Modifier.weight(1f).heightIn(min = 48.dp)
-            ) { Text("Join nearby") }
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            TextButton(onClick = { showGuide = true }) { Text("How to play") }
-            TextButton(onClick = { showAbout = true }) { Text("About & data") }
-        }
+        TabletopUtilityButton(
+            text = "About & data", onClick = { showAbout = true },
+            modifier = Modifier.fillMaxWidth()
+        )
         Card(
             colors = CardDefaults.cardColors(containerColor = Color(0xFFEAE1CA)),
             modifier = Modifier.fillMaxWidth()
@@ -401,9 +397,7 @@ internal fun CrossroadsHomeScreen(
         // The primary action remains visible as players browse course and
         // multiplayer settings; decorative assets never push it below the fold.
         Surface(
-            modifier = Modifier.align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.navigationBars),
+            modifier = Modifier.fillMaxWidth(),
             color = Paper,
             shadowElevation = 8.dp
         ) {
@@ -413,7 +407,8 @@ internal fun CrossroadsHomeScreen(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    homeRaceSummary(seats, passAndPlay, playtestRules, fairFinishExperiment),
+                    homeRaceSummary(seats, passAndPlay, playtestRules, fairFinishExperiment,
+                        courseName = CrossroadsCourse.title(selectedCourseId)),
                     style = MaterialTheme.typography.labelMedium, color = Muted
                 )
                 TabletopStartRaceButton(

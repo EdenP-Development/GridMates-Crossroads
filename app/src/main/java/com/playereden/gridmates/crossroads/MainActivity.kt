@@ -1803,36 +1803,31 @@ private fun CrossroadsApp(
                                 finishReceipt = game.fairFinishReceipt,
                                 modifier = Modifier.weight(1f, fill = false)
                             )
-                            Button(
+                            TabletopPrimaryActionButton(
+                                text = if (lanRole == LanRole.GUEST)
+                                    "HOST STARTS NEXT RACE" else "RACE AGAIN",
                                 onClick = { rematch() },
                                 enabled = lanRole != LanRole.GUEST &&
                                     (lanRole != LanRole.HOST || lanConnected),
-                                modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp),
-                                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Forest)
-                            ) {
-                                Text(if (lanRole == LanRole.GUEST)
-                                    "HOST STARTS NEXT RACE" else "RACE AGAIN")
-                            }
+                                modifier = Modifier.fillMaxWidth()
+                            )
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                OutlinedButton(
+                                TabletopUtilityButton(
+                                    text = "View course",
                                     onClick = {
-                                        // View the complete finished course, not merely
-                                        // dismiss the victory result onto the live camera.
                                         showResults = false
                                         inspectBoard = true
                                     },
-                                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
-                                    contentPadding = PaddingValues(horizontal = 6.dp)
-                                ) { Text("View course") }
-                                TextButton(
+                                    modifier = Modifier.weight(1f)
+                                )
+                                TabletopUtilityButton(
+                                    text = "Main menu",
                                     onClick = { leaveGame() },
-                                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
-                                    contentPadding = PaddingValues(horizontal = 6.dp)
-                                ) { Text("Main menu") }
+                                    modifier = Modifier.weight(1f)
+                                )
                             }
                         }
                     }
