@@ -6,6 +6,15 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class HomeRaceSummaryTest {
+    @Test fun pinnedSummaryIdentifiesCourseAndPreservesRulesDisclosure() {
+        assertEquals("Brookside Dash · Solo vs AI · 2 racers · offline",
+            homeRaceSummary(2, false, false, courseName = "Brookside Dash"))
+        assertEquals("Cedarwood Expedition · 4 people · Pass & Play · offline · Tactical + Fair Finish ON",
+            homeRaceSummary(4, true, true, true, courseName = "Cedarwood Expedition"))
+        assertEquals(homeRaceSummary(2, false, false),
+            homeRaceSummary(2, false, false, courseName = " "))
+    }
+
 
     @Test fun secondaryOptionsHaveConcisePortraitFriendlyLabels() {
         assertEquals("More options ↓", homeOptionsToggleLabel(expanded = false))
