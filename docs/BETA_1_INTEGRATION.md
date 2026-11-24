@@ -1,3 +1,26 @@
+# Beta 1 Polish — unified Woodland Experience, November 24, 2026
+
+**Latest verified QA1696:** [signed Android archive](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/45443761764/artifacts/14945831693), [Android workflow](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/45443761764). All workflow steps passed. Source 289c29cbb4c13b51eeaf87a5ef03c10ee07926d8; built merge commit 881cdfb6fc962fd7031df8ee4dfd520f4c3a36f1. Archive expires December 8, 2026. Dedicated integration/beta-1-polish fast-forwarded from verified QA1695 source by four commits, no divergence. Original integration/beta-1 and main unchanged.
+
+## Current scope
+- POLISH 01–03: adaptive portrait framing, optional overhead groundcover, matte live trails and intersections.
+- POLISH 04: 1,080 baseline and 480 expanded-course all-bot simulations passed. Original two-seat Woven median rounds 5, expanded prototype 9; median forks 8 in both. Prototype remains outside shipped registry. No human time or enjoyment claim.
+- POLISH 05–06: parchment home, scroll cue, existing art reused in course cards, compact HUD, themed match options.
+- Existing original three courses, experimental rules, saved progress and LAN behavior retained. No public release.
+
+## Acceptance gates
+1. Physically install QA1696 over existing QA (export backup first), verify record and saved race.
+2. Compare Storybook and Overhead across courses, check actual thumbnail crops, scroll, action tray, route sheet, camera, touch targets, performance and large text.
+3. Complete Solo and Pass & Play, inspect results and rematch. Record durations rather than assume simulated rounds predict human minutes.
+4. Two physical phones: trusted Wi-Fi, host/join, wrong code, disconnect/rejoin, complete match and host rematch. Plaintext TCP remains a release blocker.
+5. New asset library: establish coherent authored sprite dimensions, transparent boundaries, provenance and reuse; no generated concept image may be represented as packaged art or actual screenshot. Prioritize board scenery and shared UI over cosmetic expansion.
+6. Expanded Woven: separately versioned authored layout, route tradeoffs and encounter exposure measured; no automatic promotion of midpoint prototype.
+7. Public distribution remains separate: owner approval, production signing, privacy/security and distribution review.
+
+Use integration/beta-1-polish for subsequent verified polish work. Existing historical baseline follows. Physical acceptance and complete integrated screenshot gate still open.
+
+---
+
 # Beta 1 candidate — November 24, 2026
 
 **Latest verified signed QA1688:** [APK archive](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/45335337623/artifacts/14894101997), [Android QA](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/45335337623), [rules and design](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/45335337627). Both passed. Source head 955bd52aa640237f8c80da2aea1718a985669733; built PR merge commit e139d6797d14683e37166baf43b96d50f19d8ea6. Integration branch fast-forwarded from f531c0cc3d0900b33a9fbdb61b4547a32aa7f0e6 with 27 additional commits and no divergence. No main merge. QA archive expires December 8, 2026.
