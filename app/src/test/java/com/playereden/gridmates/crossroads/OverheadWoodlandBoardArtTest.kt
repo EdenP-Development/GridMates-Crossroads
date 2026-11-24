@@ -64,6 +64,35 @@ class OverheadWoodlandBoardArtTest {
         assertTrue(OverheadScenery.regionalLandmarks(emptyList(), emptyList()).isEmpty())
     }
 
+    @Test fun secondaryAtlasAccentsUseAllFivePreviouslyUnusedSpritesSafely() {
+        val nodes = wovenBoard.nodes
+        val landmarks = OverheadScenery.plan(nodes)
+        val accents = WovenEnvironmentAccents.plan(nodes, landmarks)
+        assertEquals(7, accents.size)
+        assertEquals(setOf(EnvironmentSprite.BUSH, EnvironmentSprite.FIR,
+            EnvironmentSprite.MUSHROOMS, EnvironmentSprite.FENCE,
+            EnvironmentSprite.REEDS), accents.map { it.sprite }.toSet())
+        assertEquals(accents, WovenEnvironmentAccents.plan(nodes, landmarks))
+        accents.forEach { p ->
+            val radius = p.sprite.diameter * kotlin.math.sqrt(2f) / 2f
+            assertTrue(p.x in radius..(1f - radius))
+            assertTrue(p.y in radius..(1f - radius))
+            assertTrue(OverheadScenery.clearOfPlay(p.x, p.y, nodes, .067f))
+            assertTrue(landmarks.all { q ->
+                kotlin.math.hypot(p.x - q.x, p.y - q.y) >= .077f
+            })
+            assertTrue(accents.filter { it != p }.all { q ->
+                kotlin.math.hypot(p.x - q.x, p.y - q.y) >= .077f
+            })
+        }
+        val first = accents.first()
+        val blocked = nodes + BoardNode(
+            "qa_accent_blocker", "meadow", "plain", emptyList(), first.x, first.y
+        )
+        assertFalse(first in WovenEnvironmentAccents.plan(blocked, landmarks))
+        assertTrue(WovenEnvironmentAccents.plan(emptyList(), landmarks).isEmpty())
+    }
+
     @Test fun WovenStreamBridgesOnlyActualLegalRoutes() {
         val bridges = OverheadScenery.bridges(wovenBoard.nodes)
         assertEquals("Two streams must cross real graph edges", 2, bridges.size)
