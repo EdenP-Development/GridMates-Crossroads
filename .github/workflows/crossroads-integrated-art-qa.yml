@@ -1,0 +1,65 @@
+name: Crossroads integrated environment artwork QA
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/crossroads-integrated-art-qa.yml"
+      - ".github/scripts/crossroads_integrated_art_qa.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: crossroads-visual92-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  same-race-art-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download immutable QA1677 procedural baseline
+        uses: actions/download-artifact@v4
+        with:
+          run-id: "45308168694"
+          name: Crossroads-Android-QA-1677-caf832d4a57ad5489437935aac6d1de3fe6bc923
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: qa-archives/base
+      - name: Download immutable QA1678 illustrated candidate
+        uses: actions/download-artifact@v4
+        with:
+          run-id: "45309598813"
+          name: Crossroads-Android-QA-1678-6f173a4afc9c2adafee2475f35ff0522efcdbbb1
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: qa-archives/next
+      - name: Prepare APK verification and screenshot script
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile .github/scripts/crossroads_integrated_art_qa.py
+          sdkmanager "build-tools;35.0.0"
+      - name: Enable KVM
+        shell: bash
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Compare procedural, atlas and Storybook on one saved race
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_4
+          disable-animations: true
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot
+          script: python3 .github/scripts/crossroads_integrated_art_qa.py
+      - name: Publish actual screenshots and evidence receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-VISUAL92-integrated-art-review-${{ github.sha }}
+          path: |
+            qa-evidence/*.png
+            qa-evidence/*.json
+          if-no-files-found: ignore
+          retention-days: 14
