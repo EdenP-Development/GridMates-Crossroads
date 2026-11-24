@@ -1049,9 +1049,9 @@ private fun CrossroadsApp(
                             style = MaterialTheme.typography.labelSmall)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        TextButton(onClick = { inspectBoard = true }) {
-                            Text("Full map", color = Color(0xFFF8EED7))
-                        }
+                        TabletopUtilityButton(
+                            text = "Full map", onClick = { inspectBoard = true }, dark = true
+                        )
                     Box {
                         IconButton(
                             onClick = { showMatchOptions = true },
@@ -1612,22 +1612,16 @@ private fun CrossroadsApp(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                OutlinedButton(
+                                TabletopUtilityButton(
+                                    text = "Back to board",
                                     onClick = { routeDialogDismissed = true },
-                                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
-                                    border = androidx.compose.foundation.BorderStroke(
-                                        1.dp, Color(0xFFB5A88F)
-                                    )
-                                ) { Text("Back to board") }
-                                OutlinedButton(
-                                    // Show full map without losing the legal routes
-                                    // or changing the existing turn checkpoint.
-                                    onClick = { inspectBoard = true },
-                                    modifier = Modifier.weight(1f).heightIn(min = 48.dp),
-                                    border = androidx.compose.foundation.BorderStroke(
-                                        1.dp, Color(0xFFB5A88F)
-                                    )
-                                ) { Text("Full map") }
+                                    modifier = Modifier.weight(1f)
+                                )
+                                TabletopUtilityButton(
+                                    // Keep the legal route decision intact while inspecting.
+                                    text = "Full map", onClick = { inspectBoard = true },
+                                    modifier = Modifier.weight(1f)
+                                )
                             }
                         }
                     }
@@ -1700,10 +1694,9 @@ private fun CrossroadsApp(
                                         fontWeight = FontWeight.Bold,
                                         style = MaterialTheme.typography.titleLarge)
                                 }
-                                TextButton(
-                                    onClick = { inspectBoard = false },
-                                    modifier = Modifier.heightIn(min = 48.dp)
-                                ) { Text("Close map") }
+                                TabletopUtilityButton(
+                                    text = "Close map", onClick = { inspectBoard = false }
+                                )
                             }
                             Column(
                                 modifier = Modifier.fillMaxWidth()
@@ -1742,18 +1735,13 @@ private fun CrossroadsApp(
                                 Text("Pinch to inspect · drag to explore",
                                     style = MaterialTheme.typography.labelSmall, color = Bark)
                             }
-                            Button(
+                            TabletopPrimaryActionButton(
+                                text = if (state.phase == Phase.ROUTE && localIsCurrentSeat &&
+                                    game.availableRoutes().size >= 2 && !routeDialogDismissed)
+                                    "RETURN TO ROUTE CHOICES" else "BACK TO THE TRAIL",
                                 onClick = { inspectBoard = false },
-                                modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp),
-                                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Forest)
-                            ) {
-                                Text(
-                                    if (state.phase == Phase.ROUTE && localIsCurrentSeat &&
-                                        game.availableRoutes().size >= 2 && !routeDialogDismissed)
-                                        "RETURN TO ROUTE CHOICES" else "BACK TO THE TRAIL"
-                                )
-                            }
+                                modifier = Modifier.fillMaxWidth()
+                            )
                         }
                     }
                 }
