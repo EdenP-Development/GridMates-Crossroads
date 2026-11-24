@@ -1,3 +1,28 @@
+# Beta 1 candidate — November 24, 2026
+
+**Latest verified signed QA1688:** [APK archive](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/45335337623/artifacts/14894101997), [Android QA](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/45335337623), [rules and design](https://github.com/PlayerEden/GridMates-Crossroads/actions/runs/45335337627). Both passed. Source head 955bd52aa640237f8c80da2aea1718a985669733; built PR merge commit e139d6797d14683e37166baf43b96d50f19d8ea6. Integration branch fast-forwarded from f531c0cc3d0900b33a9fbdb61b4547a32aa7f0e6 with 27 additional commits and no divergence. No main merge. QA archive expires December 8, 2026.
+
+## Implemented and automatically verified
+- Three distinct optional overhead scenes with shared atlas, original Storybook remains default (#96).
+- Discoverable Nearby/help, measured home footer, selected-course summary and shared results controls (#97).
+- Exact-config rematches after completed checkpoint restore, including six historical rules versions (#98).
+- Original-rules minimum distance comparison (#99).
+- AI graph-distance cache with legacy equivalence tests (#100).
+- Pending-join cancellation and original-socket-bound queued writes (#101).
+
+## Physical beta acceptance — still open
+1. Install QA1688 over existing QA without clearing data; confirm record and active race recovery.
+2. Solo Quick, Classic, Long: complete races; record rough time, confusing decisions, readability, camera and perceived fairness. Inspect both Storybook and optional Overhead under Match options.
+3. Pass & Play: two people, full finish and rematch; check turn ownership.
+4. Two physical phones on trusted household Wi-Fi: host/join, incorrect code, correct code, disconnect/rejoin, full race and host rematch. Nearby TCP remains plaintext; no host process-death recovery or public-network readiness.
+5. Large text, TalkBack, short screen and device performance. Visual-92 whole-map difference evidence exists but complete screenshot gate still unresolved.
+6. Public release separately requires private production signing, privacy and security decisions, distribution compliance and explicit owner approval. No public release.
+
+## Next development rule
+Use integration/beta-1 as the current source. Do not add speculative features until physical findings or a reproducible integration issue justify them. Historical records below are not current status.
+
+---
+
 # Beta 1 — integrated development candidate
 
 This is the complete active game source in one review branch, not a public release. Source parent: VISUAL-95 #95 b38aac34af1f8e657ec93c864a130902cf650318. GitHub comparison against main before this checkpoint: 682 commits ahead, zero behind, 267 changed paths. Alternate HUD #55 is divergent (four commits absent from the active lineage); do not merge it. Preserve historical PRs and do not merge main without owner approval.
