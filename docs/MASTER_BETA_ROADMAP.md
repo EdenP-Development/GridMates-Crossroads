@@ -1,3 +1,5 @@
+> **Current repository:** [EdenP-Development/GridMates-Crossroads](https://github.com/EdenP-Development/GridMates-Crossroads). Ownership transfer verified; existing history and QA identity retained. See [migration audit](EDENP_MIGRATION.md). Active branch `integration/beta-1-polish`; QA1707 last verified pre-transfer build. Fresh organization build and private beta signing pending.
+
 # Crossroads master development roadmap — 2026-11-24
 
 Owner endorsed continuing with the proposed staged beta roadmap. Scope below is planning, not locked release dates or authorization to publish. Prefer bundled meaningful milestones with automated QA and physical acceptance evidence over repeated tiny changes.
