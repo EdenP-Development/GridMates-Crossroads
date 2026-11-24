@@ -153,7 +153,9 @@ internal fun TabletopPrimaryActionButton(
             if (enabled) Color(0xFFD6B97A) else Color(0xFFAEA58F)
         )
     ) {
-        Row(
+        Box {
+            OptionalPrimaryButtonArt(enabled, pressed)
+            Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 13.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
@@ -171,6 +173,7 @@ internal fun TabletopPrimaryActionButton(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
+        }
         }
     }
 }
