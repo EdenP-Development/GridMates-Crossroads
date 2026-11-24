@@ -192,7 +192,8 @@ internal fun TabletopUtilityButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    dark: Boolean = false
+    dark: Boolean = false,
+    icon: TabletopIconArt? = null
 ) {
     val interactions = remember { MutableInteractionSource() }
     val pressed by interactions.collectIsPressedAsState()
@@ -221,8 +222,17 @@ internal fun TabletopUtilityButton(
                 modifier = Modifier.padding(horizontal = 9.dp, vertical = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text, style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (icon != null) {
+                        OptionalTabletopIcon(icon, Modifier.size(20.dp)
+                            .padding(end = 3.dp)) { }
+                    }
+                    Text(text, style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
+                }
             }
         }
     }
