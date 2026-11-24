@@ -207,8 +207,15 @@ tap_required("Match options")
 tap_required("Woven board art: Overhead (QA)")
 capture_pair("03_qa1678_storybook", screens)
 assert checkpoint_hash() == saved
+# At the opening position the close camera may contain no replaced ornament.
+# Require a changed whole-board image, but record local differences honestly.
+atlas_view_changed = {
+    view: screens["01_qa1677_procedural_" + view]["sha256"] !=
+          screens["02_qa1678_atlas_" + view]["sha256"]
+    for view in ("live", "full_map")
+}
+assert atlas_view_changed["full_map"], "No whole-board atlas difference"
 for view in ("live", "full_map"):
-    assert screens["01_qa1677_procedural_" + view]["sha256"] != screens["02_qa1678_atlas_" + view]["sha256"]
     assert screens["02_qa1678_atlas_" + view]["sha256"] != screens["03_qa1678_storybook_" + view]["sha256"]
 (EVIDENCE / "visual92_integrated_art_qa.json").write_text(json.dumps({
     "status": "CAPTURED_FOR_OWNER_REVIEW",
@@ -218,6 +225,8 @@ for view in ("live", "full_map"):
     "same_checkpoint_before_after": True,
     "checkpoint_sha256": saved,
     "art_selection_preserved": True,
+    "atlas_view_changed": atlas_view_changed,
+    "opening_live_difference_required": False,
     "screenshots": screens,
     "real_device_accepted": False,
     "human_art_approved": False
