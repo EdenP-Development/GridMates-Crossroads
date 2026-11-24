@@ -1,3 +1,5 @@
+> **Current standards (November 24, 2026):** [Eden Development Standards](https://github.com/PlayerEden/Eden-Development-Standards) adopted. Read [Crossroads signing, recovery and release audit](EDEN_STANDARDS_ADOPTION.md) first for QA1700 identity and pending custody/upgrade gates. Existing packages/signers unchanged; no production signing or public release authorized. Historical status below is retained.
+
 > **Current checkpoint: [Crossroads development handoff](CROSSROADS_CURRENT_HANDOFF.md).** Active branch integration/beta-1-polish; QA1698 Android passed. New environment and UI binaries remain external; physical acceptance pending. Earlier records below are historical. No main merge or public release.
 
 ---
