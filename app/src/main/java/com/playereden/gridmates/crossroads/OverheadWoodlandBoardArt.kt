@@ -31,7 +31,9 @@ internal fun useOverheadBoardPreview(
 
 // First review only Woven Trail. Reusing one scenic composition for Brookside
 // and Cedarwood would incorrectly erase what makes each course distinct.
-internal enum class OverheadDecoration { TREE, FLOWERS, ROCK, COTTAGE }
+internal enum class OverheadDecoration {
+    TREE, FLOWERS, ROCK, COTTAGE, MEADOW_BLOOM, FIR_GROVE, ORCHARD
+}
 internal data class OverheadFeature(val x: Float, val y: Float, val kind: OverheadDecoration)
 internal data class OverheadBridge(
     val x: Float, val y: Float, val directionX: Float, val directionY: Float
@@ -176,7 +178,24 @@ internal object OverheadScenery {
                 add(village)
             }
         }
-        return candidates
+        return candidates + regionalLandmarks(nodes, candidates)
+    }
+
+    /** Hand-placed Woven landmarks occupy genuine empty terrain, never routes. */
+    fun regionalLandmarks(
+        nodes: List<BoardNode>, existing: List<OverheadFeature>
+    ): List<OverheadFeature> {
+        if (nodes.isEmpty()) return emptyList()
+        val authored = listOf(
+            OverheadFeature(.29f, .56f, OverheadDecoration.MEADOW_BLOOM),
+            OverheadFeature(.60f, .68f, OverheadDecoration.FIR_GROVE),
+            OverheadFeature(.94f, .83f, OverheadDecoration.ORCHARD)
+        )
+        return authored.filter { p ->
+            clearOfPlay(p.x, p.y, nodes, .09f) && existing.none { q ->
+                kotlin.math.hypot(p.x - q.x, p.y - q.y) < .085f
+            }
+        }
     }
 }
 
@@ -325,6 +344,72 @@ internal fun DrawScope.drawOverheadWoodlandPrint(
                 drawOval(Color(0xFF74836E).copy(alpha = .54f),
                     topLeft = c + Offset(u * .52f, -u * .48f),
                     size = Size(u * .72f, u * .91f))
+            }
+            OverheadDecoration.MEADOW_BLOOM -> {
+                // A loose golden wildflower clearing, not a new landing disc.
+                drawOval(Color(0xFFB9C68A).copy(alpha = .62f),
+                    topLeft = c - Offset(u * 4.3f, u * 3.0f),
+                    size = Size(u * 8.6f, u * 6.0f))
+                for (i in 0 until 17) {
+                    val dx = ((i * 7 % 17) - 8) * u * .43f
+                    val dy = ((i * 11 % 19) - 9) * u * .26f
+                    val p = c + Offset(dx, dy)
+                    drawLine(Color(0xFF71884D).copy(alpha = .78f),
+                        p + Offset(-u * .16f, u * .52f), p,
+                        strokeWidth = u * .17f, cap = StrokeCap.Round)
+                    val petal = if (i % 3 == 0) Color(0xFFE9C579) else Color(0xFFF4E6B4)
+                    for ((x, y) in listOf(-.26f to 0f, .26f to 0f,
+                        0f to -.26f, 0f to .26f)) {
+                        drawCircle(petal, u * .21f, p + Offset(x * u, y * u))
+                    }
+                    drawCircle(Color(0xFFB88A4D), u * .13f, p)
+                }
+            }
+            OverheadDecoration.FIR_GROVE -> {
+                // Layered radial fir crowns seen from above, distinct from meadow oaks.
+                for ((dx, dy, scale) in listOf(
+                    Triple(-1.7f, 1.2f, .84f), Triple(1.65f, 1.35f, .72f),
+                    Triple(.05f, -1.4f, 1.0f)
+                )) {
+                    val p = c + Offset(dx * u, dy * u)
+                    val r = u * 1.8f * scale
+                    drawCircle(Color(0xFF344F39).copy(alpha = .25f),
+                        r * 1.12f, p + Offset(u * .25f, u * .35f))
+                    for (layer in 0..2) {
+                        val radius = r * (1f - layer * .24f)
+                        val crown = Path().apply {
+                            for (i in 0 until 16) {
+                                val angle = i * kotlin.math.PI / 8.0
+                                val d = radius * if (i % 2 == 0) 1f else .58f
+                                val x = p.x + kotlin.math.cos(angle).toFloat() * d
+                                val y = p.y + kotlin.math.sin(angle).toFloat() * d
+                                if (i == 0) moveTo(x, y) else lineTo(x, y)
+                            }
+                            close()
+                        }
+                        drawPath(crown, listOf(Color(0xFF3D6349),
+                            Color(0xFF64835A), Color(0xFF93A76C))[layer])
+                    }
+                    drawCircle(Color(0xFFD2D49B).copy(alpha = .8f), r * .12f, p)
+                }
+            }
+            OverheadDecoration.ORCHARD -> {
+                // Four compact cultivated crowns make the village outskirts recognizable.
+                drawOval(Color(0xFFD8C28D).copy(alpha = .52f),
+                    topLeft = c - Offset(u * 3.8f, u * 3.5f),
+                    size = Size(u * 7.6f, u * 7f))
+                for (i in 0..3) {
+                    val p = c + Offset((i % 2 - .5f) * u * 3.0f,
+                        (i / 2 - .5f) * u * 2.9f)
+                    drawCircle(Color(0xFF536844).copy(alpha = .30f),
+                        u * 1.43f, p + Offset(u * .22f, u * .27f))
+                    drawCircle(Color(0xFF648653), u * 1.27f, p)
+                    drawCircle(Color(0xFF98AD6A), u * .90f,
+                        p - Offset(u * .22f, u * .20f))
+                    for ((x, y) in listOf(-.45f to -.16f, .40f to -.38f, .18f to .52f)) {
+                        drawCircle(Color(0xFFB77D50), u * .19f, p + Offset(x * u, y * u))
+                    }
+                }
             }
             OverheadDecoration.COTTAGE -> {
                 val rx = u * 2.38f
