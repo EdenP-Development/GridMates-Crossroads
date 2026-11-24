@@ -1,3 +1,5 @@
+> **Current standards (November 24, 2026):** [Eden Development Standards](https://github.com/PlayerEden/Eden-Development-Standards) adopted. Read [Crossroads signing, recovery and release audit](docs/EDEN_STANDARDS_ADOPTION.md) first for QA1700 identity and pending custody/upgrade gates. Existing packages/signers unchanged; no production signing or public release authorized. Historical status below is retained.
+
 # GridMates: Crossroads
 
 **Current status (November 22, 2026):** A playable native Android **QA game**, built from a continuous unmerged draft chain. Three illustrated courses (Quick, Classic, Long), Solo AI, 2–4-person local Pass & Play, the original first-to-Finish rules, optional *experimental* Tactical v4/Fair Finish v5, action-replay local saves, manual progress transfer and a same-Wi-Fi two-phone **prototype** are implemented. No mandatory account or cloud.
