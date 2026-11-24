@@ -1054,7 +1054,8 @@ private fun CrossroadsApp(
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         TabletopUtilityButton(
-                            text = "Full map", onClick = { inspectBoard = true }, dark = true
+                            text = "Full map", onClick = { inspectBoard = true }, dark = true,
+                            icon = TabletopIconArt.MAP
                         )
                     Box {
                         IconButton(
@@ -1632,12 +1633,12 @@ private fun CrossroadsApp(
                                 TabletopUtilityButton(
                                     text = "Back to board",
                                     onClick = { routeDialogDismissed = true },
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f), icon = TabletopIconArt.MAP
                                 )
                                 TabletopUtilityButton(
                                     // Keep the legal route decision intact while inspecting.
                                     text = "Full map", onClick = { inspectBoard = true },
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f), icon = TabletopIconArt.MAP
                                 )
                             }
                         }
@@ -1712,7 +1713,8 @@ private fun CrossroadsApp(
                                         style = MaterialTheme.typography.titleLarge)
                                 }
                                 TabletopUtilityButton(
-                                    text = "Close map", onClick = { inspectBoard = false }
+                                    text = "Close map", onClick = { inspectBoard = false },
+                                    icon = TabletopIconArt.COLLAPSE
                                 )
                             }
                             Column(
@@ -1838,12 +1840,12 @@ private fun CrossroadsApp(
                                         showResults = false
                                         inspectBoard = true
                                     },
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f), icon = TabletopIconArt.MAP
                                 )
                                 TabletopUtilityButton(
                                     text = "Main menu",
                                     onClick = { leaveGame() },
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f), icon = TabletopIconArt.HOME
                                 )
                             }
                         }
