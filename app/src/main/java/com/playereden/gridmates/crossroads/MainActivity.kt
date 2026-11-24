@@ -2110,14 +2110,25 @@ private fun BoardCanvas(
     val highlightedSeat = if (isTurnTransitioning && animateTokens)
         cameraSubject else state.playerIndex
     val active = displayed[cameraSubject]
-    val cameraTarget = if (state.phase == Phase.ROUTE &&
-        focusPlayerIndex == state.playerIndex) {
-        val node = board.node(state.players[state.playerIndex].position)
+    val viewportWidth = canvasDimensions.width.toFloat()
+    val viewportHeight = canvasDimensions.height.toFloat()
+    val worldFrame = BoardWorldViewport.frame(canvasDimensions, immersiveWorld)
+    val atFork = state.phase == Phase.ROUTE && focusPlayerIndex == state.playerIndex
+    val forkNode = if (atFork) board.node(state.players[state.playerIndex].position) else null
+    val forkExits = forkNode?.next?.map { dest ->
+        board.node(dest).let { Offset(it.x, it.y) }
+    }.orEmpty()
+    val forkPreview = if (immersiveWorld && animateTokens && forkNode != null &&
+        forkExits.size >= 2 && viewportWidth > 0f && viewportHeight > 0f) {
+        CrossroadsCameraPreset.forkPreview(
+            Offset(forkNode.x, forkNode.y), forkExits, worldFrame,
+            viewportWidth, viewportHeight
+        )
+    } else null
+    val cameraTarget = forkPreview?.focus ?: if (forkNode != null) {
         CrossroadsCameraPreset.forkAnchor(
-            source = Offset(node.x, node.y),
-            exits = node.next.map { dest ->
-                board.node(dest).let { Offset(it.x, it.y) }
-            },
+            source = Offset(forkNode.x, forkNode.y),
+            exits = forkExits,
             immersive = immersiveWorld
         )
     } else active
@@ -2128,7 +2139,7 @@ private fun BoardCanvas(
     )
     val autoZoom by animateFloatAsState(
         targetValue = when (cameraMode) {
-            BoardCameraMode.FOLLOW -> CrossroadsCameraPreset.followZoom(
+            BoardCameraMode.FOLLOW -> forkPreview?.zoom ?: CrossroadsCameraPreset.followZoom(
                 state.phase, state.turn, animateTokens
             )
             BoardCameraMode.MANUAL -> manualZoom
@@ -2141,17 +2152,16 @@ private fun BoardCanvas(
         artAvailable = showWoodlandTokens,
         cameraZoom = cameraZoom
     )
-    val viewportWidth = canvasDimensions.width.toFloat()
-    val viewportHeight = canvasDimensions.height.toFloat()
-    val worldFrame = BoardWorldViewport.frame(canvasDimensions, immersiveWorld)
     val focusPx = worldFrame.position(followedFocus.x, followedFocus.y)
     val desiredTranslation = when (cameraMode) {
         BoardCameraMode.FOLLOW -> Offset(
             CameraGeometry.centerTranslation(viewportWidth / 2f, focusPx.x, cameraZoom),
             CameraGeometry.centerTranslation(viewportHeight / 2f, focusPx.y, cameraZoom) +
-                viewportHeight * (CrossroadsCameraPreset.focusHeightFraction(
+                viewportHeight * ((if (forkPreview != null)
+                    CrossroadsCameraPreset.FORK_PREVIEW_HEIGHT
+                else CrossroadsCameraPreset.focusHeightFraction(
                     state.phase, immersiveWorld
-                ) - 0.5f)
+                )) - 0.5f)
         )
         BoardCameraMode.MANUAL -> manualTranslation
     }
