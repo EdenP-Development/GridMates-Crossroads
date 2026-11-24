@@ -76,11 +76,16 @@ internal fun TabletopChoicePill(
         shadowElevation = if (selected) 4.dp else 1.dp,
         border = BorderStroke(if (selected) 1.8.dp else 1.dp, edging)
     ) {
-        Box(
-            modifier = Modifier.fillMaxWidth()
-                .padding(horizontal = 6.dp, vertical = 12.dp),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(contentAlignment = Alignment.Center) {
+            OptionalTabletopButtonArt(
+                family = if (selected) TabletopArtFamily.PRIMARY else TabletopArtFamily.SECONDARY,
+                pressed = pressed, selected = selected
+            )
+            Box(
+                modifier = Modifier.fillMaxWidth()
+                    .padding(horizontal = 6.dp, vertical = 12.dp),
+                contentAlignment = Alignment.Center
+            ) {
             Text(
                 text = text,
                 color = ink,
@@ -90,6 +95,7 @@ internal fun TabletopChoicePill(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+        }
         }
     }
 }
@@ -204,12 +210,18 @@ internal fun TabletopUtilityButton(
         border = BorderStroke(1.dp, if (dark) TabletopMaterials.brass else Color(0xFFAA9672)),
         shadowElevation = 1.dp
     ) {
-        Box(
-            modifier = Modifier.padding(horizontal = 9.dp, vertical = 8.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(text, style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
+        Box(contentAlignment = Alignment.Center) {
+            OptionalTabletopButtonArt(
+                family = if (dark) TabletopArtFamily.PRIMARY else TabletopArtFamily.SECONDARY,
+                pressed = pressed
+            )
+            Box(
+                modifier = Modifier.padding(horizontal = 9.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text, style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
+            }
         }
     }
 }
