@@ -167,7 +167,9 @@ internal fun TabletopPrimaryActionButton(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (withDie) {
-                TabletopDieStamp()
+                OptionalTabletopIcon(TabletopIconArt.DICE, Modifier.size(24.dp)) {
+                    TabletopDieStamp()
+                }
                 androidx.compose.foundation.layout.Spacer(Modifier.size(12.dp))
             }
             Text(
