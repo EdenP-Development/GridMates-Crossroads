@@ -38,7 +38,8 @@ internal enum class CrossroadsArtSlot(val filename: String) {
     TRAIL_ATLAS("trail_atlas_v1.png"),
     TOKEN_ATLAS("token_atlas_v1.png"),
     MARKER_ATLAS("marker_atlas_v1.png"),
-    ENVIRONMENT_ATLAS("environment_atlas_v1.png");
+    ENVIRONMENT_ATLAS("environment_atlas_v1.png"),
+    ENVIRONMENT_ATLAS_V2("environment_atlas_v2.png");
 
     val packagedPath: String get() = "art/v1/$filename"
 }
@@ -67,7 +68,11 @@ internal fun rememberOptionalCrossroadsArt(slot: CrossroadsArtSlot?): ImageBitma
     val context = LocalContext.current.applicationContext
     val state by produceState<ImageBitmap?>(null, context, slot) {
         value = if (slot == null) null else withContext(Dispatchers.IO) {
-            loadOptionalCrossroadsArt(context, slot)
+            if (slot == CrossroadsArtSlot.ENVIRONMENT_ATLAS) {
+                loadOptionalCrossroadsArt(context, CrossroadsArtSlot.ENVIRONMENT_ATLAS_V2)
+                    ?.takeIf { EnvironmentAtlas.validDimensions(it.width, it.height) }
+                    ?: loadOptionalCrossroadsArt(context, slot)
+            } else loadOptionalCrossroadsArt(context, slot)
         }
     }
     return state

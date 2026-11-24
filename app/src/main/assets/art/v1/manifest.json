@@ -203,6 +203,18 @@
       "license": "original",
       "sha256": "19819a342ecaf9249500406ded7d9ebcda3d101874168e8ec777846985cc8a49",
       "reviewStatus": "qa-preview-only-not-owner-approved"
+    },
+    {
+      "id": "ENVIRONMENT_ATLAS_V2",
+      "filename": "environment_atlas_v2.png",
+      "width": 1024,
+      "height": 1024,
+      "requiresAlpha": true,
+      "purpose": "Illustrated scenery replacement; same stable 12 cells and four reserved cells as v1.",
+      "status": "planned",
+      "origin": null,
+      "license": null,
+      "sha256": null
     }
   ]
 }

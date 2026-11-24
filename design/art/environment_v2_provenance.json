@@ -1,0 +1,74 @@
+{
+  "sha256": "779c42c21558a24ef9eb56f341d465ddeae68061389149bfe17fa00fe53525ab",
+  "bytes": 910844,
+  "dimensions": [
+    1024,
+    1024
+  ],
+  "date": "2026-11-24",
+  "license": "generated",
+  "state": "candidate_external_binary_not_committed",
+  "processing": "Alpha <=16 removed, proportional fit to 228px in 256px cell, transparent 12px minimum gutters and four empty reserved cells verified locally.",
+  "sprites": [
+    {
+      "id": "oak",
+      "generation": "3599de11-f449-42e3-bbac-3e11508266f8",
+      "cell": 0
+    },
+    {
+      "id": "flowers",
+      "generation": "11782c1c-a9e8-4a19-a3e3-3f87b4726029",
+      "cell": 1
+    },
+    {
+      "id": "rock",
+      "generation": "5de7011c-8f12-4867-9639-af98151bb4d7",
+      "cell": 2
+    },
+    {
+      "id": "cottage",
+      "generation": "69219afc-2912-4f98-8ed9-a530adbc332d",
+      "cell": 3
+    },
+    {
+      "id": "meadow_clearing",
+      "generation": "6207a2e7-73b6-4f61-8fb5-9363f69a1520",
+      "cell": 4
+    },
+    {
+      "id": "fir_grove",
+      "generation": "74753eb6-d8d9-4f11-9ac3-238c642cde4f",
+      "cell": 5
+    },
+    {
+      "id": "orchard",
+      "generation": "43b1050f-6901-4d01-8f51-6262535e3396",
+      "cell": 6
+    },
+    {
+      "id": "bush",
+      "generation": "92a35af7-92c4-44d8-b470-72e7d1eef74f",
+      "cell": 7
+    },
+    {
+      "id": "fir",
+      "generation": "9d9a361d-1d16-4357-9bf3-76a8da4c0314",
+      "cell": 8
+    },
+    {
+      "id": "mushrooms",
+      "generation": "9fe0663a-5458-494e-9edb-f7fa907cc20c",
+      "cell": 9
+    },
+    {
+      "id": "fence",
+      "generation": "30c8b45c-ed5e-41f8-a42b-ad45f1397e13",
+      "cell": 10
+    },
+    {
+      "id": "reeds",
+      "generation": "fdefc104-9327-4455-9ca2-14983fb43c5b",
+      "cell": 11
+    }
+  ]
+}
