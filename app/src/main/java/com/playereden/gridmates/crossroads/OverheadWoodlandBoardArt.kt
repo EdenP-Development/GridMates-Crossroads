@@ -222,18 +222,7 @@ internal fun DrawScope.drawOverheadWoodlandPrint(
         topLeft = Offset(left, top),
         size = Size(width, height)
     )
-    drawOval(
-        Color(0xFFA8BF80).copy(alpha = .43f),
-        topLeft = at(-.18f, -.10f), size = Size(width * .81f, height * 1.15f)
-    )
-    drawOval(
-        Color(0xFF91AA7B).copy(alpha = .29f),
-        topLeft = at(.38f, -.14f), size = Size(width * .77f, height * .87f)
-    )
-    drawOval(
-        Color(0xFFE8C791).copy(alpha = .24f),
-        topLeft = at(.64f, .22f), size = Size(width * .56f, height * .83f)
-    )
+    drawWovenTerrain(left, top, width, height)
 
     // Winding teal WATER, explicitly not another beige or wood-colored
     // navigable path. The real wooden graph is rendered over this layer.
@@ -283,15 +272,6 @@ internal fun DrawScope.drawOverheadWoodlandPrint(
                     center = middle + along * (half * end) + railOffset)
             }
         }
-    }
-
-    // Paper speckle is fixed by row/column instead of runtime randomness;
-    // keep it faint and distant from the existing graph symbols.
-    for (i in 0 until 54) {
-        val fx = ((i * 37) % 53 + .5f) / 53f
-        val fy = ((i * 23 + 11) % 47 + .5f) / 47f
-        drawCircle(Color(0xFF5E784F).copy(alpha = .08f),
-            radius = (.28f + (i % 3) * .21f) * u, center = at(fx, fy))
     }
 
     // Smaller atlas-only ornaments use the same camera and normalized frame.
