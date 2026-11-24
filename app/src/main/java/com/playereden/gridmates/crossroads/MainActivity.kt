@@ -2406,7 +2406,7 @@ private fun BoardCanvas(
                     }
                     if (effectiveTrails == CrossroadsTrailStyle.ARTWORK && trailAtlas != null &&
                         immersiveWorld && boardLook == CrossroadsBoardLook.ILLUSTRATED) {
-                        // VISUAL-83: actual live roads are carved at Canvas resolution,
+                        // POLISH-03: live earthen trails are drawn at Canvas resolution,
                         // not stretched from a 128x32 atlas at 2-4x zoom.
                         // Original coordinates, route colors and tap hit geometry stay identical.
                         drawCrossroadsEarthenTrail(
@@ -2439,7 +2439,7 @@ private fun BoardCanvas(
                     }
                 }
             }
-            // Finish the wood roads at real graph junctions instead of letting
+            // Finish the earthen trails at real graph junctions instead of letting
             // multiple painted endcaps pile up into an accidental timber star.
             // Draw BELOW the existing symbols and pawns; this has no effect on
             // route geometry, node counts, or pointer hit testing.
@@ -2460,7 +2460,7 @@ private fun BoardCanvas(
                             worldSide = drawWidth,
                             denseCourse = denseBoard
                         )
-                        drawCrossroadsWoodenJunctionHub(position(node.id), radius)
+                        drawCrossroadsEarthenJunction(position(node.id), radius)
                     }
                 }
             }
