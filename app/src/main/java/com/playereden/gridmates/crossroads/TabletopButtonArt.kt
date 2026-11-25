@@ -1,6 +1,12 @@
 package com.playereden.gridmates.crossroads
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.ui.graphics.FilterQuality
@@ -87,11 +93,24 @@ internal fun BoxScope.OptionalTabletopButtonArt(
     val image = images[filename]
     // QA preview: preserve the end caps at the same scale as the image height.
     // Only the middle band expands; narrow controls retain proportional Fit.
-    if (image != null) BoxWithConstraints(Modifier.matchParentSize()) {
+    BoxWithConstraints(Modifier.matchParentSize()) {
         val w = constraints.maxWidth
         val h = constraints.maxHeight
         val cap = TabletopButtonArt.expandedCap(w, h)
-        if (cap == null) {
+        // Compact controls need a quiet face rather than crowded leaf ornaments.
+        // Keep a single native fallback frame if art is unavailable or too narrow.
+        if (image == null || h <= 0 || w.toLong() * 10 < h.toLong() * 23) {
+            val dark = family == TabletopArtFamily.PRIMARY
+            val face = when {
+                !enabled -> TabletopLabelPalette.disabledPaper
+                dark -> TabletopLabelPalette.darkPaper
+                else -> TabletopLabelPalette.lightPaper
+            }
+            val edge = if (selected || dark) TabletopMaterials.brass else Color(0xFFAA9672)
+            val shape = RoundedCornerShape(12.dp)
+            Box(Modifier.matchParentSize().background(face, shape)
+                .border(if (selected) 2.dp else 1.dp, edge, shape))
+        } else if (cap == null) {
             Image(bitmap = image, contentDescription = null,
                 modifier = Modifier.matchParentSize(), contentScale = ContentScale.Fit)
         } else {
