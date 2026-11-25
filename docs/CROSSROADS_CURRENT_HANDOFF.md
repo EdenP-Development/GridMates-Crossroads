@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-07A mixed-policy tournament
+
+AI2-06B rules 45671745077 passed; Android 45671745006 failed Maven HTTP 429 dependency resolution, last verified QA1876. Added optional per-bot-seat policy overrides, copied and validated against human/out-of-range seats; default homogeneous policy remains unchanged, omitted empty overrides preserve legacy JSON. Checkpoint restore/rematch retain overrides. Real pairwise tournament: 960 games, five policies, ten pairs, four V5 courses, 12 seeds, both seat orders. Asserts completion, final replay and rematch lineup; CSV uploaded. No menu/LAN activation or default change. CI pending; no tournament results yet. Historical gate remains mandatory. Encounter comparison artifact 15049112495 retrieved previously but numerical analysis outstanding. No merge/release.
+
+---
+
 # Active checkpoint — AI2-06B deterministic targeting coverage repair
 
 R4 rules 45669778345 and Android 45669778595 failed on AdaptiveBotTargetR4Test line 44 only (124 core tests, 1 failed): natural Woven matrix produced zero TARGET phases; all completion and replay assertions before it passed. Prior AI2-05B rules 45669084844 passed, artifact 15049112495 available, Android cancelled. Replaced unsupported stochastic coverage expectation with diagnostic count and separate guaranteed medium-risk fork / single prank catalogue fixture, exercising legal targets and codec restore at pending TARGET then identical continuation. No production rules or policy change. Exact-head CI pending. Natural mischief scarcity remains a balance issue to investigate, not fixed by fixture. Next inspect encounter CSV and build mixed-policy tournament only after green CI. No release or merge.

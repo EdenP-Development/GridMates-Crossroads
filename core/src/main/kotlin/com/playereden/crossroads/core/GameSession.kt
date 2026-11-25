@@ -27,7 +27,8 @@ class GameSession(
     seats: Int = 2,
     seed: Int = 1234,
     humanIndices: Set<Int> = setOf(0),
-    val botPolicy: BotPolicyVersion = BotPolicyVersion.LEGACY_V1
+    val botPolicy: BotPolicyVersion = BotPolicyVersion.LEGACY_V1,
+    botSeatPolicies: Map<Int, BotPolicyVersion> = emptyMap()
 ) {
     private val random = Random(seed)
     private val initialSeed = seed
@@ -71,6 +72,11 @@ class GameSession(
         if (phase == Phase.ENCOUNTER && pendingEncounterPool == "hazard")
             DecisionLab.pushHazardSuccessBonus(board, pushedThisTurn) else 0
     private val originalHumanIndices = humanIndices.toSortedSet()
+    private val seatPolicyOverrides = botSeatPolicies.toSortedMap()
+    fun policyForBotSeat(seat: Int): BotPolicyVersion {
+        require(seat in players.indices && players[seat].isBot)
+        return seatPolicyOverrides[seat] ?: botPolicy
+    }
     private val acceptedActions = mutableListOf<MatchAction>()
     // A bot turn executes one nested legal roll/route/target internally; the
     // checkpoint records only the public bot command, so replay consumes the
@@ -118,6 +124,7 @@ class GameSession(
 
     init {
         require(seats in 2..4)
+        require(seatPolicyOverrides.keys.all { it in 0 until seats && it !in humanIndices })
         require(board.start != board.finish)
         require(board.nodes.map { it.id }.toSet().size == board.nodes.size)
         require(board.nodes.any { it.id == board.start } && board.nodes.any { it.id == board.finish })
@@ -150,7 +157,8 @@ class GameSession(
             humanIndices = originalHumanIndices.toList(),
             actions = acceptedActions.toList(),
             expected = snapshot(),
-            botPolicy = botPolicy
+            botPolicy = botPolicy,
+            botSeatPolicies = seatPolicyOverrides.toMap()
         )
     }
 
@@ -178,7 +186,8 @@ class GameSession(
             val game = GameSession(
                 board, catalogue, checkpoint.seats, checkpoint.seed,
                 humanIndices = checkpoint.humanIndices.toSet(),
-                botPolicy = checkpoint.botPolicy
+                botPolicy = checkpoint.botPolicy,
+                botSeatPolicies = checkpoint.botSeatPolicies
             )
             checkpoint.actions.forEach { action ->
                 when (action.kind) {
@@ -229,7 +238,7 @@ class GameSession(
      */
     fun freshRematch(seed: Int): GameSession {
         require(phase == Phase.FINISHED) { "Finish the current race before rematching" }
-        return GameSession(board, catalogue, players.size, seed, originalHumanIndices, botPolicy)
+        return GameSession(board, catalogue, players.size, seed, originalHumanIndices, botPolicy, seatPolicyOverrides)
     }
 
     fun snapshot(): Snapshot = Snapshot(
@@ -413,7 +422,7 @@ class GameSession(
     }
 
     /** Bot submits exactly one regular legal action. UI may animate between actions. */
-    fun botStep() = when (botPolicy) {
+    fun botStep() = when (policyForBotSeat(currentIndex)) {
         BotPolicyVersion.LEGACY_V1 -> legacyBotStep()
         BotPolicyVersion.ADAPTIVE_V2_R1 -> adaptiveBotStep()
         BotPolicyVersion.ADAPTIVE_V2_R2 -> adaptiveRouteBotStep()
