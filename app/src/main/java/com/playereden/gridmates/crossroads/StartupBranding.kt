@@ -29,8 +29,8 @@ import kotlinx.coroutines.withContext
 
 internal object StartupBrandingSpec {
     val stages = listOf("Spudacus" to "spudacus.png", "GridMates" to "gridmates.png")
-    const val FADE_MS = 250
-    const val HOLD_MS = 1000
+    const val FADE_MS = 300
+    const val HOLD_MS = 1500
     fun initialStage(cold: Boolean, motion: Boolean): Int =
         if (cold && motion) 0 else stages.size
 }
@@ -78,7 +78,7 @@ internal fun StartupBranding(
             stage = stages.size
             return@LaunchedEffect
         }
-        opacity.animateTo(1f, tween(StartupBrandingSpec.FADE_MS))
+        opacity.animateTo(1f, tween(StartupBrandingSpec.FADE_MS, easing = androidx.compose.animation.core.LinearEasing))
         delay(StartupBrandingSpec.HOLD_MS.toLong())
         opacity.animateTo(0f, tween(StartupBrandingSpec.FADE_MS))
         stage++
