@@ -6,6 +6,17 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class CourseOverheadArtTest {
+    @Test fun regionalPigmentCompositionIsBoundedAndCoversAllThreeRegions() {
+        val washes = RegionalTerrainComposition.washes
+        assertEquals(10, washes.size)
+        assertEquals(setOf(0,1,2), washes.map { it.tone }.toSet())
+        assertEquals(washes.size, washes.map { it.x to it.y }.distinct().size)
+        washes.forEach {
+            assertTrue(it.x in 0f..1f && it.y in 0f..1f)
+            assertTrue(it.radius in .15f.. .25f)
+        }
+    }
+
     @Test fun siblingCoursesHaveDistinctSafeScenery() {
         val results = listOf(
             "woodland_brookside_quick" to CourseOverheadStyle.BROOKSIDE,

@@ -1,3 +1,9 @@
+# Active checkpoint — WW2-04A regional terrain palette
+
+WW2-03A rules 45579266484 passed. Android 45579266581 failed before compilation/tests resolving existing dependencies: Maven Central HTTP 429 Too Many Requests. No dependency changes or test waiver. Regional overhead terrain now has ten overlapping fixed pigment pools (warm village earth, shaded forest, golden meadow), plus region-specific fleck tints; clipped to existing board, beneath graph and sprites. Added composition regression for count, bounds and three tones. Existing course palettes untouched. No new assets, game geometry, signing, startup, icon or saves changes. Exact-head CI and physical review pending; visual colors provisional. Next prioritize consolidated verification before additional changes if repository rate limiting persists.
+
+---
+
 # Active checkpoint — WW2-03A clustered groundcover
 
 WW2-02B rules run 45578950534 failed before tests: Maven Central and Gradle plugin portal HTTP 403 resolving existing Kotlin dependencies. Android 45578950645 running at inspection. No dependency change or test waiver. Groundcover planner now prioritizes up to 60 deterministic companion tufts around existing scenery, then retains a sparser background distribution; original route/landmark/patch clearance checks remain. Added regional cluster and total budget regression. Applies to existing illustrated groundcover planner across courses; companion clusters require occupied landmarks. No new assets, graph, camera, signing or saves changes. Exact-head CI and physical review pending; cluster density provisional.

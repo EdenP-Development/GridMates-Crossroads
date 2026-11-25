@@ -107,6 +107,24 @@ internal object CourseOverheadScenery {
     }
 }
 
+/** Fixed overlapping pigment pools soften the regional boundaries without suggesting new paths. */
+internal data class RegionalTerrainWash(val x: Float, val y: Float, val radius: Float, val tone: Int)
+
+internal object RegionalTerrainComposition {
+    val washes = listOf(
+        RegionalTerrainWash(.14f,.15f,.23f,0),
+        RegionalTerrainWash(.48f,.19f,.20f,0),
+        RegionalTerrainWash(.86f,.21f,.22f,0),
+        RegionalTerrainWash(.16f,.43f,.23f,1),
+        RegionalTerrainWash(.43f,.48f,.24f,1),
+        RegionalTerrainWash(.72f,.40f,.22f,1),
+        RegionalTerrainWash(.91f,.56f,.17f,1),
+        RegionalTerrainWash(.20f,.71f,.20f,2),
+        RegionalTerrainWash(.52f,.79f,.24f,2),
+        RegionalTerrainWash(.84f,.88f,.23f,2)
+    )
+}
+
 /** Course-specific printed terrain with shared atlas. No artificial paths or bridge claims. */
 internal fun DrawScope.drawSiblingCourseOverhead(
     style: CourseOverheadStyle, accents: List<EnvironmentAccent>,
@@ -136,8 +154,28 @@ internal fun DrawScope.drawSiblingCourseOverhead(
             drawCircle(Brush.radialGradient(listOf(tint.copy(alpha=.27f),tint.copy(alpha=0f)),
                 center=at(x,y),radius=unit*r),radius=unit*r,center=at(x,y))
         }
+        if (style == CourseOverheadStyle.REGIONAL) {
+            RegionalTerrainComposition.washes.forEach { wash ->
+                val tint = when (wash.tone) {
+                    0 -> Color(0xFFB88F59)
+                    1 -> Color(0xFF486E46)
+                    else -> Color(0xFFF1D58B)
+                }
+                val center = at(wash.x,wash.y)
+                val radius = unit * wash.radius
+                drawCircle(Brush.radialGradient(
+                    listOf(tint.copy(alpha = .24f), tint.copy(alpha = 0f)),
+                    center = center, radius = radius), radius = radius, center = center)
+            }
+        }
         WovenTerrainTexture.flecks.forEach { f ->
-            val tint = if (f.tone==1) Color(0xFFF5E9C5).copy(alpha=.24f)
+            val tint = if (style == CourseOverheadStyle.REGIONAL && f.tone != 1) {
+                when {
+                    f.y < .30f -> Color(0xFF92734C).copy(alpha=.20f)
+                    f.y < .67f -> Color(0xFF405F40).copy(alpha=.22f)
+                    else -> Color(0xFF8A9154).copy(alpha=.18f)
+                }
+            } else if (f.tone==1) Color(0xFFF5E9C5).copy(alpha=.24f)
                 else Color(0xFF536B49).copy(alpha=.15f)
             val center=at(f.x,f.y)
             drawCircle(tint,radius=f.size*unit*.42f,center=center)
