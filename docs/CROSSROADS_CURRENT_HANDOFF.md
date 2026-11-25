@@ -1,3 +1,9 @@
+# Active checkpoint — VISUAL-120D1
+
+QA1825 screenshot shows board bottom ending above action tray, exposing an unwanted green strip. Existing follow clamp allowed world bottom to reach 68% viewport in roll/route, 55% encounter, 57% target. Move bounds to 80%, 65%, 63% respectively as provisional visual correction; preserves existing focus target, top clamp, manual pan/zoom, Full Map and exact shared rendering/hit geometry. Updated edge clamp tests to assert each phase. Real-device checks required at start/finish, forks and tall encounter/target panels; active pawn may shift down near edge, check visibility before acceptance. VISUAL-120A rules 45566999949 passed; Android 45567000206 in progress at inspection. No gameplay or signing changes. Exact-head CI pending. Organic trails and wider scene composition remain open.
+
+---
+
 # Active checkpoint — VISUAL-120A/B
 
 QA1825 Android 45564597458 and rules 45564597444 passed. Owner supplied phone screenshots: green launcher and native icon shown without previous black surround; home cover rounded; map header uncluttered; Nearby labels still crowd ornament; Woven overhead terrain still flat and river bleeds into outer mat. No explicit owner final art acceptance. Audited runtime catalog and original import guide: three backplates, home hero, event art, trail/token/marker/environment atlases; V2 environment preferred if valid, 24 UI source candidates remain separate until promoted. First terrain pass uses fixed soft pigment washes and subtle shared atlas contact shadows; clip Woven river to printed board rectangle; shorten Nearby actions to Host/Join under existing same-Wi-Fi heading. No graph, hit testing, camera, save or signing changes. Visual styling provisional; exact-head CI and phone review pending. Next inspect camera edge behavior and terrain composition before changing geometry.

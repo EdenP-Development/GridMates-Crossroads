@@ -179,9 +179,9 @@ internal object CrossroadsCameraPreset {
         val scaledBottom = center + (worldBottom - center) * zoom
         val safeTop = viewportHeight * 0.18f
         val safeBottom = viewportHeight * when (phase) {
-            Phase.ENCOUNTER -> 0.55f
-            Phase.TARGET -> 0.57f
-            else -> 0.68f
+            Phase.ENCOUNTER -> 0.65f
+            Phase.TARGET -> 0.63f
+            else -> 0.80f
         }
         val min = safeBottom - scaledBottom
         val max = safeTop - scaledTop

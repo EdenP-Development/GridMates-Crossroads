@@ -150,7 +150,7 @@ class CrossroadsPresentationTest {
         )
         val screenBottom = height / 2f + (height - height / 2f) * zoom + lo
         assertEquals("World bottom should live under the roll dock",
-            height * .68f, screenBottom, .01f)
+            height * .80f, screenBottom, .01f)
 
         val hi = CrossroadsCameraPreset.boundFollowVertical(
             10000f, height, 0f, height, zoom, Phase.ROLL, true
@@ -163,6 +163,11 @@ class CrossroadsPresentationTest {
             -10000f, height, 0f, height, zoom, Phase.ENCOUNTER, true
         )
         assertTrue("Tall encounter dock needs more reserved space", encounter < lo)
+        val target = CrossroadsCameraPreset.boundFollowVertical(
+            -10000f, height, 0f, height, zoom, Phase.TARGET, true
+        )
+        assertEquals(height * .65f, height / 2f + height / 2f * zoom + encounter, .01f)
+        assertEquals(height * .63f, height / 2f + height / 2f * zoom + target, .01f)
     }
 
     @Test fun fullMapNeverReceivesImmersiveHudClamping() {
