@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-06B deterministic targeting coverage repair
+
+R4 rules 45669778345 and Android 45669778595 failed on AdaptiveBotTargetR4Test line 44 only (124 core tests, 1 failed): natural Woven matrix produced zero TARGET phases; all completion and replay assertions before it passed. Prior AI2-05B rules 45669084844 passed, artifact 15049112495 available, Android cancelled. Replaced unsupported stochastic coverage expectation with diagnostic count and separate guaranteed medium-risk fork / single prank catalogue fixture, exercising legal targets and codec restore at pending TARGET then identical continuation. No production rules or policy change. Exact-head CI pending. Natural mischief scarcity remains a balance issue to investigate, not fixed by fixture. Next inspect encounter CSV and build mixed-policy tournament only after green CI. No release or merge.
+
+---
+
 # Active checkpoint — AI2-06A experimental threat assessment R4
 
 AI2-05B rules 45669084844 and Android 45669084948 in progress at inspection; encounter comparison results not yet available. Added ADAPTIVE_V2_R4, explicit core-only policy. R4 delegates all non-target phases to R3 and ranks legal targets by visible distance, shield, actual traversed-path retreat distance estimate and proximity to finish. Shield stripping valued at provisional 0.75; urgency multiplier 1.5 within six spaces, distance-gap penalty 0.65. No hidden draws or added RNG; no rules changes. Tests cover target ranking, ties, empty set and 64 seeded four-bot Woven V5 races with target-boundary and final replay. CI pending; target coverage not yet established. V1 remains default; no Android/LAN activation. Next inspect encounter comparison and target results, then mixed-policy competition. Owner visual review outstanding. No merge/release.

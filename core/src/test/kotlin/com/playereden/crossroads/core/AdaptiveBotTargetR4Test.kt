@@ -18,6 +18,34 @@ class AdaptiveBotTargetR4Test {
         assertEquals(1,AdaptiveBotTargetR4.choose(listOf(
             BotTargetView(2,10,false,12),BotTargetView(1,10,false,12))))
     }
+    @Test fun controlledMischiefReachesTargetAndReplays() {
+        // Both exits have the same advertised risk and the only event is a prank.
+        // A Steady opening roll reaches the fork without relying on any random draw.
+        fun node(id: String, vararg next: String) =
+            BoardNode(id,"forest","path",next.toList(),0f,0f)
+        val board = DecisionLab.variantV5(BoardDefinition("r4-target-fixture","start","finish",
+            listOf(node("start","a","b"),node("a","c"),node("b","c"),
+                node("c","d"),node("d","e"),node("e","finish"),node("finish")),
+            listOf(ForkDefinition("start",choices=listOf(
+                ForkChoice("a","Mischief A","medium"),ForkChoice("b","Mischief B","medium"))))))
+        val events = EventCatalogue(listOf(EventDefinition("fixture_prank",listOf("forest"),
+            1,EventEffect("prank",2),listOf("mischief"))))
+        val game = GameSession(board,events,4,17,emptySet(),BotPolicyVersion.ADAPTIVE_V2_R4)
+        game.botStep()
+        assertEquals(Phase.ROUTE,game.phase)
+        game.botStep()
+        assertEquals(Phase.TARGET,game.phase)
+        assertEquals(listOf(1,2,3),game.availableTargets())
+        val saved = MatchCheckpointCodec.decode(MatchCheckpointCodec.encode(
+            game.checkpoint("forced-target",1L)))
+        val mirror = GameSession.restore(board,events,saved)
+        game.botStep()
+        mirror.botStep()
+        assertEquals(game.snapshot(),mirror.snapshot())
+        assertEquals(1,game.currentIndex)
+        assertEquals(Phase.ROLL,game.phase)
+    }
+
     @Test fun explicitPolicyCompletesAndReplays() {
         val root = File(System.getProperty("crossroads.repoDir"))
         val board = DecisionLab.variantV5(GameData.board(File(root,
@@ -41,6 +69,7 @@ class AdaptiveBotTargetR4Test {
             assertEquals(BotPolicyVersion.ADAPTIVE_V2_R4,saved.botPolicy)
             assertEquals(game.snapshot(),GameSession.restore(board,events,saved).snapshot())
         }
-        assertTrue("Seed matrix must exercise targeting",targets > 0)
+        // Natural target frequency is diagnostic, not a guaranteed property of this course.
+        println("R4 natural Woven target phases: $targets")
     }
 }
