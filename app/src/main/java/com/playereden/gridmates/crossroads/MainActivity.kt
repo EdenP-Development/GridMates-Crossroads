@@ -2400,8 +2400,16 @@ private fun BoardCanvas(
                     isFakeBoldText = true
                     textAlign = android.graphics.Paint.Align.CENTER
                 }
-                listOf("MEADOW", "FOREST", "VILLAGE").forEachIndexed { index, label ->
-                    canvas.nativeCanvas.drawText(label, left + (0.2f + index * 0.29f) * drawWidth, top + 8f, labelPaint)
+                if (DecisionLab.baseId(board.id) == CrossroadsCourse.REGIONAL_ID) {
+                    listOf("VILLAGE" to .06f, "FOREST" to .47f, "MEADOW" to .76f)
+                        .forEach { (label, y) ->
+                            canvas.nativeCanvas.drawText(label, left + .50f * drawWidth,
+                                top + y * drawHeight, labelPaint)
+                        }
+                } else {
+                    listOf("MEADOW", "FOREST", "VILLAGE").forEachIndexed { index, label ->
+                        canvas.nativeCanvas.drawText(label, left + (0.2f + index * 0.29f) * drawWidth, top + 8f, labelPaint)
+                    }
                 }
             }
             // Longer authored courses have more route nodes in the same viewport.
