@@ -1,3 +1,9 @@
+# Active checkpoint — VISUAL-118A
+
+VISUAL-117C rules 45563639767 passed; Android 45563639649 failed because utility button safeInset was not declared in its scope. Fixed with BoxWithConstraints and local inset. First board pass: reuse deterministic, graph-clearance-filtered groundcover on Storybook illustrated view as well as Overhead (no duplicate drawing); retain all route geometry, camera and input transforms. Woven procedural fallback now resolves tactical variants through baseId, matching other courses. No new artwork or rule changes. Groundcover over existing backplates is provisional and needs device review for density and readability. Exact-head CI pending. Next examine actual camera edge framing and HUD rather than changing geometry blindly.
+
+---
+
 # Active checkpoint — VISUAL-117C
 
 VISUAL-117B Android 45562649186 and rules 45562649121 passed. Shared tabletop controls now reserve larger horizontal text insets on wide faces, use quiet native frames for aspect ratios below 3:1, retain selected borders and add pressed-state shading in native fallback, and constrain utility labels to two centered lines. Added pure geometry policy regression test. These thresholds are provisional pending screenshots; no gameplay, saves, signing or artwork master changes. Exact-head CI pending. Next inspect compact and wide controls on phone; then HUD and board presentation.

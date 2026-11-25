@@ -2006,9 +2006,9 @@ private fun BoardCanvas(
         if (wovenOverhead) WovenEnvironmentAccents.plan(board.nodes, overheadDecor)
         else emptyList()
     }
-    val groundcover = remember(board, courseOverheadStyle, useOverheadArtwork,
+    val groundcover = remember(board, courseOverheadStyle, useOverheadArtwork, boardLook,
         overheadDecor, environmentAccents, siblingAccents) {
-        if (useOverheadArtwork && courseOverheadStyle != null) {
+        if (boardLook == CrossroadsBoardLook.ILLUSTRATED && courseOverheadStyle != null) {
             WoodlandGroundcover.plan(board.nodes, courseOverheadStyle,
                 overheadDecor.map { Offset(it.x,it.y) } +
                     (environmentAccents + siblingAccents).map { Offset(it.x,it.y) })
@@ -2389,6 +2389,10 @@ private fun BoardCanvas(
                         drawHeight.toInt().coerceAtLeast(1)),
                     filterQuality = FilterQuality.Medium
                 )
+            }
+            // Storybook also receives quiet route-safe groundcover; overhead already draws it.
+            if (!useOverheadArtwork && boardLook == CrossroadsBoardLook.ILLUSTRATED) {
+                drawWoodlandGroundcover(groundcover, left, top, drawWidth, drawHeight)
             }
             // Region names make the fixed course easier to learn between matches.
             drawIntoCanvas { canvas ->

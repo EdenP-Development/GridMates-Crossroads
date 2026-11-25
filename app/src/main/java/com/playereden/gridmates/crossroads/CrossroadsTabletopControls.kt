@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -223,7 +222,8 @@ internal fun TabletopUtilityButton(
         contentColor = if (dark) Color(0xFFFFF3D6) else Color(0xFF385945),
         shadowElevation = 0.dp
     ) {
-        Box(contentAlignment = Alignment.Center) {
+        BoxWithConstraints(contentAlignment = Alignment.Center) {
+            val safeInset = if (maxWidth >= 200.dp) 28.dp else 10.dp
             OptionalTabletopButtonArt(
                 family = if (dark) TabletopArtFamily.PRIMARY else TabletopArtFamily.SECONDARY,
                 pressed = pressed
