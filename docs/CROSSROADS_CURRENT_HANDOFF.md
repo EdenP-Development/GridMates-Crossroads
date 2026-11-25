@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-01 baseline instrumentation
+
+Added BotPolicyBaselineTest (252 all-bot games, seven course/rule combinations, 2–4 seats, 12 seeds; finish and checkpoint replay assertions, phase counts CSV) and docs/AI2_01_BASELINE.md. Runtime unchanged. MatchCheckpoint v1 stores BOT commands, so policy/RNG changes may break legacy saves; version policy before changing behavior. CI pending, no simulation results yet. QA1857 visual review deferred due owner upload limit. No release changes.
+
+---
+
 # Active checkpoint — WW2-06 consolidated visual audit / QA1857
 
 Both exact-head WW2-05A workflows passed: rules 45581152204, Android 45581152201; QA1857 artifact 15006113348 (20257423 bytes). Added docs/WW2_06_VISUAL_ARTWORK_AUDIT.md with inventory (17 slots, 10 QA-preview approved, 7 planned), reuse and decode audit, theoretical memory costs, owner test matrix, and explicit limitations. No runtime changes; no new APK needed for this documentation-only checkpoint. Physical review and performance measurements outstanding. Next focus gameplay/AI/balance and multiplayer after review.
