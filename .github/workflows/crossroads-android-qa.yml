@@ -120,6 +120,8 @@ jobs:
           gradle --no-daemon :app:assembleRelease "-PcrossroadsQaVersionCode=$QA_CODE" --console=plain
           unsigned=app/build/outputs/apk/release/app-release-unsigned.apk
           test -s "$unsigned"
+          unzip -p "$unsigned" assets/branding/startup/v1/spudacus.png | sha256sum -c <(echo "74773dbda822161f73a639f959e8bce5c6e0b333a94ebeb8ee27f620d4995d25  -")
+          unzip -p "$unsigned" assets/branding/startup/v1/gridmates.png | sha256sum -c <(echo "eef6d631cac0b9523f7e0dbebac229f9a2458d36fe2e73e111d251704d9ff292  -")
           tools="$ANDROID_HOME/build-tools/35.0.0"
           "$tools/aapt" dump badging "$unsigned" | tee /tmp/crossroads-release-badging.txt
           grep -F "package: name='com.playereden.gridmates.crossroads'" /tmp/crossroads-release-badging.txt
@@ -136,6 +138,8 @@ jobs:
           APK=app/build/outputs/apk/debug/app-debug.apk
           TOOLS="$ANDROID_HOME/build-tools/35.0.0"
           test -s "$APK"
+          unzip -p "$APK" assets/branding/startup/v1/spudacus.png | sha256sum -c <(echo "74773dbda822161f73a639f959e8bce5c6e0b333a94ebeb8ee27f620d4995d25  -")
+          unzip -p "$APK" assets/branding/startup/v1/gridmates.png | sha256sum -c <(echo "eef6d631cac0b9523f7e0dbebac229f9a2458d36fe2e73e111d251704d9ff292  -")
           "$TOOLS/apksigner" verify --print-certs "$APK" | tee /tmp/crossroads-certs.txt
           grep -iF '75cc3c896247d71fbd51f7a3ed41f90c8218a8a5a70df8c0f6b494b5cc23d419' /tmp/crossroads-certs.txt
           "$TOOLS/aapt" dump badging "$APK" | grep -F "name='com.playereden.gridmates.crossroads.qa' versionCode='$QA_CODE'"
