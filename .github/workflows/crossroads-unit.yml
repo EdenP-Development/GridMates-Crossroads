@@ -67,6 +67,7 @@ jobs:
             core/build/reports/ai2-baseline/bot_policy_baseline.csv
             core/build/reports/ai2-comparison/travel_samples.csv
             core/build/reports/ai2-comparison/travel_summary.txt
+            core/build/reports/ai2-comparison/route_samples.csv
             ${{ runner.temp }}/crossroads-history/*.json
           if-no-files-found: error
           retention-days: 30

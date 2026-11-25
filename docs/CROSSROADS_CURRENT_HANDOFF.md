@@ -1,3 +1,11 @@
+# Active checkpoint — AI2-04C route policy comparison and portfolio handoff
+
+AI2-04B rules 45591493548 passed; Android 45591493481 running at inspection. Added actual-engine homogeneous R1/R2 comparison: 576 races, 288 paired course/seat/seed configurations, 4 V5 courses, 2–4 seats, 24 seeds. Records pacing, route/encounter/target counts and winner seats; requires finish and replay. All seats share one policy per race; cannot infer relative competitive strength from this test. CSV uploaded with existing AI artifact. No runtime changes; exact-head CI pending.
+
+Current state: legacy V1 remains default; R1/R2 explicit experimental core only. Historical V1 gate passes on prior head; R1/R2 same-version replay tests pass on prior rules head. Travel result source artifact 15009953323: 134 vs 145 wins in 432 per arm, 2150/2918 vs 1980/2922 push rolls. QA1857 owner screenshots incomplete due upload limit; retain visual checkpoint. Next inspect route comparison CSV, design mixed-policy competition or controlled focal proxy, then encounter intelligence. No public release, merge, or LAN activation. Draft PR120 remains development lane.
+
+---
+
 # Active checkpoint — AI2-04B experimental adaptive route R2
 
 AI2-04A rules 45590871078 and Android 45590871122 still running at inspection. Added explicit ADAPTIVE_V2_R2: on Lab routes score remaining distance, advertised risk only if encounter available, Steady shelter momentum, visible finish and next safe fork when encounter spent. Deterministic ID tie-break; R2 consumes no route scoring RNG (different stream from R1 by design). R1 travel reused, all other phases unchanged. V1 and R1 branches untouched; default V1; no Android/LAN selection. Added scoring and 12 seed replay tests. Geometry not guaranteed if encounters intervene; weights provisional, no measured superiority. Exact-head CI pending. Next compare R2 against R1 and retain historical compatibility. QA1857 physical review outstanding.
