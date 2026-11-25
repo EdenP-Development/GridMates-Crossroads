@@ -350,8 +350,8 @@ internal fun CrossroadsHomeScreen(
         Text("Two phones on the same Wi-Fi", style = MaterialTheme.typography.bodySmall,
             color = Muted)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TabletopUtilityButton("Host nearby", onNearbyHost, Modifier.weight(1f), icon = TabletopIconArt.MULTIPLAYER)
-            TabletopUtilityButton("Join nearby", onNearbyJoin, Modifier.weight(1f), icon = TabletopIconArt.MULTIPLAYER)
+            TabletopUtilityButton("Host", onNearbyHost, Modifier.weight(1f), icon = TabletopIconArt.MULTIPLAYER)
+            TabletopUtilityButton("Join", onNearbyJoin, Modifier.weight(1f), icon = TabletopIconArt.MULTIPLAYER)
         }
         TabletopUtilityButton(
             text = "How to play", onClick = { showGuide = true },

@@ -1,6 +1,8 @@
 package com.playereden.gridmates.crossroads
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -86,6 +88,11 @@ internal fun DrawScope.tryDrawEnvironmentSprite(
         !boardSide.isFinite() || boardSide <= 0f ||
         !center.x.isFinite() || !center.y.isFinite()) return false
     val diameter = (boardSide * sprite.diameter).roundToInt().coerceAtLeast(1)
+    // A shared contact shadow anchors the cutout to the printed ground.
+    val d = diameter.toFloat()
+    drawOval(Color(0xFF34492D).copy(alpha = .20f),
+        topLeft = center + Offset(-d * .31f, d * .27f),
+        size = Size(d * .68f, d * .15f))
     drawImage(
         image = atlas,
         srcOffset = EnvironmentAtlas.source(sprite),

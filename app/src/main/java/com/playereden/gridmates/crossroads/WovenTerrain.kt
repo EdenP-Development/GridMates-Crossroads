@@ -77,6 +77,18 @@ internal fun DrawScope.drawWovenTerrain(left: Float, top: Float, width: Float, h
                 radius = unit * radius, center = center
             )
         }
+        // Overlapping soft pigment washes break up the broad region bands.
+        // Fixed board-space positions: no animation shimmer or new game geometry.
+        for (i in 0 until 36) {
+            val x = (i % 6 + .24f + (i * 17 % 49) / 100f) / 6f
+            val y = (i / 6 + .18f + (i * 23 % 53) / 100f) / 6f
+            val radius = unit * (.065f + (i % 5) * .014f)
+            val center = at(x, y)
+            val tint = if (i % 3 == 0) Color(0xFFF0DFA8) else Color(0xFF577A4C)
+            drawCircle(Brush.radialGradient(
+                listOf(tint.copy(alpha = .16f), tint.copy(alpha = 0f)),
+                center = center, radius = radius), radius = radius, center = center)
+        }
         // Tiny broken fibers and vegetation strokes remain subtle under the paths.
         WovenTerrainTexture.flecks.forEach { fleck ->
             val p = at(fleck.x, fleck.y)

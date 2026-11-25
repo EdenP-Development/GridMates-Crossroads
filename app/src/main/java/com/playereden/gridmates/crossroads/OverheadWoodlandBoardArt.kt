@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import com.playereden.crossroads.core.BoardNode
 import com.playereden.crossroads.core.DecisionLab
@@ -238,12 +239,15 @@ internal fun DrawScope.drawOverheadWoodlandPrint(
         p = at(.62f, .64f); q = at(.90f, .72f); end = at(.80f, 1.05f)
         cubicTo(p.x, p.y, q.x, q.y, end.x, end.y)
     }
+    clipRect(left, top, left + width, top + height) {
     drawPath(stream, color = Color(0xFF5D8A85).copy(alpha = .49f),
         style = Stroke(width = u * 5.9f, cap = StrokeCap.Round))
     drawPath(stream, color = Color(0xFF93BAB0).copy(alpha = .91f),
         style = Stroke(width = u * 4.4f, cap = StrokeCap.Round))
     drawPath(stream, color = Color(0xFFC4D9BC).copy(alpha = .65f),
         style = Stroke(width = u * 1.0f, cap = StrokeCap.Round))
+
+    }
 
     // These little plank bridges line up with the graph, not with arbitrary
     // decorative map coordinates. Actual wooden roads still draw above them;

@@ -1,3 +1,9 @@
+# Active checkpoint — VISUAL-120A/B
+
+QA1825 Android 45564597458 and rules 45564597444 passed. Owner supplied phone screenshots: green launcher and native icon shown without previous black surround; home cover rounded; map header uncluttered; Nearby labels still crowd ornament; Woven overhead terrain still flat and river bleeds into outer mat. No explicit owner final art acceptance. Audited runtime catalog and original import guide: three backplates, home hero, event art, trail/token/marker/environment atlases; V2 environment preferred if valid, 24 UI source candidates remain separate until promoted. First terrain pass uses fixed soft pigment washes and subtle shared atlas contact shadows; clip Woven river to printed board rectangle; shorten Nearby actions to Host/Join under existing same-Wi-Fi heading. No graph, hit testing, camera, save or signing changes. Visual styling provisional; exact-head CI and phone review pending. Next inspect camera edge behavior and terrain composition before changing geometry.
+
+---
+
 # Active checkpoint — VISUAL-119A
 
 VISUAL-118A rules 45564231581 passed; Android 45564231618 was still running when checked. Small HUD cleanup: avoid displaying the same narration twice when turn details are expanded; shorten the disclosure to Turn details / Hide details, covered by a unit test; allow turn title to wrap to two lines rather than truncate long names. Existing action dock minimum heights and camera geometry deliberately retained until physical review. No rules, signing or data changes. Exact-head CI pending. Next consolidated APK review should cover launcher masks, home controls, Storybook groundcover, map exit, and HUD with normal/large fonts. Further board scenery and camera improvements remain open.
