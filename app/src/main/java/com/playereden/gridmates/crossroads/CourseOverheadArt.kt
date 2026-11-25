@@ -12,13 +12,14 @@ import com.playereden.crossroads.core.DecisionLab
 import kotlin.math.min
 
 internal enum class CourseOverheadStyle {
-    BROOKSIDE, WOVEN, CEDARWOOD;
+    BROOKSIDE, WOVEN, CEDARWOOD, REGIONAL;
 
     companion object {
         fun forBoard(id: String): CourseOverheadStyle? = when (DecisionLab.baseId(id)) {
             "woodland_brookside_quick_v01" -> BROOKSIDE
             "woodland_woven_trail_v02" -> WOVEN
             "woodland_cedarwood_long_v01" -> CEDARWOOD
+            CrossroadsCourse.REGIONAL_ID -> REGIONAL
             else -> null
         }
     }
@@ -52,6 +53,17 @@ internal object CourseOverheadScenery {
                 p(.94f,.834f,EnvironmentSprite.ORCHARD),
                 p(.284f,.936f,EnvironmentSprite.BUSH),
                 p(.716f,.944f,EnvironmentSprite.FENCE)
+            )
+            CourseOverheadStyle.REGIONAL -> listOf(
+                p(.18f,.10f,EnvironmentSprite.COTTAGE),
+                p(.42f,.11f,EnvironmentSprite.ORCHARD),
+                p(.75f,.10f,EnvironmentSprite.COTTAGE),
+                p(.30f,.43f,EnvironmentSprite.FIR_GROVE),
+                p(.53f,.43f,EnvironmentSprite.OAK),
+                p(.72f,.43f,EnvironmentSprite.FIR_GROVE),
+                p(.28f,.74f,EnvironmentSprite.FLOWERS),
+                p(.52f,.74f,EnvironmentSprite.MEADOW_CLEARING),
+                p(.72f,.74f,EnvironmentSprite.FLOWERS)
             )
             CourseOverheadStyle.CEDARWOOD -> listOf(
                 p(.052f,.048f,EnvironmentSprite.FIR),
@@ -96,7 +108,13 @@ internal fun DrawScope.drawSiblingCourseOverhead(
         listOf(Color(0xFFE5DDB2),Color(0xFFC7D3A4),Color(0xFFDDD3A6))
     else listOf(Color(0xFFC8C6A0),Color(0xFF9DAF87),Color(0xFFC9BC95))
     clipRect(left,top,left+width,top+height) {
-        drawRect(Brush.linearGradient(palette,start=at(0f,.2f),end=at(1f,.8f)),
+        val terrainBrush = if (style == CourseOverheadStyle.REGIONAL)
+            Brush.verticalGradient(0f to Color(0xFFE4D1AC), .30f to Color(0xFFD4D4AA),
+                .49f to Color(0xFF9DAF87), .65f to Color(0xFFA9BA8D),
+                .82f to Color(0xFFD6DAA7), 1f to Color(0xFFE8DDB2),
+                startY=top, endY=top+height)
+        else Brush.linearGradient(palette,start=at(0f,.2f),end=at(1f,.8f))
+        drawRect(terrainBrush,
             topLeft=at(0f,0f),size=Size(width,height))
         val pools = if (style == CourseOverheadStyle.BROOKSIDE)
             listOf(Triple(.18f,.3f,.25f),Triple(.48f,.5f,.19f),Triple(.88f,.81f,.22f))
