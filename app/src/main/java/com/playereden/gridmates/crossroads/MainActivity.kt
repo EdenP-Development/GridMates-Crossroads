@@ -1001,13 +1001,13 @@ private fun CrossroadsApp(
             Column(
                 modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth()
                     .background(Color(0xED352C20))
-                    .padding(top = 6.dp, bottom = 5.dp),
+                    .padding(top = 3.dp, bottom = 2.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
             val displayedSeat = (if (!turnReady) cameraTrackIndex else state.playerIndex)
                 .coerceIn(state.players.indices)
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 1.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 state.players.forEachIndexed { i, player ->
@@ -1032,7 +1032,7 @@ private fun CrossroadsApp(
             }
 
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(start = 12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(start = 10.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -1048,10 +1048,6 @@ private fun CrossroadsApp(
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
-                    if (BuildConfig.DEBUG) {
-                        Text("QA", color = Color(0xFFF0D7A5),
-                            style = MaterialTheme.typography.labelSmall)
-                    }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         TabletopUtilityButton(
                             text = "Full map", onClick = { inspectBoard = true }, dark = true,
@@ -1243,8 +1239,8 @@ private fun CrossroadsApp(
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
-                        .padding(horizontal = 10.dp, vertical = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     val round = (state.turn - 1) / state.players.size + 1
                     val currentName = state.players[state.playerIndex].name
