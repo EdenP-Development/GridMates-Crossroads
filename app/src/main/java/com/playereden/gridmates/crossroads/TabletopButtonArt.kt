@@ -43,6 +43,10 @@ internal object TabletopButtonArt {
         return cap.takeIf { it > 0 && 2L * it < width }
     }
 
+    // Narrow faces deliberately use the native frame; ornaments need room for labels.
+    fun usesIllustration(width: Int, height: Int): Boolean =
+        width > 0 && height > 0 && width.toLong() * 10 >= height.toLong() * 30
+
     fun filename(enabled: Boolean, pressed: Boolean): String =
         filename(TabletopArtFamily.PRIMARY, enabled, pressed, false)
 
@@ -99,7 +103,7 @@ internal fun BoxScope.OptionalTabletopButtonArt(
         val cap = TabletopButtonArt.expandedCap(w, h)
         // Compact controls need a quiet face rather than crowded leaf ornaments.
         // Keep a single native fallback frame if art is unavailable or too narrow.
-        if (image == null || h <= 0 || w.toLong() * 10 < h.toLong() * 23) {
+        if (image == null || !TabletopButtonArt.usesIllustration(w, h)) {
             val dark = family == TabletopArtFamily.PRIMARY
             val face = when {
                 !enabled -> TabletopLabelPalette.disabledPaper
@@ -107,8 +111,9 @@ internal fun BoxScope.OptionalTabletopButtonArt(
                 else -> TabletopLabelPalette.lightPaper
             }
             val edge = if (selected || dark) TabletopMaterials.brass else Color(0xFFAA9672)
+            val pressedFace = if (pressed && enabled) androidx.compose.ui.graphics.lerp(face, Color.Black, .08f) else face
             val shape = RoundedCornerShape(12.dp)
-            Box(Modifier.matchParentSize().background(face, shape)
+            Box(Modifier.matchParentSize().background(pressedFace, shape)
                 .border(if (selected) 2.dp else 1.dp, edge, shape))
         } else if (cap == null) {
             Image(bitmap = image, contentDescription = null,

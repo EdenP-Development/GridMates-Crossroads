@@ -9,6 +9,8 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -86,14 +88,15 @@ internal fun TabletopChoicePill(
         contentColor = ink,
         shadowElevation = 0.dp
     ) {
-        Box(contentAlignment = Alignment.Center) {
+        BoxWithConstraints(contentAlignment = Alignment.Center) {
+            val safeInset = if (maxWidth >= 200.dp) 28.dp else 10.dp
             OptionalTabletopButtonArt(
                 family = if (selected) TabletopArtFamily.PRIMARY else TabletopArtFamily.SECONDARY,
                 pressed = pressed, selected = selected
             )
             Box(
                 modifier = Modifier.fillMaxWidth()
-                    .padding(horizontal = 6.dp, vertical = 12.dp),
+                    .padding(horizontal = safeInset, vertical = 12.dp),
                 contentAlignment = Alignment.Center
             ) {
             Text(
@@ -165,10 +168,11 @@ internal fun TabletopPrimaryActionButton(
         contentColor = if (enabled) Color(0xFFFFF5DA) else Color(0xFF786D5A),
         shadowElevation = 0.dp
     ) {
-        Box {
+        BoxWithConstraints {
+            val safeInset = if (maxWidth >= 200.dp) 32.dp else 12.dp
             OptionalPrimaryButtonArt(enabled, pressed)
             Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 13.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = safeInset, vertical = 13.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -225,7 +229,7 @@ internal fun TabletopUtilityButton(
                 pressed = pressed
             )
             Box(
-                modifier = Modifier.padding(horizontal = 9.dp, vertical = 8.dp),
+                modifier = Modifier.padding(horizontal = safeInset, vertical = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Row(
@@ -238,7 +242,8 @@ internal fun TabletopUtilityButton(
                     }
                     Text(text, style = MaterialTheme.typography.labelLarge.copy(shadow = tabletopInkShadow(dark)),
                         color = if (dark) TabletopLabelPalette.lightInk else TabletopLabelPalette.darkInk,
-                        fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
+                        fontWeight = FontWeight.Medium, textAlign = TextAlign.Center,
+                        maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
             }
         }

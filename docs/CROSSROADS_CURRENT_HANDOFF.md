@@ -1,3 +1,9 @@
+# Active checkpoint — VISUAL-117C
+
+VISUAL-117B Android 45562649186 and rules 45562649121 passed. Shared tabletop controls now reserve larger horizontal text insets on wide faces, use quiet native frames for aspect ratios below 3:1, retain selected borders and add pressed-state shading in native fallback, and constrain utility labels to two centered lines. Added pure geometry policy regression test. These thresholds are provisional pending screenshots; no gameplay, saves, signing or artwork master changes. Exact-head CI pending. Next inspect compact and wide controls on phone; then HUD and board presentation.
+
+---
+
 # Active checkpoint — VISUAL-117B
 
 VISUAL-117A Android 45561783809 and rules 45561783745 passed. Home cleanup: clip cover overlay to rounded cover, clip scrolling content to its allocated viewport, increase scroll-end breathing room, use explicit Players heading with compact 2/3/4 choices and accessible labels, separate QA course disclosure from Regional Journey button, allow board appearance label to wrap in weighted column. These are provisional visual adjustments, not physical approval. Pinned Start Race, rule summary, game rules, saves and signing unchanged. Exact-head CI pending. Shared control art insets and board presentation remain open.
