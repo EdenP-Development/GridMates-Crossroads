@@ -46,6 +46,8 @@ android {
     }
     buildFeatures { compose = true; buildConfig = true }
     sourceSets.getByName("main").assets.srcDir(rootProject.file("data"))
+    // QA-only prototype assets; not bundled into the public release.
+    sourceSets.getByName("debug").assets.srcDir(rootProject.file("design/prototypes"))
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
