@@ -1144,7 +1144,7 @@ private fun CrossroadsApp(
                                 )
                                 DropdownMenuItem(
                                     text = {
-                                        Text(if (woodlandPieces) "Pieces: Woodland (zoom detail)"
+                                        Text(if (woodlandPieces) "Pieces: Woodland"
                                             else "Pieces: Standard")
                                     },
                                     onClick = {
@@ -2179,7 +2179,9 @@ private fun BoardCanvas(
     val cameraZoom = if (cameraMode == BoardCameraMode.MANUAL) manualZoom else autoZoom
     val drawWoodlandPortraits = shouldDrawWoodlandPortrait(
         artAvailable = showWoodlandTokens,
-        cameraZoom = cameraZoom
+        cameraZoom = cameraZoom,
+        liveWorld = immersiveWorld,
+        baseDiameterPx = 22f * gamePieceScale
     )
     val focusPx = worldFrame.position(followedFocus.x, followedFocus.y)
     val desiredTranslation = when (cameraMode) {
