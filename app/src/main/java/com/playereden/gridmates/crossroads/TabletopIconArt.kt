@@ -2,6 +2,9 @@ package com.playereden.gridmates.crossroads
 
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -46,7 +49,11 @@ internal fun OptionalTabletopIcon(
         }
         bitmap
     }
-    if (image == null) fallback()
-    else Image(bitmap = image, contentDescription = null,
-        modifier = modifier, contentScale = ContentScale.Fit)
+    // Reserve the same caller-defined space before and after decoding.
+    // Decorative artwork must never move native labels or touch targets.
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        if (image == null) fallback()
+        else Image(bitmap = image, contentDescription = null,
+            modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+    }
 }
