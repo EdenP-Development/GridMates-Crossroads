@@ -23,6 +23,7 @@ internal object WoodlandGroundcover {
                     CourseOverheadStyle.CEDARWOOD -> true
                     CourseOverheadStyle.BROOKSIDE -> x > .66f
                     CourseOverheadStyle.WOVEN -> x in .34f.. .69f
+                    CourseOverheadStyle.REGIONAL -> y in .38f.. .69f
                 }
                 if (!forest && i % 3 == 0) continue
                 val radius = .006f + (i % 4) * .002f
