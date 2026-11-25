@@ -71,6 +71,8 @@ jobs:
             core/build/reports/ai2-comparison/encounter_samples.csv
             core/build/reports/ai2-comparison/mixed_tournament.csv
             core/build/reports/ai2-comparison/four_seat_tournament.csv
+            core/build/reports/ai2-comparison/route_exposure.csv
+            core/build/reports/ai2-comparison/finish_receipts.csv
             ${{ runner.temp }}/crossroads-history/*.json
           if-no-files-found: error
           retention-days: 30
