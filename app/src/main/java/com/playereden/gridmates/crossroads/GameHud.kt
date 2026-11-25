@@ -39,13 +39,13 @@ internal fun GameHudTurnStrip(
             contentDescription = "$moment. $title"
         },
         color = Color(0xFF385945),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(10.dp),
         border = BorderStroke(1.dp, Color(0xFFBDA677)),
-        shadowElevation = 2.dp
+        shadowElevation = 0.dp
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp)
-                .padding(horizontal = 10.dp, vertical = 4.dp),
+                .padding(horizontal = 9.dp, vertical = 3.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(9.dp)
         ) {
@@ -53,7 +53,7 @@ internal fun GameHudTurnStrip(
                 modifier = Modifier.width(5.dp).height(26.dp)
                     .background(seatColor, RoundedCornerShape(4.dp))
             )
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(0.dp)) {
                 Text(moment, fontSize = 10.sp, fontWeight = FontWeight.Bold,
                     color = Color(0xFFF0D7A5))
                 Text(title, style = MaterialTheme.typography.bodyMedium,

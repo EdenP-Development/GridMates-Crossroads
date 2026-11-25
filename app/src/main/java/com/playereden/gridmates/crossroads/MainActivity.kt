@@ -1055,7 +1055,8 @@ private fun CrossroadsApp(
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         TabletopUtilityButton(
-                            text = "Full map", onClick = { inspectBoard = true }, dark = true,
+                            text = "Map", onClick = { inspectBoard = true }, dark = true,
+                            modifier = Modifier.width(94.dp).semantics { contentDescription = "Full map" },
                             icon = TabletopIconArt.MAP
                         )
                     Box {
@@ -1303,7 +1304,7 @@ private fun CrossroadsApp(
                     // The encounter card itself explains the human's next action.
                     // Avoid a redundant two-line explanation above it, which
                     // pushed event choices off shorter portrait screens.
-                    if (!showTurnDetails && showCollapsedActionNote(
+                    if (!showTurnDetails && !(initialInstructions && game.playtestRules && lanRole == LanRole.OFFLINE) && showCollapsedActionNote(
                             phase = state.phase,
                             humanEncounterChoiceReady =
                                 state.phase == Phase.ENCOUNTER &&
@@ -1418,7 +1419,7 @@ private fun CrossroadsApp(
                                         )
                                         TabletopActionTile(
                                             title = "PUSH",
-                                            detail = "Risk for speed",
+                                            detail = "1 or 5–8 spaces",
                                             warm = true,
                                             onClick = {
                                                 queuedLabRoll = LabRoll.PUSH

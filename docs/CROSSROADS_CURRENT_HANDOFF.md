@@ -1,3 +1,9 @@
+# Active checkpoint — VISUAL-120E1
+
+VISUAL-120C1 Android 45568422712 and rules 45568422627 passed. Compact HUD pass: fixed-width Map utility with full accessible description, omit redundant opening narration for offline tactical roll (actions already explain choice), Push tile displays actual outcomes 1 or 5–8 spaces, turn strip tighter and flatter, action tiles use warm brass and reduced elevation/padding with two-line consequence text. Existing dock safety bounds and 48dp+ interactive targets retained, no camera or rules changes. Provisional design; exact-head CI and phone review needed, including four seats, Regional Journey, large fonts and turn details. No signing or saved-data changes.
+
+---
+
 # Active checkpoint — VISUAL-120C1
 
 VISUAL-120D1 Android 45567414743 and rules 45567414689 passed. Refined existing earthen trail and junction rendering: soft layered shoulders, reduced dark outline, warmer earth deck, deterministic broken verge pigment and matched junction palette. Centerlines, marker coordinates, route colors, width of playable deck, hit testing, motion, saves and signing unchanged. No curved geometry introduced; visual-only first pass. Simple/Printed and atlas overview remain intact. New CI and phone review pending; verify risk-band legibility and dense regional routes. Next review HUD proportions and environmental density in consolidated build.

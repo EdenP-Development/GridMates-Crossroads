@@ -187,7 +187,7 @@ internal fun TabletopActionTile(
         animationSpec = tween(95),
         label = "tabletop-tile-contact"
     )
-    val bg = if (warm) Color(0xFFB68A48) else Color(0xFF3D624A)
+    val bg = if (warm) Color(0xFFD4AE68) else Color(0xFF3D624A)
     val ink = if (warm) Color(0xFF30291F) else Color(0xFFFFF3D6)
     Surface(
         onClick = onClick,
@@ -199,10 +199,10 @@ internal fun TabletopActionTile(
         color = if (enabled) bg else Color(0xFFD5CEBC),
         border = BorderStroke(2.dp,
             if (enabled) TabletopMaterials.brass else Color(0xFFB2A58B)),
-        shadowElevation = if (enabled) 4.dp else 0.dp
+        shadowElevation = if (enabled) 2.dp else 0.dp
     ) {
         Box(
-            modifier = Modifier.padding(horizontal = 5.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
             contentAlignment = Alignment.Center
         ) {
             androidx.compose.foundation.layout.Column(
@@ -216,7 +216,7 @@ internal fun TabletopActionTile(
                     overflow = TextOverflow.Ellipsis)
                 Text(detail, color = if (enabled) ink else Color(0xFF786C59),
                     style = MaterialTheme.typography.labelSmall,
-                    textAlign = TextAlign.Center, maxLines = 1,
+                    textAlign = TextAlign.Center, maxLines = 2,
                     overflow = TextOverflow.Ellipsis)
             }
         }
