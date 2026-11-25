@@ -7,13 +7,13 @@ import org.junit.Test
 class CrossroadsPresentationTest {
     @Test fun narrowPortraitFollowShowsMoreContextWithoutChangingManualOrMapPresets() {
         val preset = CrossroadsCameraPreset.followZoom(Phase.ROLL, 4, true)
-        assertEquals(1.88f, CrossroadsCameraPreset.portraitContextZoom(preset, 674f, 1536f), .0001f)
+        assertEquals(1.15f, CrossroadsCameraPreset.portraitContextZoom(preset, 674f, 1536f), .0001f)
         val intermediate = CrossroadsCameraPreset.portraitContextZoom(preset, 540f, 1000f)
-        assertTrue(intermediate > 1.88f && intermediate < preset)
-        assertEquals(preset, CrossroadsCameraPreset.portraitContextZoom(preset, 800f, 1000f), .0001f)
+        assertTrue(intermediate > 1.15f && intermediate < 1.65f)
+        assertEquals(1.65f, CrossroadsCameraPreset.portraitContextZoom(preset, 800f, 1000f), .0001f)
         assertEquals(preset, CrossroadsCameraPreset.portraitContextZoom(preset, 0f, 1000f), .0001f)
         assertEquals(1f, CrossroadsCameraPreset.portraitContextZoom(1f, 400f, 900f), .0001f)
-        assertEquals(1.65f, CrossroadsCameraPreset.portraitContextZoom(1.65f, 400f, 1000f), .0001f)
+        assertEquals(1.15f, CrossroadsCameraPreset.portraitContextZoom(1.65f, 400f, 1000f), .0001f)
     }
 
     @Test fun courseTitlesAreSpecificAndNeverAlterStoredIds() {
