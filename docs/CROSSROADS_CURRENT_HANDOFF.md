@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-03A mirrored travel comparison
+
+Adaptive V2 R1 rules 45589117704 passed; Android 45589117637 running at inspection. Added AdaptiveTravelComparisonTest: 864 races / 432 paired scenarios, four V5 courses, 2–4 seats, every focal seat, twelve seeds, legacy vs adaptive travel on a synthetic human seat against unchanged V1 bots. Both arms use identical deterministic non-travel choices; this isolates travel heuristics but is not a full mixed-policy tournament. Record wins, pushes, rolls and actions, assert completion and pairing; publish CSV/summary via existing AI artifact. No runtime, policy IDs, RNG or save changes. Exact-head CI pending; no measured superiority claim. Review actual report before modifying policy.
+
+---
+
 # Active checkpoint — AI2-02B experimental adaptive travel R1
 
 AI2-02A both CI passed (45586915751 rules,45586916198 Android). Added explicit ADAPTIVE_V2_R1 policy; only Lab travel roll choices differ, based on pure race assessment, signed gap, protection and final round. Other phases use unchanged legacy implementation. Existing default remains LEGACY_V1; no Android menu/LAN selection or public activation. Experimental policy saved explicitly and rematch retains it; older strict decoders cannot read experimental saves. Tests cover heuristic branches and 12 three-bot V5 Woven races with restored future; historical replay gate still runs. Freeze R1 behavior for replay, future revisions new policy IDs. Thresholds provisional, no strength claim. Exact-head CI pending; no actual device or LAN validation. QA1857 visual review deferred.
