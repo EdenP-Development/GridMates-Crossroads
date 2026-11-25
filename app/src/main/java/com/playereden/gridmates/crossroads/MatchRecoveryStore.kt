@@ -77,7 +77,7 @@ internal class MatchRecoveryStore(
             // Experimental races are deliberately excluded from the user's
             // established Classic/Quick/Long records. They still receive a
             // completed timestamp and restorable results receipt.
-            if (!game.playtestRules) {
+            if (!game.playtestRules && game.board.id != CrossroadsCourse.REGIONAL_ID) {
                 editor.putInt("completed", prefs.getInt("completed", 0) + 1)
                 editor.putInt("wins", prefs.getInt("wins", 0) +
                     if (game.winnerIndex == 0 && game.players.count { !it.isBot } == 1) 1 else 0)
