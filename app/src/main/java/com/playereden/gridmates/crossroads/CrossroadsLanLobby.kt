@@ -114,9 +114,11 @@ internal fun CrossroadsLanLobby(
                 ) { Text("Create nearby room") }
             }
             LanScreen.HOST_WAIT -> {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE5EBD8)),
-                    modifier = Modifier.fillMaxWidth()
+                TabletopPanel(
+                    color = Color(0xFFE5EBD8),
+                    contentColor = Color(0xFF3B5841),
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = 1.dp
                 ) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                         Text("Waiting for Player 2", color = forest,
@@ -150,10 +152,10 @@ internal fun CrossroadsLanLobby(
             LanScreen.JOIN -> {
                 Text("Nearby games", color = forest, style = MaterialTheme.typography.titleMedium)
                 if (rooms.isEmpty()) {
-                    Surface(
+                    TabletopPanel(
                         color = Color(0xFFE5EBD8),
-                        shape = MaterialTheme.shapes.large,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = 1.dp
                     ) {
                         Column(Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -211,7 +213,7 @@ internal fun CrossroadsLanLobby(
         }
         if (busy) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         if (!note.isNullOrEmpty()) {
-            Surface(color = Color(0xFFF1E5D3), shape = MaterialTheme.shapes.medium) {
+            TabletopPanel(color = Color(0xFFF1E5D3), elevation = 0.dp) {
                 Text(note, modifier = Modifier.padding(12.dp))
             }
         }
