@@ -1,3 +1,9 @@
+# Active checkpoint — WW2-06 consolidated visual audit / QA1857
+
+Both exact-head WW2-05A workflows passed: rules 45581152204, Android 45581152201; QA1857 artifact 15006113348 (20257423 bytes). Added docs/WW2_06_VISUAL_ARTWORK_AUDIT.md with inventory (17 slots, 10 QA-preview approved, 7 planned), reuse and decode audit, theoretical memory costs, owner test matrix, and explicit limitations. No runtime changes; no new APK needed for this documentation-only checkpoint. Physical review and performance measurements outstanding. Next focus gameplay/AI/balance and multiplayer after review.
+
+---
+
 # Active checkpoint — WW2-05A low-risk draw-path cleanup
 
 WW2-04A exact-head rules 45580068227 and Android 45580068405 both passed; signed QA1855 artifact 15006376951 (20256824 bytes). All prior WW2 additions included. WW2-05A hoists constant groundcover colors and caches waypoint angle lists/unit vectors instead of rebuilding them on draw. Same colors, shapes, geometry and placement, no new art or gameplay changes. This is a small static hot-path cleanup, not measured speedup; no claim of improved FPS or memory use. Existing board scene plans already remembered by board/style; larger raster caching deferred until profiling/physical evidence. Exact-head CI pending. QA1855 is prior verified fallback; physical WW2 review pending. Startup/icon/signing/saves untouched.
