@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-02B experimental adaptive travel R1
+
+AI2-02A both CI passed (45586915751 rules,45586916198 Android). Added explicit ADAPTIVE_V2_R1 policy; only Lab travel roll choices differ, based on pure race assessment, signed gap, protection and final round. Other phases use unchanged legacy implementation. Existing default remains LEGACY_V1; no Android menu/LAN selection or public activation. Experimental policy saved explicitly and rematch retains it; older strict decoders cannot read experimental saves. Tests cover heuristic branches and 12 three-bot V5 Woven races with restored future; historical replay gate still runs. Freeze R1 behavior for replay, future revisions new policy IDs. Thresholds provisional, no strength claim. Exact-head CI pending; no actual device or LAN validation. QA1857 visual review deferred.
+
+---
+
 # Active checkpoint — AI2-02A pure race assessment
 
 AI2-01C rules workflow 45586159958 passed including pinned old-engine fixture generation, current replay comparison and artifact upload; Android 45586159877 running at inspection. Added BotRaceAssessment and tests: visible remaining distance, shield, ordered opponent threat, signed gap, lead/tie/trail, opening/midgame/endgame and final-round awareness. Preliminary thresholds: opening front >=75% remaining, endgame front <= max(6,20% course length) or final round. Pure helper not wired into GameSession; legacy policy only, no V2 selectable, no RNG or save changes. Exact-head CI pending. Next integrate an explicitly versioned experimental policy and exercise historical gate before exposing it. QA1857 visual review still deferred.

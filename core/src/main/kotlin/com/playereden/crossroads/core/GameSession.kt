@@ -415,6 +415,28 @@ class GameSession(
     /** Bot submits exactly one regular legal action. UI may animate between actions. */
     fun botStep() = when (botPolicy) {
         BotPolicyVersion.LEGACY_V1 -> legacyBotStep()
+        BotPolicyVersion.ADAPTIVE_V2_R1 -> adaptiveBotStep()
+    }
+
+    // R1 is intentionally narrow: adaptive travel only; all other phases retain V1.
+    // Never mutate this version once saved matches exist; future revisions get new IDs.
+    private fun adaptiveBotStep() {
+        require(players[currentIndex].isBot && phase != Phase.FINISHED)
+        if (phase != Phase.ROLL || !playtestRules) {
+            legacyBotStep()
+            return
+        }
+        val awareness = BotRaceAssessment.assess(currentIndex,
+            players.mapIndexed { seat, player ->
+                BotRacerView(seat, distanceToFinish(player.position), player.shield)
+            }, distanceToFinish(board.start), finalRoundPending)
+        insideBotCommand = true
+        try {
+            if (AdaptiveBotTravelR1.shouldPush(awareness)) rollBold() else rollSteady()
+        } finally {
+            insideBotCommand = false
+        }
+        record(MatchAction(MatchActionKind.BOT))
     }
 
     private fun legacyBotStep() {
