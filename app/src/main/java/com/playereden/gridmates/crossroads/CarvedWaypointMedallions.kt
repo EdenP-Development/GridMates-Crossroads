@@ -2,6 +2,7 @@ package com.playereden.gridmates.crossroads
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 
@@ -10,6 +11,11 @@ import androidx.compose.ui.graphics.drawscope.Stroke
  * UNDER the existing engine-authored S/F letter and player pieces.
  */
 internal object CarvedWaypointGeometry {
+    // Decorative rim only: preserve the central S/F label and existing socket footprint.
+    fun rimMarks(isFinish: Boolean): List<Float> =
+        if (isFinish) listOf(30f, 90f, 150f, 210f, 270f, 330f)
+        else listOf(35f, 145f, 215f, 325f)
+
     fun socketRadius(
         baseRadius: Float,
         neighborDistanceNormalized: Float,
@@ -40,7 +46,8 @@ internal fun DrawScope.drawCarvedStartFinishBase(
         center = center + Offset(0f, radius * 0.26f)
     )
     drawCircle(Color(0xFF493D30), radius = radius * 1.05f, center = center)
-    drawCircle(Color(0xFFC19D65), radius = radius * 0.98f, center = center)
+    drawCircle(if (isFinish) Color(0xFFD3AE63) else Color(0xFFA88A58),
+        radius = radius * 0.98f, center = center)
     drawCircle(Color(0xFFEEE0BD), radius = radius * 0.84f, center = center)
     drawCircle(paint, radius = radius * 0.66f, center = center)
     drawCircle(
@@ -55,4 +62,19 @@ internal fun DrawScope.drawCarvedStartFinishBase(
         center = center,
         style = Stroke(width = radius * 0.055f)
     )
+    // Trailhead: four leaf-like engravings; destination: six brass sunburst marks.
+    // All ink remains within the existing ring, behind the authoritative label.
+    CarvedWaypointGeometry.rimMarks(isFinish).forEach { degrees ->
+        val radians = degrees * kotlin.math.PI / 180.0
+        val direction = Offset(kotlin.math.cos(radians).toFloat(), kotlin.math.sin(radians).toFloat())
+        val tangent = Offset(-direction.y, direction.x)
+        val at = center + direction * (radius * .82f)
+        val ink = if (isFinish) Color(0xFF9A682D) else Color(0xFF426446)
+        drawLine(ink, at - tangent * (radius * .07f), at + tangent * (radius * .07f),
+            strokeWidth = radius * .065f, cap = StrokeCap.Round)
+        if (!isFinish) {
+            drawLine(ink, at, at + direction * (radius * .075f),
+                strokeWidth = radius * .045f, cap = StrokeCap.Round)
+        }
+    }
 }

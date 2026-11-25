@@ -1,3 +1,9 @@
+# Active checkpoint — WW2-02A waypoint identity
+
+WW2-01 rules 45577715018 passed; Android 45577715008 running at inspection. Start/Finish sockets now have distinct engraved rim treatments: green trailhead with four leaf-like marks and warm brass destination with six sunburst marks. Existing outer footprint, radius clamp, S/F text and pawn layering retained; no new selectable node, asset or graph change. Added deterministic rim-pattern regression. This is a small first waypoint identity pass, not the promised full environmental trailhead/village landmark; larger scenery requires placement clearance and phone review. Exact-head Android/rules CI pending. Startup, icon, saved data and signing unchanged.
+
+---
+
 # Active checkpoint — WW2-01 Regional scenery composition
 
 QA1844 owner accepted startup; launcher retained. Expanded Regional Journey authored scenery from 9 to 16 candidates: village fence, orchard and bushes, forest fir companions and meadow bush. Existing .078 graph clearance and .09 spacing remain; independent JS check on actual Regional JSON predicts all 16 accepted. Kotlin regression now requires >=15 and unchanged geometry; CI pending. Compact gameplay header Regional Journey retains full accessible title and map name. No changes to gameplay graph, camera, signing, startup or saves. Scenery still provisional; review physical appearance and performance. Next: Start/Finish landmarks and less uniform region composition.
