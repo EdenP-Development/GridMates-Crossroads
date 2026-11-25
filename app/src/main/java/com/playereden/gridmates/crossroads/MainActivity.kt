@@ -107,7 +107,9 @@ class MainActivity : ComponentActivity() {
                     outline = Color(0xFF978B76), outlineVariant = Color(0xFFD8CCB3)
                 )
             ) {
-                CrossroadsApp(classicBoard, quickBoard, longBoard, catalogue, regionalBoard)
+                StartupBranding(showInitially = savedInstanceState == null, lifecycle = lifecycle) {
+                    CrossroadsApp(classicBoard, quickBoard, longBoard, catalogue, regionalBoard)
+                }
             }
         }
     }
