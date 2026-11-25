@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-04A route horizon foundation
+
+AI2-03A rules 45589884978 passed including historical gate and artifact 15009953323; Android 45589884972 in progress at inspection. Inspected actual 864-row CSV: V1 134/432 wins, 2150/2918 push rolls; R1 145/432, 1980/2922; 21 paired gains, 10 paired losses. Course wins V1/R1: Brookside 33/33, Woven 35/38, Cedarwood 36/36, Regional 30/38 (108 per arm each). Controlled travel proxy, not full tournament or statistical proof. Retain R1 frozen, no default activation. Added pure BotRouteLookahead and unit tests for deterministic corridor horizon, finish, next fork advertised risks, exhausted movement, malformed cycles. No RNG, no event forecasting, not yet wired to live decisions. Current geometry-only horizon ignores intervening encounter changes to movement. Exact-head CI pending. Next evaluate route scoring and explicit new policy revision without altering R1 or legacy.
+
+---
+
 # Active checkpoint — AI2-03A mirrored travel comparison
 
 Adaptive V2 R1 rules 45589117704 passed; Android 45589117637 running at inspection. Added AdaptiveTravelComparisonTest: 864 races / 432 paired scenarios, four V5 courses, 2–4 seats, every focal seat, twelve seeds, legacy vs adaptive travel on a synthetic human seat against unchanged V1 bots. Both arms use identical deterministic non-travel choices; this isolates travel heuristics but is not a full mixed-policy tournament. Record wins, pushes, rolls and actions, assert completion and pairing; publish CSV/summary via existing AI artifact. No runtime, policy IDs, RNG or save changes. Exact-head CI pending; no measured superiority claim. Review actual report before modifying policy.
