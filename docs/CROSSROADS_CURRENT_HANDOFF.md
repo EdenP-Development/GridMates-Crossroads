@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-07B tournament evidence and four-seat validation
+
+Both AI2-07A workflows passed: rules 45683192102; Android 45683191929, QA1886 artifact 15054214634. Inspected actual CSV artifact 15053909983. Added docs/AI2_07B_TOURNAMENT_EVIDENCE.md: V1/R1/R2/R3/R4 wins 163/168/205/212/212 out of 384 appearances each; seat1 574/960; R3 vs R4 48/48. R2/R3 encounter comparison 24 target phases each, all Brookside. Added 960-game four-seat cyclic lineup test with each policy omitted once, 12 seeds, four courses, codec/replay assertions and CSV upload. CI pending, no new runtime or menu changes. Do not select difficulty tiers until larger-room evidence; fairness and mischief scarcity remain open. No release or merge.
+
+---
+
 # Active checkpoint — AI2-07A mixed-policy tournament
 
 AI2-06B rules 45671745077 passed; Android 45671745006 failed Maven HTTP 429 dependency resolution, last verified QA1876. Added optional per-bot-seat policy overrides, copied and validated against human/out-of-range seats; default homogeneous policy remains unchanged, omitted empty overrides preserve legacy JSON. Checkpoint restore/rematch retain overrides. Real pairwise tournament: 960 games, five policies, ten pairs, four V5 courses, 12 seeds, both seat orders. Asserts completion, final replay and rematch lineup; CSV uploaded. No menu/LAN activation or default change. CI pending; no tournament results yet. Historical gate remains mandatory. Encounter comparison artifact 15049112495 retrieved previously but numerical analysis outstanding. No merge/release.
