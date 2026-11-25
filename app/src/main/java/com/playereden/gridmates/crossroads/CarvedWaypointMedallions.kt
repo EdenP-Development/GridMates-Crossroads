@@ -12,9 +12,18 @@ import androidx.compose.ui.graphics.drawscope.Stroke
  */
 internal object CarvedWaypointGeometry {
     // Decorative rim only: preserve the central S/F label and existing socket footprint.
-    fun rimMarks(isFinish: Boolean): List<Float> =
-        if (isFinish) listOf(30f, 90f, 150f, 210f, 270f, 330f)
-        else listOf(35f, 145f, 215f, 325f)
+    private val finishMarks = listOf(30f, 90f, 150f, 210f, 270f, 330f)
+    private val startMarks = listOf(35f, 145f, 215f, 325f)
+    fun rimMarks(isFinish: Boolean): List<Float> = if (isFinish) finishMarks else startMarks
+
+    private fun directions(marks: List<Float>) = marks.map { degrees ->
+        val radians = degrees * kotlin.math.PI / 180.0
+        Offset(kotlin.math.cos(radians).toFloat(), kotlin.math.sin(radians).toFloat())
+    }
+    private val finishDirections = directions(finishMarks)
+    private val startDirections = directions(startMarks)
+    fun rimDirections(isFinish: Boolean): List<Offset> =
+        if (isFinish) finishDirections else startDirections
 
     fun socketRadius(
         baseRadius: Float,
@@ -64,9 +73,7 @@ internal fun DrawScope.drawCarvedStartFinishBase(
     )
     // Trailhead: four leaf-like engravings; destination: six brass sunburst marks.
     // All ink remains within the existing ring, behind the authoritative label.
-    CarvedWaypointGeometry.rimMarks(isFinish).forEach { degrees ->
-        val radians = degrees * kotlin.math.PI / 180.0
-        val direction = Offset(kotlin.math.cos(radians).toFloat(), kotlin.math.sin(radians).toFloat())
+    CarvedWaypointGeometry.rimDirections(isFinish).forEach { direction ->
         val tangent = Offset(-direction.y, direction.x)
         val at = center + direction * (radius * .82f)
         val ink = if (isFinish) Color(0xFF9A682D) else Color(0xFF426446)

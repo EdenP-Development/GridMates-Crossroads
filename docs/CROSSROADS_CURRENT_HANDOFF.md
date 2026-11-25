@@ -1,3 +1,9 @@
+# Active checkpoint — WW2-05A low-risk draw-path cleanup
+
+WW2-04A exact-head rules 45580068227 and Android 45580068405 both passed; signed QA1855 artifact 15006376951 (20256824 bytes). All prior WW2 additions included. WW2-05A hoists constant groundcover colors and caches waypoint angle lists/unit vectors instead of rebuilding them on draw. Same colors, shapes, geometry and placement, no new art or gameplay changes. This is a small static hot-path cleanup, not measured speedup; no claim of improved FPS or memory use. Existing board scene plans already remembered by board/style; larger raster caching deferred until profiling/physical evidence. Exact-head CI pending. QA1855 is prior verified fallback; physical WW2 review pending. Startup/icon/signing/saves untouched.
+
+---
+
 # Active checkpoint — WW2-04A regional terrain palette
 
 WW2-03A rules 45579266484 passed. Android 45579266581 failed before compilation/tests resolving existing dependencies: Maven Central HTTP 429 Too Many Requests. No dependency changes or test waiver. Regional overhead terrain now has ten overlapping fixed pigment pools (warm village earth, shaded forest, golden meadow), plus region-specific fleck tints; clipped to existing board, beneath graph and sprites. Added composition regression for count, bounds and three tones. Existing course palettes untouched. No new assets, game geometry, signing, startup, icon or saves changes. Exact-head CI and physical review pending; visual colors provisional. Next prioritize consolidated verification before additional changes if repository rate limiting persists.
