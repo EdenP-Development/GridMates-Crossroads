@@ -58,11 +58,15 @@ internal fun GameHudTurnStrip(
                     color = Color(0xFFF0D7A5))
                 Text(title, style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold, color = Color(0xFFFFF7E8),
-                    maxLines = 1)
+                    maxLines = 2)
             }
         }
     }
 }
+
+/** Keep the disclosure short while preserving its purpose. */
+internal fun turnDetailsLabel(expanded: Boolean): String =
+    if (expanded) "Hide details" else "Turn details"
 
 /** Used by the prototype and its tests; no gameplay phase is changed by HUD. */
 internal fun gameHudActionHeading(phase: Phase): String = when (phase) {

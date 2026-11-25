@@ -1303,7 +1303,7 @@ private fun CrossroadsApp(
                     // The encounter card itself explains the human's next action.
                     // Avoid a redundant two-line explanation above it, which
                     // pushed event choices off shorter portrait screens.
-                    if (showCollapsedActionNote(
+                    if (!showTurnDetails && showCollapsedActionNote(
                             phase = state.phase,
                             humanEncounterChoiceReady =
                                 state.phase == Phase.ENCOUNTER &&
@@ -1516,7 +1516,7 @@ private fun CrossroadsApp(
                             modifier = Modifier.align(Alignment.End),
                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
                         ) {
-                            Text(if (showTurnDetails) "Less detail" else "Rules & last action",
+                            Text(turnDetailsLabel(showTurnDetails),
                                 style = MaterialTheme.typography.labelMedium)
                         }
                     }

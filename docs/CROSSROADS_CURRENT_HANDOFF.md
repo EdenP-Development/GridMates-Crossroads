@@ -1,3 +1,9 @@
+# Active checkpoint — VISUAL-119A
+
+VISUAL-118A rules 45564231581 passed; Android 45564231618 was still running when checked. Small HUD cleanup: avoid displaying the same narration twice when turn details are expanded; shorten the disclosure to Turn details / Hide details, covered by a unit test; allow turn title to wrap to two lines rather than truncate long names. Existing action dock minimum heights and camera geometry deliberately retained until physical review. No rules, signing or data changes. Exact-head CI pending. Next consolidated APK review should cover launcher masks, home controls, Storybook groundcover, map exit, and HUD with normal/large fonts. Further board scenery and camera improvements remain open.
+
+---
+
 # Active checkpoint — VISUAL-118A
 
 VISUAL-117C rules 45563639767 passed; Android 45563639649 failed because utility button safeInset was not declared in its scope. Fixed with BoxWithConstraints and local inset. First board pass: reuse deterministic, graph-clearance-filtered groundcover on Storybook illustrated view as well as Overhead (no duplicate drawing); retain all route geometry, camera and input transforms. Woven procedural fallback now resolves tactical variants through baseId, matching other courses. No new artwork or rule changes. Groundcover over existing backplates is provisional and needs device review for density and readability. Exact-head CI pending. Next examine actual camera edge framing and HUD rather than changing geometry blindly.
