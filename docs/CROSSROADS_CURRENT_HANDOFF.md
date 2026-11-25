@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-01B legacy policy identity
+
+AI2-01 rules 45584918650 passed; Android 45584918793 running at inspection. Added stable serialized BotPolicyVersion.LEGACY_V1, default and only supported policy, explicit session dispatch to unchanged legacyBotStep, checkpoint/restore/rematch propagation. EncodeDefault NEVER preserves existing format-1 legacy JSON shape; omitted field defaults to legacy. Baseline test now exercises codec roundtrip, omitted field and policy identity across 252 races. No V2 behavior or UI enabled; no changes to RNG draws, board fingerprints or save format number. Exact-head CI pending; cross-version historical fixture still needed before enabling a new policy. New policy must explicitly handle older binary rejection and LAN compatibility.
+
+---
+
 # Active checkpoint — AI2-01 baseline instrumentation
 
 Added BotPolicyBaselineTest (252 all-bot games, seven course/rule combinations, 2–4 seats, 12 seeds; finish and checkpoint replay assertions, phase counts CSV) and docs/AI2_01_BASELINE.md. Runtime unchanged. MatchCheckpoint v1 stores BOT commands, so policy/RNG changes may break legacy saves; version policy before changing behavior. CI pending, no simulation results yet. QA1857 visual review deferred due owner upload limit. No release changes.

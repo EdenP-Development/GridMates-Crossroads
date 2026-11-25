@@ -26,7 +26,8 @@ class GameSession(
     private val catalogue: EventCatalogue,
     seats: Int = 2,
     seed: Int = 1234,
-    humanIndices: Set<Int> = setOf(0)
+    humanIndices: Set<Int> = setOf(0),
+    val botPolicy: BotPolicyVersion = BotPolicyVersion.LEGACY_V1
 ) {
     private val random = Random(seed)
     private val initialSeed = seed
@@ -148,7 +149,8 @@ class GameSession(
             seats = players.size,
             humanIndices = originalHumanIndices.toList(),
             actions = acceptedActions.toList(),
-            expected = snapshot()
+            expected = snapshot(),
+            botPolicy = botPolicy
         )
     }
 
@@ -175,7 +177,8 @@ class GameSession(
 
             val game = GameSession(
                 board, catalogue, checkpoint.seats, checkpoint.seed,
-                humanIndices = checkpoint.humanIndices.toSet()
+                humanIndices = checkpoint.humanIndices.toSet(),
+                botPolicy = checkpoint.botPolicy
             )
             checkpoint.actions.forEach { action ->
                 when (action.kind) {
@@ -226,7 +229,7 @@ class GameSession(
      */
     fun freshRematch(seed: Int): GameSession {
         require(phase == Phase.FINISHED) { "Finish the current race before rematching" }
-        return GameSession(board, catalogue, players.size, seed, originalHumanIndices)
+        return GameSession(board, catalogue, players.size, seed, originalHumanIndices, botPolicy)
     }
 
     fun snapshot(): Snapshot = Snapshot(
@@ -410,7 +413,11 @@ class GameSession(
     }
 
     /** Bot submits exactly one regular legal action. UI may animate between actions. */
-    fun botStep() {
+    fun botStep() = when (botPolicy) {
+        BotPolicyVersion.LEGACY_V1 -> legacyBotStep()
+    }
+
+    private fun legacyBotStep() {
         require(players[currentIndex].isBot && phase != Phase.FINISHED)
         insideBotCommand = true
         try {

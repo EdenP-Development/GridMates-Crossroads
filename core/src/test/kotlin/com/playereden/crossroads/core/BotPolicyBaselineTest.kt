@@ -31,7 +31,12 @@ class BotPolicyBaselineTest {
             val winner = requireNotNull(game.winnerIndex)
             assertEquals(board.finish, game.players[winner].position)
             val checkpoint = game.checkpoint("baseline-$seed", 1L)
-            val restored = GameSession.restore(board, events, checkpoint)
+            val encoded = MatchCheckpointCodec.encode(checkpoint)
+            assertFalse("Legacy wire shape must remain unchanged", encoded.contains("\"botPolicy\""))
+            val decoded = MatchCheckpointCodec.decode(encoded)
+            assertEquals(BotPolicyVersion.LEGACY_V1, decoded.botPolicy)
+            val restored = GameSession.restore(board, events, decoded)
+            assertEquals(BotPolicyVersion.LEGACY_V1, restored.botPolicy)
             assertEquals(game.snapshot(), restored.snapshot())
             rows += listOf(board.id, seats, seed, winner + 1, actions,
                 counts[Phase.ROLL] ?: 0, counts[Phase.ROUTE] ?: 0,
