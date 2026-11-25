@@ -1,3 +1,9 @@
+# Active checkpoint — WW2-02B Regional trailhead and destination scenery
+
+WW2-02A rules 45578412836 passed; Android 45578412699 was running at inspection. Added existing atlas fence near Regional START (.035,.67) at (.15,.725), and cottage near FINISH (.88,.27) at (.925,.175). Independent JS check against actual authored JSON confirms both satisfy existing .078 route clearance, .09 separation and sprite bounds; Kotlin regression requires both placements. No new artwork, graph changes, camera changes or extra playable spaces. Only Regional overhead QA view affected; other courses still need landmark composition. Exact-head CI and phone review pending. Startup/icon/signing/saves unchanged.
+
+---
+
 # Active checkpoint — WW2-02A waypoint identity
 
 WW2-01 rules 45577715018 passed; Android 45577715008 running at inspection. Start/Finish sockets now have distinct engraved rim treatments: green trailhead with four leaf-like marks and warm brass destination with six sunburst marks. Existing outer footprint, radius clamp, S/F text and pawn layering retained; no new selectable node, asset or graph change. Added deterministic rim-pattern regression. This is a small first waypoint identity pass, not the promised full environmental trailhead/village landmark; larger scenery requires placement clearance and phone review. Exact-head Android/rules CI pending. Startup, icon, saved data and signing unchanged.

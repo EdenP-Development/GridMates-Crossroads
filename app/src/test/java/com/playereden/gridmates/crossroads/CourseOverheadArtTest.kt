@@ -45,6 +45,8 @@ class CourseOverheadArtTest {
         assertFalse(useOverheadBoardPreview(board.id,false,true,true))
         val scenery = CourseOverheadScenery.plan(style,board.nodes)
         assertTrue("Regional scenery should exceed the original nine landmarks", scenery.size >= 15)
+        assertTrue(scenery.any { it.sprite == EnvironmentSprite.FENCE && it.x == .15f && it.y == .725f })
+        assertTrue(scenery.any { it.sprite == EnvironmentSprite.COTTAGE && it.x == .925f && it.y == .175f })
         assertEquals("Regional Journey", CrossroadsCourse.compactTitle(board.id))
         assertEquals("Woven Trail: Regional Journey", CrossroadsCourse.title(board.id))
         assertEquals(scenery,CourseOverheadScenery.plan(style,board.nodes))

@@ -71,7 +71,11 @@ internal object CourseOverheadScenery {
                 p(.88f,.09f,EnvironmentSprite.ORCHARD),
                 p(.63f,.44f,EnvironmentSprite.FIR),
                 p(.85f,.43f,EnvironmentSprite.FIR),
-                p(.40f,.75f,EnvironmentSprite.BUSH)
+                p(.40f,.75f,EnvironmentSprite.BUSH),
+                // Trailhead boundary and destination cottage: real empty terrain,
+                // never a new route or an obstruction on the S/F socket.
+                p(.15f,.725f,EnvironmentSprite.FENCE),
+                p(.925f,.175f,EnvironmentSprite.COTTAGE)
             )
             CourseOverheadStyle.CEDARWOOD -> listOf(
                 p(.052f,.048f,EnvironmentSprite.FIR),
