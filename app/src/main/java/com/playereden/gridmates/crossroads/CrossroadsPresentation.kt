@@ -9,10 +9,12 @@ internal object CrossroadsCourse {
     const val CLASSIC_ID = "woodland_woven_trail_v02"
     const val QUICK_ID = "woodland_brookside_quick_v01"
     const val LONG_ID = "woodland_cedarwood_long_v01"
+    const val REGIONAL_ID = "woodland_woven_trail_v05_varied_prototype"
 
     fun title(boardId: String): String = when (DecisionLab.baseId(boardId)) {
         QUICK_ID -> "Brookside Dash"
         LONG_ID -> "Cedarwood Expedition"
+        REGIONAL_ID -> "Woven Trail: Regional Journey"
         CLASSIC_ID -> "Woven Trail"
         else -> "Woodland Crossing"
     }
@@ -30,6 +32,7 @@ internal object CrossroadsCourse {
     else when (boardId) {
         QUICK_ID -> "Quick race"
         LONG_ID -> "Long race"
+        REGIONAL_ID -> "Experimental regional race"
         CLASSIC_ID -> "Classic race"
         else -> "Woodland race"
     }
