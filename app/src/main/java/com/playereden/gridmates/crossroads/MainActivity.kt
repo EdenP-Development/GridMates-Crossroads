@@ -160,7 +160,7 @@ private fun CrossroadsApp(
     // judged next to the existing storybook landscapes before any replacement.
     // This is a local appearance preference, never a save or LAN rule.
     var topDownBoardPreview by remember {
-        mutableStateOf(BuildConfig.DEBUG && prefs.getBoolean("qa_overhead_board_v1", false))
+        mutableStateOf(BuildConfig.DEBUG && prefs.getBoolean("qa_overhead_board_v2", true))
     }
     val recoveryStore = remember(prefs, classicBoard, quickBoard, longBoard, catalogue) {
         MatchRecoveryStore(prefs, classicBoard, catalogue, knownBoards)
@@ -1124,7 +1124,7 @@ private fun CrossroadsApp(
                                     onClick = {
                                         topDownBoardPreview = !topDownBoardPreview
                                         prefs.edit().putBoolean(
-                                            "qa_overhead_board_v1", topDownBoardPreview
+                                            "qa_overhead_board_v2", topDownBoardPreview
                                         ).apply()
                                         showMatchOptions = false
                                     }
