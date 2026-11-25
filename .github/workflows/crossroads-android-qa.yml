@@ -93,6 +93,16 @@ jobs:
         shell: bash
         run: |
           gradle --no-daemon :core:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug             "-PcrossroadsQaVersionCode=$QA_CODE" --console=plain
+      - name: Publish course decision exposure report
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-GAMEPLAY-104-${{ github.sha }}
+          path: core/build/reports/gameplay-104/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Summarize course decision exposure
+        shell: bash
+        run: cat core/build/reports/gameplay-104/summary.txt
       - name: Validate unsigned public variant without distributing it
         shell: bash
         run: |
