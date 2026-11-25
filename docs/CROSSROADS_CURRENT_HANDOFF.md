@@ -1,3 +1,13 @@
+# Active checkpoint — IDENTITY-23B (2026-11-24)
+
+Supersedes historical artwork-transfer status below. Active stacked draft [PR120](https://github.com/EdenP-Development/GridMates-Crossroads/pull/120), branch feature/identity-17-art-import, base feature/identity-16-panels. Latest functional commit 0de491e3315ec0c9832c6c840be86e8971a27ff5. Both original ZIPs committed under design/art/imports; original hashes verified in [QA1712 run](https://github.com/EdenP-Development/GridMates-Crossroads/actions/runs/45519675722), [artifact](https://github.com/EdenP-Development/GridMates-Crossroads/actions/runs/45519675722/artifacts/14978134266). V2 atlas checksum also verified inside signed QA APK. Shared procedure recorded in [Eden artwork pipeline](https://github.com/EdenP-Development/Eden-Development-Standards/blob/main/ARTWORK_PIPELINE.md).
+
+Subsequent commits promote 16 UI assets at build time, preload button states, stabilize icon bounds, add provisional three-slice horizontal scaling, native label contrast and tests, and shared panel framing across home/results/LAN lobby. These newer changes are not yet confirmed by completed CI or physical screenshot review. QA1731 was in progress at checkpoint before LAN panel commit. Check newest PR run; avoid repeated code changes while consolidated CI runs. Next: verify exact packaged assets, inspect actual screenshots for narrow/wide buttons and native label backing, then settings/panels and launcher icon as justified. No new generated panel artwork yet.
+
+QA1712 uses .qa package and public QA-only signer; NOT a private beta upgrade. Owner's installed private beta 2002 uses separate package and signer (see historical private beta checkpoint); retain its exact identity and increasing version code. Do not replace or publish it until trusted signing branch and install-over gates pass. Main untouched. No new gameplay or save-format changes.
+
+---
+
 # Current visual checkpoint — QA1709
 
 Board navigation and shared panel PRs 118–119 passed Android QA; six commits fast-forwarded to integration/beta-1-polish, zero divergence. QA1709 [run](https://github.com/EdenP-Development/GridMates-Crossroads/actions/runs/45494047473), [artifact](https://github.com/EdenP-Development/GridMates-Crossroads/actions/runs/45494047473/artifacts/14967623369). Original launcher icon retained per owner. Private beta 2002 remains owner playtest baseline.
