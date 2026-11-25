@@ -14,7 +14,8 @@ class CourseDecisionExposureTest {
         val paths = listOf("data/boards/woodland_brookside_quick.json",
             "data/boards/woodland_woven_trail.json", "data/boards/woodland_cedarwood_long.json",
             "design/prototypes/woodland_woven_expanded.json",
-            "design/prototypes/woodland_woven_regional_v04.json")
+            "design/prototypes/woodland_woven_regional_v04.json",
+            "design/prototypes/woodland_woven_regional_v05.json")
         val rows = mutableListOf("course,rules,seats,seed,seat,rounds,rolls,forks,encounter_choices,target_choices,won")
         val summary = mutableListOf<String>()
         var races = 0
@@ -68,8 +69,8 @@ class CourseDecisionExposureTest {
                 }
             }
         }
-        assertEquals(1800, races)
-        assertEquals(5401, rows.size)
+        assertEquals(2160, races)
+        assertEquals(6481, rows.size)
         val dir = File(root, "core/build/reports/gameplay-104")
         dir.mkdirs()
         File(dir, "seat-exposure.csv").writeText(rows.joinToString("\n") + "\n")
