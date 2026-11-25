@@ -103,6 +103,16 @@ jobs:
       - name: Summarize course decision exposure
         shell: bash
         run: cat core/build/reports/gameplay-104/summary.txt
+      - name: Publish regional tactical strategy report
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-GAMEPLAY-109-${{ github.sha }}
+          path: core/build/reports/gameplay-109/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Summarize regional tactical strategy
+        shell: bash
+        run: cat core/build/reports/gameplay-109/tactical_factorial_summary.txt
       - name: Validate unsigned public variant without distributing it
         shell: bash
         run: |
