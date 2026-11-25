@@ -1,3 +1,9 @@
+# Active checkpoint — VISUAL-120C1
+
+VISUAL-120D1 Android 45567414743 and rules 45567414689 passed. Refined existing earthen trail and junction rendering: soft layered shoulders, reduced dark outline, warmer earth deck, deterministic broken verge pigment and matched junction palette. Centerlines, marker coordinates, route colors, width of playable deck, hit testing, motion, saves and signing unchanged. No curved geometry introduced; visual-only first pass. Simple/Printed and atlas overview remain intact. New CI and phone review pending; verify risk-band legibility and dense regional routes. Next review HUD proportions and environmental density in consolidated build.
+
+---
+
 # Active checkpoint — VISUAL-120D1
 
 QA1825 screenshot shows board bottom ending above action tray, exposing an unwanted green strip. Existing follow clamp allowed world bottom to reach 68% viewport in roll/route, 55% encounter, 57% target. Move bounds to 80%, 65%, 63% respectively as provisional visual correction; preserves existing focus target, top clamp, manual pan/zoom, Full Map and exact shared rendering/hit geometry. Updated edge clamp tests to assert each phase. Real-device checks required at start/finish, forks and tall encounter/target panels; active pawn may shift down near edge, check visibility before acceptance. VISUAL-120A rules 45566999949 passed; Android 45567000206 in progress at inspection. No gameplay or signing changes. Exact-head CI pending. Organic trails and wider scene composition remain open.
