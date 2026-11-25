@@ -34,4 +34,12 @@ class WoodlandPieceArtTest {
         assertFalse(shouldDrawWoodlandPortrait(true, Float.POSITIVE_INFINITY))
         assertFalse(shouldDrawWoodlandPortrait(true, -1f))
     }
+    @Test fun widerLiveCameraRetainsPortraitsWhenRenderedSizeIsAdequate() {
+        assertTrue(shouldDrawWoodlandPortrait(true, 1.15f, true, 50f))
+        assertTrue(shouldDrawWoodlandPortrait(true, 1f, true, 44f))
+        assertFalse(shouldDrawWoodlandPortrait(true, 1.15f, true, 30f))
+        assertFalse(shouldDrawWoodlandPortrait(false, 1.15f, true, 50f))
+        assertFalse(shouldDrawWoodlandPortrait(true, 1.15f, true, Float.NaN))
+        assertFalse(shouldDrawWoodlandPortrait(true, 1f, false, 50f))
+    }
 }
