@@ -418,6 +418,7 @@ class GameSession(
         BotPolicyVersion.ADAPTIVE_V2_R1 -> adaptiveBotStep()
         BotPolicyVersion.ADAPTIVE_V2_R2 -> adaptiveRouteBotStep()
         BotPolicyVersion.ADAPTIVE_V2_R3 -> adaptiveEncounterBotStep()
+        BotPolicyVersion.ADAPTIVE_V2_R4 -> adaptiveTargetBotStep()
     }
 
     // R1 is intentionally narrow: adaptive travel only; all other phases retain V1.
@@ -435,6 +436,31 @@ class GameSession(
         insideBotCommand = true
         try {
             if (AdaptiveBotTravelR1.shouldPush(awareness)) rollBold() else rollSteady()
+        } finally {
+            insideBotCommand = false
+        }
+        record(MatchAction(MatchActionKind.BOT))
+    }
+
+    private fun adaptiveTargetBotStep() {
+        require(players[currentIndex].isBot && phase != Phase.FINISHED)
+        if (phase != Phase.TARGET) {
+            adaptiveEncounterBotStep()
+            return
+        }
+        val candidates = availableTargets().map { seat ->
+            val player = players[seat]
+            val retreatIndex = (player.traversed.lastIndex - pendingPrank).coerceAtLeast(0)
+            val distance = distanceToFinish(player.position)
+            val after = if (player.shield) distance else
+                distanceToFinish(player.traversed[retreatIndex])
+            BotTargetView(seat, distance, player.shield, after)
+        }
+        val target = AdaptiveBotTargetR4.choose(candidates)
+        insideBotCommand = true
+        try {
+            if (target == null) { finishTurn(); revision++ }
+            else chooseTarget(target)
         } finally {
             insideBotCommand = false
         }

@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-06A experimental threat assessment R4
+
+AI2-05B rules 45669084844 and Android 45669084948 in progress at inspection; encounter comparison results not yet available. Added ADAPTIVE_V2_R4, explicit core-only policy. R4 delegates all non-target phases to R3 and ranks legal targets by visible distance, shield, actual traversed-path retreat distance estimate and proximity to finish. Shield stripping valued at provisional 0.75; urgency multiplier 1.5 within six spaces, distance-gap penalty 0.65. No hidden draws or added RNG; no rules changes. Tests cover target ranking, ties, empty set and 64 seeded four-bot Woven V5 races with target-boundary and final replay. CI pending; target coverage not yet established. V1 remains default; no Android/LAN activation. Next inspect encounter comparison and target results, then mixed-policy competition. Owner visual review outstanding. No merge/release.
+
+---
+
 # Active checkpoint — AI2-05B encounter policy comparison
 
 AI2-05A rules 45668310891 passed; Android 45668310797 in progress at inspection. Added homogeneous actual-engine R2/R3 comparison, 576 races / 288 paired configurations over four V5 courses, 2–4 seats, 24 seeds. Counts shelter and hazard responses using lastEventId after encounter action, distinct hazard result IDs per match, target opportunities and shielded legacy targets, action and roll pacing; requires completion and replay. Target counts are not full encounter variety, and distinct hazard IDs per race are not catalogue coverage. Both policies retain legacy targeting. CSV included in AI workflow artifact. No runtime changes, default remains V1. Exact-head CI pending. Inspect results before deciding on targeting policy; mixed-policy competitive testing still outstanding. Owner visual review still incomplete. No merge or release.
