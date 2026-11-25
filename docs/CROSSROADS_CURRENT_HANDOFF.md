@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-04B experimental adaptive route R2
+
+AI2-04A rules 45590871078 and Android 45590871122 still running at inspection. Added explicit ADAPTIVE_V2_R2: on Lab routes score remaining distance, advertised risk only if encounter available, Steady shelter momentum, visible finish and next safe fork when encounter spent. Deterministic ID tie-break; R2 consumes no route scoring RNG (different stream from R1 by design). R1 travel reused, all other phases unchanged. V1 and R1 branches untouched; default V1; no Android/LAN selection. Added scoring and 12 seed replay tests. Geometry not guaranteed if encounters intervene; weights provisional, no measured superiority. Exact-head CI pending. Next compare R2 against R1 and retain historical compatibility. QA1857 physical review outstanding.
+
+---
+
 # Active checkpoint — AI2-04A route horizon foundation
 
 AI2-03A rules 45589884978 passed including historical gate and artifact 15009953323; Android 45589884972 in progress at inspection. Inspected actual 864-row CSV: V1 134/432 wins, 2150/2918 push rolls; R1 145/432, 1980/2922; 21 paired gains, 10 paired losses. Course wins V1/R1: Brookside 33/33, Woven 35/38, Cedarwood 36/36, Regional 30/38 (108 per arm each). Controlled travel proxy, not full tournament or statistical proof. Retain R1 frozen, no default activation. Added pure BotRouteLookahead and unit tests for deterministic corridor horizon, finish, next fork advertised risks, exhausted movement, malformed cycles. No RNG, no event forecasting, not yet wired to live decisions. Current geometry-only horizon ignores intervening encounter changes to movement. Exact-head CI pending. Next evaluate route scoring and explicit new policy revision without altering R1 or legacy.

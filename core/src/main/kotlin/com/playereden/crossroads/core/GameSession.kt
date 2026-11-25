@@ -416,6 +416,7 @@ class GameSession(
     fun botStep() = when (botPolicy) {
         BotPolicyVersion.LEGACY_V1 -> legacyBotStep()
         BotPolicyVersion.ADAPTIVE_V2_R1 -> adaptiveBotStep()
+        BotPolicyVersion.ADAPTIVE_V2_R2 -> adaptiveRouteBotStep()
     }
 
     // R1 is intentionally narrow: adaptive travel only; all other phases retain V1.
@@ -433,6 +434,35 @@ class GameSession(
         insideBotCommand = true
         try {
             if (AdaptiveBotTravelR1.shouldPush(awareness)) rollBold() else rollSteady()
+        } finally {
+            insideBotCommand = false
+        }
+        record(MatchAction(MatchActionKind.BOT))
+    }
+
+    private fun adaptiveRouteBotStep() {
+        require(players[currentIndex].isBot && phase != Phase.FINISHED)
+        if (phase != Phase.ROUTE || !playtestRules) {
+            adaptiveBotStep()
+            return
+        }
+        val awareness = BotRaceAssessment.assess(currentIndex,
+            players.mapIndexed { seat, player ->
+                BotRacerView(seat, distanceToFinish(player.position), player.shield)
+            }, distanceToFinish(board.start), finalRoundPending)
+        val fork = board.forkAt(players[currentIndex].position)
+        val chosen = availableRoutes().minWith(compareBy<BoardNode> { route ->
+            AdaptiveBotRouteR2.score(
+                distanceToFinish(route.id),
+                fork?.choices?.firstOrNull { it.to == route.id }?.risk,
+                BotRouteLookahead.inspect(board, route.id, remainingSteps),
+                awareness, routeEncounterAvailable, steadyTravelChosen &&
+                    DecisionLab.supportsSteadyShelterBonus(board)
+            )
+        }.thenBy { it.id })
+        insideBotCommand = true
+        try {
+            chooseRoute(chosen.id)
         } finally {
             insideBotCommand = false
         }
