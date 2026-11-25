@@ -1,3 +1,11 @@
+# Active checkpoint — BRANDING-115 (2026-11-24 local)
+
+Owner-approved master recovered from private Drive and verified locally: PNG RGB 1254×1254, 2257645 bytes, SHA-256 711cde86e7d7da605206b3c531ee80ba0d768860ab5f528ec836388555208d4b, Git blob a1beaa04a9f143a1c685ed176fedcd6828f1b893. Exact original is committed at design/art/imports/Crossroads-approved-icon-v1.png; no regeneration. Gradle generates a centered 52dp artwork on a 108dp adaptive layer (432px raster), black background matches original corners. Conservative initial sizing is provisional pending actual launcher mask review. Existing manifest, app IDs, signing, saves, startup and rules unchanged. Existing fox asset retained as historical source.
+
+Prior BRANDING-114 rules run 45554247752 and Android QA run 45554247775 both passed. New exact-head CI, APK resource verification and physical launcher/Regional Journey/startup review pending. Engineering QA only; private beta 2002 remains a separate signing channel. No public distribution or main merge.
+
+---
+
 # Active checkpoint — BRANDING-114 / GAMEPLAY-113 (2026-11-24)
 
 Owner authorized Spudacus → GridMates → existing Crossroads root per shared startup v1.0 after physically accepting Sudoku Beta 3 Visual Review 4. Read central BRAND_IDENTITY.md, branding/game-startup/v1.0/README.md, reference/StartupBranding.kt and both asset guides. Newer shared standard supersedes older pilot-only language.

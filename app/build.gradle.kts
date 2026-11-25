@@ -1,5 +1,8 @@
 import java.security.MessageDigest
 import java.net.URI
+import java.awt.RenderingHints
+import java.awt.image.BufferedImage
+import javax.imageio.ImageIO
 
 plugins {
     id("com.android.application")
@@ -35,6 +38,32 @@ val prepareStartupBranding = tasks.register("prepareStartupBranding") {
             }
             check(hash(dest.readBytes()) == expected) { "Startup branding checksum mismatch: " + name }
         }
+    }
+}
+ // BRANDING-115: preserve the exact master; generate a mask-safe adaptive foreground.
+val launcherMaster = rootProject.file("design/art/imports/Crossroads-approved-icon-v1.png")
+val launcherResDir = layout.buildDirectory.dir("generated/crossroadsLauncher/res")
+val prepareCrossroadsLauncher = tasks.register("prepareCrossroadsLauncher") {
+    inputs.file(launcherMaster)
+    outputs.dir(launcherResDir)
+    doLast {
+        val bytes = launcherMaster.readBytes()
+        val hash = MessageDigest.getInstance("SHA-256").digest(bytes)
+            .joinToString("") { "%02x".format(it.toInt() and 255) }
+        check(hash == "711cde86e7d7da605206b3c531ee80ba0d768860ab5f528ec836388555208d4b") { "Crossroads launcher master checksum mismatch" }
+        val source = requireNotNull(ImageIO.read(launcherMaster))
+        check(source.width == 1254 && source.height == 1254)
+        // 52 dp artwork centered in the 108 dp adaptive layer, 4 px/dp.
+        // The full rounded frame fits inside the central mask-safe region.
+        val layer = BufferedImage(432, 432, BufferedImage.TYPE_INT_ARGB)
+        val graphics = layer.createGraphics()
+        try {
+            graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC)
+            graphics.drawImage(source, 112, 112, 208, 208, null)
+        } finally { graphics.dispose() }
+        val output = launcherResDir.get().file("drawable-nodpi/ic_crossroads_family_foreground.png").asFile
+        output.parentFile.mkdirs()
+        check(ImageIO.write(layer, "png", output))
     }
 }
 android {
@@ -77,13 +106,14 @@ android {
     buildFeatures { compose = true; buildConfig = true }
     sourceSets.getByName("main").assets.srcDir(rootProject.file("data"))
     sourceSets.getByName("main").assets.srcDir(startupAssetsDir)
+    sourceSets.getByName("main").res.srcDir(launcherResDir)
     // QA-only prototype assets; not bundled into the public release.
     sourceSets.getByName("debug").assets.srcDir(rootProject.file("design/prototypes"))
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
 }
-tasks.named("preBuild").configure { dependsOn(prepareStartupBranding) }
+tasks.named("preBuild").configure { dependsOn(prepareStartupBranding, prepareCrossroadsLauncher) }
 dependencies {
     implementation(project(":core"))
     implementation("androidx.core:core-ktx:1.15.0")
