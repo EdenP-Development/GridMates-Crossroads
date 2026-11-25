@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-02A pure race assessment
+
+AI2-01C rules workflow 45586159958 passed including pinned old-engine fixture generation, current replay comparison and artifact upload; Android 45586159877 running at inspection. Added BotRaceAssessment and tests: visible remaining distance, shield, ordered opponent threat, signed gap, lead/tie/trail, opening/midgame/endgame and final-round awareness. Preliminary thresholds: opening front >=75% remaining, endgame front <= max(6,20% course length) or final round. Pure helper not wired into GameSession; legacy policy only, no V2 selectable, no RNG or save changes. Exact-head CI pending. Next integrate an explicitly versioned experimental policy and exercise historical gate before exposing it. QA1857 visual review still deferred.
+
+---
+
 # Active checkpoint — AI2-01C historical replay gate
 
 AI2-01B rules 45585566634 passed; Android 45585566974 running at inspection. Added HistoricalBotReplayTest and rules workflow step that checks out pinned pre-policy commit 3bf768046e08f0724c4171c91b5a547647436289, runs the same fixture harness against old engine to produce 24 mid/end checkpoint pairs, then verifies current engine restores old midpoint, re-encodes identical legacy JSON and finishes with identical final checkpoint. Upload baseline CSV and historical fixtures. No engine behavior changes. CI pending; historical fixtures not yet generated/verified. No claim of Android install-over or LAN validation. Next enable experimental policy only after gate passes.
