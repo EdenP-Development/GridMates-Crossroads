@@ -2416,7 +2416,7 @@ private fun BoardCanvas(
                         else -> "neutral"
                     }
                     if (effectiveTrails == CrossroadsTrailStyle.ARTWORK && trailAtlas != null &&
-                        immersiveWorld && boardLook == CrossroadsBoardLook.ILLUSTRATED) {
+                        (immersiveWorld || useOverheadArtwork) && boardLook == CrossroadsBoardLook.ILLUSTRATED) {
                         // POLISH-03: live earthen trails are drawn at Canvas resolution,
                         // not stretched from a 128x32 atlas at 2-4x zoom.
                         // Original coordinates, route colors and tap hit geometry stay identical.
@@ -2428,8 +2428,7 @@ private fun BoardCanvas(
                             visibilityScale = roadVisibilityScale
                         )
                     } else if (effectiveTrails == CrossroadsTrailStyle.ARTWORK && trailAtlas != null) {
-                        // The miniature Full Map deliberately keeps its earlier
-                        // detailed route atlas for a consistent whole-course overview.
+                        // Storybook overview retains its older atlas for A/B review.
                         drawCrossroadsIllustratedTrail(
                             from = from,
                             to = position(dest),
