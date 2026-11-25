@@ -417,6 +417,7 @@ class GameSession(
         BotPolicyVersion.LEGACY_V1 -> legacyBotStep()
         BotPolicyVersion.ADAPTIVE_V2_R1 -> adaptiveBotStep()
         BotPolicyVersion.ADAPTIVE_V2_R2 -> adaptiveRouteBotStep()
+        BotPolicyVersion.ADAPTIVE_V2_R3 -> adaptiveEncounterBotStep()
     }
 
     // R1 is intentionally narrow: adaptive travel only; all other phases retain V1.
@@ -434,6 +435,27 @@ class GameSession(
         insideBotCommand = true
         try {
             if (AdaptiveBotTravelR1.shouldPush(awareness)) rollBold() else rollSteady()
+        } finally {
+            insideBotCommand = false
+        }
+        record(MatchAction(MatchActionKind.BOT))
+    }
+
+    private fun adaptiveEncounterBotStep() {
+        require(players[currentIndex].isBot && phase != Phase.FINISHED)
+        if (phase != Phase.ENCOUNTER) {
+            adaptiveRouteBotStep()
+            return
+        }
+        val awareness = BotRaceAssessment.assess(currentIndex,
+            players.mapIndexed { seat, player ->
+                BotRacerView(seat, distanceToFinish(player.position), player.shield)
+            }, distanceToFinish(board.start), finalRoundPending)
+        val choice = AdaptiveBotEncounterR3.choose(availableEncounterChoices(),
+            awareness, remainingSteps, steadyTravelChosen, pendingPushHazardBonus)
+        insideBotCommand = true
+        try {
+            chooseEncounter(choice)
         } finally {
             insideBotCommand = false
         }

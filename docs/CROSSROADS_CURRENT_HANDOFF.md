@@ -1,3 +1,11 @@
+# Active checkpoint — AI2-05A encounter-aware experimental R3
+
+AI2-04C both CI passed (45592178746 rules,45592178745 Android); QA1876 artifact 15011083088 (20269970 bytes). Actual route CSV artifact 15011602785: 288 completed and replayed per arm, R1/R2 actions 14081/13522, rolls 5825/5471, routes 4565/4477, encounters 3651/3550, targets 40/24. Mean actions 48.89/46.95; mean rolls 20.23/19.00. Homogeneous policy races, not competitive superiority. R2 fewer rolls in 3 of 4 courses; mischief reduction merits review.
+
+Added ADAPTIVE_V2_R3, explicit experimental core only. Retains R2 route and R1 travel; encounter choices use remaining movement, shield, signed gap, Steady protection, visible Push bonus and final-round status. Heuristic not probability-optimal; shield does not block hazard retreat (already-shielded bots may gamble to avoid redundant protection). Added focused tests and 12 seed completed replay checks; exact-head CI pending. V1 default unchanged, R1/R2 untouched, no UI/LAN activation or release. Next compare encounter choices and mischief diversity, mixed-policy competition, then threat assessment. QA1857 physical review outstanding.
+
+---
+
 # Active checkpoint — AI2-04C route policy comparison and portfolio handoff
 
 AI2-04B rules 45591493548 passed; Android 45591493481 running at inspection. Added actual-engine homogeneous R1/R2 comparison: 576 races, 288 paired course/seat/seed configurations, 4 V5 courses, 2–4 seats, 24 seeds. Records pacing, route/encounter/target counts and winner seats; requires finish and replay. All seats share one policy per race; cannot infer relative competitive strength from this test. CSV uploaded with existing AI artifact. No runtime changes; exact-head CI pending.
