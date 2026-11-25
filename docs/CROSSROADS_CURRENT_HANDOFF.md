@@ -1,3 +1,9 @@
+# Active checkpoint — VISUAL-120F1
+
+VISUAL-120E1 Android 45570109811 and rules 45570109817 passed. Encounter cards now reuse TabletopActionTile rather than duplicating colors, feedback and sizing; two-line consequence copy matches tactical actions, legal choices and callbacks unchanged. Route comparison sheet adopts shared parchment/brass tokens and shorter Board button with accessible Back to board description; route comparison and map inspection preserved. No gameplay, signing or data changes. New exact-head CI and physical review pending, particularly four-option encounter fit and large fonts. Results, journal and settings remain candidates for later cohesion. No final visual approval claimed.
+
+---
+
 # Active checkpoint — VISUAL-120E1
 
 VISUAL-120C1 Android 45568422712 and rules 45568422627 passed. Compact HUD pass: fixed-width Map utility with full accessible description, omit redundant opening narration for offline tactical roll (actions already explain choice), Push tile displays actual outcomes 1 or 5–8 spaces, turn strip tighter and flatter, action tiles use warm brass and reduced elevation/padding with two-line consequence text. Existing dock safety bounds and 48dp+ interactive targets retained, no camera or rules changes. Provisional design; exact-head CI and phone review needed, including four seats, Regional Journey, large fonts and turn details. No signing or saved-data changes.

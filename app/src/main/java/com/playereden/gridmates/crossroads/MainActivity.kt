@@ -1553,9 +1553,9 @@ private fun CrossroadsApp(
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(
                             topStart = 24.dp, topEnd = 24.dp
                         ),
-                        color = Color(0xFFF1E4C8),
+                        color = TabletopMaterials.paper,
                         border = androidx.compose.foundation.BorderStroke(
-                            2.dp, Color(0xFF9D865E)
+                            2.dp, TabletopMaterials.brass
                         ),
                         shadowElevation = 12.dp
                     ) {
@@ -1633,9 +1633,9 @@ private fun CrossroadsApp(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 TabletopUtilityButton(
-                                    text = "Back to board",
+                                    text = "Board",
                                     onClick = { routeDialogDismissed = true },
-                                    modifier = Modifier.weight(1f), icon = TabletopIconArt.MAP
+                                    modifier = Modifier.weight(1f).semantics { contentDescription = "Back to board" }, icon = TabletopIconArt.MAP
                                 )
                                 TabletopUtilityButton(
                                     // Keep the legal route decision intact while inspecting.
