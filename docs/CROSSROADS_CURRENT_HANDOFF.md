@@ -1,3 +1,11 @@
+# Active checkpoint — GAMEPLAY-112B (2026-11-24)
+
+Active branch feature/identity-17-art-import, stacked draft PR120; main untouched. Owner QA1759 review: docs/QA1759_OWNER_PHONE_VISUAL_AUDIT.md. Gameplay-first plan: docs/GAMEPLAY_103_COURSE_REDEVELOPMENT.md. Regional V5 selected provisionally: 113 nodes, 49–62 edges, 8 forks, 3 three-way forks, 23 event nodes. Verified QA1776 run 45547159727; 2160 exposure races and 2160 strategy races; V5 tactical median rounds 10 across 2/3/4 seats. V5 fixed policy wins (2/3/4 seats): Steady shortest 60/45/28.8%, Steady safest 55/38.3/25%, Push shortest 45/18.3/10%, Push safest 47.5/45/30%. Aggressive multiplayer weakness remains open; synthetic, not human timing or proven balance.
+
+GAMEPLAY-112A/B commits a17b0724acc7c629c045c2c6ac9df7dd68766204, 4bf9a026c15abed9741b0407dce10a9d60bc0bc1, 719337eb265150ebb7c342a066d6a7217ed1547d, 5c508885412ad4fe21f6fe74d8b4ac45e53d7701: debug assets include design/prototypes; MainActivity loads regional V5 only in DEBUG, registers board and variants, home adds separate QA pill, title/subtitle mapped. LAN host still uses original Classic. No existing board ID or rule change. Exact latest build unverified. Next inspect regional renderer fallback, density, camera, stats and recovery behavior; add tests and verify signed QA build before phone review. No bespoke regional art yet. Keep private beta 2002 and QA signing identities separate.
+
+---
+
 # Active checkpoint — IDENTITY-23B (2026-11-24)
 
 Supersedes historical artwork-transfer status below. Active stacked draft [PR120](https://github.com/EdenP-Development/GridMates-Crossroads/pull/120), branch feature/identity-17-art-import, base feature/identity-16-panels. Latest functional commit 0de491e3315ec0c9832c6c840be86e8971a27ff5. Both original ZIPs committed under design/art/imports; original hashes verified in [QA1712 run](https://github.com/EdenP-Development/GridMates-Crossroads/actions/runs/45519675722), [artifact](https://github.com/EdenP-Development/GridMates-Crossroads/actions/runs/45519675722/artifacts/14978134266). V2 atlas checksum also verified inside signed QA APK. Shared procedure recorded in [Eden artwork pipeline](https://github.com/EdenP-Development/Eden-Development-Standards/blob/main/ARTWORK_PIPELINE.md).
