@@ -218,7 +218,7 @@ internal fun CrossroadsHomeScreen(
     val homeScroll = rememberScrollState()
     Column(Modifier.fillMaxSize().background(Paper)
         .windowInsetsPadding(WindowInsets.safeDrawing)) {
-        Box(Modifier.weight(1f).fillMaxWidth()) {
+        Box(Modifier.weight(1f).fillMaxWidth().clip(androidx.compose.ui.graphics.RectangleShape)) {
         Canvas(Modifier.matchParentSize()) {
             val spacing = 13.dp.toPx()
             val columns = (size.width / spacing).toInt()
@@ -234,14 +234,14 @@ internal fun CrossroadsHomeScreen(
         Column(
             modifier = Modifier.fillMaxSize()
                 .verticalScroll(homeScroll)
-                .padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 16.dp),
+                .padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
         Text("GRIDMATES · BOARD GAMES",
             style = MaterialTheme.typography.labelMedium, color = Muted)
         // The illustrated course is the game's cover, not a separate text
         // page header followed by a thumbnail.
-        Box(Modifier.fillMaxWidth()) {
+        Box(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large)) {
             HomeTrailIllustration()
             Column(
                 modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth()
@@ -288,16 +288,18 @@ internal fun CrossroadsHomeScreen(
             else "You and ${seats - 1} ${if (seats == 2) "AI opponent" else "AI opponents"} · offline",
             style = MaterialTheme.typography.bodySmall, color = Muted
         )
+        Text("Players", style = MaterialTheme.typography.labelMedium, color = Ink,
+            fontWeight = FontWeight.SemiBold)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             (2..4).forEach { count ->
                 TabletopChoicePill(
-                    text = "$count players",
+                    text = "$count",
                     selected = count == seats,
                     onClick = { seats = count },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).semantics { contentDescription = "$count players" }
                 )
             }
         }
@@ -322,8 +324,9 @@ internal fun CrossroadsHomeScreen(
             }
         }
         if (regionalCourseId != null) {
+            Text("Experimental course · QA", style = MaterialTheme.typography.labelSmall, color = Muted)
             TabletopChoicePill(
-                text = "Regional Journey · QA",
+                text = "Regional Journey",
                 selected = selectedCourseId == regionalCourseId,
                 onClick = { onCourseChange(regionalCourseId) },
                 modifier = Modifier.fillMaxWidth()
@@ -366,7 +369,7 @@ internal fun CrossroadsHomeScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                 Text("Board appearance", color = Ink,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold)

@@ -1,3 +1,9 @@
+# Active checkpoint — VISUAL-117B
+
+VISUAL-117A Android 45561783809 and rules 45561783745 passed. Home cleanup: clip cover overlay to rounded cover, clip scrolling content to its allocated viewport, increase scroll-end breathing room, use explicit Players heading with compact 2/3/4 choices and accessible labels, separate QA course disclosure from Regional Journey button, allow board appearance label to wrap in weighted column. These are provisional visual adjustments, not physical approval. Pinned Start Race, rule summary, game rules, saves and signing unchanged. Exact-head CI pending. Shared control art insets and board presentation remain open.
+
+---
+
 # Active checkpoint — VISUAL-117A
 
 BRANDING-116 Android run 45561130523 and rules run 45561130482 failed at Gradle script compilation: java.util reference shadowed by Gradle java extension. Import ArrayDeque directly; retain all pixel processing logic. First visual cleanup: remove redundant cramped Close map header button, retain pinned Back to the trail/Return to route choices and dialog dismissal. No rules, signing or data changes. Exact new CI and device review pending. Further shared button insets, home footer spacing, board/HUD and terrain work remain open.
