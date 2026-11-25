@@ -52,6 +52,7 @@ jobs:
             )
             python3 tools/import_environment_v2.py "$dir/crossroads_environment_v2.zip"
             python3 tools/import_ui_core_v1.py "$dir/crossroads_ui_core_v1.zip"
+            python3 tools/promote_ui_preview.py
             echo "Original environment atlas and UI source archive verified." >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Validate optional woodland art, provenance and size budget
@@ -121,6 +122,26 @@ jobs:
           "$TOOLS/aapt" dump badging "$APK" | grep -F "application-label:'Crossroads QA'"
           if [[ -f design/art/imports/crossroads_environment_v2.zip ]]; then
             unzip -p "$APK" assets/art/v1/environment_atlas_v2.png | sha256sum -c <(echo "779c42c21558a24ef9eb56f341d465ddeae68061389149bfe17fa00fe53525ab  -")
+          fi
+          if [[ -f design/art/imports/crossroads_ui_core_v1.zip ]]; then
+            python3 - "$APK" <<'PY'
+          import hashlib, json, sys, zipfile
+          from pathlib import Path
+          root = Path("app/src/main/assets/art/ui/v1")
+          manifest = json.loads((root / "manifest.json").read_text())
+          with zipfile.ZipFile(sys.argv[1]) as apk:
+              prefix = "assets/art/ui/v1/"
+              expected = {prefix + a["filename"] for a in manifest["assets"]}
+              actual = {n for n in apk.namelist() if n.startswith(prefix) and n.endswith(".png")}
+              if actual != expected or len(expected) != 16:
+                  raise ValueError("Runtime UI asset set mismatch")
+              for a in manifest["assets"]:
+                  if hashlib.sha256(apk.read(prefix + a["filename"])).hexdigest() != a["sha256"]:
+                      raise ValueError("Packaged UI hash mismatch: " + a["filename"])
+              if apk.read(prefix + "manifest.json") != (root / "manifest.json").read_bytes():
+                  raise ValueError("Packaged UI manifest mismatch")
+          print("Verified 16 illustrated UI assets inside signed APK.")
+          PY
           fi
           cp "$APK" "GridMates-Crossroads-QA-$QA_CODE.apk"
           sha256sum "GridMates-Crossroads-QA-$QA_CODE.apk" > "GridMates-Crossroads-QA-$QA_CODE.apk.sha256"
