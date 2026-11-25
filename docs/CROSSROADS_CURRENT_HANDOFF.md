@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-05B encounter policy comparison
+
+AI2-05A rules 45668310891 passed; Android 45668310797 in progress at inspection. Added homogeneous actual-engine R2/R3 comparison, 576 races / 288 paired configurations over four V5 courses, 2–4 seats, 24 seeds. Counts shelter and hazard responses using lastEventId after encounter action, distinct hazard result IDs per match, target opportunities and shielded legacy targets, action and roll pacing; requires completion and replay. Target counts are not full encounter variety, and distinct hazard IDs per race are not catalogue coverage. Both policies retain legacy targeting. CSV included in AI workflow artifact. No runtime changes, default remains V1. Exact-head CI pending. Inspect results before deciding on targeting policy; mixed-policy competitive testing still outstanding. Owner visual review still incomplete. No merge or release.
+
+---
+
 # Active checkpoint — AI2-05A encounter-aware experimental R3
 
 AI2-04C both CI passed (45592178746 rules,45592178745 Android); QA1876 artifact 15011083088 (20269970 bytes). Actual route CSV artifact 15011602785: 288 completed and replayed per arm, R1/R2 actions 14081/13522, rolls 5825/5471, routes 4565/4477, encounters 3651/3550, targets 40/24. Mean actions 48.89/46.95; mean rolls 20.23/19.00. Homogeneous policy races, not competitive superiority. R2 fewer rolls in 3 of 4 courses; mischief reduction merits review.
