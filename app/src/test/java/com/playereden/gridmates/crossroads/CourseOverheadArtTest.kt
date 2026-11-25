@@ -62,6 +62,10 @@ class CourseOverheadArtTest {
         val occupied = scenery.map { androidx.compose.ui.geometry.Offset(it.x,it.y) }
         val patches = WoodlandGroundcover.plan(board.nodes,style,occupied)
         assertTrue(patches.isNotEmpty())
+        assertTrue(patches.size <= 460)
+        assertTrue(patches.any { p -> occupied.any { a ->
+            kotlin.math.hypot(p.x-a.x,p.y-a.y) in .074f.. .094f
+        } })
         assertEquals(patches,WoodlandGroundcover.plan(board.nodes,style,occupied))
         patches.forEach { p ->
             assertTrue(OverheadScenery.clearOfPlay(p.x,p.y,board.nodes,.034f+p.radius))

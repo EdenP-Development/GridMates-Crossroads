@@ -1,3 +1,9 @@
+# Active checkpoint — WW2-03A clustered groundcover
+
+WW2-02B rules run 45578950534 failed before tests: Maven Central and Gradle plugin portal HTTP 403 resolving existing Kotlin dependencies. Android 45578950645 running at inspection. No dependency change or test waiver. Groundcover planner now prioritizes up to 60 deterministic companion tufts around existing scenery, then retains a sparser background distribution; original route/landmark/patch clearance checks remain. Added regional cluster and total budget regression. Applies to existing illustrated groundcover planner across courses; companion clusters require occupied landmarks. No new assets, graph, camera, signing or saves changes. Exact-head CI and physical review pending; cluster density provisional.
+
+---
+
 # Active checkpoint — WW2-02B Regional trailhead and destination scenery
 
 WW2-02A rules 45578412836 passed; Android 45578412699 was running at inspection. Added existing atlas fence near Regional START (.035,.67) at (.15,.725), and cottage near FINISH (.88,.27) at (.925,.175). Independent JS check against actual authored JSON confirms both satisfy existing .078 route clearance, .09 separation and sprite bounds; Kotlin regression requires both placements. No new artwork, graph changes, camera changes or extra playable spaces. Only Regional overhead QA view affected; other courses still need landmark composition. Exact-head CI and phone review pending. Startup/icon/signing/saves unchanged.

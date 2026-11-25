@@ -16,6 +16,25 @@ internal object WoodlandGroundcover {
              occupied: List<Offset>): List<GroundcoverPatch> {
         if (nodes.isEmpty()) return emptyList()
         return buildList {
+            // Prefer small companion plants near existing landmarks, rather
+            // than evenly scattering identical tufts throughout the board.
+            // Keep the same clearance, finite placement budget and stable order.
+            for ((index, anchor) in occupied.withIndex()) {
+                for (j in 0 until 5) {
+                    val angle = (index * 137.5 + j * 72.0) * kotlin.math.PI / 180.0
+                    val distance = .075f + (j % 3) * .009f
+                    val x = anchor.x + kotlin.math.cos(angle).toFloat() * distance
+                    val y = anchor.y + kotlin.math.sin(angle).toFloat() * distance
+                    val radius = .007f + (j % 3) * .001f
+                    if (x !in radius..(1f-radius) || y !in radius..(1f-radius)) continue
+                    if (!OverheadScenery.clearOfPlay(x,y,nodes,.034f+radius)) continue
+                    if (occupied.any { hypot(x-it.x,y-it.y) < .055f+radius }) continue
+                    if (any { p: GroundcoverPatch -> hypot(x-p.x,y-p.y) < p.radius+radius+.006f }) continue
+                    add(GroundcoverPatch(x,y,radius,if (j % 3 == 0) 3 else j % 2))
+                    if (size >= 60) break
+                }
+                if (size >= 60) break
+            }
             for (i in 0 until 400) {
                 val x = (i % 20 + .22f + (i * 17 % 53) / 100f) / 20f
                 val y = (i / 20 + .22f + (i * 29 % 53) / 100f) / 20f
@@ -25,7 +44,9 @@ internal object WoodlandGroundcover {
                     CourseOverheadStyle.WOVEN -> x in .34f.. .69f
                     CourseOverheadStyle.REGIONAL -> y in .38f.. .69f
                 }
-                if (!forest && i % 3 == 0) continue
+                // Quiet gaps give groves and clearings greater visual contrast.
+                if (!forest && i % 2 == 0) continue
+                if (forest && i % 7 == 0) continue
                 val radius = .006f + (i % 4) * .002f
                 if (x !in radius..(1f-radius) || y !in radius..(1f-radius)) continue
                 if (!OverheadScenery.clearOfPlay(x,y,nodes,.034f+radius)) continue
