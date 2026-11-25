@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-08B Woven encounter spacing experiment
+
+AI2-08A rules 45690185706 passed, Android 45690185607 in progress at inspection. Actual artifact 15059066050: 960 finish receipts, first finisher wins 858, later winner 102, tied best 18. Woven F2 medium offered 223, encounter available 0, observed medium 199, targets 0. This supports exhausted encounter allowance rather than medium avoidance within observed runs. Added test-only geometry comparison: original plus 1/2/3 plain spaces R3→F2, 3 policies V1/R2/R4, 2/4 seats, 24 seeds, 576 matches. Measure F2 exposure, available encounters, observed medium, targets, actions/rolls and winner; require completion and replay. Spacing may alter route attractiveness; no causal isolation from geometry incentive changes. No registered board, runtime, save, or rule modifications. CI pending. Next compare variants and assess pacing before considering separately versioned course change. Fair finish tie rule alone unlikely to explain seat imbalance; further diagnostics needed. No merge or release.
+
+---
+
 # Active checkpoint — AI2-08A balance diagnostics
 
 AI2-07B both workflows passed; QA1888 available. Four-seat actual results documented in docs/AI2_08A_BALANCE_DIAGNOSTICS.md. Added 960 diagnostic matches with route exposure and fair finish receipt CSVs; no gameplay changes. Exact-head CI pending. Investigate Woven mischief availability and seat bias before any versioned rules changes. Legacy V1 default; no Android/LAN experimental activation. Owner physical review pending. No merge/release.
