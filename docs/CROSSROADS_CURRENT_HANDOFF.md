@@ -1,3 +1,9 @@
+# Active checkpoint — VISUAL-117A
+
+BRANDING-116 Android run 45561130523 and rules run 45561130482 failed at Gradle script compilation: java.util reference shadowed by Gradle java extension. Import ArrayDeque directly; retain all pixel processing logic. First visual cleanup: remove redundant cramped Close map header button, retain pinned Back to the trail/Return to route choices and dialog dismissal. No rules, signing or data changes. Exact new CI and device review pending. Further shared button insets, home footer spacing, board/HUD and terrain work remain open.
+
+---
+
 # Active checkpoint — BRANDING-116 / owner QA1813 visual review
 
 Owner phone screenshots confirm QA1813 installed and the new fox icon appears, but black surround/corners are rejected. Sudoku Beta 3 feat/beta3-foundation uses icon_background #214F3F (actual colors.xml and adaptive XML inspected). Preserve approved master and SHA unchanged. Runtime derivative removes only edge-connected near-black pixels (threshold 48, four-connected flood fill, removal sanity gate); use same family green adaptive background and enlarge artwork from 52 to 56 dp provisionally. No claim of visual acceptance; inspect launcher and native startup on next phone build. Prior QA1813 Android run 45557527365 and rules 45557527355 passed. New exact-head CI pending.

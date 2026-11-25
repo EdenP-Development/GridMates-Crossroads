@@ -2,6 +2,7 @@ import java.security.MessageDigest
 import java.net.URI
 import java.awt.RenderingHints
 import java.awt.Color
+import java.util.ArrayDeque
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
 
@@ -61,7 +62,7 @@ val prepareCrossroadsLauncher = tasks.register("prepareCrossroadsLauncher") {
         val cleaned = BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)
         cleaned.setRGB(0, 0, w, h, source.getRGB(0, 0, w, h, null, 0, w), 0, w)
         val visited = BooleanArray(w * h)
-        val queue = java.util.ArrayDeque<Int>()
+        val queue = ArrayDeque<Int>()
         fun offer(x: Int, y: Int) {
             if (x !in 0 until w || y !in 0 until h) return
             val i = y * w + x

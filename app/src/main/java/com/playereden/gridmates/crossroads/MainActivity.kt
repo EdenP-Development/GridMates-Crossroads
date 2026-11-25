@@ -1713,10 +1713,7 @@ private fun CrossroadsApp(
                                         fontWeight = FontWeight.Bold,
                                         style = MaterialTheme.typography.titleLarge)
                                 }
-                                TabletopUtilityButton(
-                                    text = "Close map", onClick = { inspectBoard = false },
-                                    icon = TabletopIconArt.COLLAPSE
-                                )
+                                // The pinned return action below closes the map; avoid a duplicate cramped header control.
                             }
                             Column(
                                 modifier = Modifier.fillMaxWidth()
