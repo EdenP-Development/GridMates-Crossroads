@@ -433,9 +433,10 @@ internal fun CrossroadsHomeScreen(
             text = "About & data", onClick = { showAbout = true },
             modifier = Modifier.fillMaxWidth(), icon = TabletopIconArt.SETTINGS
         )
-        Card(
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFEAE1CA)),
-            modifier = Modifier.fillMaxWidth()
+        TabletopPanel(
+            color = Color(0xFFEAE1CA),
+            modifier = Modifier.fillMaxWidth(),
+            elevation = 1.dp
         ) {
             Column(
                 modifier = Modifier.padding(15.dp),
