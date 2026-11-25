@@ -1,3 +1,15 @@
+# Active checkpoint — BRANDING-114 / GAMEPLAY-113 (2026-11-24)
+
+Owner authorized Spudacus → GridMates → existing Crossroads root per shared startup v1.0 after physically accepting Sudoku Beta 3 Visual Review 4. Read central BRAND_IDENTITY.md, branding/game-startup/v1.0/README.md, reference/StartupBranding.kt and both asset guides. Newer shared standard supersedes older pilot-only language.
+
+Pinned runtime PNGs: Spudacus source 015645bffb612e0f4311ec5a2d29e9c8bad91289 SHA256 74773dbda822161f73a639f959e8bce5c6e0b333a94ebeb8ee27f620d4995d25; GridMates source 9affedc94ca5a6b896d36148f46f14a4e8218c3a SHA256 eef6d631cac0b9523f7e0dbebac229f9a2458d36fe2e73e111d251704d9ff292. GitHub connector could not decode binary PNGs. Central repository public; Gradle prepareStartupBranding fetches pinned bytes at build time, verifies checksum and caches generated assets; CI verifies both exact PNGs inside signed QA and unsigned public APK. Installed runtime reads local assets only. New clean build requires network to central source. No regeneration.
+
+StartupBranding overlay adapted to Compose root, cream #FAE7CD, 250/1000/250ms per logo, nominal 3 seconds plus decode, tap/Back skips remainder, reduced motion bypass, ON_STOP dismissal, savedInstanceState gate, local decode failure skips, underlying semantics cleared during overlay. Unit tests cover stage order, nominal duration and initial gate. No actual device startup timing, skip, focus, lifecycle, orientation, offline, native splash or performance verification yet. Exact new CI pending. No package/signing/launcher changes, no public release.
+
+Previous consolidated regional development verified QA1799 workflow 45553389006 and rules 45553388398. Regional V5 selectable in debug only, dedicated terrain and labels, dense marker spacing, expanded recovery test 192 matches, regional original rules excluded from official stats. Next verify branding exact-head CI, then owner internal QA of both startup and Regional Journey, save recovery, gameplay pacing, scenery and readability. Main remains untouched, draft PR120. Keep private beta 2002 separate from public-test-only QA signer.
+
+---
+
 # Active checkpoint — GAMEPLAY-112B (2026-11-24)
 
 Active branch feature/identity-17-art-import, stacked draft PR120; main untouched. Owner QA1759 review: docs/QA1759_OWNER_PHONE_VISUAL_AUDIT.md. Gameplay-first plan: docs/GAMEPLAY_103_COURSE_REDEVELOPMENT.md. Regional V5 selected provisionally: 113 nodes, 49–62 edges, 8 forks, 3 three-way forks, 23 event nodes. Verified QA1776 run 45547159727; 2160 exposure races and 2160 strategy races; V5 tactical median rounds 10 across 2/3/4 seats. V5 fixed policy wins (2/3/4 seats): Steady shortest 60/45/28.8%, Steady safest 55/38.3/25%, Push shortest 45/18.3/10%, Push safest 47.5/45/30%. Aggressive multiplayer weakness remains open; synthetic, not human timing or proven balance.
