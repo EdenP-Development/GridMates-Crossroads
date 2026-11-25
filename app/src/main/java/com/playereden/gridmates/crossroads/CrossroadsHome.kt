@@ -380,9 +380,9 @@ internal fun CrossroadsHomeScreen(
                 Text(boardLook.label + " ▾")
             }
         }
-        Surface(
+        TabletopPanel(
             color = if (playtestRules) Color(0xFFE4EBD9) else Color(0xFFECE5D4),
-            shape = MaterialTheme.shapes.medium
+            elevation = 0.dp
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 5.dp),
@@ -406,9 +406,9 @@ internal fun CrossroadsHomeScreen(
             }
         }
         if (playtestRules) {
-            Surface(
+            TabletopPanel(
                 color = if (fairFinishExperiment) Color(0xFFE4EBD9) else Color(0xFFF2ECDD),
-                shape = MaterialTheme.shapes.medium
+                elevation = 0.dp
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth()

@@ -1,3 +1,9 @@
+# Active checkpoint — VISUAL-120F3
+
+VISUAL-120F2 rules 45571927615 passed; Android 45571927630 running at inspection. Nearby setup reuses shared primary action controls for Create room and Join by address; room-code input is placed before discovered rooms so protected-room buttons no longer require scrolling to manual address controls. Same code state, parser, validation, callbacks and transport unchanged. Home tactical and fair-finish settings use shared tabletop paper panels. Exact-head CI and two-phone physical review pending; no protocol, rules, saved data or signing changes. Consolidate QA next.
+
+---
+
 # Active checkpoint — VISUAL-120F2
 
 VISUAL-120F1 rules 45571106183 passed; Android 45571106233 was running at inspection. Results: shared engraved TabletopPanel for winner and last encounter, rounded optional victory art. Journal: each existing encounter is a separate parchment entry with turn/actor, title and outcome; newest first unchanged. No new victory asset, no fabricated placements, scoring/timing/receipt logic unchanged. No signing, save or gameplay changes. CI pending for this head; physical review of short screens/large fonts needed. Settings and multiplayer remain open; consolidate QA after this checkpoint rather than repeatedly superseding builds.
