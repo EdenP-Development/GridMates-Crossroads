@@ -232,15 +232,14 @@ internal fun TabletopActionTray(
     Surface(
         modifier = modifier,
         color = TabletopMaterials.walnut,
-        shape = RoundedCornerShape(22.dp),
-        border = BorderStroke(2.dp, TabletopMaterials.brass),
-        shadowElevation = 15.dp
+        shape = RoundedCornerShape(17.dp),
+        border = BorderStroke(1.5.dp, TabletopMaterials.brass),
+        shadowElevation = 6.dp
     ) {
         Surface(
-            modifier = Modifier.padding(3.dp),
+            modifier = Modifier.padding(2.dp),
             color = TabletopMaterials.paper,
-            shape = RoundedCornerShape(18.dp),
-            border = BorderStroke(1.dp, Color(0xFFB4A078)),
+            shape = RoundedCornerShape(14.dp),
         ) {
             content()
         }
