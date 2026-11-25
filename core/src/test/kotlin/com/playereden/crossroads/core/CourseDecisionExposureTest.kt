@@ -13,7 +13,8 @@ class CourseDecisionExposureTest {
         val events = GameData.events(File(root, "data/events/woven_events_v02.json").readText())
         val paths = listOf("data/boards/woodland_brookside_quick.json",
             "data/boards/woodland_woven_trail.json", "data/boards/woodland_cedarwood_long.json",
-            "design/prototypes/woodland_woven_expanded.json")
+            "design/prototypes/woodland_woven_expanded.json",
+            "design/prototypes/woodland_woven_regional_v04.json")
         val rows = mutableListOf("course,rules,seats,seed,seat,rounds,rolls,forks,encounter_choices,target_choices,won")
         val summary = mutableListOf<String>()
         var races = 0
@@ -67,8 +68,8 @@ class CourseDecisionExposureTest {
                 }
             }
         }
-        assertEquals(1440, races)
-        assertEquals(4321, rows.size)
+        assertEquals(1800, races)
+        assertEquals(5401, rows.size)
         val dir = File(root, "core/build/reports/gameplay-104")
         dir.mkdirs()
         File(dir, "seat-exposure.csv").writeText(rows.joinToString("\n") + "\n")
