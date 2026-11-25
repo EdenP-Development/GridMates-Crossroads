@@ -1,3 +1,9 @@
+# Active checkpoint — WW2-01 Regional scenery composition
+
+QA1844 owner accepted startup; launcher retained. Expanded Regional Journey authored scenery from 9 to 16 candidates: village fence, orchard and bushes, forest fir companions and meadow bush. Existing .078 graph clearance and .09 spacing remain; independent JS check on actual Regional JSON predicts all 16 accepted. Kotlin regression now requires >=15 and unchanged geometry; CI pending. Compact gameplay header Regional Journey retains full accessible title and map name. No changes to gameplay graph, camera, signing, startup or saves. Scenery still provisional; review physical appearance and performance. Next: Start/Finish landmarks and less uniform region composition.
+
+---
+
 # Active checkpoint — QA1844 physical review / Woodland World 2.0 planning
 
 Owner supplied QA1844 physical screenshots and explicitly confirmed startup is good. Startup presentation accepted; no claim of separate skip/reduced-motion/lifecycle verification. Launcher screenshot shows close visual family alignment with Sudoku; retain current master and 58dp recipe, no separate exact gold-frame pixel acceptance claimed. Regional Journey full map, initial play HUD, manual exploration views and home settings visible. Host/Join labels fit; camera board coverage improved in supplied views. Regional Journey still has sparse scenery, large flat terrain areas, clipped long course name in live header and a heavily regular loop layout; no gameplay or finish/multiplayer acceptance inferred. Next Woodland World 2.0: prioritize course-specific environmental clusters and compact Regional Journey header, preserve graph and touch geometry; evaluate Start/Finish landmarks and performance. QA1844 CI both passed (45574853504,45574853404). No runtime changes in this documentation checkpoint.

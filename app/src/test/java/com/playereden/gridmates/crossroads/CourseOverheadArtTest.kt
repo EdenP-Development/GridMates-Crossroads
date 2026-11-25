@@ -44,7 +44,9 @@ class CourseOverheadArtTest {
         assertTrue(useOverheadBoardPreview(board.id,true,true,true))
         assertFalse(useOverheadBoardPreview(board.id,false,true,true))
         val scenery = CourseOverheadScenery.plan(style,board.nodes)
-        assertTrue(scenery.isNotEmpty())
+        assertTrue("Regional scenery should exceed the original nine landmarks", scenery.size >= 15)
+        assertEquals("Regional Journey", CrossroadsCourse.compactTitle(board.id))
+        assertEquals("Woven Trail: Regional Journey", CrossroadsCourse.title(board.id))
         assertEquals(scenery,CourseOverheadScenery.plan(style,board.nodes))
         scenery.forEach { a ->
             val radius = a.sprite.diameter * kotlin.math.sqrt(2f) / 2f

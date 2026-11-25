@@ -63,7 +63,15 @@ internal object CourseOverheadScenery {
                 p(.72f,.43f,EnvironmentSprite.FIR_GROVE),
                 p(.28f,.74f,EnvironmentSprite.FLOWERS),
                 p(.52f,.74f,EnvironmentSprite.MEADOW_CLEARING),
-                p(.72f,.74f,EnvironmentSprite.FLOWERS)
+                p(.72f,.74f,EnvironmentSprite.FLOWERS),
+                // Village outskirts and grouped forest companions, screened by the same graph clearance.
+                p(.08f,.08f,EnvironmentSprite.BUSH),
+                p(.30f,.08f,EnvironmentSprite.FENCE),
+                p(.55f,.07f,EnvironmentSprite.BUSH),
+                p(.88f,.09f,EnvironmentSprite.ORCHARD),
+                p(.63f,.44f,EnvironmentSprite.FIR),
+                p(.85f,.43f,EnvironmentSprite.FIR),
+                p(.40f,.75f,EnvironmentSprite.BUSH)
             )
             CourseOverheadStyle.CEDARWOOD -> listOf(
                 p(.052f,.048f,EnvironmentSprite.FIR),

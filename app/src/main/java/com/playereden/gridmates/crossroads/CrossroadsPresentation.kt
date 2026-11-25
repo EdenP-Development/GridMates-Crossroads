@@ -19,6 +19,9 @@ internal object CrossroadsCourse {
         else -> "Woodland Crossing"
     }
 
+    fun compactTitle(boardId: String): String =
+        if (DecisionLab.baseId(boardId) == REGIONAL_ID) "Regional Journey" else title(boardId)
+
     fun subtitle(boardId: String): String = if (boardId.endsWith(DecisionLab.V5_SUFFIX))
         "Gameplay 2.0 · Lab v5"
     else if (boardId.endsWith(DecisionLab.V4_SUFFIX))

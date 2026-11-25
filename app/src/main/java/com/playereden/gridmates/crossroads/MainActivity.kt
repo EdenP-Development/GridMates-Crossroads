@@ -1043,7 +1043,7 @@ private fun CrossroadsApp(
                 ) {
                     val matchBrand = if (BuildConfig.DEBUG) "CROSSROADS · QA" else "CROSSROADS"
                     Text(
-                        CrossroadsCourse.title(board.id),
+                        CrossroadsCourse.compactTitle(board.id),
                         modifier = Modifier.weight(1f).semantics {
                             contentDescription = "$matchBrand · ${CrossroadsCourse.title(board.id)}"
                         },
