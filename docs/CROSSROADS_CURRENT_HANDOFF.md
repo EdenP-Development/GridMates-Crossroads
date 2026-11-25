@@ -1,3 +1,9 @@
+# Active checkpoint — VISUAL-120F2
+
+VISUAL-120F1 rules 45571106183 passed; Android 45571106233 was running at inspection. Results: shared engraved TabletopPanel for winner and last encounter, rounded optional victory art. Journal: each existing encounter is a separate parchment entry with turn/actor, title and outcome; newest first unchanged. No new victory asset, no fabricated placements, scoring/timing/receipt logic unchanged. No signing, save or gameplay changes. CI pending for this head; physical review of short screens/large fonts needed. Settings and multiplayer remain open; consolidate QA after this checkpoint rather than repeatedly superseding builds.
+
+---
+
 # Active checkpoint — VISUAL-120F1
 
 VISUAL-120E1 Android 45570109811 and rules 45570109817 passed. Encounter cards now reuse TabletopActionTile rather than duplicating colors, feedback and sizing; two-line consequence copy matches tactical actions, legal choices and callbacks unchanged. Route comparison sheet adopts shared parchment/brass tokens and shorter Board button with accessible Back to board description; route comparison and map inspection preserved. No gameplay, signing or data changes. New exact-head CI and physical review pending, particularly four-option encounter fit and large fonts. Results, journal and settings remain candidates for later cohesion. No final visual approval claimed.

@@ -1663,9 +1663,21 @@ private fun CrossroadsApp(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         state.encounters.asReversed().forEach { note ->
-                            Text("Turn ${note.turn} · ${note.actor}: ${note.title}",
-                                fontWeight = FontWeight.SemiBold)
-                            Text(note.outcome, style = MaterialTheme.typography.bodySmall, color = Bark)
+                            TabletopPanel(
+                                modifier = Modifier.fillMaxWidth(),
+                                color = TabletopMaterials.paper,
+                                elevation = 0.dp
+                            ) {
+                                Column(
+                                    Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
+                                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                                ) {
+                                    Text("Turn ${note.turn} · ${note.actor}",
+                                        style = MaterialTheme.typography.labelSmall, color = Bark)
+                                    Text(note.title, fontWeight = FontWeight.SemiBold, color = Forest)
+                                    Text(note.outcome, style = MaterialTheme.typography.bodySmall, color = Bark)
+                                }
+                            }
                         }
                     }
                 },
