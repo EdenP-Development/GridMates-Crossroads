@@ -58,7 +58,6 @@ internal fun StartupBranding(
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer) }
     }
-    BackHandler(visible) { stage = stages.size }
     LaunchedEffect(stage) {
         if (!visible) return@LaunchedEffect
         if (!ValueAnimator.areAnimatorsEnabled()) {
@@ -108,4 +107,6 @@ internal fun StartupBranding(
             }
         }
     }
+    // Register after the game content so Back dismisses branding first.
+    BackHandler(visible) { stage = stages.size }
 }
