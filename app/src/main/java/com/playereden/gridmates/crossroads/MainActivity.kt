@@ -2497,13 +2497,20 @@ private fun BoardCanvas(
                     "finish" -> Color(0xFFB47E40)
                     else -> Color(0xFFFDF8E9)
                 }
-                val radius = (when {
+                val nominalRadius = (when {
                     node.kind == "fork" -> if (denseBoard) 11f else 12f
                     node.kind == "start" || node.kind == "finish" -> 13f
                     denseBoard && node.kind == "plain" -> 4.75f
                     denseBoard && node.kind == "event" -> 6.25f
                     else -> 7f
                 }) * nodeVisibilityScale
+                // Regional special markers keep a footprint proportional to the actual
+                // nearest graph space. Preserve legacy marker sizes on other courses.
+                val radius = if (DecisionLab.baseId(board.id) == CrossroadsCourse.REGIONAL_ID &&
+                    (node.kind == "fork" || node.kind == "event")) {
+                    val spacingPx = (nearestSpaceSpacing[node.id] ?: Float.POSITIVE_INFINITY) * drawWidth
+                    minOf(nominalRadius, (spacingPx * .34f).coerceAtLeast(2f))
+                } else nominalRadius
                 // VISUAL-83: Start and Finish feel like physical sockets for
                 // the travelers, not two ordinary dots. Shared graph centers
                 // and the original S/F labels remain authoritative.
