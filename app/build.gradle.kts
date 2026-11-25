@@ -83,12 +83,13 @@ val prepareCrossroadsLauncher = tasks.register("prepareCrossroadsLauncher") {
             offer(x - 1, y); offer(x + 1, y); offer(x, y - 1); offer(x, y + 1)
         }
         check(removed > 0 && removed < w * h / 4) { "Unexpected launcher corner removal: $removed" }
-        // 56 dp artwork on a 108 dp layer: slightly larger, still conservative.
+        // GridMates launcher standard v1.0: Sudoku's 58 dp artwork on a 108 dp layer.
+        // Eden-Development-Standards@9821e84330057c7744ff0f84ae3e85d380445c57
         val layer = BufferedImage(432, 432, BufferedImage.TYPE_INT_ARGB)
         val graphics = layer.createGraphics()
         try {
             graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC)
-            graphics.drawImage(cleaned, 104, 104, 224, 224, null)
+            graphics.drawImage(cleaned, 100, 100, 232, 232, null)
         } finally { graphics.dispose() }
         val output = launcherResDir.get().file("drawable-nodpi/ic_crossroads_family_foreground.png").asFile
         output.parentFile.mkdirs()

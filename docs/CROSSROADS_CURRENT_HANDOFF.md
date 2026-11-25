@@ -1,3 +1,9 @@
+# Active checkpoint — GridMates launcher standard v1.0 adoption
+
+Owner designated illustrated Sudoku Beta 3 icon as canonical for green surround and margin. Shared standard committed at EdenP-Development/Eden-Development-Standards@9821e84330057c7744ff0f84ae3e85d380445c57, branding/gridmates/app-icons/v1.0/README.md. Verified actual Sudoku build recipe, not legacy vector: 58dp/232px foreground centered at 100,100 on 432px adaptive canvas, runtime #214F3F. Crossroads already uses same green; changed 56dp/224px to exact nominal 58dp/232px footprint. Original fox master, edge-connected corner cleanup, IDs, signing, saves and startup timing retained. Actual gold-frame pixel extents and mask appearance still require side-by-side physical review; no final visual acceptance claimed. Exact-head CI pending. Shared standard contains source hashes from Sudoku recipe; original bytes not independently reconstructed in this audit. Other GridMates titles need independent adoption.
+
+---
+
 # Active checkpoint — VISUAL-120F3
 
 VISUAL-120F2 rules 45571927615 passed; Android 45571927630 running at inspection. Nearby setup reuses shared primary action controls for Create room and Join by address; room-code input is placed before discovered rooms so protected-room buttons no longer require scrolling to manual address controls. Same code state, parser, validation, callbacks and transport unchanged. Home tactical and fair-finish settings use shared tabletop paper panels. Exact-head CI and two-phone physical review pending; no protocol, rules, saved data or signing changes. Consolidate QA next.
