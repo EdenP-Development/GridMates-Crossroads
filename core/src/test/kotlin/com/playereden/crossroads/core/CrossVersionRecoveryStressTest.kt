@@ -14,10 +14,11 @@ import org.junit.Test
 class CrossVersionRecoveryStressTest {
     private val root = File(System.getProperty("crossroads.repoDir"))
     private val originals = listOf(
-        "woodland_brookside_quick.json",
-        "woodland_woven_trail.json",
-        "woodland_cedarwood_long.json"
-    ).map { GameData.board(File(root, "data/boards/$it").readText()) }
+        "data/boards/woodland_brookside_quick.json",
+        "data/boards/woodland_woven_trail.json",
+        "data/boards/woodland_cedarwood_long.json",
+        "design/prototypes/woodland_woven_regional_v05.json"
+    ).map { GameData.board(File(root, it).readText()) }
     private val events = GameData.events(
         File(root, "data/events/woven_events_v02.json").readText())
     private val start = 1794931200000L
@@ -190,8 +191,8 @@ class CrossVersionRecoveryStressTest {
                 }
             }
         }
-        assertEquals(144, records.size)
-        assertTrue("No checkpoints were restored", totalRecoveries >= 144)
+        assertEquals(192, records.size)
+        assertTrue("No checkpoints were restored", totalRecoveries >= 192)
         assertTrue("No fork decisions were exercised", records.any { it.sawRoute })
         assertTrue("No interactive encounter was exercised", records.any { it.sawEncounter })
         assertTrue("No pending final chance was captured",
@@ -208,7 +209,7 @@ class CrossVersionRecoveryStressTest {
         )
         val summary = listOf(
             "SAVE-78 — Repeated checkpoint and replay stress",
-            "144 synthetic full matches: 3 boards x 6 immutable versions " +
+            "192 synthetic full matches: 4 boards x 6 immutable versions " +
                 "x 2 seat counts (2/4) x Solo/Pass x 2 seeds.",
             "Total successful in-race restores: $totalRecoveries",
             "Total legal actions: ${records.sumOf { it.actions }}",
