@@ -6,9 +6,9 @@ import org.junit.Test
 class StartupBrandingSpecTest {
     @Test fun approvedSequenceAndTiming() {
         assertEquals(listOf("Spudacus", "GridMates"), StartupBrandingSpec.stages.map { it.first })
-        assertEquals(250, StartupBrandingSpec.FADE_MS)
-        assertEquals(1000, StartupBrandingSpec.HOLD_MS)
-        assertEquals(3000, StartupBrandingSpec.stages.size *
+        assertEquals(300, StartupBrandingSpec.FADE_MS)
+        assertEquals(1500, StartupBrandingSpec.HOLD_MS)
+        assertEquals(4200, StartupBrandingSpec.stages.size *
             (2 * StartupBrandingSpec.FADE_MS + StartupBrandingSpec.HOLD_MS))
     }
     @Test fun onlyColdLaunchWithMotionShowsBranding() {
