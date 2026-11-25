@@ -48,19 +48,26 @@ internal fun BoxScope.OptionalTabletopButtonArt(
 ) {
     val context = LocalContext.current.applicationContext
     val filename = TabletopButtonArt.filename(family, enabled, pressed, selected)
-    // Key the produced value as well as the effect to avoid showing a stale state.
-    val image = androidx.compose.runtime.key(context, filename) {
-        val bitmap by produceState<ImageBitmap?>(null, context, filename) {
+    // Load a family's complete state set once, rather than decoding during a press.
+    val images = androidx.compose.runtime.key(context, family) {
+        val bitmaps by produceState<Map<String, ImageBitmap>>(emptyMap(), context, family) {
             value = withContext(Dispatchers.IO) {
-                runCatching {
-                    context.assets.open("art/ui/v1/$filename").use {
-                        BitmapFactory.decodeStream(it)?.takeIf { b -> b.width == 384 && b.height == 144 }?.asImageBitmap()
-                    }
-                }.getOrNull()
+                listOf("normal", "highlight", "pressed", "disabled").mapNotNull { state ->
+                    val name = "${family.stem}_$state.png"
+                    val bitmap = runCatching {
+                        context.assets.open("art/ui/v1/$name").use {
+                            BitmapFactory.decodeStream(it)
+                                ?.takeIf { b -> b.width == 384 && b.height == 144 }
+                                ?.asImageBitmap()
+                        }
+                    }.getOrNull()
+                    bitmap?.let { name to it }
+                }.toMap()
             }
         }
-        bitmap
+        bitmaps
     }
+    val image = images[filename]
     // Fit preserves painted corners. Leave existing surface visible outside artwork.
     // Stretchable production surfaces require separate nine-slice review.
     if (image != null) Image(bitmap = image, contentDescription = null,
