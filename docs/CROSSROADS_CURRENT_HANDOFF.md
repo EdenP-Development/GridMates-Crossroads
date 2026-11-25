@@ -1,3 +1,11 @@
+# Active checkpoint — BRANDING-116 / owner QA1813 visual review
+
+Owner phone screenshots confirm QA1813 installed and the new fox icon appears, but black surround/corners are rejected. Sudoku Beta 3 feat/beta3-foundation uses icon_background #214F3F (actual colors.xml and adaptive XML inspected). Preserve approved master and SHA unchanged. Runtime derivative removes only edge-connected near-black pixels (threshold 48, four-connected flood fill, removal sanity gate); use same family green adaptive background and enlarge artwork from 52 to 56 dp provisionally. No claim of visual acceptance; inspect launcher and native startup on next phone build. Prior QA1813 Android run 45557527365 and rules 45557527355 passed. New exact-head CI pending.
+
+Owner also requests game-wide visual cohesion. Screenshot audit: mixed illustrated/native buttons, cramped Close map label overlapping right ornament, large action panel and repeated Rules & last action, blank board edge near start, sparse terrain and inconsistent header/panel styling; home course metadata can be obscured by fixed start footer. Woven Trail was shown, not Regional Journey, and shared splash screens were not captured. Next visual pass: unify control variants and safe text insets, fix map close header layout, verify home footer/scroll spacing, refine board camera bounds and HUD hierarchy, improve terrain composition without hiding routes. Preserve rules, saves, signing and approved art. No main merge/public release.
+
+---
+
 # Active checkpoint — BRANDING-115 (2026-11-24 local)
 
 Owner-approved master recovered from private Drive and verified locally: PNG RGB 1254×1254, 2257645 bytes, SHA-256 711cde86e7d7da605206b3c531ee80ba0d768860ab5f528ec836388555208d4b, Git blob a1beaa04a9f143a1c685ed176fedcd6828f1b893. Exact original is committed at design/art/imports/Crossroads-approved-icon-v1.png; no regeneration. Gradle generates a centered 52dp artwork on a 108dp adaptive layer (432px raster), black background matches original corners. Conservative initial sizing is provisional pending actual launcher mask review. Existing manifest, app IDs, signing, saves, startup and rules unchanged. Existing fox asset retained as historical source.

@@ -1,6 +1,7 @@
 import java.security.MessageDigest
 import java.net.URI
 import java.awt.RenderingHints
+import java.awt.Color
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
 
@@ -53,13 +54,40 @@ val prepareCrossroadsLauncher = tasks.register("prepareCrossroadsLauncher") {
         check(hash == "711cde86e7d7da605206b3c531ee80ba0d768860ab5f528ec836388555208d4b") { "Crossroads launcher master checksum mismatch" }
         val source = requireNotNull(ImageIO.read(launcherMaster))
         check(source.width == 1254 && source.height == 1254)
-        // 52 dp artwork centered in the 108 dp adaptive layer, 4 px/dp.
-        // The full rounded frame fits inside the central mask-safe region.
+        // Remove only near-black pixels connected to the outer canvas edge.
+        // Interior outlines and the approved original remain untouched.
+        val w = source.width
+        val h = source.height
+        val cleaned = BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)
+        cleaned.setRGB(0, 0, w, h, source.getRGB(0, 0, w, h, null, 0, w), 0, w)
+        val visited = BooleanArray(w * h)
+        val queue = java.util.ArrayDeque<Int>()
+        fun offer(x: Int, y: Int) {
+            if (x !in 0 until w || y !in 0 until h) return
+            val i = y * w + x
+            if (visited[i]) return
+            visited[i] = true
+            val c = Color(source.getRGB(x, y))
+            if (maxOf(c.red, c.green, c.blue) <= 48) queue.addLast(i)
+        }
+        for (x in 0 until w) { offer(x, 0); offer(x, h - 1) }
+        for (y in 0 until h) { offer(0, y); offer(w - 1, y) }
+        var removed = 0
+        while (queue.isNotEmpty()) {
+            val i = queue.removeFirst()
+            val x = i % w
+            val y = i / w
+            cleaned.setRGB(x, y, 0)
+            removed++
+            offer(x - 1, y); offer(x + 1, y); offer(x, y - 1); offer(x, y + 1)
+        }
+        check(removed > 0 && removed < w * h / 4) { "Unexpected launcher corner removal: $removed" }
+        // 56 dp artwork on a 108 dp layer: slightly larger, still conservative.
         val layer = BufferedImage(432, 432, BufferedImage.TYPE_INT_ARGB)
         val graphics = layer.createGraphics()
         try {
             graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC)
-            graphics.drawImage(source, 112, 112, 208, 208, null)
+            graphics.drawImage(cleaned, 104, 104, 224, 224, null)
         } finally { graphics.dispose() }
         val output = launcherResDir.get().file("drawable-nodpi/ic_crossroads_family_foreground.png").asFile
         output.parentFile.mkdirs()
