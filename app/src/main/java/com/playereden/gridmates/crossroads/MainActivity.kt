@@ -91,6 +91,7 @@ class MainActivity : ComponentActivity() {
         val classicBoard = GameData.board(assets.open("boards/woodland_woven_trail.json").bufferedReader().use { it.readText() })
         val quickBoard = GameData.board(assets.open("boards/woodland_brookside_quick.json").bufferedReader().use { it.readText() })
         val longBoard = GameData.board(assets.open("boards/woodland_cedarwood_long.json").bufferedReader().use { it.readText() })
+        val regionalBoard = if (BuildConfig.DEBUG) GameData.board(assets.open("woodland_woven_regional_v05.json").bufferedReader().use { it.readText() }) else null
         val catalogue = GameData.events(assets.open("events/woven_events_v02.json").bufferedReader().use { it.readText() })
         setContent {
             MaterialTheme(
@@ -106,7 +107,7 @@ class MainActivity : ComponentActivity() {
                     outline = Color(0xFF978B76), outlineVariant = Color(0xFFD8CCB3)
                 )
             ) {
-                CrossroadsApp(classicBoard, quickBoard, longBoard, catalogue)
+                CrossroadsApp(classicBoard, quickBoard, longBoard, catalogue, regionalBoard)
             }
         }
     }
@@ -117,10 +118,11 @@ private fun CrossroadsApp(
     classicBoard: BoardDefinition,
     quickBoard: BoardDefinition,
     longBoard: BoardDefinition,
-    catalogue: EventCatalogue
+    catalogue: EventCatalogue,
+    regionalBoard: BoardDefinition? = null
 ) {
-    val knownBoards = remember(classicBoard, quickBoard, longBoard) {
-        val original = listOf(classicBoard, quickBoard, longBoard)
+    val knownBoards = remember(classicBoard, quickBoard, longBoard, regionalBoard) {
+        val original = listOfNotNull(classicBoard, quickBoard, longBoard, regionalBoard)
         (original + original.map(DecisionLab::variant) +
             original.map(DecisionLab::variantV2) +
             original.map(DecisionLab::variantV3) +
@@ -884,6 +886,7 @@ private fun CrossroadsApp(
             completed = matches,
             onStart = { seats, localPlayers -> start(seats, localPlayers) },
             selectedCourseId = selectedCourseId,
+            regionalCourseId = regionalBoard?.id,
             onCourseChange = { courseId ->
                 if (courseId in knownBoards) selectedCourseId = courseId
             },
