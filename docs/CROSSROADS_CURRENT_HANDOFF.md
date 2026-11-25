@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-01C historical replay gate
+
+AI2-01B rules 45585566634 passed; Android 45585566974 running at inspection. Added HistoricalBotReplayTest and rules workflow step that checks out pinned pre-policy commit 3bf768046e08f0724c4171c91b5a547647436289, runs the same fixture harness against old engine to produce 24 mid/end checkpoint pairs, then verifies current engine restores old midpoint, re-encodes identical legacy JSON and finishes with identical final checkpoint. Upload baseline CSV and historical fixtures. No engine behavior changes. CI pending; historical fixtures not yet generated/verified. No claim of Android install-over or LAN validation. Next enable experimental policy only after gate passes.
+
+---
+
 # Active checkpoint — AI2-01B legacy policy identity
 
 AI2-01 rules 45584918650 passed; Android 45584918793 running at inspection. Added stable serialized BotPolicyVersion.LEGACY_V1, default and only supported policy, explicit session dispatch to unchanged legacyBotStep, checkpoint/restore/rematch propagation. EncodeDefault NEVER preserves existing format-1 legacy JSON shape; omitted field defaults to legacy. Baseline test now exercises codec roundtrip, omitted field and policy identity across 252 races. No V2 behavior or UI enabled; no changes to RNG draws, board fingerprints or save format number. Exact-head CI pending; cross-version historical fixture still needed before enabling a new policy. New policy must explicitly handle older binary rejection and LAN compatibility.

@@ -46,6 +46,28 @@ jobs:
           gradle-version: "8.11.1"
       - name: Run JVM rules tests
         run: gradle --no-daemon :core:test --console=plain
+      - name: Check out pinned pre-policy engine
+        uses: actions/checkout@v4
+        with:
+          ref: 3bf768046e08f0724c4171c91b5a547647436289
+          path: legacy-reference
+      - name: Generate historical checkpoints and compare current replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          export CROSSROADS_HISTORY_DIR="$RUNNER_TEMP/crossroads-history"
+          cp core/src/test/kotlin/com/playereden/crossroads/core/HistoricalBotReplayTest.kt legacy-reference/core/src/test/kotlin/com/playereden/crossroads/core/HistoricalBotReplayTest.kt
+          CROSSROADS_HISTORY_MODE=generate gradle -p legacy-reference --no-daemon :core:test --tests '*HistoricalBotReplayTest' --console=plain
+          CROSSROADS_HISTORY_MODE=verify gradle --no-daemon :core:test --tests '*HistoricalBotReplayTest' --rerun-tasks --console=plain
+      - name: Upload AI baseline and historical fixtures
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-AI2-baseline-${{ github.sha }}
+          path: |
+            core/build/reports/ai2-baseline/bot_policy_baseline.csv
+            ${{ runner.temp }}/crossroads-history/*.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Upload reproducible gameplay balance report
         if: always()
         uses: actions/upload-artifact@v4
