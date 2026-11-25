@@ -2406,7 +2406,7 @@ private fun BoardCanvas(
             }
             // Longer authored courses have more route nodes in the same viewport.
             // Reduce plain-node and trail thickness just for this dense atlas.
-            val denseBoard = DecisionLab.baseId(board.id) == CrossroadsCourse.LONG_ID
+            val denseBoard = board.nodes.size >= 100
             // Shared board geography never changes with the event seed.
             board.nodes.forEach { node ->
                 val from = position(node.id)
