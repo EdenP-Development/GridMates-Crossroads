@@ -3,6 +3,7 @@ package com.playereden.gridmates.crossroads
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -40,6 +41,19 @@ import androidx.compose.ui.unit.sp
  * Buttons react immediately to contact, but do not bounce, shake, or delay input.
  * All match choices still invoke the owner's existing callbacks unchanged.
  */
+/** Opaque native label backing keeps contrast independent of painted texture. */
+internal object TabletopLabelPalette {
+    val darkPaper = Color(0xFF3D624A)
+    val lightInk = Color(0xFFFFF5DA)
+    val lightPaper = Color(0xFFECE2CA)
+    val darkInk = Color(0xFF493925)
+    val disabledPaper = Color(0xFFDCD6C2)
+    val disabledInk = Color(0xFF625747)
+}
+
+private fun Modifier.tabletopLabelBacking(color: Color): Modifier =
+    background(color, RoundedCornerShape(5.dp)).padding(horizontal = 4.dp, vertical = 2.dp)
+
 internal object CrossroadsTabletopFeedback {
     const val PRESSED_SCALE = 0.975f
     const val REST_SCALE = 1f
@@ -60,8 +74,8 @@ internal fun TabletopChoicePill(
         animationSpec = tween(durationMillis = 95),
         label = "tabletop-choice-contact"
     )
-    val bg = if (selected) Color(0xFF3D624A) else Color(0xFFECE2CA)
-    val ink = if (selected) Color(0xFFFFF5DA) else Color(0xFF6B563E)
+    val bg = if (selected) TabletopLabelPalette.darkPaper else TabletopLabelPalette.lightPaper
+    val ink = if (selected) TabletopLabelPalette.lightInk else TabletopLabelPalette.darkInk
     val edging = if (selected) Color(0xFFE8CE94) else Color(0xFFAA9672)
     Surface(
         onClick = onClick,
@@ -88,11 +102,12 @@ internal fun TabletopChoicePill(
             ) {
             Text(
                 text = text,
+                modifier = Modifier.tabletopLabelBacking(bg),
                 color = ink,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                 style = MaterialTheme.typography.labelLarge,
                 textAlign = TextAlign.Center,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
         }
@@ -176,7 +191,8 @@ internal fun TabletopPrimaryActionButton(
                 text,
                 fontWeight = FontWeight.Bold,
                 fontSize = if (withDie) 17.sp else 15.sp,
-                color = if (enabled) Color(0xFFFFF5DA) else Color(0xFF786D5A),
+                modifier = Modifier.tabletopLabelBacking(if (enabled) TabletopLabelPalette.darkPaper else TabletopLabelPalette.disabledPaper),
+                color = if (enabled) TabletopLabelPalette.lightInk else TabletopLabelPalette.disabledInk,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -231,6 +247,8 @@ internal fun TabletopUtilityButton(
                             .padding(end = 3.dp)) { }
                     }
                     Text(text, style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.tabletopLabelBacking(if (dark) TabletopLabelPalette.darkPaper else TabletopLabelPalette.lightPaper),
+                        color = if (dark) TabletopLabelPalette.lightInk else TabletopLabelPalette.darkInk,
                         fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
                 }
             }
