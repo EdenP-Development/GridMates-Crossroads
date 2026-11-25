@@ -122,7 +122,8 @@ internal object CrossroadsCameraPreset {
             width <= 0f || height <= 0f) return preset
         val aspect = width / height
         val blend = ((aspect - .44f) / .26f).coerceIn(0f, 1f)
-        val cap = 1.88f + (preset - 1.88f).coerceAtLeast(0f) * blend
+        // QA1734 owner review: normal live framing must show the route, not magnify scenery.
+        val cap = 1.15f + (minOf(preset, 1.65f) - 1.15f).coerceAtLeast(0f) * blend
         return minOf(preset, cap)
     }
 
