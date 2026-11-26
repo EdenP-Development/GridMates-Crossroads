@@ -92,6 +92,7 @@ class MainActivity : ComponentActivity() {
         val quickBoard = GameData.board(assets.open("boards/woodland_brookside_quick.json").bufferedReader().use { it.readText() })
         val longBoard = GameData.board(assets.open("boards/woodland_cedarwood_long.json").bufferedReader().use { it.readText() })
         val regionalBoard = if (BuildConfig.DEBUG) GameData.board(assets.open("woodland_woven_regional_v05.json").bufferedReader().use { it.readText() }) else null
+        val convergenceBoard = if (BuildConfig.DEBUG) GameData.board(assets.open("woodland_woven_convergence_v02.json").bufferedReader().use { it.readText() }) else null
         val catalogue = GameData.events(assets.open("events/woven_events_v02.json").bufferedReader().use { it.readText() })
         setContent {
             MaterialTheme(
@@ -108,7 +109,7 @@ class MainActivity : ComponentActivity() {
                 )
             ) {
                 StartupBranding(showInitially = savedInstanceState == null, lifecycle = lifecycle) {
-                    CrossroadsApp(classicBoard, quickBoard, longBoard, catalogue, regionalBoard)
+                    CrossroadsApp(classicBoard, quickBoard, longBoard, catalogue, regionalBoard, convergenceBoard)
                 }
             }
         }
@@ -121,15 +122,16 @@ private fun CrossroadsApp(
     quickBoard: BoardDefinition,
     longBoard: BoardDefinition,
     catalogue: EventCatalogue,
-    regionalBoard: BoardDefinition? = null
+    regionalBoard: BoardDefinition? = null,
+    convergenceBoard: BoardDefinition? = null
 ) {
-    val knownBoards = remember(classicBoard, quickBoard, longBoard, regionalBoard) {
+    val knownBoards = remember(classicBoard, quickBoard, longBoard, regionalBoard, convergenceBoard) {
         val original = listOfNotNull(classicBoard, quickBoard, longBoard, regionalBoard)
         (original + original.map(DecisionLab::variant) +
             original.map(DecisionLab::variantV2) +
             original.map(DecisionLab::variantV3) +
             original.map(DecisionLab::variantV4) +
-            original.map(DecisionLab::variantV5)).associateBy { it.id }
+            original.map(DecisionLab::variantV5) + listOfNotNull(convergenceBoard, convergenceBoard?.let(DecisionLab::variantV5))).associateBy { it.id }
     }
     val context = LocalContext.current
     // Crossroads runs inside its own ComponentActivity. Explicitly observe the
@@ -889,6 +891,7 @@ private fun CrossroadsApp(
             onStart = { seats, localPlayers -> start(seats, localPlayers) },
             selectedCourseId = selectedCourseId,
             regionalCourseId = regionalBoard?.id,
+            convergenceCourseId = convergenceBoard?.id,
             onCourseChange = { courseId ->
                 if (courseId in knownBoards) selectedCourseId = courseId
             },
@@ -1910,7 +1913,7 @@ private fun CrossroadsApp(
                             matchStartedAtEpochMillis = restored.match?.startedAtEpochMillis ?: 0L
                             startedFromCheckpoint = restored.match != null
                             if (restored.match != null) {
-                                selectedCourseId = restored.match.game.board.id
+                                selectedCourseId = DecisionLab.baseId(restored.match.game.board.id)
                             }
                             recoveryWarning = null
                             revision++

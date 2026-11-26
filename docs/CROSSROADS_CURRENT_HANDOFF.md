@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-08F optional QA convergence preview
+
+AI2-08E both CI passed (45891358945 rules,45891358980 Android). Added debug-only asset loading and explicit offline Woven Balance Preview choice, distinct course label, registered base identity for home and V5 identity for recovery, forced V5 new-match selection for this candidate regardless of ordinary tactical toggles. LAN continues using original classic board. Normalize imported selected course to base ID. V1 bot default retained. Existing original courses untouched. Exact-head CI pending; actual renderer, scenery and physical save/restore require owner review. Home tactical switches do not apply to this preview; explicit subtitle indicates Lab v5. No release or merge.
+
+---
+
 # Active checkpoint — AI2-08E Woven candidate geometry refinement
 
 AI2-08D rules 45891026493 and Android 45891027084 in progress at inspection. Candidate v01 normalized straight L4→F2 length 0.35725, longest edge. Created distinct unregistered v02 prototype design/prototypes/woodland_woven_convergence_v02.json repositioning L2 (.27,.75), L3 (.34,.65), L4 (.32,.51); L4→F2 now 0.13647; longest remaining edge 0.23537; no proper nonadjacent straight-line edge crossings in coordinate inspection. Original and v01 retained. Added geometry/topology and 24 seeded identical snapshot comparison tests. Straight-line geometry not proof of actual curved renderer, scenery clearance or tablet readability. Exact-head CI pending. No shipped boards, Android registration, rules, policies or save changes. Next verify CI and prepare optional QA preview with visual review. No merge/release.

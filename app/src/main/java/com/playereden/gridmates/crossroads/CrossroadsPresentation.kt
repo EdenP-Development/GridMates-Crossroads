@@ -9,12 +9,14 @@ internal object CrossroadsCourse {
     const val CLASSIC_ID = "woodland_woven_trail_v02"
     const val QUICK_ID = "woodland_brookside_quick_v01"
     const val LONG_ID = "woodland_cedarwood_long_v01"
+    const val CONVERGENCE_ID = "woodland_woven_trail_v02_convergence_candidate_v02"
     const val REGIONAL_ID = "woodland_woven_trail_v05_varied_prototype"
 
     fun title(boardId: String): String = when (DecisionLab.baseId(boardId)) {
         QUICK_ID -> "Brookside Dash"
         LONG_ID -> "Cedarwood Expedition"
         REGIONAL_ID -> "Woven Trail: Regional Journey"
+        CONVERGENCE_ID -> "Woven Balance Preview"
         CLASSIC_ID -> "Woven Trail"
         else -> "Woodland Crossing"
     }
@@ -36,6 +38,7 @@ internal object CrossroadsCourse {
         QUICK_ID -> "Quick race"
         LONG_ID -> "Long race"
         REGIONAL_ID -> "Experimental regional race"
+        CONVERGENCE_ID -> "QA balance preview"
         CLASSIC_ID -> "Classic race"
         else -> "Woodland race"
     }
@@ -57,7 +60,8 @@ internal object CrossroadsCourse {
 /** New-match selection only. Existing checkpoints always supply their own board ID. */
 internal object CrossroadsExperimentalMode {
     fun boardId(baseId: String, tactical: Boolean, fairFinish: Boolean): String =
-        if (!tactical) baseId
+        if (baseId == CrossroadsCourse.CONVERGENCE_ID) baseId + DecisionLab.V5_SUFFIX
+        else if (!tactical) baseId
         else baseId + if (fairFinish) DecisionLab.V5_SUFFIX else DecisionLab.V4_SUFFIX
 }
 

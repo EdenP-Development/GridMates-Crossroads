@@ -189,7 +189,8 @@ internal fun CrossroadsHomeScreen(
     onExportProgress: () -> Unit,
     onImportProgress: () -> Unit,
     recoveryWarning: String? = null,
-    regionalCourseId: String? = null
+    regionalCourseId: String? = null,
+    convergenceCourseId: String? = null
 ) {
     // The first run is a single tap: 1 human + 1 bot. No room codes or setup screens.
     var seats by remember { mutableIntStateOf(2) }
@@ -332,8 +333,17 @@ internal fun CrossroadsHomeScreen(
                 modifier = Modifier.fillMaxWidth()
             )
         }
+        if (convergenceCourseId != null) {
+            TabletopChoicePill(
+                text = "Woven Trail · Balance Preview",
+                selected = selectedCourseId == convergenceCourseId,
+                onClick = { onCourseChange(convergenceCourseId) },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
         Text(
             when (selectedCourseId) {
+                convergenceCourseId -> "QA only · balanced junction layout · offline Lab v5"
                 regionalCourseId -> "Regional Journey · 8 crossroads · experimental offline course"
                 CrossroadsCourse.QUICK_ID ->
                     "Brookside Dash · 2 crossroads · a short woodland sprint"
