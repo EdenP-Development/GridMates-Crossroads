@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-08G QA preview acceptance and repository sync
+
+AI2-08F both workflows passed (45893695980 rules,45893696070 Android), QA1900 artifact 15152852006, 20277538 bytes. Added Android JVM regression tests for forced V5 course selection and distinct title, QA registry recovery, classic checkpoint preservation, preview backup roundtrip and unavailable public registry rejecting without erasing checkpoint. Tests awaiting exact-head CI. No runtime changes. Physical review of scenery, paths, target encounters, install-over, resume and LAN remains outstanding. Legacy V1 default, no public release. Next: difficulty/personalities design and starting-position fairness experiment; retain previous checkpoints and draft PR.
+
+---
+
 # Active checkpoint — AI2-08F optional QA convergence preview
 
 AI2-08E both CI passed (45891358945 rules,45891358980 Android). Added debug-only asset loading and explicit offline Woven Balance Preview choice, distinct course label, registered base identity for home and V5 identity for recovery, forced V5 new-match selection for this candidate regardless of ordinary tactical toggles. LAN continues using original classic board. Normalize imported selected course to base ID. V1 bot default retained. Existing original courses untouched. Exact-head CI pending; actual renderer, scenery and physical save/restore require owner review. Home tactical switches do not apply to this preview; explicit subtitle indicates Lab v5. No release or merge.

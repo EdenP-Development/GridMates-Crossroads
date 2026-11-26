@@ -6,6 +6,16 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class DecisionLabV5PresentationTest {
+    @Test fun balancePreviewAlwaysUsesV5AndRetainsDistinctLabel() {
+        val base = CrossroadsCourse.CONVERGENCE_ID
+        for (tactical in listOf(false,true)) for (fair in listOf(false,true)) {
+            assertEquals(base + DecisionLab.V5_SUFFIX,
+                CrossroadsExperimentalMode.boardId(base,tactical,fair))
+        }
+        assertEquals("Woven Balance Preview",CrossroadsCourse.title(base+DecisionLab.V5_SUFFIX))
+        assertEquals("Woven Trail",CrossroadsCourse.title(CrossroadsCourse.CLASSIC_ID))
+    }
+
     @Test fun currentTestModeIdentifiesV5ButKeepsOldResults() {
         val base = CrossroadsCourse.CLASSIC_ID
         assertEquals("Woven Trail", CrossroadsCourse.title(base + DecisionLab.V5_SUFFIX))

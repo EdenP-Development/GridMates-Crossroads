@@ -41,6 +41,34 @@ class MatchRecoveryStoreTest {
         assertEquals(Phase.FINISHED, game.phase)
     }
 
+    @Test fun balancePreviewRecoversWithoutChangingClassicOrPublicRegistry() {
+        val candidateFile = listOf(File("design/prototypes/woodland_woven_convergence_v02.json"),
+            File("../design/prototypes/woodland_woven_convergence_v02.json")).first { it.isFile }
+        val candidate = GameData.board(candidateFile.readText())
+        assertEquals(CrossroadsCourse.CONVERGENCE_ID,candidate.id)
+        val preview = DecisionLab.variantV5(candidate)
+        val prefs = MemoryPreferences()
+        val registry = mapOf(board.id to board,candidate.id to candidate,preview.id to preview)
+        val classic = GameSession(board,events,seed=47)
+        classic.roll()
+        assertTrue(MatchRecoveryStore(prefs,board,events).persist(classic,"classic-before-preview",1L))
+        val qa = MatchRecoveryStore(prefs,board,events,registry)
+        assertEquals(classic.snapshot(),requireNotNull(qa.load().match).game.snapshot())
+        val race = GameSession(preview,events,seed=47)
+        race.rollSteady()
+        assertTrue(qa.persist(race,"balance-preview",2L))
+        val recovered = requireNotNull(MatchRecoveryStore(prefs,board,events,registry).load().match)
+        assertEquals(preview.id,recovered.game.board.id)
+        assertEquals(race.snapshot(),recovered.game.snapshot())
+        val publicStore = MatchRecoveryStore(prefs,board,events)
+        assertTrue(publicStore.load().invalidSavedMatch)
+        assertEquals(race.snapshot(),requireNotNull(qa.load().match).game.snapshot())
+        val backup = qa.exportProgress()
+        val imported = MatchRecoveryStore(MemoryPreferences(),board,events,registry)
+        assertTrue(imported.importProgress(imported.previewImport(backup)))
+        assertEquals(race.snapshot(),requireNotNull(imported.load().match).game.snapshot())
+    }
+
     @Test fun completedMatchTimeAndStatsSurviveReopenWithoutDoubleCounting() {
         for (passAndPlay in listOf(false, true)) {
             val prefs = MemoryPreferences()
