@@ -1,0 +1,561 @@
+{
+  "id": "woodland_woven_trail_v02_convergence_candidate_v02",
+  "version": 2,
+  "status": "PLAYTEST_HANDCRAFTED_NOT_BALANCED",
+  "name": "Woodland Crossing · Woven Trail",
+  "start": "START",
+  "finish": "FINISH",
+  "regions": [
+    {
+      "id": "meadow",
+      "label": "Meadow",
+      "risk": "mixed"
+    },
+    {
+      "id": "forest",
+      "label": "Forest",
+      "risk": "mixed"
+    },
+    {
+      "id": "village",
+      "label": "Village",
+      "risk": "mixed"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "START",
+      "region": "meadow",
+      "kind": "start",
+      "x": 0.055,
+      "y": 0.85,
+      "next": [
+        "P1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "P1",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.085,
+      "y": 0.78,
+      "next": [
+        "P2"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "P2",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.12,
+      "y": 0.69,
+      "next": [
+        "F1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "F1",
+      "region": "meadow",
+      "kind": "fork",
+      "x": 0.16,
+      "y": 0.6,
+      "next": [
+        "R1",
+        "L1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "R1",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.18,
+      "y": 0.46,
+      "next": [
+        "R2"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "R2",
+      "region": "meadow",
+      "kind": "event",
+      "x": 0.19,
+      "y": 0.33,
+      "next": [
+        "R3"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "R3",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.27,
+      "y": 0.24,
+      "next": [
+        "F2"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "L1",
+      "region": "meadow",
+      "kind": "event",
+      "x": 0.2,
+      "y": 0.73,
+      "next": [
+        "L2"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "L2",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.27,
+      "y": 0.75,
+      "next": [
+        "L3"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "L3",
+      "region": "meadow",
+      "kind": "event",
+      "x": 0.34,
+      "y": 0.65,
+      "next": [
+        "L4"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "L4",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.32,
+      "y": 0.51,
+      "next": [
+        "F2"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "F2",
+      "region": "forest",
+      "kind": "fork",
+      "x": 0.385,
+      "y": 0.39,
+      "next": [
+        "C1",
+        "M1",
+        "B1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "C1",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.445,
+      "y": 0.205,
+      "next": [
+        "C2"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "C2",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.545,
+      "y": 0.135,
+      "next": [
+        "C3"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "C3",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.655,
+      "y": 0.26,
+      "next": [
+        "F4"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "M1",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.485,
+      "y": 0.455,
+      "next": [
+        "M2"
+      ],
+      "route": "mischief"
+    },
+    {
+      "id": "M2",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.605,
+      "y": 0.39,
+      "next": [
+        "F4"
+      ],
+      "route": "mischief",
+      "eventPool": "mischief"
+    },
+    {
+      "id": "B1",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.435,
+      "y": 0.535,
+      "next": [
+        "F3"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "F3",
+      "region": "forest",
+      "kind": "fork",
+      "x": 0.475,
+      "y": 0.65,
+      "next": [
+        "S1",
+        "G1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "S1",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.555,
+      "y": 0.555,
+      "next": [
+        "S2"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "S2",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.635,
+      "y": 0.515,
+      "next": [
+        "F4"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "G1",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.505,
+      "y": 0.79,
+      "next": [
+        "G2"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "G2",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.58,
+      "y": 0.88,
+      "next": [
+        "G3"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "G3",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.675,
+      "y": 0.78,
+      "next": [
+        "G4"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "G4",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.71,
+      "y": 0.62,
+      "next": [
+        "F4"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "F4",
+      "region": "village",
+      "kind": "fork",
+      "x": 0.72,
+      "y": 0.42,
+      "next": [
+        "V1",
+        "O1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "V1",
+      "region": "village",
+      "kind": "event",
+      "x": 0.78,
+      "y": 0.29,
+      "next": [
+        "V2"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "V2",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.85,
+      "y": 0.31,
+      "next": [
+        "F5"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "O1",
+      "region": "village",
+      "kind": "event",
+      "x": 0.755,
+      "y": 0.625,
+      "next": [
+        "O2"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "O2",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.825,
+      "y": 0.78,
+      "next": [
+        "O3"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "O3",
+      "region": "village",
+      "kind": "event",
+      "x": 0.91,
+      "y": 0.7,
+      "next": [
+        "F5"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "F5",
+      "region": "village",
+      "kind": "fork",
+      "x": 0.86,
+      "y": 0.47,
+      "next": [
+        "H1",
+        "T1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "H1",
+      "region": "village",
+      "kind": "event",
+      "x": 0.91,
+      "y": 0.35,
+      "next": [
+        "H2"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "H2",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.92,
+      "y": 0.25,
+      "next": [
+        "FINISH"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "T1",
+      "region": "village",
+      "kind": "event",
+      "x": 0.905,
+      "y": 0.585,
+      "next": [
+        "T2"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "T2",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.975,
+      "y": 0.54,
+      "next": [
+        "T3"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "T3",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.98,
+      "y": 0.37,
+      "next": [
+        "FINISH"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "FINISH",
+      "region": "village",
+      "kind": "finish",
+      "x": 0.947,
+      "y": 0.16,
+      "next": [],
+      "route": "neutral"
+    }
+  ],
+  "forks": [
+    {
+      "id": "F1",
+      "title": "Meadow Crossing",
+      "choices": [
+        {
+          "to": "R1",
+          "label": "High Ridge",
+          "risk": "high",
+          "description": "Upper ridge • hazard encounters"
+        },
+        {
+          "to": "L1",
+          "label": "Creekside Walk",
+          "risk": "low",
+          "description": "Creekside trail • helpful encounters"
+        }
+      ]
+    },
+    {
+      "id": "F2",
+      "title": "Old Forest Junction",
+      "choices": [
+        {
+          "to": "C1",
+          "label": "Cliff Track",
+          "risk": "high",
+          "description": "Wild high route · a risky encounter"
+        },
+        {
+          "to": "M1",
+          "label": "Mill Lane",
+          "risk": "medium",
+          "description": "Direct route · a chance for mischief"
+        },
+        {
+          "to": "B1",
+          "label": "Cedar Bridge",
+          "risk": "low",
+          "description": "Detour to the lower crossing · helpful encounter"
+        }
+      ]
+    },
+    {
+      "id": "F3",
+      "title": "Woodland Crossroads",
+      "choices": [
+        {
+          "to": "S1",
+          "label": "River Leap",
+          "risk": "high",
+          "description": "Short and unpredictable"
+        },
+        {
+          "to": "G1",
+          "label": "Fern Garden",
+          "risk": "low",
+          "description": "Longer trail · shelter encounters"
+        }
+      ]
+    },
+    {
+      "id": "F4",
+      "title": "Village Crossing",
+      "choices": [
+        {
+          "to": "V1",
+          "label": "Market Steps",
+          "risk": "high",
+          "description": "Fast lane · hazards"
+        },
+        {
+          "to": "O1",
+          "label": "Orchard Walk",
+          "risk": "low",
+          "description": "Longer lane · helpful events"
+        }
+      ]
+    },
+    {
+      "id": "F5",
+      "title": "Last Crossroads",
+      "choices": [
+        {
+          "to": "H1",
+          "label": "Hilltop Dash",
+          "risk": "high",
+          "description": "Shortest finish · final hazard"
+        },
+        {
+          "to": "T1",
+          "label": "Lantern Lane",
+          "risk": "low",
+          "description": "Gentler finish · helpful encounter"
+        }
+      ]
+    }
+  ]
+}

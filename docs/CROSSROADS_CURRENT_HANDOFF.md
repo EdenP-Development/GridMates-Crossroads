@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-08E Woven candidate geometry refinement
+
+AI2-08D rules 45891026493 and Android 45891027084 in progress at inspection. Candidate v01 normalized straight L4→F2 length 0.35725, longest edge. Created distinct unregistered v02 prototype design/prototypes/woodland_woven_convergence_v02.json repositioning L2 (.27,.75), L3 (.34,.65), L4 (.32,.51); L4→F2 now 0.13647; longest remaining edge 0.23537; no proper nonadjacent straight-line edge crossings in coordinate inspection. Original and v01 retained. Added geometry/topology and 24 seeded identical snapshot comparison tests. Straight-line geometry not proof of actual curved renderer, scenery clearance or tablet readability. Exact-head CI pending. No shipped boards, Android registration, rules, policies or save changes. Next verify CI and prepare optional QA preview with visual review. No merge/release.
+
+---
+
 # Active checkpoint — AI2-08D Woven candidate frozen for review
 
 AI2-08C both workflows passed (45889974903 rules,45889975088 Android); QA1894 artifact 15150519782. Inspected actual convergence CSV artifact 15151191767: original / +0 / +1 / +2 / +3, 144 games each, F2 decisions 141/344/364/394/392, encounter availability 0/153/181/221/255, targets 0/56/58/93/105, rolls means 8.3889/8.8611/9.7917/10.7222/11.2778, actions means 24.5417/26.2153/27.7639/29.6667/30.0764. Selected zero added spaces as lowest pacing impact (5.63% more rolls, 6.82% more actions). Added separately identified unregistered prototype design/prototypes/woodland_woven_convergence_v01.json redirecting L4 to F2, and exact graph / fingerprint / 144-game replay and target count regression. Geometry coordinates unchanged; visual crossing/readability, owner acceptance, real device and starting seat fairness outstanding. No runtime registration, policy changes, shipped board changes or release. CI pending. Next inspect geometry and prepare opt-in QA preview only after verification.
