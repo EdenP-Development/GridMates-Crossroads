@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-15F reject round-start awareness candidate
+
+AI2-15E rules 46054811743 and Android 46054811852 passed. Retrieved direct job 140694606060 step 13 JSON. 320 paired matches: Guardian live P1 wins204/320 (63.75%), candidate277/320 (86.56%), 95 seat2-to-seat1 reversals vs22 opposite. Candidate worsened fairness; do not register. Preserve test and frozen policies. Evidence docs/AI2_15F_ROUND_START_DECISION.md. Next audit starting-player identity/replay/rematch/statistics assumptions and design isolated offline QA rotation/randomization, which distributes rather than removes order advantage. Physical QA outstanding. No merge/release.
+
+---
+
 # Active checkpoint — AI2-15E isolated round-start Guardian awareness experiment
 
 AI2-15D both workflows passed (46053152697 rules,46053152653 Android). Added test-only comparison on five courses, 64 seeds, 320 paired live vs round-start Guardian races plus 320 native Guardian controls. Explicit legal travel commands; all other phases use unchanged Guardian policy. Live harness checks snapshot parity with native bot after every action. Candidate uses round-boundary opponent distance for ordinary travel, retains live shields/own distance and final-round awareness, falls back to live view if own distance changed since boundary (e.g. mischief). Checkpoint replay verifies actual recorded actions, not a new autonomous policy. CI validator emits paired winner transitions and per-seat Push counts, by course and overall. No production engine or save changes. CI pending; no causal or performance claim. Next inspect log results and decide whether a separately versioned autonomous candidate is justified. Physical QA outstanding. No merge/release.
