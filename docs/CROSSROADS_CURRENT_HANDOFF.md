@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-11D Guardian competition and G2 evidence
+
+AI2-11C rules 45951475782 passed; Android 45951475778 in progress at inspection. Actual G2 CSV from artifact 15176483702 inspected; 240/480 and 240/960 wins, zero Brace in 3454 hazard choices. Retain G1 preset, no G2 promotion. Evidence docs/AI2_11D_GAMBLER_REFINEMENT_EVIDENCE.md. Added 4320 Guardian focal matches across five courses, six opposing policies including G1, 2/4 seats, 24 seeds, all focal seats; 14400 actor rows, exact decisions and checkpoint replay. CI pending. No runtime, preset, save, LAN or public UI changes. Next inspect Guardian results before promotion, then Strategist/difficulty. Physical QA outstanding; no merge/release.
+
+---
+
 # Active checkpoint — AI2-11C executable Guardian personality
 
 AI2-11B rules 45950998925 passed, Android 45950998875 in progress at inspection; AI2-11A rules 45950620705 passed, Android cancelled. G2 competition core suite passed but numerical CSV results not yet inspected in this turn. Added immutable GUARDIAN_V1 dispatch with independent travel, encounter and route preference, R4 targeting fallback; previous policy and preset mappings unchanged. Added 48 mirrored Guardian/Gambler integration matches on convergence V02 with distinct opening receipt, midpoint codec/recovery, continued exact decisions and rematch checks. Exact-head CI pending. Next analyze G2 CSV and run Guardian dedicated competitive calibration before any preset remapping. No public UI, LAN, default, signing or release changes. Physical QA remains outstanding.
