@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-14D live opponent identity
+
+AI2-14C rules 45969060601 and Android 45969060573 in progress at inspection. Added presentation-only live seat names for customized offline QA Lab v5 matches, from authoritative resolved policy IDs; numeric seat prefix preserves duplicate-personality identity. Advanced Guardian compact label Guardian+. Classic-only matches, humans, release, Nearby, unknown experimental IDs retain original names. Scoreboard and turn strip use same label. Added JVM mapping tests. No engine names, checkpoint schema, gameplay or networking changes. CI pending; four-seat text fit and TalkBack verification outstanding. Next verify recovery and labels CI, audit accessibility and fairness. No merge/release.
+
+---
+
 # Active checkpoint — AI2-14C Android customized opponent recovery coverage
 
 AI2-14B rules 45968440468 passed; Android 45968440425 in progress at inspection. Added Android JVM recovery-store test with 12 seeded four-seat Lab v5 matches using actual setup adapter (Scout, Gambler, Advanced Guardian), human seat 0. Verify saved policy IDs, reopen, backup transfer to independent preferences, deterministic continuation across three sessions, final receipt, completed recovery, rematch roster and official stats isolation. No runtime or save schema change. CI pending; physical lifecycle and layout tests outstanding. Next verify Android CI and add live gameplay personality labels from resolved policy IDs. No merge/release.

@@ -33,6 +33,21 @@ internal object OfflineOpponentPreview {
         }
     }
 
+    /** Display only; retain numeric seat identity even for duplicate personalities. */
+    fun liveName(original: String, seat: Int, policy: BotPolicyVersion?): String {
+        val personality = when(policy) {
+            BotPolicyVersion.LEGACY_V1 -> "Classic"
+            BotPolicyVersion.ADAPTIVE_V2_R1 -> "Traveler"
+            BotPolicyVersion.ADAPTIVE_V2_R2 -> "Scout"
+            BotPolicyVersion.GAMBLER_V1 -> "Gambler"
+            BotPolicyVersion.GUARDIAN_V1 -> "Guardian"
+            BotPolicyVersion.STRATEGIST_V1 -> "Strategist"
+            BotPolicyVersion.GUARDIAN_FINISH_CANDIDATE_V1 -> "Guardian+"
+            else -> return original
+        }
+        return "${seat + 1} · $personality"
+    }
+
     fun label(configuration: BotOpponentConfigurationV1): String {
         val name = when(configuration.personality) {
             BotPersonalityV1.CLASSIC -> "Classic"

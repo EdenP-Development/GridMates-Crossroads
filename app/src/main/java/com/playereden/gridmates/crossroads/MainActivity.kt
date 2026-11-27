@@ -935,6 +935,17 @@ private fun CrossroadsApp(
                 .background(Color(0xFF304433))
                 .windowInsetsPadding(WindowInsets.safeDrawing)
         ) {
+            val showOpponentIdentity = BuildConfig.DEBUG && lanRole == LanRole.OFFLINE &&
+                board.id.endsWith(DecisionLab.V5_SUFFIX) &&
+                state.players.indices.any { seat ->
+                    state.players[seat].isBot && game.policyForBotSeat(seat) != BotPolicyVersion.LEGACY_V1
+                }
+            fun displaySeatName(seat: Int): String {
+                val player = state.players[seat]
+                return OfflineOpponentPreview.liveName(player.name, seat,
+                    if (showOpponentIdentity && player.isBot) game.policyForBotSeat(seat) else null)
+            }
+
             // Remember the BoxWithConstraints scope's dimensions outside
             // descendant Box lambdas, which have their own receiver.
             val viewportHeight = maxHeight
@@ -1032,7 +1043,7 @@ private fun CrossroadsApp(
                     }
                     TabletopSeatPlate(
                         seatIndex = i,
-                        name = player.name,
+                        name = displaySeatName(i),
                         seatColor = PlayerColors[i],
                         active = isFocused,
                         shielded = player.shield,
@@ -1255,10 +1266,8 @@ private fun CrossroadsApp(
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     val round = (state.turn - 1) / state.players.size + 1
-                    val currentName = state.players[state.playerIndex].name
-                    val trackedName = state.players[
-                        cameraTrackIndex.coerceIn(state.players.indices)
-                    ].name
+                    val currentName = displaySeatName(state.playerIndex)
+                    val trackedName = displaySeatName(cameraTrackIndex.coerceIn(state.players.indices))
                     GameHudTurnStrip(
                         title = if (state.phase == Phase.FINISHED && !turnReady)
                             "Approaching the finish…"

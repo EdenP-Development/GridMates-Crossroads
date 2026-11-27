@@ -39,6 +39,15 @@ class OfflineOpponentPreviewTest {
         assertNull(OfflineOpponentPreview.summary(true,false,board,2,mapOf(1 to
             BotOpponentConfigurationV1(BotPersonalityV1.CLASSIC))))
     }
+    @Test fun liveNamesUseResolvedPolicyAndRetainSeatIdentity() {
+        assertEquals("2 · Scout",OfflineOpponentPreview.liveName("Bot 2",1,BotPolicyVersion.ADAPTIVE_V2_R2))
+        assertEquals("3 · Scout",OfflineOpponentPreview.liveName("Bot 3",2,BotPolicyVersion.ADAPTIVE_V2_R2))
+        assertEquals("4 · Guardian+",OfflineOpponentPreview.liveName("Bot 4",3,BotPolicyVersion.GUARDIAN_FINISH_CANDIDATE_V1))
+        assertEquals("2 · Classic",OfflineOpponentPreview.liveName("Bot 2",1,BotPolicyVersion.LEGACY_V1))
+        assertEquals("You",OfflineOpponentPreview.liveName("You",0,null))
+        assertEquals("Bot 2",OfflineOpponentPreview.liveName("Bot 2",1,BotPolicyVersion.GUARDIAN_RELAXED_CANDIDATE_V1))
+    }
+
     @Test fun unavailableTierCannotResolve() {
         try {
             OfflineOpponentPreview.policies(true,false,board,2,mapOf(1 to
