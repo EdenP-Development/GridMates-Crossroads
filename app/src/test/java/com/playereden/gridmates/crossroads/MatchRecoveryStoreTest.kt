@@ -72,13 +72,17 @@ class MatchRecoveryStoreTest {
             }
         }
         for (seed in 1..12) {
-            val game = GameSession(lab, events, 4, seed, setOf(0), botSeatPolicies = policies)
+            val starter = OfflineStartingSeatPreview.resolve(true, false, lab.id, 4,
+                OfflineStartingSeatPreview.RANDOM) { count -> seed % count }
+            val game = GameSession(lab, events, 4, seed, setOf(0), botSeatPolicies = policies,
+                startingSeat = starter)
             val id = "custom-opponents-$seed"
             val began = System.currentTimeMillis() - 1000L
             repeat(5) { if (game.phase != Phase.FINISHED) advance(game) }
             assertTrue(store.persist(game, id, began))
             val reopened = requireNotNull(MatchRecoveryStore(prefs, board, events, registry).load().match).game
             assertPolicies(reopened)
+            assertEquals(starter, reopened.startingSeat)
             assertEquals(game.snapshot(), reopened.snapshot())
             val transfer = store.exportProgress()
             val importedPrefs = MemoryPreferences()
@@ -86,6 +90,7 @@ class MatchRecoveryStoreTest {
             assertTrue(imported.importProgress(imported.previewImport(transfer)))
             val moved = requireNotNull(imported.load().match).game
             assertPolicies(moved)
+            assertEquals(starter, moved.startingSeat)
             assertEquals(game.snapshot(), moved.snapshot())
             var actions = 0
             while (game.phase != Phase.FINISHED && actions++ < 1500) {
@@ -104,6 +109,16 @@ class MatchRecoveryStoreTest {
             val rematch = finished.freshRematch(seed + 100)
             assertPolicies(rematch)
             assertEquals(lab.id, rematch.board.id)
+            assertEquals(starter, finished.startingSeat)
+            assertEquals(starter, rematch.startingSeat)
+            val rotated = finished.freshRematch(seed + 100, rotateStarter = true)
+            assertPolicies(rotated)
+            assertEquals((starter + 1) % 4, rotated.startingSeat)
+            assertEquals(rotated.startingSeat, rotated.currentIndex)
+            assertTrue(imported.persist(rotated, "rotated-$seed", began + 1))
+            val rotatedRecovered = requireNotNull(imported.load().match).game
+            assertEquals(rotated.startingSeat, rotatedRecovered.startingSeat)
+            assertEquals(rotated.snapshot(), rotatedRecovered.snapshot())
             assertEquals(12, importedPrefs.getInt("completed", 0))
             assertEquals(5, importedPrefs.getInt("wins", 0))
         }
