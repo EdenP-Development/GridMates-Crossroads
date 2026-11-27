@@ -82,7 +82,11 @@ class GameSession(
     // checkpoint records only the public bot command, so replay consumes the
     // exact same random draws.
     private var insideBotCommand = false
+    // Diagnostic receipt only: never serialized, never read by a policy or rules.
+    internal var lastBotDecision: MatchAction? = null
+        private set
     private fun record(action: MatchAction) {
+        if (insideBotCommand) lastBotDecision = action
         if (!insideBotCommand) {
             check(acceptedActions.size < MatchCheckpointCodec.MAX_ACTIONS) {
                 "Match exceeded supported checkpoint action count"
@@ -422,12 +426,15 @@ class GameSession(
     }
 
     /** Bot submits exactly one regular legal action. UI may animate between actions. */
-    fun botStep() = when (policyForBotSeat(currentIndex)) {
+    fun botStep() {
+        lastBotDecision = null
+        when (policyForBotSeat(currentIndex)) {
         BotPolicyVersion.LEGACY_V1 -> legacyBotStep()
         BotPolicyVersion.ADAPTIVE_V2_R1 -> adaptiveBotStep()
         BotPolicyVersion.ADAPTIVE_V2_R2 -> adaptiveRouteBotStep()
         BotPolicyVersion.ADAPTIVE_V2_R3 -> adaptiveEncounterBotStep()
         BotPolicyVersion.ADAPTIVE_V2_R4 -> adaptiveTargetBotStep()
+        }
     }
 
     // R1 is intentionally narrow: adaptive travel only; all other phases retain V1.

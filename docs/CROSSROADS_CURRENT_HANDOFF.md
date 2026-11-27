@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-09C exact decision receipts
+
+AI2-09B both CI passed (45916504120 rules,45916504122 Android). Added internal ephemeral lastBotDecision receipt captured at nested accepted legal action record; reset on botStep, no serialization, policy reads, RNG changes or additional checkpoint actions. Added 720 exact calibration races across two Woven layouts, five presets, 2–4 seats, 24 seeds, legal action assertions, action count reconciliation and replay receipt/snapshot checks. Prior inferred calibration retained for comparison. Exact CSV uploaded. CI pending. Need inspect actual data before selecting personality or difficulty policies. No UI/LAN/default changes, no merge/release.
+
+---
+
 # Active checkpoint — AI2-09B strategy behavior calibration
 
 AI2-09A both workflows passed (45915821720 rules,45915821724 Android). Added 720 homogeneous diagnostic races across original Woven and convergence V02, five strategy presets, 2/3/4 seats and 24 seeds. Reports route risk, encounter responses, target frequency, action/roll pacing and winner seat; checks completion and deterministic replay. Post-action steady flag provides only confirmed steady lower bound, remaining rolls unclassified (never infer push from die); route retreat and ambiguous encounter observations likewise unclassified. No difficulty strength claims from homogeneous races. CSV uploaded by rules workflow. CI pending. Next measure exact travel decisions with a replay-safe observer if needed, then separately calibrated difficulty policies and fairness. No runtime/default/save/UI/LAN changes, no merge/release.
