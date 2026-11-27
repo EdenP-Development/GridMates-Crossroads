@@ -58,3 +58,20 @@ internal object BotDifficultyTargetV1 {
         }
     }
 }
+
+/** Only implemented combinations resolve; unsupported tiers must not silently
+ * fall back to Standard or be exposed as functioning difficulty options. */
+object BotOpponentPolicyV1 {
+    fun resolve(configuration: BotOpponentConfigurationV1): BotPolicyVersion {
+        if (configuration.difficulty == BotDifficultyV1.STANDARD)
+            return configuration.personality.policy
+        require(configuration.personality == BotPersonalityV1.SCOUT) {
+            "Difficulty variant not implemented for this personality"
+        }
+        return when (configuration.difficulty) {
+            BotDifficultyV1.RELAXED -> BotPolicyVersion.SCOUT_RELAXED_V1
+            BotDifficultyV1.ADVANCED -> BotPolicyVersion.SCOUT_ADVANCED_V1
+            BotDifficultyV1.STANDARD -> configuration.personality.policy
+        }
+    }
+}

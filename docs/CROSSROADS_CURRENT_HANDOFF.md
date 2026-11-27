@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-13B Scout difficulty pilot
+
+AI2-13A rules 45956799645 and Android 45956799628 were in progress at inspection. Added immutable SCOUT_RELAXED_V1 and SCOUT_ADVANCED_V1 IDs, route-only adjustment dispatch, Standard unchanged (R2). Other phases fall back to exact R2 behavior; target adjustments not wired. New BotOpponentPolicyV1 resolver supports all six Standard personalities and only Scout nonstandard tiers, rejects unsupported pairs. Added 72 three-seat mixed-tier replay matches and resolver tests. CI pending; no claim of difficulty ordering. Next verify all tests and calibrate actual route-choice differences and strength before extending other personalities. No public UI, default, LAN, checkpoint schema or signing change. No merge/release.
+
+---
+
 # Active checkpoint — AI2-13A difficulty foundation
 
 AI2-12E both workflows passed (45955316342 rules,45955316359 Android). Added BotDifficultyV1 (Relaxed/Standard/Advanced), independent opponent configuration and pure candidate route/target scoring adjustments. Standard identity, no hidden outcomes or RNG access; tests cover all personalities, shield behavior, visible route opportunities and standard invariance. Design contract docs/AI2_13A_DIFFICULTY_DESIGN.md. No registration, dispatch, checkpoint schema, UI, preset, default or LAN change. Candidate strength ordering unverified. CI pending. Next integrate narrowly scoped versioned difficulty variants and run mirrored calibration, preserving Classic/Traveler identity. No merge/release.

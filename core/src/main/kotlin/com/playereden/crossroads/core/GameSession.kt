@@ -438,6 +438,8 @@ class GameSession(
         BotPolicyVersion.GAMBLER_V2 -> gamblerBotStep(refined = true)
         BotPolicyVersion.GUARDIAN_V1 -> guardianBotStep()
         BotPolicyVersion.STRATEGIST_V1 -> strategistBotStep()
+        BotPolicyVersion.SCOUT_RELAXED_V1 -> scoutDifficultyBotStep(BotDifficultyV1.RELAXED)
+        BotPolicyVersion.SCOUT_ADVANCED_V1 -> scoutDifficultyBotStep(BotDifficultyV1.ADVANCED)
         }
     }
 
@@ -615,6 +617,38 @@ class GameSession(
         insideBotCommand = true
         try {
             chooseEncounter(choice)
+        } finally {
+            insideBotCommand = false
+        }
+        record(MatchAction(MatchActionKind.BOT))
+    }
+
+    // First difficulty experiment: Scout route choices only. All other
+    // phases retain the exact existing R2 behavior and random draws.
+    private fun scoutDifficultyBotStep(difficulty: BotDifficultyV1) {
+        require(players[currentIndex].isBot && phase != Phase.FINISHED)
+        if (phase != Phase.ROUTE || !playtestRules) {
+            adaptiveRouteBotStep()
+            return
+        }
+        val awareness = BotRaceAssessment.assess(currentIndex,
+            players.mapIndexed { seat, player ->
+                BotRacerView(seat, distanceToFinish(player.position), player.shield)
+            }, distanceToFinish(board.start), finalRoundPending)
+        val fork = board.forkAt(players[currentIndex].position)
+        val chosen = availableRoutes().minWith(compareBy<BoardNode> { route ->
+            val distance = distanceToFinish(route.id)
+            val horizon = BotRouteLookahead.inspect(board, route.id, remainingSteps)
+            val base = AdaptiveBotRouteR2.score(distance,
+                fork?.choices?.firstOrNull { it.to == route.id }?.risk,
+                horizon, awareness, routeEncounterAvailable, steadyTravelChosen &&
+                    DecisionLab.supportsSteadyShelterBonus(board))
+            BotDifficultyRouteV1.score(difficulty, BotPersonalityV1.SCOUT,
+                base, distance, horizon, routeEncounterAvailable)
+        }.thenBy { it.id })
+        insideBotCommand = true
+        try {
+            chooseRoute(chosen.id)
         } finally {
             insideBotCommand = false
         }
