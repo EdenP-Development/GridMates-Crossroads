@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-11B reproducible evidence tooling
+
+AI2-10E workflows 45950432133/45950432144 cancelled after new head; AI2-11A workflows 45950620705/45950620713 still running at inspection. Existing concurrency cancels superseded runs. Avoid another core/app change until current combined CI completes. Rechecked actual AI2-10C artifact 15176076243 locally: Gambler wins 576/1200 and 556/2400, 17444 Push / 20497 travel, 9449 Gamble / 0 Brace; prior exact calibration Guardian/Strategist aggregates match. Added standalone standard-library tools/summarize_ai2_competition.py for repeatable ZIP evidence summaries and seat/winner validation, outside current CI trigger paths. No engine changes. Next inspect completed G2 artifact and validate Guardian before registration. No merge/release.
+
+---
+
 # Active checkpoint — AI2-11A Guardian personality foundation
 
 AI2-10E workflows 45950432133 rules and 45950432144 Android still in progress at inspection; no G2 outcome claims. Added unregistered pure GuardianPersonalityV1 candidate: cautious travel with catch-up thresholds, shield-aware shelter, hazard decisions distinguishing shield from steady protection, conditional extra safe-route preference layered on R2 score. Tests cover contrasts, conditional route scoring and 6400 visible race states with two encounter pools and both steady flags. No executable ID, dispatch, preset remapping, save format, UI or default changes. CI pending. Next verify G2 results from actual CSV and integrate Guardian under separate immutable ID only after tests. No merge/release. Physical QA and difficulty/fairness outstanding.
