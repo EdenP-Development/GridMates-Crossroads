@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-15A controlled starting-seat fairness audit
+
+AI2-14E rules 45970515482 passed; Android 45970515427 in progress at inspection. Added 5760 homogeneous-policy Lab v5 matches (5 courses,6 frozen standard policies,2/3/4 seats,64 seeds). Record first arrival, actual winner, tie receipt, finishers, actions and roll counts per seat. CI validator checks complete matrix and emits aggregate/policy/course breakdowns in logs and archived JSON. First-arrival versus winner is a within-match descriptive comparison, not a counterfactual v4 experiment. Shared seed and course dependence prevents treating all samples as independent. No fairness result yet; no gameplay or save change. Next inspect directly retrieved CI summary and assess tie/turn-order mechanisms before proposing changes. Physical scoreboard QA outstanding. No merge/release.
+
+---
+
 # Active checkpoint — AI2-14E compact accessible opponent plates
 
 AI2-14D both workflows passed (45969639085 rules,45969639153 Android), including prior recovery coverage. Audited actual TabletopSeatPlate: numbered pawn plus single-line name duplicated numeric prefix and left little room in four-seat layout. Added presentation-only plate name without repeated seat number, stacked pawn/name arrangement for customized 3/4-seat matches, two-line name allowance and expanded Advanced Guardian accessibility description. Turn strip keeps existing numbered names. Original uncustomized layout retained. Added mapping tests. CI pending; physical narrow-phone/large-font/TalkBack checks remain required, stacked layout increases HUD height. No gameplay, saves, LAN or release changes. Next verify CI and inspect fairness evidence. No merge/release.
