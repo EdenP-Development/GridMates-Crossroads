@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-10D Gambler evidence and defensive refinement candidate
+
+AI2-10C both workflows passed (45948087404 rules,45948087192 Android); QA1914 artifact 15175577813. Actual ZIP 15176076243 inspected, 12000 actor rows and 720 exact calibration rows. Gambler wins 576/1200 two-seat and 556/2400 four-seat, 17444 Push / 20497 travel decisions, 9449 Gamble / 0 Brace. Detailed evidence docs/AI2_10D_GAMBLER_EVIDENCE.md. Added pure unregistered GamblerPersonalityV2 candidate with narrow defensive exception, tests for contrast and retained travel/shelter behavior. No G1 mutation, policy ID, dispatch, runtime, save or UI change. CI pending. Next compare G2 in actual matches before adoption; guardian/strategist aggregate behavior indistinguishable in prior homogeneous data. Physical QA and difficulty/fairness still outstanding. No merge/release.
+
+---
+
 # Active checkpoint — AI2-10C Gambler competitive calibration
 
 AI2-10B both workflows passed (45920567676 rules,45920567753 Android); QA1912 artifact 15163653947, 20280251 bytes. Added dedicated 3600-match Gambler competition (five courses including Woven Balance Preview, five existing opposing policies, two/four seats, 24 seeds, every Gambler starting seat). One Gambler versus homogeneous opposing policy per match; not a full six-policy round robin. Exact action receipts by actor seat, win flag, pacing, codec/replay and policy assignments; 12000 actor rows. Original historical cohorts remain fixed. CI pending, no competitive results yet. Exact earlier calibration CSV analysis still outstanding. No runtime, default, Android UI, LAN or signing changes. Next examine actual results by course and seat before assigning difficulty or adjusting personalities. Physical QA outstanding, no merge/release.
