@@ -258,9 +258,13 @@ class GameSession(
      * human seats. A new seed is supplied by the caller. Never reuse match
      * progress or reinterpret a restored match through home preferences.
      */
-    fun freshRematch(seed: Int): GameSession {
+    fun freshRematch(seed: Int, rotateStarter: Boolean = false): GameSession {
         require(phase == Phase.FINISHED) { "Finish the current race before rematching" }
-        return GameSession(board, catalogue, players.size, seed, originalHumanIndices, botPolicy, seatPolicyOverrides, startingSeat)
+        require(!rotateStarter || (DecisionLab.isV5(board) && originalHumanIndices == setOf(0))) {
+            "Rotating rematches require Solo Lab v5"
+        }
+        val nextStarter = if (rotateStarter) startingOrder.rotated().first else startingSeat
+        return GameSession(board, catalogue, players.size, seed, originalHumanIndices, botPolicy, seatPolicyOverrides, nextStarter)
     }
 
     fun snapshot(): Snapshot = Snapshot(
