@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-13K Relaxed Guardian travel candidate
+
+AI2-13J rules 45962661312 and Android 45962661272 in progress at inspection. Added isolated GuardianRelaxedCandidateV1: outside final round/endgame, raises existing Guardian Push gap threshold from 5 to 8; all other travel decisions unchanged. No encounter/route/target changes, no policy registration or preview eligibility changes. Tests enumerate 6560 synthetic race assessments and verify exact change predicate, urgent travel preservation and large-gap recovery. Strength remains a hypothesis; conservative choices may improve performance (as seen in Scout experiment). Next verify CI, measure actual same-state decision exposure and run mirrored calibration if warranted. No default, save schema, UI, LAN, signing or release change.
+
+---
+
 # Active checkpoint — AI2-13J explicit offline difficulty preview eligibility
 
 AI2-13I rules 45962208764 passed; Android 45962208742 in progress at inspection. Added separate BotDifficultyPreviewV1 allowing six Standard configurations plus Advanced Guardian for offline QA only. Explicit rejection of all other nonstandard configurations; experimental resolver and existing policy IDs unchanged. Lineup resolver preserves human seats and resolved IDs; exhaustive 18-combination eligibility tests and mixed lineup validation. No actual UI wiring or default change. Prior numerical evidence documents are carried forward, not independently reverified in this checkpoint. Next verify CI and design Relaxed Guardian candidate with controlled comparisons; no public difficulty claim. No merge/release.
