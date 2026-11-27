@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-12D Strategist competitive calibration
+
+AI2-12C both workflows passed (45953155025 rules,45953154953 Android); 96 mixed four-seat replay matches verified. Added 5040 dedicated Strategist focal matches (five courses, seven opponents including Guardian V1 and Gambler V1, 2/4 seats, 24 seeds, every focal seat), 16800 actor records, exact decision counts and checkpoint replay checks. Original cohorts unchanged; one focal vs homogeneous opposing policy, not full mixed roster tournament. CSV upload and standalone summary utility updated. CI pending; no numerical results yet. Next inspect actual ZIP bytes or CI logs and select roster; evaluate starting-position fairness, difficulty and Android customization. No runtime, defaults, preset, save, LAN, signing or publication changes. Physical QA remains outstanding.
+
+---
+
 # Active checkpoint — AI2-12C executable Strategist personality
 
 AI2-12A rules 45952327560 passed; Android cancelled. AI2-12B rules 45952743688 and Android 45952743642 still running at inspection. Added immutable STRATEGIST_V1 dispatch for independent travel, route and target decisions with R3 encounter fallback; classic rules fall back to R4 chain. Prior IDs, defaults and preset mappings unchanged. Added 96 four-seat mixed-personality matches across 24 seeds and four rotations on convergence V02 with checkpoint codec, replay, exact decision and rematch checks. Core/Android CI pending. Next verify this integration and run dedicated Strategist competitive calibration; then select roster and develop difficulty. Guardian evidence preserved in AI2_12B_GUARDIAN_EVIDENCE.md; no production release, signing, UI or LAN changes.

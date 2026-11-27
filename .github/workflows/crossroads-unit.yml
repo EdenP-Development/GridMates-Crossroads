@@ -80,6 +80,7 @@ jobs:
             core/build/reports/ai2-comparison/gambler_competition.csv
             core/build/reports/ai2-comparison/gambler_refinement.csv
             core/build/reports/ai2-comparison/guardian_competition.csv
+            core/build/reports/ai2-comparison/strategist_competition.csv
             ${{ runner.temp }}/crossroads-history/*.json
           if-no-files-found: error
           retention-days: 30
