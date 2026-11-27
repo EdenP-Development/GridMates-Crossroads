@@ -1,0 +1,9 @@
+# AI2-16A — Flexible starting order architecture
+
+Source audit at c3a1203227e748da6008f6436acae8e950c3c36b; rules 46055540840 and Android 46055540791 passed.
+
+GameSession.currentIndex starts at 0; finishTurn advances cyclically but declareWinner and finishTurn end the equal round at players.lastIndex. fairFinishReceipt.laterSeatsGotFinalChance uses numeric comparison. All three boundary checks must use turn ordinal rather than identity for a nonzero first seat. Snapshot turn count and Android round display already count turns; retain that meaning. GameSession.restore reconstructs from seed, humanIndices, policy IDs and actions; freshRematch currently carries identity roster and policy overrides but has no starting order parameter. MatchCheckpoint needs a replay-authoritative opt-in order field or separately versioned representation before nonzero starts are enabled. Old default-zero checkpoints must retain serialized shape and replay results. Audit codec validation and older reader rejection before shipping.
+
+MainActivity uses identity seat indexes for colors and LAN host/guest authorization. MatchRecoveryStore credits official solo wins at identity 0; keep local human identity 0. Never reorder players or policies to rotate start. Limit initial candidate to offline QA Lab v5 with explicit opt-in. No LAN or default changes. Audit camera initialization, results copy, recovery/backup and rematch behavior before exposing controls.
+
+Implemented pure StartingOrderV1 cyclic ordinal/seat mapping, next, last, later turn and rotation; not wired into GameSession. Tests enumerate all nine configurations (2+3+4), historical default behavior, full rotation cycles and invalid input. Next add replay-authoritative opt-in representation and isolated integration tests, only after CI. Randomized starting order spreads advantage across identities rather than fixing underlying turn-order bias.

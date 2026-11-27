@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-16A starting order identity separation
+
+AI2-15F both workflows passed (46055540840 rules,46055540791 Android). Audited GameSession, MatchCheckpoint, MainActivity and MatchRecoveryStore. Fixed-zero initial seat and numeric last-seat finish checks/receipt must be replaced together for an opt-in start; identity 0 remains human and stats owner. Added pure StartingOrderV1 cyclic mapping/rotation with exhaustive 2–4 seat tests; not connected to gameplay. Architecture docs/AI2_16A_STARTING_ORDER_ARCHITECTURE.md. Next verify CI and design replay-authoritative opt-in checkpoint representation, then isolated engine integration with legacy parity. No runtime/save/LAN/release change. Physical QA outstanding. No merge/release.
+
+---
+
 # Active checkpoint — AI2-15F reject round-start awareness candidate
 
 AI2-15E rules 46054811743 and Android 46054811852 passed. Retrieved direct job 140694606060 step 13 JSON. 320 paired matches: Guardian live P1 wins204/320 (63.75%), candidate277/320 (86.56%), 95 seat2-to-seat1 reversals vs22 opposite. Candidate worsened fairness; do not register. Preserve test and frozen policies. Evidence docs/AI2_15F_ROUND_START_DECISION.md. Next audit starting-player identity/replay/rematch/statistics assumptions and design isolated offline QA rotation/randomization, which distributes rather than removes order advantage. Physical QA outstanding. No merge/release.
