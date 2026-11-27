@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-13D Scout difficulty evidence and travel odds foundation
+
+AI2-13C rules 45957389443 passed; Android 45957389394 in progress. Actual ZIP 15178694083 inspected in container: 14400 actor rows. Relaxed beats Standard 133/240 and 135/480; Advanced vs Standard 120/240 and 120/480; Advanced vs Relaxed 107/240 and 110/480. Standard/Advanced focal vs Relaxed all 2400 matched actor rows equal on outcomes and counts. No calibrated ordering; do not expose tiers. Evidence docs/AI2_13D_SCOUT_DIFFICULTY_EVIDENCE.md. Added pure movement-only travel odds helper and tests, not connected to engine; no hidden RNG. Next validate helper and design controlled travel/encounter decision comparison, checking encounter and final-round assumptions. Existing IDs/defaults/saves/UI/LAN unchanged; no merge/release. CI pending.
+
+---
+
 # Active checkpoint — AI2-13C Scout difficulty calibration
 
 AI2-13B rules 45956957612 and Android 45956957646 in progress at inspection. Added Scout tier competitive suite: five courses, six ordered distinct tier pairs, two/four seats, 24 seeds and every focal position = 4320 matches, 14400 actor records. Exact route risk/decision counts, winner flags and checkpoint replay checks; two-seat reversed ordered comparisons duplicate match lineups and must not be treated as independent evidence. Four-seat one focal versus three same-tier opponents. CSV includes focal policy and seat for correct grouping. Updated report upload and ZIP summarizer match keys. No runtime changes, tier ordering claims, UI, defaults, save format, LAN or signing changes. CI pending; next inspect actual artifact and quantify matched outcomes/route differences before expanding tiers. No merge/release.
