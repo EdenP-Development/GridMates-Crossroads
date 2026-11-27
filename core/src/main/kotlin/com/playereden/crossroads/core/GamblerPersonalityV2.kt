@@ -1,6 +1,6 @@
 package com.playereden.crossroads.core
 
-/** Pure candidate only; G1 remains immutable and registered. */
+/** Frozen G2 encounter refinement; G1 remains immutable. */
 internal object GamblerPersonalityV2 {
     fun shouldPush(race: BotRaceAwareness): Boolean =
         GamblerPersonalityV1.shouldPush(race)

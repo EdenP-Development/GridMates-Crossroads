@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-10E executable Gambler refinement comparison
+
+AI2-10D rules 45950054876 passed; Android 45950054885 in progress at inspection. Added GAMBLER_V2 immutable ID and dispatch using the V2 encounter refinement only; travel, routes and targets unchanged, G1 dispatch preserved. No preset remapping. Added 1440 matches (five courses, 2/4 seats, 48 seeds, every G2 seat), one G2 versus G1 opponents, 4800 actor rows with exact receipts and checkpoint replay. CSV reporting added. CI pending. Next inspect actual CSV for brace frequency, win rates, course/seat exposure and pacing before adopting. Previous QA1914 verified. No UI/default/LAN/signing changes, no merge/release. Physical acceptance outstanding.
+
+---
+
 # Active checkpoint — AI2-10D Gambler evidence and defensive refinement candidate
 
 AI2-10C both workflows passed (45948087404 rules,45948087192 Android); QA1914 artifact 15175577813. Actual ZIP 15176076243 inspected, 12000 actor rows and 720 exact calibration rows. Gambler wins 576/1200 two-seat and 556/2400 four-seat, 17444 Push / 20497 travel decisions, 9449 Gamble / 0 Brace. Detailed evidence docs/AI2_10D_GAMBLER_EVIDENCE.md. Added pure unregistered GamblerPersonalityV2 candidate with narrow defensive exception, tests for contrast and retained travel/shelter behavior. No G1 mutation, policy ID, dispatch, runtime, save or UI change. CI pending. Next compare G2 in actual matches before adoption; guardian/strategist aggregate behavior indistinguishable in prior homogeneous data. Physical QA and difficulty/fairness still outstanding. No merge/release.
