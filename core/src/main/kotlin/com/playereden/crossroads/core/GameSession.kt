@@ -28,8 +28,10 @@ class GameSession(
     seed: Int = 1234,
     humanIndices: Set<Int> = setOf(0),
     val botPolicy: BotPolicyVersion = BotPolicyVersion.LEGACY_V1,
-    botSeatPolicies: Map<Int, BotPolicyVersion> = emptyMap()
+    botSeatPolicies: Map<Int, BotPolicyVersion> = emptyMap(),
+    val startingSeat: Int = 0
 ) {
+    private val startingOrder = StartingOrderV1(seats, startingSeat)
     private val random = Random(seed)
     private val initialSeed = seed
     val playtestRules: Boolean = DecisionLab.enabled(board)
@@ -56,7 +58,7 @@ class GameSession(
             winningUnusedSteps = equalRoundLeadExcess,
             finishers = equalRoundFinishers,
             tiedOnWinningSteps = equalRoundBestExcessTies > 1,
-            laterSeatsGotFinalChance = first < players.lastIndex
+            laterSeatsGotFinalChance = startingOrder.hasLaterTurn(first)
         )
     }
     val finalRoundPending: Boolean get() =
@@ -110,7 +112,7 @@ class GameSession(
     val players: List<Player>
     var phase: Phase = Phase.ROLL
         private set
-    var currentIndex: Int = 0
+    var currentIndex: Int = startingSeat
         private set
     var remainingSteps: Int = 0
         private set
@@ -141,6 +143,7 @@ class GameSession(
 
     init {
         require(seats in 2..4)
+        require(startingSeat == 0 || DecisionLab.isV5(board)) { "Flexible starts require Lab v5" }
         require(seatPolicyOverrides.keys.all { it in 0 until seats && it !in humanIndices })
         require(board.start != board.finish)
         require(board.nodes.map { it.id }.toSet().size == board.nodes.size)
@@ -175,7 +178,8 @@ class GameSession(
             actions = acceptedActions.toList(),
             expected = snapshot(),
             botPolicy = botPolicy,
-            botSeatPolicies = seatPolicyOverrides.toMap()
+            botSeatPolicies = seatPolicyOverrides.toMap(),
+            startingSeat = startingSeat
         )
     }
 
@@ -204,7 +208,8 @@ class GameSession(
                 board, catalogue, checkpoint.seats, checkpoint.seed,
                 humanIndices = checkpoint.humanIndices.toSet(),
                 botPolicy = checkpoint.botPolicy,
-                botSeatPolicies = checkpoint.botSeatPolicies
+                botSeatPolicies = checkpoint.botSeatPolicies,
+                startingSeat = checkpoint.startingSeat
             )
             checkpoint.actions.forEach { action ->
                 when (action.kind) {
@@ -255,7 +260,7 @@ class GameSession(
      */
     fun freshRematch(seed: Int): GameSession {
         require(phase == Phase.FINISHED) { "Finish the current race before rematching" }
-        return GameSession(board, catalogue, players.size, seed, originalHumanIndices, botPolicy, seatPolicyOverrides)
+        return GameSession(board, catalogue, players.size, seed, originalHumanIndices, botPolicy, seatPolicyOverrides, startingSeat)
     }
 
     fun snapshot(): Snapshot = Snapshot(
@@ -968,7 +973,7 @@ class GameSession(
             equalRoundBestExcessTies++
         }
         equalRoundFinishers++
-        if (currentIndex == players.lastIndex) {
+        if (currentIndex == startingOrder.last) {
             finishEqualRound()
         } else {
             finishTurn()
@@ -992,11 +997,11 @@ class GameSession(
         // A first finish never denies the last seat its current-round action.
         // Resolve only AFTER the last seat completes a legal turn or reaches FINISH.
         if (DecisionLab.finishRoundEqually(board) &&
-            equalRoundLeader != null && currentIndex == players.lastIndex) {
+            equalRoundLeader != null && currentIndex == startingOrder.last) {
             finishEqualRound()
             return
         }
-        currentIndex = (currentIndex + 1) % players.size
+        currentIndex = startingOrder.next(currentIndex)
         phase = Phase.ROLL
         remainingSteps = 0
         die = null

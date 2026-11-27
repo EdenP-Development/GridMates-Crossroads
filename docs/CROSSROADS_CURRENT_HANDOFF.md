@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-16B replay-authoritative flexible starting seat
+
+AI2-16A rules 46067441758 passed; Android 46067441773 in progress at inspection. Integrated StartingOrderV1 in GameSession, default zero, nonzero only Lab v5. Checkpoint optional startingSeat defaults zero and omitted from legacy serialization; strict older readers reject unknown field rather than reinterpret. Restore passes startingSeat; both equal-round completion boundaries and receipt use cyclic order. Rematch preserves start for now; no automatic rotation or Android control. Added 108 mixed human/Guardian races (nine configurations x12 seeds), verify turn order, equal roll counts, mid/end replay, receipt, roster and rematch; invalid/tampered starts rejected. CI pending; historical replay gate and Android backup/rotation controls next. No public/LAN/release changes. Physical QA outstanding. No merge/release.
+
+---
+
 # Active checkpoint — AI2-16A starting order identity separation
 
 AI2-15F both workflows passed (46055540840 rules,46055540791 Android). Audited GameSession, MatchCheckpoint, MainActivity and MatchRecoveryStore. Fixed-zero initial seat and numeric last-seat finish checks/receipt must be replaced together for an opt-in start; identity 0 remains human and stats owner. Added pure StartingOrderV1 cyclic mapping/rotation with exhaustive 2–4 seat tests; not connected to gameplay. Architecture docs/AI2_16A_STARTING_ORDER_ARCHITECTURE.md. Next verify CI and design replay-authoritative opt-in checkpoint representation, then isolated engine integration with legacy parity. No runtime/save/LAN/release change. Physical QA outstanding. No merge/release.

@@ -49,7 +49,9 @@ data class MatchCheckpoint(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     val botPolicy: BotPolicyVersion = BotPolicyVersion.LEGACY_V1,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
-    val botSeatPolicies: Map<Int, BotPolicyVersion> = emptyMap()
+    val botSeatPolicies: Map<Int, BotPolicyVersion> = emptyMap(),
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    val startingSeat: Int = 0
 )
 
 object MatchCheckpointCodec {
