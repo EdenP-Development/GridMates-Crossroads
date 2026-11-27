@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-13H Guardian finish candidate competitive calibration
+
+AI2-13G rules 45961046813 passed, Android 45961046896 in progress at inspection. Added dedicated Guardian finish candidate vs Guardian V1 tournament: five courses, 96 seeds, 2/4 seats, all focal positions = 2880 matches, 9600 actor rows. Exact decisions, winner flags, snapshot replay; CSV upload and summarizer support. Equal-share benchmarks 50% and 25% are descriptive, not evidence of independent samples; shared seeds and seat rotations require paired analysis. Four-seat candidate plays against three Standard opponents. CI pending, no measured strength claim. Candidate remains unavailable in difficulty resolver/UI. Next verify CI, inspect actual report or verified CI logs, compare wins by course/seat/seed and decision exposures before any promotion. Existing policy IDs, saves, defaults, LAN, signing and public releases unchanged. No merge/release.
+
+---
+
 # Active checkpoint — AI2-13G Guardian finishing candidate
 
 AI2-13F rules 45960365286 passed, Android 45960365351 in progress at inspection. Actual ZIP artifact 15180751859 inspected with Python csv: 24876 rolls, 1215 eligible, 270 positive direct gains, 74 final-round positive gains. Guardian 62/203 improvements, all to Push, 37 final-round. Evidence docs/AI2_13G_FINISH_AUDIT_EVIDENCE.md. Added GUARDIAN_FINISH_CANDIDATE_V1 immutable policy, uses direct finish recommendation only on eligible roll states with unequal direct counts, otherwise retains Guardian behavior. Added 96 mixed Guardian candidate replay matches and recommendation assertions. CI pending. No calibrated strength claim; not registered in difficulty resolver. Next head-to-head tournament and actual results. No default, UI, save schema, LAN, signing or release change.

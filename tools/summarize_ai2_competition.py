@@ -9,7 +9,7 @@ from zipfile import ZipFile
 
 KEYS = ("steady", "push", "supplies", "cover", "gamble", "brace")
 FILES = ("gambler_competition.csv", "gambler_refinement.csv",
-         "exact_strategy_calibration.csv", "guardian_competition.csv", "strategist_competition.csv", "scout_difficulty_competition.csv")
+         "exact_strategy_calibration.csv", "guardian_competition.csv", "strategist_competition.csv", "scout_difficulty_competition.csv", "guardian_finish_competition.csv")
 
 
 def summarize(archive):
