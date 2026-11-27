@@ -10,7 +10,8 @@ enum class BotStrategyPreset(val policy: BotPolicyVersion) {
     TRAVELER(BotPolicyVersion.ADAPTIVE_V2_R1),
     SCOUT(BotPolicyVersion.ADAPTIVE_V2_R2),
     GUARDIAN(BotPolicyVersion.ADAPTIVE_V2_R3),
-    STRATEGIST(BotPolicyVersion.ADAPTIVE_V2_R4)
+    STRATEGIST(BotPolicyVersion.ADAPTIVE_V2_R4),
+    GAMBLER(BotPolicyVersion.GAMBLER_V1)
 }
 
 object BotStrategyLineup {

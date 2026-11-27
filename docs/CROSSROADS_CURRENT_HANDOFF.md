@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-10B executable Gambler policy
+
+AI2-10A both workflows passed (45919107891 rules,45919107983 Android). Added immutable GAMBLER_V1 identifier and strategy preset, dispatch for visible-state travel and encounter decisions; route and targeting reuse R4 chain, classic rules retain legacy behavior through fallback except existing R4 target behavior. Explicitly pinned original five-policy cohorts in mixed/four-seat tournaments, balance diagnostics and both calibration tests. Added 24 mixed Gambler/Scout convergence races, opening Push receipt, midpoint codec/replay, continued exact decisions and rematch tests. CI pending. No Android UI, LAN or default policy change. Exact calibration CSV analysis still outstanding. Next run dedicated Gambler competition and behavior comparisons. No merge/release.
+
+---
+
 # Active checkpoint — AI2-10A Gambler decision foundation
 
 AI2-09C rules 45918709240 passed; Android 45918709219 in progress at inspection. Added pure GamblerPersonalityV1 candidate travel and encounter heuristics and legality/contrast tests. Opening/midgame Push when gap >= -2; preserve near safe finish unless final round; shelter supplies unless substantial lead with defensive need; hazard Gamble when visible upside or close race. These are uncalibrated heuristics, not demonstrated difficulty. No registration, dispatch, serialized ID, preset mapping, RNG, UI or LAN changes yet. Prior tests use enum entries with fixed matrix sizes; pin historical comparison cohorts before adding new executable policy. Exact calibration CSV numerical analysis outstanding. CI pending. Next integrate separately versioned policy and run mixed competition with exact receipts. No merge/release.

@@ -434,6 +434,7 @@ class GameSession(
         BotPolicyVersion.ADAPTIVE_V2_R2 -> adaptiveRouteBotStep()
         BotPolicyVersion.ADAPTIVE_V2_R3 -> adaptiveEncounterBotStep()
         BotPolicyVersion.ADAPTIVE_V2_R4 -> adaptiveTargetBotStep()
+        BotPolicyVersion.GAMBLER_V1 -> gamblerBotStep()
         }
     }
 
@@ -452,6 +453,30 @@ class GameSession(
         insideBotCommand = true
         try {
             if (AdaptiveBotTravelR1.shouldPush(awareness)) rollBold() else rollSteady()
+        } finally {
+            insideBotCommand = false
+        }
+        record(MatchAction(MatchActionKind.BOT))
+    }
+
+    private fun gamblerBotStep() {
+        require(players[currentIndex].isBot && phase != Phase.FINISHED)
+        if (!playtestRules || (phase != Phase.ROLL && phase != Phase.ENCOUNTER)) {
+            adaptiveTargetBotStep()
+            return
+        }
+        val awareness = BotRaceAssessment.assess(currentIndex,
+            players.mapIndexed { seat, player ->
+                BotRacerView(seat, distanceToFinish(player.position), player.shield)
+            }, distanceToFinish(board.start), finalRoundPending)
+        insideBotCommand = true
+        try {
+            if (phase == Phase.ROLL) {
+                if (GamblerPersonalityV1.shouldPush(awareness)) rollBold() else rollSteady()
+            } else {
+                chooseEncounter(GamblerPersonalityV1.chooseEncounter(availableEncounterChoices(),
+                    awareness, remainingSteps, steadyTravelChosen, pendingPushHazardBonus))
+            }
         } finally {
             insideBotCommand = false
         }

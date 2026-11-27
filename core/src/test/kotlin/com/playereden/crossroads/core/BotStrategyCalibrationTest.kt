@@ -14,7 +14,7 @@ class BotStrategyCalibrationTest {
         }
         val events=GameData.events(File(root,"data/events/woven_events_v02.json").readText())
         val rows=mutableListOf<String>()
-        for(board in boards) for(preset in BotStrategyPreset.entries)
+        for(board in boards) for(preset in listOf(BotStrategyPreset.CLASSIC, BotStrategyPreset.TRAVELER, BotStrategyPreset.SCOUT, BotStrategyPreset.GUARDIAN, BotStrategyPreset.STRATEGIST))
             for(seats in 2..4) for(seed in 1..24) {
                 val game=GameSession(board,events,seats,seed,emptySet(),preset.policy)
                 var actions=0

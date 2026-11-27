@@ -14,7 +14,7 @@ class FourSeatBotTournamentTest {
             "design/prototypes/woodland_woven_regional_v05.json").map {
             DecisionLab.variantV5(GameData.board(File(root,it).readText()))
         }
-        val policies = BotPolicyVersion.entries
+        val policies = listOf(BotPolicyVersion.LEGACY_V1, BotPolicyVersion.ADAPTIVE_V2_R1, BotPolicyVersion.ADAPTIVE_V2_R2, BotPolicyVersion.ADAPTIVE_V2_R3, BotPolicyVersion.ADAPTIVE_V2_R4)
         assertEquals(5,policies.size)
         val rows = mutableListOf<String>()
         for (board in boards) for (omitted in policies) for (seed in 1..12) {

@@ -16,7 +16,7 @@ class BotBalanceDiagnosticsTest {
         }
         val routeRows = mutableListOf<String>()
         val finishRows = mutableListOf<String>()
-        for (board in boards) for (policy in BotPolicyVersion.entries)
+        for (board in boards) for (policy in listOf(BotPolicyVersion.LEGACY_V1, BotPolicyVersion.ADAPTIVE_V2_R1, BotPolicyVersion.ADAPTIVE_V2_R2, BotPolicyVersion.ADAPTIVE_V2_R3, BotPolicyVersion.ADAPTIVE_V2_R4))
             for (seats in listOf(2,4)) for (seed in 1..24) {
                 val game = GameSession(board,events,seats,seed,emptySet(),policy)
                 var actions = 0

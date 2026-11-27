@@ -31,7 +31,7 @@ data class MatchAction(
 
 /** Stable serialized identifier; never change the behavior of an existing policy. */
 @Serializable
-enum class BotPolicyVersion { LEGACY_V1, ADAPTIVE_V2_R1, ADAPTIVE_V2_R2, ADAPTIVE_V2_R3, ADAPTIVE_V2_R4 }
+enum class BotPolicyVersion { LEGACY_V1, ADAPTIVE_V2_R1, ADAPTIVE_V2_R2, ADAPTIVE_V2_R3, ADAPTIVE_V2_R4, GAMBLER_V1 }
 
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
