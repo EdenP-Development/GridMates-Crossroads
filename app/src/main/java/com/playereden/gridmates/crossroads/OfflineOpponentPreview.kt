@@ -21,6 +21,18 @@ internal object OfflineOpponentPreview {
         })
     }
 
+    /** Compact summary of active bot seats; never advertise inactive choices. */
+    fun summary(debug: Boolean, passAndPlay: Boolean, effectiveBoardId: String,
+                seats: Int, choices: Map<Int, BotOpponentConfigurationV1>): String? {
+        val active = policies(debug, passAndPlay, effectiveBoardId, seats, choices)
+        if (active.isEmpty() || active.values.all { it == BotPolicyVersion.LEGACY_V1 })
+            return null
+        return (1 until seats).joinToString(" · ", prefix = "AI: ") { seat ->
+            val choice = choices[seat]
+            if (choice == null) "Classic" else label(choice)
+        }
+    }
+
     fun label(configuration: BotOpponentConfigurationV1): String {
         val name = when(configuration.personality) {
             BotPersonalityV1.CLASSIC -> "Classic"

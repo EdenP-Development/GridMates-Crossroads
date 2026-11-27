@@ -537,10 +537,16 @@ internal fun CrossroadsHomeScreen(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    homeRaceSummary(seats, passAndPlay, playtestRules, fairFinishExperiment,
+                    homeRaceSummary(seats, passAndPlay,
+                        playtestRules || effectiveBoardId.endsWith(com.playereden.crossroads.core.DecisionLab.V5_SUFFIX),
+                        effectiveBoardId.endsWith(com.playereden.crossroads.core.DecisionLab.V5_SUFFIX),
                         courseName = CrossroadsCourse.title(selectedCourseId)),
                     style = MaterialTheme.typography.labelMedium, color = Muted
                 )
+                OfflineOpponentPreview.summary(BuildConfig.DEBUG, passAndPlay,
+                    effectiveBoardId, seats, opponentChoices)?.let { summary ->
+                    Text(summary, style = MaterialTheme.typography.labelMedium, color = Ink)
+                }
                 TabletopStartRaceButton(
                     onClick = { onStart(seats, passAndPlay, if (opponentPreview) opponentChoices.toMap() else emptyMap()) },
                     modifier = Modifier.fillMaxWidth()

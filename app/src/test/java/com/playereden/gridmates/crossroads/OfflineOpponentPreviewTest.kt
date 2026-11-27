@@ -26,6 +26,19 @@ class OfflineOpponentPreviewTest {
         assertTrue(OfflineOpponentPreview.enabled(true,false,effective))
         assertEquals("Guardian · Advanced preview",OfflineOpponentPreview.label(guardian))
     }
+    @Test fun setupSummaryMatchesActiveSeatsAndEligibility() {
+        val choices=mapOf(0 to guardian,1 to scout,3 to guardian)
+        assertEquals("AI: Scout · Classic · Guardian · Advanced preview",
+            OfflineOpponentPreview.summary(true,false,board,4,choices))
+        assertEquals("AI: Scout",OfflineOpponentPreview.summary(true,false,board,2,choices))
+        assertNull(OfflineOpponentPreview.summary(true,false,board,2,mapOf(3 to guardian)))
+        assertNull(OfflineOpponentPreview.summary(false,false,board,4,choices))
+        assertNull(OfflineOpponentPreview.summary(true,true,board,4,choices))
+        assertNull(OfflineOpponentPreview.summary(true,false,CrossroadsCourse.CLASSIC_ID,4,choices))
+        assertNull(OfflineOpponentPreview.summary(true,false,board,2,emptyMap()))
+        assertNull(OfflineOpponentPreview.summary(true,false,board,2,mapOf(1 to
+            BotOpponentConfigurationV1(BotPersonalityV1.CLASSIC))))
+    }
     @Test fun unavailableTierCannotResolve() {
         try {
             OfflineOpponentPreview.policies(true,false,board,2,mapOf(1 to

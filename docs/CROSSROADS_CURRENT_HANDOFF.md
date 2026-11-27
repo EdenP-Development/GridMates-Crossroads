@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-14B truthful opponent setup summary
+
+AI2-14A both workflows passed (45967017645 rules,45967017459 Android). Added compact active-seat AI summary above Start when any nonclassic configuration is active; ignores inactive seats and hides in release/pass-and-play/non-v5. Default Classic quick start stays uncluttered. Fixed collapsed rules summary for forced Convergence v5, using effective board ID rather than only remembered toggles. Added Android JVM summary eligibility tests. No runtime AI, checkpoint, LAN, signing or release changes. CI pending; physical layout and Android mixed-policy recovery tests remain outstanding. Next inspect recovery store tests and add mixed-policy checkpoint/rematch coverage; then gameplay labels. No merge/release.
+
+---
+
 # Active checkpoint — AI2-14A Android offline opponent selector
 
 AI2-13N both workflows passed (45965509051 rules,45965509140 Android). Added QA-only Lab v5 Solo opponent picker under More options, per-seat selection of six Standard personalities plus Advanced Guardian preview; default untouched Classic. Uses effective board ID including forced convergence; disabled for pass-and-play, non-v5 and release. New-match adapter filters human/inactive seats and resolves immutable IDs; MainActivity passes overrides only to offline new GameSession. Nearby and recovery paths untouched. Added Android JVM adapter tests. CI pending; physical layout/accessibility/recovery testing outstanding. Choices are session-local Home state, not persisted across Home recreation. No production release/merge. Next verify Android compile and add setup summary plus recovery/rematch QA coverage.
