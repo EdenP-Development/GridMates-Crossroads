@@ -24,6 +24,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.playereden.crossroads.core.BotOpponentConfigurationV1
+import com.playereden.crossroads.core.BotPersonalityV1
+import com.playereden.crossroads.core.BotDifficultyPreviewV1
+import com.playereden.crossroads.core.BotDifficultyV1
 
 private val Ink = Color(0xFF48684D)
 private val Muted = Color(0xFF80664B)
@@ -175,7 +179,7 @@ private fun HomeCourseCard(id: String, label: String, selected: Boolean,
 internal fun CrossroadsHomeScreen(
     wins: Int,
     completed: Int,
-    onStart: (Int, Boolean) -> Unit,
+    onStart: (Int, Boolean, Map<Int, BotOpponentConfigurationV1>) -> Unit,
     selectedCourseId: String,
     onCourseChange: (String) -> Unit,
     boardLook: CrossroadsBoardLook,
@@ -195,6 +199,10 @@ internal fun CrossroadsHomeScreen(
     // The first run is a single tap: 1 human + 1 bot. No room codes or setup screens.
     var seats by remember { mutableIntStateOf(2) }
     var passAndPlay by remember { mutableStateOf(false) }
+    val opponentChoices = remember { mutableStateMapOf<Int, BotOpponentConfigurationV1>() }
+    var opponentSeat by remember { mutableStateOf<Int?>(null) }
+    val effectiveBoardId = CrossroadsExperimentalMode.boardId(selectedCourseId, playtestRules, fairFinishExperiment)
+    val opponentPreview = OfflineOpponentPreview.enabled(BuildConfig.DEBUG, passAndPlay, effectiveBoardId)
     var showGuide by remember { mutableStateOf(false) }
     var showAbout by remember { mutableStateOf(false) }
     var showAppearancePicker by remember { mutableStateOf(false) }
@@ -374,6 +382,18 @@ internal fun CrossroadsHomeScreen(
             icon = if (showExtraOptions) TabletopIconArt.COLLAPSE else TabletopIconArt.EXPAND
         )
         if (showExtraOptions) {
+        if (opponentPreview) {
+            HomeSectionHeading("AI OPPONENTS · QA")
+            Text("Optional · Lab v5 only", color = Muted, style = MaterialTheme.typography.bodySmall)
+            for (seat in 1 until seats) {
+                val choice = opponentChoices[seat]
+                TabletopUtilityButton(
+                    text = "Player ${seat + 1}: " + (choice?.let { OfflineOpponentPreview.label(it) } ?: "Classic"),
+                    onClick = { opponentSeat = seat },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -522,11 +542,45 @@ internal fun CrossroadsHomeScreen(
                     style = MaterialTheme.typography.labelMedium, color = Muted
                 )
                 TabletopStartRaceButton(
-                    onClick = { onStart(seats, passAndPlay) },
+                    onClick = { onStart(seats, passAndPlay, if (opponentPreview) opponentChoices.toMap() else emptyMap()) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         }
+    }
+    val editingSeat = opponentSeat
+    if (editingSeat != null && opponentPreview && editingSeat in 1 until seats) {
+        AlertDialog(
+            onDismissRequest = { opponentSeat = null },
+            containerColor = Paper,
+            title = { Text("Player ${editingSeat + 1} opponent", color = Ink) },
+            text = {
+                Column(Modifier.fillMaxWidth().heightIn(max = 360.dp)
+                    .verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    for (personality in BotPersonalityV1.entries) {
+                        for (difficulty in BotDifficultyPreviewV1.available(personality)) {
+                            val config = BotOpponentConfigurationV1(personality, difficulty)
+                            val selected = (opponentChoices[editingSeat] ?:
+                                BotOpponentConfigurationV1(BotPersonalityV1.CLASSIC)) == config
+                            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                                verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(selected = selected, onClick = {
+                                    opponentChoices[editingSeat] = config
+                                    opponentSeat = null
+                                })
+                                TextButton(onClick = {
+                                    opponentChoices[editingSeat] = config
+                                    opponentSeat = null
+                                }, modifier = Modifier.weight(1f)) {
+                                    Text(OfflineOpponentPreview.label(config), color = Ink)
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { opponentSeat = null }) { Text("Close") } }
+        )
     }
     if (showAppearancePicker) {
         AlertDialog(

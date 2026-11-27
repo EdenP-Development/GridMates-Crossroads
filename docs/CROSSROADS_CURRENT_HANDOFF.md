@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-14A Android offline opponent selector
+
+AI2-13N both workflows passed (45965509051 rules,45965509140 Android). Added QA-only Lab v5 Solo opponent picker under More options, per-seat selection of six Standard personalities plus Advanced Guardian preview; default untouched Classic. Uses effective board ID including forced convergence; disabled for pass-and-play, non-v5 and release. New-match adapter filters human/inactive seats and resolves immutable IDs; MainActivity passes overrides only to offline new GameSession. Nearby and recovery paths untouched. Added Android JVM adapter tests. CI pending; physical layout/accessibility/recovery testing outstanding. Choices are session-local Home state, not persisted across Home recreation. No production release/merge. Next verify Android compile and add setup summary plus recovery/rematch QA coverage.
+
+---
+
 # Active checkpoint — AI2-13N verified Guardian tier results
 
 AI2-13M both workflows passed (45964646619 rules,45964646684 Android). Directly retrieved job 140390312643 step 10 JSON: 12960 rows,3600 matches. Relaxed vs Standard 131/240 and113/480; finish vs Standard128/240 and136/480; finish vs Relaxed120/240 and148/480. Reverse four-seat Standard vs Relaxed131/480, Standard vs finish104/480, Relaxed vs finish95/480. No reliable three-tier ordering; Relaxed stays excluded. See docs/AI2_13N_GUARDIAN_TIER_DECISION.md. Recommend prioritizing offline QA personality selector and fairness, then physical feedback rather than indefinitely tuning all 18 combinations. Existing Advanced Guardian remains experimental preview. No runtime/default/save/UI/LAN changes. Prior numerical claims not independently reverified; direct CI evidence used for this checkpoint. No merge/release.

@@ -545,14 +545,17 @@ private fun CrossroadsApp(
         revision++
     }
 
-    fun start(seats: Int, passAndPlay: Boolean) {
+    fun start(seats: Int, passAndPlay: Boolean,
+              opponents: Map<Int, BotOpponentConfigurationV1>) {
         if (lanRole != LanRole.OFFLINE) leaveGame()
         val humans = if (passAndPlay) (0 until seats).toSet() else setOf(0)
         val boardId = CrossroadsExperimentalMode.boardId(
             selectedCourseId, playtestRules, fairFinishExperiment
         )
         val newGame = GameSession(knownBoards.getValue(boardId), catalogue, seats = seats,
-            seed = java.util.Random().nextInt(), humanIndices = humans)
+            seed = java.util.Random().nextInt(), humanIndices = humans,
+            botSeatPolicies = OfflineOpponentPreview.policies(BuildConfig.DEBUG, passAndPlay,
+                boardId, seats, opponents))
         beginOfflineRace(newGame)
     }
 
@@ -888,7 +891,7 @@ private fun CrossroadsApp(
         CrossroadsHomeScreen(
             wins = wins,
             completed = matches,
-            onStart = { seats, localPlayers -> start(seats, localPlayers) },
+            onStart = { seats, localPlayers, opponents -> start(seats, localPlayers, opponents) },
             selectedCourseId = selectedCourseId,
             regionalCourseId = regionalBoard?.id,
             convergenceCourseId = convergenceBoard?.id,
