@@ -445,6 +445,7 @@ class GameSession(
         BotPolicyVersion.GAMBLER_V2 -> gamblerBotStep(refined = true)
         BotPolicyVersion.GUARDIAN_V1 -> guardianBotStep()
         BotPolicyVersion.GUARDIAN_FINISH_CANDIDATE_V1 -> guardianBotStep(finishCandidate = true)
+        BotPolicyVersion.GUARDIAN_RELAXED_CANDIDATE_V1 -> guardianBotStep(relaxedCandidate = true)
         BotPolicyVersion.STRATEGIST_V1 -> strategistBotStep()
         BotPolicyVersion.SCOUT_RELAXED_V1 -> scoutDifficultyBotStep(BotDifficultyV1.RELAXED)
         BotPolicyVersion.SCOUT_ADVANCED_V1 -> scoutDifficultyBotStep(BotDifficultyV1.ADVANCED)
@@ -500,7 +501,7 @@ class GameSession(
         record(MatchAction(MatchActionKind.BOT))
     }
 
-    private fun guardianBotStep(finishCandidate: Boolean = false) {
+    private fun guardianBotStep(finishCandidate: Boolean = false, relaxedCandidate: Boolean = false) {
         require(players[currentIndex].isBot && phase != Phase.FINISHED)
         if (!playtestRules || phase == Phase.TARGET) {
             adaptiveTargetBotStep()
@@ -514,8 +515,9 @@ class GameSession(
         try {
             when (phase) {
                 Phase.ROLL -> {
-                    val push = (if (finishCandidate) directFinishOpportunity()?.preferPush()
-                        else null) ?: GuardianPersonalityV1.shouldPush(awareness)
+                    val push = if (relaxedCandidate) GuardianRelaxedCandidateV1.shouldPush(awareness)
+                        else (if (finishCandidate) directFinishOpportunity()?.preferPush()
+                            else null) ?: GuardianPersonalityV1.shouldPush(awareness)
                     if (push) rollBold() else rollSteady()
                 }
                 Phase.ENCOUNTER -> chooseEncounter(GuardianPersonalityV1.chooseEncounter(

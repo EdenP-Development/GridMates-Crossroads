@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-13L Relaxed Guardian experimental integration
+
+AI2-13K rules 45963134502 passed; Android 45963134782 in progress at inspection. Registered immutable GUARDIAN_RELAXED_CANDIDATE_V1, changes only Guardian travel decision via frozen candidate helper; Standard and finish candidate dispatch preserved. Added 96 four-seat mixed Guardian replay matches, legal travel receipt checks, rematch policy identity and explicit preview exclusion test. CI pending; no strength or exposure claims. Next run mirrored Relaxed vs Standard/finish candidate calibration, measure actual changed decisions and verify report contents directly before promotion. Existing preview eligibility, defaults, save schema, UI, LAN and signing unchanged. No merge/release.
+
+---
+
 # Active checkpoint — AI2-13K Relaxed Guardian travel candidate
 
 AI2-13J rules 45962661312 and Android 45962661272 in progress at inspection. Added isolated GuardianRelaxedCandidateV1: outside final round/endgame, raises existing Guardian Push gap threshold from 5 to 8; all other travel decisions unchanged. No encounter/route/target changes, no policy registration or preview eligibility changes. Tests enumerate 6560 synthetic race assessments and verify exact change predicate, urgent travel preservation and large-gap recovery. Strength remains a hypothesis; conservative choices may improve performance (as seen in Scout experiment). Next verify CI, measure actual same-state decision exposure and run mirrored calibration if warranted. No default, save schema, UI, LAN, signing or release change.

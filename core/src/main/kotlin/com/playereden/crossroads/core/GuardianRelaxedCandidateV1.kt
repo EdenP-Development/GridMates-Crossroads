@@ -1,6 +1,6 @@
 package com.playereden.crossroads.core
 
-/** Unregistered conservative travel candidate. Relaxed strength is a
+/** Frozen experimental conservative travel candidate. Relaxed strength is a
  * hypothesis, not a guarantee: safer choices may improve win rates.
  * Preserve all existing Guardian endgame and non-travel decisions.
  */
