@@ -41,6 +41,74 @@ class MatchRecoveryStoreTest {
         assertEquals(Phase.FINISHED, game.phase)
     }
 
+    @Test fun customizedOfflineOpponentsSurviveRecoveryBackupAndRematch() {
+        val lab = DecisionLab.variantV5(quick)
+        val registry = mapOf(board.id to board, quick.id to quick, lab.id to lab)
+        val prefs = MemoryPreferences()
+        prefs.edit().putInt("completed", 12).putInt("wins", 5).commit()
+        val store = MatchRecoveryStore(prefs, board, events, registry)
+        val choices = mapOf(
+            1 to BotOpponentConfigurationV1(BotPersonalityV1.SCOUT),
+            2 to BotOpponentConfigurationV1(BotPersonalityV1.GAMBLER),
+            3 to BotOpponentConfigurationV1(BotPersonalityV1.GUARDIAN, BotDifficultyV1.ADVANCED)
+        )
+        val policies = OfflineOpponentPreview.policies(true, false, lab.id, 4, choices)
+        assertEquals(mapOf(1 to BotPolicyVersion.ADAPTIVE_V2_R2,
+            2 to BotPolicyVersion.GAMBLER_V1,
+            3 to BotPolicyVersion.GUARDIAN_FINISH_CANDIDATE_V1), policies)
+        fun assertPolicies(game: GameSession) {
+            for ((seat, policy) in policies) assertEquals(policy, game.policyForBotSeat(seat))
+            assertFalse(game.players[0].isBot)
+            assertTrue(game.players.drop(1).all { it.isBot })
+        }
+        fun advance(game: GameSession) {
+            if (game.players[game.currentIndex].isBot) game.botStep()
+            else when (game.phase) {
+                Phase.ROLL -> game.rollSteady()
+                Phase.ROUTE -> game.chooseRoute(game.availableRoutes().first().id)
+                Phase.ENCOUNTER -> game.chooseEncounter(game.availableEncounterChoices().first())
+                Phase.TARGET -> game.chooseTarget(game.availableTargets().first())
+                Phase.FINISHED -> Unit
+            }
+        }
+        for (seed in 1..12) {
+            val game = GameSession(lab, events, 4, seed, setOf(0), botSeatPolicies = policies)
+            val id = "custom-opponents-$seed"
+            val began = System.currentTimeMillis() - 1000L
+            repeat(5) { if (game.phase != Phase.FINISHED) advance(game) }
+            assertTrue(store.persist(game, id, began))
+            val reopened = requireNotNull(MatchRecoveryStore(prefs, board, events, registry).load().match).game
+            assertPolicies(reopened)
+            assertEquals(game.snapshot(), reopened.snapshot())
+            val transfer = store.exportProgress()
+            val importedPrefs = MemoryPreferences()
+            val imported = MatchRecoveryStore(importedPrefs, board, events, registry)
+            assertTrue(imported.importProgress(imported.previewImport(transfer)))
+            val moved = requireNotNull(imported.load().match).game
+            assertPolicies(moved)
+            assertEquals(game.snapshot(), moved.snapshot())
+            var actions = 0
+            while (game.phase != Phase.FINISHED && actions++ < 1500) {
+                advance(game)
+                advance(reopened)
+                advance(moved)
+                assertEquals(game.snapshot(), reopened.snapshot())
+                assertEquals(game.snapshot(), moved.snapshot())
+            }
+            assertEquals(Phase.FINISHED, game.phase)
+            assertEquals(game.fairFinishReceipt, moved.fairFinishReceipt)
+            assertTrue(imported.persist(moved, id, began))
+            val finished = requireNotNull(imported.load().match).game
+            assertPolicies(finished)
+            assertEquals(game.snapshot(), finished.snapshot())
+            val rematch = finished.freshRematch(seed + 100)
+            assertPolicies(rematch)
+            assertEquals(lab.id, rematch.board.id)
+            assertEquals(12, importedPrefs.getInt("completed", 0))
+            assertEquals(5, importedPrefs.getInt("wins", 0))
+        }
+    }
+
     @Test fun balancePreviewRecoversWithoutChangingClassicOrPublicRegistry() {
         val candidateFile = listOf(File("design/prototypes/woodland_woven_convergence_v02.json"),
             File("../design/prototypes/woodland_woven_convergence_v02.json")).first { it.isFile }

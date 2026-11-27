@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-14C Android customized opponent recovery coverage
+
+AI2-14B rules 45968440468 passed; Android 45968440425 in progress at inspection. Added Android JVM recovery-store test with 12 seeded four-seat Lab v5 matches using actual setup adapter (Scout, Gambler, Advanced Guardian), human seat 0. Verify saved policy IDs, reopen, backup transfer to independent preferences, deterministic continuation across three sessions, final receipt, completed recovery, rematch roster and official stats isolation. No runtime or save schema change. CI pending; physical lifecycle and layout tests outstanding. Next verify Android CI and add live gameplay personality labels from resolved policy IDs. No merge/release.
+
+---
+
 # Active checkpoint — AI2-14B truthful opponent setup summary
 
 AI2-14A both workflows passed (45967017645 rules,45967017459 Android). Added compact active-seat AI summary above Start when any nonclassic configuration is active; ignores inactive seats and hides in release/pass-and-play/non-v5. Default Classic quick start stays uncluttered. Fixed collapsed rules summary for forced Convergence v5, using effective board ID rather than only remembered toggles. Added Android JVM summary eligibility tests. No runtime AI, checkpoint, LAN, signing or release changes. CI pending; physical layout and Android mixed-policy recovery tests remain outstanding. Next inspect recovery store tests and add mixed-policy checkpoint/rematch coverage; then gameplay labels. No merge/release.
