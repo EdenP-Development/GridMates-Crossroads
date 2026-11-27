@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-13J explicit offline difficulty preview eligibility
+
+AI2-13I rules 45962208764 passed; Android 45962208742 in progress at inspection. Added separate BotDifficultyPreviewV1 allowing six Standard configurations plus Advanced Guardian for offline QA only. Explicit rejection of all other nonstandard configurations; experimental resolver and existing policy IDs unchanged. Lineup resolver preserves human seats and resolved IDs; exhaustive 18-combination eligibility tests and mixed lineup validation. No actual UI wiring or default change. Prior numerical evidence documents are carried forward, not independently reverified in this checkpoint. Next verify CI and design Relaxed Guardian candidate with controlled comparisons; no public difficulty claim. No merge/release.
+
+---
+
 # Active checkpoint — AI2-13I Guardian competitive evidence
 
 AI2-13H rules 45961604660 passed; Android 45961604703 in progress at inspection. Actual artifact 15181063442 opened locally; 9600 actor rows, 2880 validated matches. Candidate 507/960 and 524/1920 wins; above equal-share on all five courses. Seed-cluster bootstrap intervals 51.56–54.17% and 26.51–28.13%. Evidence docs/AI2_13I_GUARDIAN_FINISH_EVIDENCE.md. Retain as Advanced Guardian preview candidate; no resolver/UI promotion yet. Scout tiers not calibrated; next separate calibrated-preview eligibility from experimental resolver and investigate Relaxed Guardian. Seat fairness and physical QA outstanding. No runtime, defaults, save schema, LAN, signing or release changes.
