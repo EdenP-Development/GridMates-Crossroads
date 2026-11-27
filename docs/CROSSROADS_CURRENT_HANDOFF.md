@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-13A difficulty foundation
+
+AI2-12E both workflows passed (45955316342 rules,45955316359 Android). Added BotDifficultyV1 (Relaxed/Standard/Advanced), independent opponent configuration and pure candidate route/target scoring adjustments. Standard identity, no hidden outcomes or RNG access; tests cover all personalities, shield behavior, visible route opportunities and standard invariance. Design contract docs/AI2_13A_DIFFICULTY_DESIGN.md. No registration, dispatch, checkpoint schema, UI, preset, default or LAN change. Candidate strength ordering unverified. CI pending. Next integrate narrowly scoped versioned difficulty variants and run mirrored calibration, preserving Classic/Traveler identity. No merge/release.
+
+---
+
 # Active checkpoint — AI2-12E selected personality roster
 
 AI2-12D rules 45954691900 passed; Android 45954691869 in progress at inspection. Actual ZIP artifact 15178202767 inspected via Python csv; 16800 actor records, 883/1680 and 847/3360 Strategist wins, 19453/28651 Push, 394/12311 Brace. Evidence docs/AI2_12E_STRATEGIST_EVIDENCE.md. Added separate BotPersonalityV1 and lineup resolver for selected six-personality roster; historical BotStrategyPreset remains unchanged. Added roster/seat validation tests. No UI wiring, default, engine dispatch, save schema or LAN changes. CI pending. Next design versioned difficulty settings and evaluate fairness; physical QA outstanding. No merge/release.
