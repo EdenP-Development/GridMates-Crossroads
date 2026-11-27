@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-13F controlled finish opportunity audit
+
+AI2-13E both workflows passed (45958881490 rules,45958881630 Android). Added internal read-only GameSession.directFinishOpportunity() for Lab roll phase using current final-round leader excess; no policy dispatch change. Added 1440 homogeneous personality races across five courses, six selected personalities, 2/4 seats and 24 seeds, paired with unobserved control sessions. Every action checks exact receipt and snapshot parity; CSV records every roll, eligible corridor, direct success counts, recommendation and potential gain in six movement outcomes. Upload configured. CI pending; no quantitative outcome claims. Next inspect actual CSV or CI summary; assess opportunity frequency and direct gains before registering refined Advanced policy. No save schema, default, UI, LAN, signing or release change.
+
+---
+
 # Active checkpoint — AI2-13E conservative finish opportunity evaluator
 
 AI2-13D both workflows passed (45957993226 rules,45957993347 Android). Inspected GameSession progress, landing, route commitment and equal-round finish logic: uninterrupted movement reaches finish before landing events; later finishers must strictly exceed existing leader excess. Added pure BotFinishOpportunityV1 corridor check (max eight spaces, rejects forks/cycles/dead ends) and direct success counts including optional leader excess, tie returns no preference. Counts are lower bounds; failed direct movement can land on events, and future opponent turns are not modeled. No engine dispatch or public changes. Tests committed; CI pending. Next verify and run controlled same-state decision comparisons before registering any difficulty refinement. Existing IDs/defaults/saves/UI/LAN unchanged. No merge/release.

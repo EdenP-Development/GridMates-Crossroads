@@ -61,6 +61,13 @@ class GameSession(
     }
     val finalRoundPending: Boolean get() =
         DecisionLab.finishRoundEqually(board) && equalRoundLeader != null && phase != Phase.FINISHED
+    /** Read-only movement assessment; no random draws or state changes. */
+    internal fun directFinishOpportunity(): FinishOpportunityV1? {
+        if (!playtestRules || phase != Phase.ROLL) return null
+        return BotFinishOpportunityV1.assess(board, players[currentIndex].position,
+            if (finalRoundPending) equalRoundLeadExcess else null)
+    }
+
     val leadingFinisherName: String? get() =
         if (finalRoundPending) equalRoundLeader?.let { players[it].name } else null
     /** Live, replay-derived travel stance; used only to describe Lab route choices. */
