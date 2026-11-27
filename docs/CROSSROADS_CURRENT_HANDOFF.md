@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-15C two-seat decision exposure
+
+AI2-15B rules 45971737785 passed; Android 45971738058 in progress at inspection. Source audit confirms shared seeded RNG for bold travel/events/legacy route jitter, fixed order, live opponent positions and earliest arrival tie rule. None is proven causal. Added read-only observedRaceAwareness helper and 1920 homogeneous two-seat matches paired with 1920 unobserved controls; compare snapshots and decision receipts after every action. Capture seat, gap, stage, final round, actual travel choice and direct finish odds. New CI validator checks full matrix and per-match equal rolls; publishes per-policy/seat counts and lower direct-odds choices. Direct odds are not full win probabilities. No random/rule/policy/checkpoint behavior changed. CI pending. Next inspect direct log summary before selecting a versioned intervention; physical QA outstanding. No merge/release.
+
+---
+
 # Active checkpoint — AI2-15B CI-verified seat fairness evidence
 
 AI2-15A rules 45971098146 passed; Android 45971098149 in progress at inspection. Direct job 140411454642 step 11 JSON retrieved. 5760 matches; winners by seat: 2 players [1138,782], 3 [659,692,569], 4 [502,506,494,418]. First arrivals [1271,649], [834,632,454], [689,508,424,299]. Changed winners 133/214/304, ties29/74/72. Equal aggregate roll counts per seat. Two-seat residual warrants focused mechanism audit; no gameplay change. Evidence docs/AI2_15B_STARTING_SEAT_EVIDENCE.md. Next inspect shared RNG, state visibility, target timing and options for rotating first-player identity in versioned offline QA. Physical scoreboard QA remains outstanding. No merge/release.

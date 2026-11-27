@@ -69,6 +69,11 @@ jobs:
         run: |
           set -euo pipefail
           python3 tools/summarize_starting_seats.py core/build/reports/ai2-comparison/starting_seat_fairness.csv | tee core/build/reports/ai2-comparison/starting_seat_summary.json
+      - name: Validate and display two-seat decision exposure
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/summarize_two_seat_exposure.py core/build/reports/ai2-comparison/two_seat_decision_exposure.csv | tee core/build/reports/ai2-comparison/two_seat_decision_summary.json
       - name: Upload AI baseline and historical fixtures
         uses: actions/upload-artifact@v4
         with:
@@ -98,6 +103,8 @@ jobs:
             core/build/reports/ai2-comparison/guardian_difficulty_summary.json
             core/build/reports/ai2-comparison/starting_seat_fairness.csv
             core/build/reports/ai2-comparison/starting_seat_summary.json
+            core/build/reports/ai2-comparison/two_seat_decision_exposure.csv
+            core/build/reports/ai2-comparison/two_seat_decision_summary.json
             ${{ runner.temp }}/crossroads-history/*.json
           if-no-files-found: error
           retention-days: 30

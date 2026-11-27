@@ -61,6 +61,12 @@ class GameSession(
     }
     val finalRoundPending: Boolean get() =
         DecisionLab.finishRoundEqually(board) && equalRoundLeader != null && phase != Phase.FINISHED
+    /** Diagnostic only: same public-state race assessment used by adaptive policies. */
+    internal fun observedRaceAwareness(): BotRaceAwareness =
+        BotRaceAssessment.assess(currentIndex, players.mapIndexed { seat, player ->
+            BotRacerView(seat, distanceToFinish(player.position), player.shield)
+        }, distanceToFinish(board.start), finalRoundPending)
+
     /** Read-only movement assessment; no random draws or state changes. */
     internal fun directFinishOpportunity(): FinishOpportunityV1? {
         if (!playtestRules || phase != Phase.ROLL) return null
