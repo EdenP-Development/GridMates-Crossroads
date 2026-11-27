@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-15D verified tactical exposure
+
+AI2-15C rules 45972486928 and Android 45972486932 passed. Direct job 140416034678 JSON: 1920 matches,23520 rolls; all six policies Push more from seat 2. Guardian 160/1937 vs1170/1937, trailing636 vs1868. Evidence docs/AI2_15D_TWO_SEAT_EXPOSURE.md. Sequential position assessment is a plausible contributor, not established cause. Next test round-start awareness in isolated versioned experiment and audit starting identity rotation feasibility; no change to v5 semantics or frozen policies. Physical QA outstanding. No merge/release.
+
+---
+
 # Active checkpoint — AI2-15C two-seat decision exposure
 
 AI2-15B rules 45971737785 passed; Android 45971738058 in progress at inspection. Source audit confirms shared seeded RNG for bold travel/events/legacy route jitter, fixed order, live opponent positions and earliest arrival tie rule. None is proven causal. Added read-only observedRaceAwareness helper and 1920 homogeneous two-seat matches paired with 1920 unobserved controls; compare snapshots and decision receipts after every action. Capture seat, gap, stage, final round, actual travel choice and direct finish odds. New CI validator checks full matrix and per-match equal rolls; publishes per-policy/seat counts and lower direct-odds choices. Direct odds are not full win probabilities. No random/rule/policy/checkpoint behavior changed. CI pending. Next inspect direct log summary before selecting a versioned intervention; physical QA outstanding. No merge/release.
