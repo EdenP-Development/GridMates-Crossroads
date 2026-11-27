@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-12B Guardian evidence and analysis support
+
+AI2-11D rules 45952022460 passed; Android 45952022540 cancelled. Actual artifact 15176704165 inspected with Python csv: 14400 actor rows, 4320 Guardian focal rows; 855/1440 two-seat wins, 840/2880 four-seat wins, 13282/24591 Push, 432/5536 Brace. Evidence docs/AI2_12B_GUARDIAN_EVIDENCE.md. Guardian remains candidate for later preset promotion, no difficulty claim. Extended standalone ZIP summarizer to recognize guardian_competition.csv and guardian_seat grouping. Latest AI2-12A rules 45952327560 and Android 45952327607 still running at inspection; no Strategist integration until its core tests pass. No engine or preset changes. Next verify CI and integrate Strategist under immutable ID; dedicated competition, roster review, difficulty and UI follow. No merge/release.
+
+---
+
 # Active checkpoint — AI2-12A Strategist decision foundation
 
 AI2-11D Guardian tournament workflows 45952022460 rules and 45952022540 Android in progress at inspection. Added pure unregistered StrategistPersonalityV1: visible imminent-finish travel decisions, conditional encounter-free finish and diverse-fork route bonuses, targeting that prioritizes denying a four-space steady-finish opportunity. Tests cover contrast against R4, shield handling, deterministic legal choices and conditional route scoring. Thresholds are heuristics, not optimal probability estimates. Existing policy IDs, dispatch, preset mappings, save schema, UI and LAN unchanged. New CI pending; previous runs may be superseded by concurrency. Next verify Guardian tournament and actual CSV, then integrate Strategist if tests pass. No merge/release.
