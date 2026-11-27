@@ -33,6 +33,15 @@ internal object OfflineOpponentPreview {
         }
     }
 
+    /** Seat plates already have a numbered pawn. Avoid repeating the number. */
+    fun plateName(original: String, seat: Int, policy: BotPolicyVersion?): String =
+        if (policy == null) original else liveName(original, seat, policy)
+            .removePrefix("${seat + 1} · ")
+
+    fun accessiblePlateName(original: String, seat: Int, policy: BotPolicyVersion?): String =
+        if (policy == BotPolicyVersion.GUARDIAN_FINISH_CANDIDATE_V1)
+            "Guardian, Advanced preview" else plateName(original, seat, policy)
+
     /** Display only; retain numeric seat identity even for duplicate personalities. */
     fun liveName(original: String, seat: Int, policy: BotPolicyVersion?): String {
         val personality = when(policy) {

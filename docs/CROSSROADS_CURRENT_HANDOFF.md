@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-14E compact accessible opponent plates
+
+AI2-14D both workflows passed (45969639085 rules,45969639153 Android), including prior recovery coverage. Audited actual TabletopSeatPlate: numbered pawn plus single-line name duplicated numeric prefix and left little room in four-seat layout. Added presentation-only plate name without repeated seat number, stacked pawn/name arrangement for customized 3/4-seat matches, two-line name allowance and expanded Advanced Guardian accessibility description. Turn strip keeps existing numbered names. Original uncustomized layout retained. Added mapping tests. CI pending; physical narrow-phone/large-font/TalkBack checks remain required, stacked layout increases HUD height. No gameplay, saves, LAN or release changes. Next verify CI and inspect fairness evidence. No merge/release.
+
+---
+
 # Active checkpoint — AI2-14D live opponent identity
 
 AI2-14C rules 45969060601 and Android 45969060573 in progress at inspection. Added presentation-only live seat names for customized offline QA Lab v5 matches, from authoritative resolved policy IDs; numeric seat prefix preserves duplicate-personality identity. Advanced Guardian compact label Guardian+. Classic-only matches, humans, release, Nearby, unknown experimental IDs retain original names. Scoreboard and turn strip use same label. Added JVM mapping tests. No engine names, checkpoint schema, gameplay or networking changes. CI pending; four-seat text fit and TalkBack verification outstanding. Next verify recovery and labels CI, audit accessibility and fairness. No merge/release.

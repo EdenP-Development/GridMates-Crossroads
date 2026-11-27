@@ -48,6 +48,15 @@ class OfflineOpponentPreviewTest {
         assertEquals("Bot 2",OfflineOpponentPreview.liveName("Bot 2",1,BotPolicyVersion.GUARDIAN_RELAXED_CANDIDATE_V1))
     }
 
+    @Test fun plateNamesAvoidDuplicatingPawnNumberAndExpandAdvancedForSpeech() {
+        assertEquals("Scout", OfflineOpponentPreview.plateName("Bot 2",1,BotPolicyVersion.ADAPTIVE_V2_R2))
+        assertEquals("Guardian+", OfflineOpponentPreview.plateName("Bot 4",3,BotPolicyVersion.GUARDIAN_FINISH_CANDIDATE_V1))
+        assertEquals("Guardian, Advanced preview", OfflineOpponentPreview.accessiblePlateName(
+            "Bot 4",3,BotPolicyVersion.GUARDIAN_FINISH_CANDIDATE_V1))
+        assertEquals("You", OfflineOpponentPreview.plateName("You",0,null))
+        assertEquals("Bot 2", OfflineOpponentPreview.plateName("Bot 2",1,BotPolicyVersion.GUARDIAN_RELAXED_CANDIDATE_V1))
+    }
+
     @Test fun unavailableTierCannotResolve() {
         try {
             OfflineOpponentPreview.policies(true,false,board,2,mapOf(1 to

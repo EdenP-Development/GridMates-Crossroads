@@ -1043,7 +1043,11 @@ private fun CrossroadsApp(
                     }
                     TabletopSeatPlate(
                         seatIndex = i,
-                        name = displaySeatName(i),
+                        name = OfflineOpponentPreview.plateName(player.name, i,
+                            if (showOpponentIdentity && player.isBot) game.policyForBotSeat(i) else null),
+                        accessibleName = OfflineOpponentPreview.accessiblePlateName(player.name, i,
+                            if (showOpponentIdentity && player.isBot) game.policyForBotSeat(i) else null),
+                        stackLabel = showOpponentIdentity && state.players.size >= 3,
                         seatColor = PlayerColors[i],
                         active = isFocused,
                         shielded = player.shield,

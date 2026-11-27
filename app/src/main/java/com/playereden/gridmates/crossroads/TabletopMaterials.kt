@@ -119,11 +119,13 @@ internal fun TabletopSeatPlate(
     active: Boolean,
     shielded: Boolean,
     status: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    accessibleName: String = name,
+    stackLabel: Boolean = false
 ) {
     Surface(
         modifier = modifier.semantics(mergeDescendants = true) {
-            contentDescription = TabletopMaterials.label(seatIndex, name, status, shielded)
+            contentDescription = TabletopMaterials.label(seatIndex, accessibleName, status, shielded)
         },
         color = if (active) Color(0xFF4B6046) else Color(0xFF3D3529),
         contentColor = Color(0xFFFFF1D5),
@@ -132,12 +134,7 @@ internal fun TabletopSeatPlate(
             if (active) Color(0xFFF0D99F) else Color(0xFF937954)),
         shadowElevation = if (active) 4.dp else 1.dp
     ) {
-        Row(
-            modifier = Modifier.heightIn(min = 38.dp)
-                .padding(horizontal = 5.dp, vertical = 5.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        val pawn: @Composable () -> Unit = {
             Box(contentAlignment = Alignment.Center) {
                 Canvas(Modifier.size(26.dp).clearAndSetSemantics { }) {
                     val c = Offset(size.width / 2f, size.height / 2f)
@@ -153,6 +150,31 @@ internal fun TabletopSeatPlate(
                 Text((seatIndex + 1).toString(), color = Color.White,
                     fontWeight = FontWeight.Bold, fontSize = 11.sp)
             }
+
+        }
+        if (stackLabel) {
+            androidx.compose.foundation.layout.Column(
+                modifier = Modifier.heightIn(min = 48.dp).padding(horizontal = 3.dp, vertical = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    pawn()
+                    if (shielded) Text("◆", color = Color(0xFFF6D48D), fontSize = 10.sp)
+                }
+                Text(name, fontSize = 12.sp, maxLines = 2,
+                    overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
+                    fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
+                    color = Color(0xFFFFF0D4))
+            }
+        } else {
+        Row(
+            modifier = Modifier.heightIn(min = 38.dp)
+                .padding(horizontal = 5.dp, vertical = 5.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            pawn()
             Spacer(Modifier.width(4.dp))
             Text(name, modifier = Modifier.weight(1f, fill = false),
                 maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -162,6 +184,8 @@ internal fun TabletopSeatPlate(
                 Spacer(Modifier.width(2.dp))
                 Text("◆", color = Color(0xFFF6D48D), fontSize = 10.sp)
             }
+        }
+
         }
     }
 }
