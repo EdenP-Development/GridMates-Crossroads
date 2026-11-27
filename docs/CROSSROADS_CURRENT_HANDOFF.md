@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-09A strategy preset foundation
+
+AI2-08G both workflows passed (45894542176 rules,45894542225 Android). Added core-only BotStrategyPreset and BotStrategyLineup resolver mapping five provisional descriptive strategies to existing immutable V1/R1–R4. Tests for human exclusion, invalid size, 24 mixed-policy convergence races and checkpoint/rematch preservation. No new policies, difficulty ranking, UI, LAN, runtime defaults or save schema changes. CI pending. Design rationale docs/AI2_09A_STRATEGY_PRESETS.md. Next calibrate difficulty separately from strategy, inspect fairness and mischief behavior, retain physical QA checkpoint. No merge/release.
+
+---
+
 # Active checkpoint — AI2-08G QA preview acceptance and repository sync
 
 AI2-08F both workflows passed (45893695980 rules,45893696070 Android), QA1900 artifact 15152852006, 20277538 bytes. Added Android JVM regression tests for forced V5 course selection and distinct title, QA registry recovery, classic checkpoint preservation, preview backup roundtrip and unavailable public registry rejecting without erasing checkpoint. Tests awaiting exact-head CI. No runtime changes. Physical review of scenery, paths, target encounters, install-over, resume and LAN remains outstanding. Legacy V1 default, no public release. Next: difficulty/personalities design and starting-position fairness experiment; retain previous checkpoints and draft PR.
