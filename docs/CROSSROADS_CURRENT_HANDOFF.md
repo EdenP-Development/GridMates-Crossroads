@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-13E conservative finish opportunity evaluator
+
+AI2-13D both workflows passed (45957993226 rules,45957993347 Android). Inspected GameSession progress, landing, route commitment and equal-round finish logic: uninterrupted movement reaches finish before landing events; later finishers must strictly exceed existing leader excess. Added pure BotFinishOpportunityV1 corridor check (max eight spaces, rejects forks/cycles/dead ends) and direct success counts including optional leader excess, tie returns no preference. Counts are lower bounds; failed direct movement can land on events, and future opponent turns are not modeled. No engine dispatch or public changes. Tests committed; CI pending. Next verify and run controlled same-state decision comparisons before registering any difficulty refinement. Existing IDs/defaults/saves/UI/LAN unchanged. No merge/release.
+
+---
+
 # Active checkpoint — AI2-13D Scout difficulty evidence and travel odds foundation
 
 AI2-13C rules 45957389443 passed; Android 45957389394 in progress. Actual ZIP 15178694083 inspected in container: 14400 actor rows. Relaxed beats Standard 133/240 and 135/480; Advanced vs Standard 120/240 and 120/480; Advanced vs Relaxed 107/240 and 110/480. Standard/Advanced focal vs Relaxed all 2400 matched actor rows equal on outcomes and counts. No calibrated ordering; do not expose tiers. Evidence docs/AI2_13D_SCOUT_DIFFICULTY_EVIDENCE.md. Added pure movement-only travel odds helper and tests, not connected to engine; no hidden RNG. Next validate helper and design controlled travel/encounter decision comparison, checking encounter and final-round assumptions. Existing IDs/defaults/saves/UI/LAN unchanged; no merge/release. CI pending.
