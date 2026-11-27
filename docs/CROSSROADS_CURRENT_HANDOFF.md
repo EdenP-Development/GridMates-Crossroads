@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-12C executable Strategist personality
+
+AI2-12A rules 45952327560 passed; Android cancelled. AI2-12B rules 45952743688 and Android 45952743642 still running at inspection. Added immutable STRATEGIST_V1 dispatch for independent travel, route and target decisions with R3 encounter fallback; classic rules fall back to R4 chain. Prior IDs, defaults and preset mappings unchanged. Added 96 four-seat mixed-personality matches across 24 seeds and four rotations on convergence V02 with checkpoint codec, replay, exact decision and rematch checks. Core/Android CI pending. Next verify this integration and run dedicated Strategist competitive calibration; then select roster and develop difficulty. Guardian evidence preserved in AI2_12B_GUARDIAN_EVIDENCE.md; no production release, signing, UI or LAN changes.
+
+---
+
 # Active checkpoint — AI2-12B Guardian evidence and analysis support
 
 AI2-11D rules 45952022460 passed; Android 45952022540 cancelled. Actual artifact 15176704165 inspected with Python csv: 14400 actor rows, 4320 Guardian focal rows; 855/1440 two-seat wins, 840/2880 four-seat wins, 13282/24591 Push, 432/5536 Brace. Evidence docs/AI2_12B_GUARDIAN_EVIDENCE.md. Guardian remains candidate for later preset promotion, no difficulty claim. Extended standalone ZIP summarizer to recognize guardian_competition.csv and guardian_seat grouping. Latest AI2-12A rules 45952327560 and Android 45952327607 still running at inspection; no Strategist integration until its core tests pass. No engine or preset changes. Next verify CI and integrate Strategist under immutable ID; dedicated competition, roster review, difficulty and UI follow. No merge/release.

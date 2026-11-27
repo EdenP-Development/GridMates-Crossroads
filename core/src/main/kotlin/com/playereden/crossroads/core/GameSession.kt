@@ -437,6 +437,7 @@ class GameSession(
         BotPolicyVersion.GAMBLER_V1 -> gamblerBotStep()
         BotPolicyVersion.GAMBLER_V2 -> gamblerBotStep(refined = true)
         BotPolicyVersion.GUARDIAN_V1 -> guardianBotStep()
+        BotPolicyVersion.STRATEGIST_V1 -> strategistBotStep()
         }
     }
 
@@ -519,6 +520,54 @@ class GameSession(
                     chooseRoute(chosen.id)
                 }
                 else -> error("Unexpected Guardian phase")
+            }
+        } finally {
+            insideBotCommand = false
+        }
+        record(MatchAction(MatchActionKind.BOT))
+    }
+
+    private fun strategistBotStep() {
+        require(players[currentIndex].isBot && phase != Phase.FINISHED)
+        if (!playtestRules || phase == Phase.ENCOUNTER) {
+            adaptiveTargetBotStep()
+            return
+        }
+        val awareness = BotRaceAssessment.assess(currentIndex,
+            players.mapIndexed { seat, player ->
+                BotRacerView(seat, distanceToFinish(player.position), player.shield)
+            }, distanceToFinish(board.start), finalRoundPending)
+        insideBotCommand = true
+        try {
+            when (phase) {
+                Phase.ROLL -> if (StrategistPersonalityV1.shouldPush(awareness))
+                    rollBold() else rollSteady()
+                Phase.ROUTE -> {
+                    val fork = board.forkAt(players[currentIndex].position)
+                    val chosen = availableRoutes().minWith(compareBy<BoardNode> { route ->
+                        val risk = fork?.choices?.firstOrNull { it.to == route.id }?.risk
+                        val horizon = BotRouteLookahead.inspect(board, route.id, remainingSteps)
+                        val base = AdaptiveBotRouteR2.score(distanceToFinish(route.id), risk,
+                            horizon, awareness, routeEncounterAvailable, steadyTravelChosen &&
+                                DecisionLab.supportsSteadyShelterBonus(board))
+                        StrategistPersonalityV1.routeScore(base, horizon, awareness, routeEncounterAvailable)
+                    }.thenBy { it.id })
+                    chooseRoute(chosen.id)
+                }
+                Phase.TARGET -> {
+                    val candidates = availableTargets().map { seat ->
+                        val player = players[seat]
+                        val retreatIndex = (player.traversed.lastIndex - pendingPrank).coerceAtLeast(0)
+                        val distance = distanceToFinish(player.position)
+                        val after = if (player.shield) distance else
+                            distanceToFinish(player.traversed[retreatIndex])
+                        BotTargetView(seat, distance, player.shield, after)
+                    }
+                    val target = StrategistPersonalityV1.chooseTarget(candidates)
+                    if (target == null) { finishTurn(); revision++ }
+                    else chooseTarget(target)
+                }
+                else -> error("Unexpected Strategist phase")
             }
         } finally {
             insideBotCommand = false

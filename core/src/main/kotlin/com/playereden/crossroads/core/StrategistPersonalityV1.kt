@@ -1,6 +1,6 @@
 package com.playereden.crossroads.core
 
-/** Unregistered tactical personality candidate. No access to hidden outcomes. */
+/** Frozen tactical personality policy. No access to hidden outcomes. */
 internal object StrategistPersonalityV1 {
     fun shouldPush(race: BotRaceAwareness): Boolean {
         val gap = race.gapToLeader ?: 0
