@@ -809,9 +809,13 @@ private fun CrossroadsApp(
         revision++
     }
 
-    fun rematch() {
+    fun rematch(rotateStarter: Boolean = false) {
         val current = session ?: return
         if (current.phase != Phase.FINISHED) return
+        if (rotateStarter && (lanRole != LanRole.OFFLINE ||
+            !OfflineOpponentPreview.enabled(BuildConfig.DEBUG,
+                current.players.count { !it.isBot } != 1 || current.players[0].isBot,
+                current.board.id))) return
         if (lanRole == LanRole.HOST) {
             if (!lanConnected) return
             val next = current.freshRematch(java.util.Random().nextInt())
@@ -822,7 +826,7 @@ private fun CrossroadsApp(
             lanHost?.publish(next.checkpoint(activeMatchId, matchStartedAtEpochMillis))
             revision++
         } else if (lanRole == LanRole.OFFLINE) {
-            beginOfflineRace(current.freshRematch(java.util.Random().nextInt()))
+            beginOfflineRace(current.freshRematch(java.util.Random().nextInt(), rotateStarter))
         }
     }
 
@@ -1862,6 +1866,16 @@ private fun CrossroadsApp(
                                     (lanRole != LanRole.HOST || lanConnected),
                                 modifier = Modifier.fillMaxWidth()
                             )
+                            if (lanRole == LanRole.OFFLINE &&
+                                OfflineOpponentPreview.enabled(BuildConfig.DEBUG,
+                                    game.players.count { !it.isBot } != 1 || game.players[0].isBot,
+                                    game.board.id)) {
+                                TabletopUtilityButton(
+                                    text = "Race again · rotate starter (QA)",
+                                    onClick = { rematch(rotateStarter = true) },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
