@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-15B CI-verified seat fairness evidence
+
+AI2-15A rules 45971098146 passed; Android 45971098149 in progress at inspection. Direct job 140411454642 step 11 JSON retrieved. 5760 matches; winners by seat: 2 players [1138,782], 3 [659,692,569], 4 [502,506,494,418]. First arrivals [1271,649], [834,632,454], [689,508,424,299]. Changed winners 133/214/304, ties29/74/72. Equal aggregate roll counts per seat. Two-seat residual warrants focused mechanism audit; no gameplay change. Evidence docs/AI2_15B_STARTING_SEAT_EVIDENCE.md. Next inspect shared RNG, state visibility, target timing and options for rotating first-player identity in versioned offline QA. Physical scoreboard QA remains outstanding. No merge/release.
+
+---
+
 # Active checkpoint — AI2-15A controlled starting-seat fairness audit
 
 AI2-14E rules 45970515482 passed; Android 45970515427 in progress at inspection. Added 5760 homogeneous-policy Lab v5 matches (5 courses,6 frozen standard policies,2/3/4 seats,64 seeds). Record first arrival, actual winner, tie receipt, finishers, actions and roll counts per seat. CI validator checks complete matrix and emits aggregate/policy/course breakdowns in logs and archived JSON. First-arrival versus winner is a within-match descriptive comparison, not a counterfactual v4 experiment. Shared seed and course dependence prevents treating all samples as independent. No fairness result yet; no gameplay or save change. Next inspect directly retrieved CI summary and assess tie/turn-order mechanisms before proposing changes. Physical scoreboard QA outstanding. No merge/release.
