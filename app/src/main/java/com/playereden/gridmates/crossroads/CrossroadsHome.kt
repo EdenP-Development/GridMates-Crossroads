@@ -179,7 +179,7 @@ private fun HomeCourseCard(id: String, label: String, selected: Boolean,
 internal fun CrossroadsHomeScreen(
     wins: Int,
     completed: Int,
-    onStart: (Int, Boolean, Map<Int, BotOpponentConfigurationV1>) -> Unit,
+    onStart: (Int, Boolean, Map<Int, BotOpponentConfigurationV1>, Int) -> Unit,
     selectedCourseId: String,
     onCourseChange: (String) -> Unit,
     boardLook: CrossroadsBoardLook,
@@ -200,6 +200,7 @@ internal fun CrossroadsHomeScreen(
     var seats by remember { mutableIntStateOf(2) }
     var passAndPlay by remember { mutableStateOf(false) }
     val opponentChoices = remember { mutableStateMapOf<Int, BotOpponentConfigurationV1>() }
+    var starterChoice by remember { mutableIntStateOf(0) }
     var opponentSeat by remember { mutableStateOf<Int?>(null) }
     val effectiveBoardId = CrossroadsExperimentalMode.boardId(selectedCourseId, playtestRules, fairFinishExperiment)
     val opponentPreview = OfflineOpponentPreview.enabled(BuildConfig.DEBUG, passAndPlay, effectiveBoardId)
@@ -383,6 +384,14 @@ internal fun CrossroadsHomeScreen(
         )
         if (showExtraOptions) {
         if (opponentPreview) {
+            HomeSectionHeading("STARTING PLAYER · QA")
+            TabletopUtilityButton(
+                text = OfflineStartingSeatPreview.label(starterChoice, seats),
+                onClick = { starterChoice = OfflineStartingSeatPreview.nextChoice(starterChoice, seats) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text("Tap to cycle: You, other players, or Random", color = Muted,
+                style = MaterialTheme.typography.bodySmall)
             HomeSectionHeading("AI OPPONENTS · QA")
             Text("Optional · Lab v5 only", color = Muted, style = MaterialTheme.typography.bodySmall)
             for (seat in 1 until seats) {
@@ -547,8 +556,14 @@ internal fun CrossroadsHomeScreen(
                     effectiveBoardId, seats, opponentChoices)?.let { summary ->
                     Text(summary, style = MaterialTheme.typography.labelMedium, color = Ink)
                 }
+                if (opponentPreview && OfflineStartingSeatPreview.normalized(starterChoice, seats) != 0) {
+                    Text(OfflineStartingSeatPreview.label(starterChoice, seats),
+                        style = MaterialTheme.typography.labelMedium, color = Ink)
+                }
                 TabletopStartRaceButton(
-                    onClick = { onStart(seats, passAndPlay, if (opponentPreview) opponentChoices.toMap() else emptyMap()) },
+                    onClick = { onStart(seats, passAndPlay,
+                        if (opponentPreview) opponentChoices.toMap() else emptyMap(),
+                        if (opponentPreview) starterChoice else 0) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }

@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-16C offline QA starting-player selection
+
+AI2-16B rules run 46067979922 JVM and historical replay steps passed, Android 46067979921 in progress at inspection. Added setup-only starting choice cycle (You, each active opponent, Random) in existing QA More Options, compact nondefault summary, normalized invalid inactive seats, random draw only at new match creation and separate from engine RNG. Gated same debug Solo v5 eligibility as opponents; public/pass-and-play/other rules default zero. MainActivity passes resolved startingSeat to engine; checkpoint saves actual seat. Rematches still preserve original starter, no rotation yet. Added adapter JVM tests. CI pending; Android recovery backup and rotated rematch next, physical accessibility/layout review required. No production/LAN changes. No merge/release.
+
+---
+
 # Active checkpoint — AI2-16B replay-authoritative flexible starting seat
 
 AI2-16A rules 46067441758 passed; Android 46067441773 in progress at inspection. Integrated StartingOrderV1 in GameSession, default zero, nonzero only Lab v5. Checkpoint optional startingSeat defaults zero and omitted from legacy serialization; strict older readers reject unknown field rather than reinterpret. Restore passes startingSeat; both equal-round completion boundaries and receipt use cyclic order. Rematch preserves start for now; no automatic rotation or Android control. Added 108 mixed human/Guardian races (nine configurations x12 seeds), verify turn order, equal roll counts, mid/end replay, receipt, roster and rematch; invalid/tampered starts rejected. CI pending; historical replay gate and Android backup/rotation controls next. No public/LAN/release changes. Physical QA outstanding. No merge/release.
