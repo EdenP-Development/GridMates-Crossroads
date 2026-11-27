@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-10C Gambler competitive calibration
+
+AI2-10B both workflows passed (45920567676 rules,45920567753 Android); QA1912 artifact 15163653947, 20280251 bytes. Added dedicated 3600-match Gambler competition (five courses including Woven Balance Preview, five existing opposing policies, two/four seats, 24 seeds, every Gambler starting seat). One Gambler versus homogeneous opposing policy per match; not a full six-policy round robin. Exact action receipts by actor seat, win flag, pacing, codec/replay and policy assignments; 12000 actor rows. Original historical cohorts remain fixed. CI pending, no competitive results yet. Exact earlier calibration CSV analysis still outstanding. No runtime, default, Android UI, LAN or signing changes. Next examine actual results by course and seat before assigning difficulty or adjusting personalities. Physical QA outstanding, no merge/release.
+
+---
+
 # Active checkpoint — AI2-10B executable Gambler policy
 
 AI2-10A both workflows passed (45919107891 rules,45919107983 Android). Added immutable GAMBLER_V1 identifier and strategy preset, dispatch for visible-state travel and encounter decisions; route and targeting reuse R4 chain, classic rules retain legacy behavior through fallback except existing R4 target behavior. Explicitly pinned original five-policy cohorts in mixed/four-seat tournaments, balance diagnostics and both calibration tests. Added 24 mixed Gambler/Scout convergence races, opening Push receipt, midpoint codec/replay, continued exact decisions and rematch tests. CI pending. No Android UI, LAN or default policy change. Exact calibration CSV analysis still outstanding. Next run dedicated Gambler competition and behavior comparisons. No merge/release.

@@ -77,6 +77,7 @@ jobs:
             core/build/reports/ai2-comparison/woven_convergence_experiment.csv
             core/build/reports/ai2-comparison/strategy_calibration.csv
             core/build/reports/ai2-comparison/exact_strategy_calibration.csv
+            core/build/reports/ai2-comparison/gambler_competition.csv
             ${{ runner.temp }}/crossroads-history/*.json
           if-no-files-found: error
           retention-days: 30
