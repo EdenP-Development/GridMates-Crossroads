@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-13I Guardian competitive evidence
+
+AI2-13H rules 45961604660 passed; Android 45961604703 in progress at inspection. Actual artifact 15181063442 opened locally; 9600 actor rows, 2880 validated matches. Candidate 507/960 and 524/1920 wins; above equal-share on all five courses. Seed-cluster bootstrap intervals 51.56–54.17% and 26.51–28.13%. Evidence docs/AI2_13I_GUARDIAN_FINISH_EVIDENCE.md. Retain as Advanced Guardian preview candidate; no resolver/UI promotion yet. Scout tiers not calibrated; next separate calibrated-preview eligibility from experimental resolver and investigate Relaxed Guardian. Seat fairness and physical QA outstanding. No runtime, defaults, save schema, LAN, signing or release changes.
+
+---
+
 # Active checkpoint — AI2-13H Guardian finish candidate competitive calibration
 
 AI2-13G rules 45961046813 passed, Android 45961046896 in progress at inspection. Added dedicated Guardian finish candidate vs Guardian V1 tournament: five courses, 96 seeds, 2/4 seats, all focal positions = 2880 matches, 9600 actor rows. Exact decisions, winner flags, snapshot replay; CSV upload and summarizer support. Equal-share benchmarks 50% and 25% are descriptive, not evidence of independent samples; shared seeds and seat rotations require paired analysis. Four-seat candidate plays against three Standard opponents. CI pending, no measured strength claim. Candidate remains unavailable in difficulty resolver/UI. Next verify CI, inspect actual report or verified CI logs, compare wins by course/seat/seed and decision exposures before any promotion. Existing policy IDs, saves, defaults, LAN, signing and public releases unchanged. No merge/release.
