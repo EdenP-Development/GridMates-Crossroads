@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-13N verified Guardian tier results
+
+AI2-13M both workflows passed (45964646619 rules,45964646684 Android). Directly retrieved job 140390312643 step 10 JSON: 12960 rows,3600 matches. Relaxed vs Standard 131/240 and113/480; finish vs Standard128/240 and136/480; finish vs Relaxed120/240 and148/480. Reverse four-seat Standard vs Relaxed131/480, Standard vs finish104/480, Relaxed vs finish95/480. No reliable three-tier ordering; Relaxed stays excluded. See docs/AI2_13N_GUARDIAN_TIER_DECISION.md. Recommend prioritizing offline QA personality selector and fairness, then physical feedback rather than indefinitely tuning all 18 combinations. Existing Advanced Guardian remains experimental preview. No runtime/default/save/UI/LAN changes. Prior numerical claims not independently reverified; direct CI evidence used for this checkpoint. No merge/release.
+
+---
+
 # Active checkpoint — AI2-13M Guardian three-tier calibration
 
 AI2-13L both workflows passed (45963815906 rules,45963815927 Android). Added Guardian difficulty tournament: five courses, 24 seeds, three unordered two-seat pairs with both starting positions (720 matches), six ordered four-seat focal/opponent pairs with all positions (2880 matches), total 3600 matches / 12960 actor rows. Avoid duplicate reversed two-seat simulations; four-seat groups remain asymmetric. Exact decision counts and replay checks. New standard-library Python validator checks complete matrix, unique seats, one winner, policy assignments and action totals; prints pair/course results in CI and archives JSON plus CSV. CI pending; no numerical outcome or strength claim. Next retrieve actual CI log summary, assess difficulty ordering and calibrate further if necessary. Prior numerical evidence carried forward, not independently reverified. No preview eligibility, runtime, save schema, defaults, UI, LAN, signing or release changes.
