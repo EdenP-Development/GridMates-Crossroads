@@ -9,7 +9,7 @@ from zipfile import ZipFile
 
 KEYS = ("steady", "push", "supplies", "cover", "gamble", "brace")
 FILES = ("gambler_competition.csv", "gambler_refinement.csv",
-         "exact_strategy_calibration.csv", "guardian_competition.csv", "strategist_competition.csv")
+         "exact_strategy_calibration.csv", "guardian_competition.csv", "strategist_competition.csv", "scout_difficulty_competition.csv")
 
 
 def summarize(archive):
@@ -45,8 +45,8 @@ def summarize(archive):
                     if won not in (0, 1):
                         raise ValueError("Invalid winner flag")
                     group["wins"] += won
-                    focal = row.get("gambler_seat", row.get("g2_seat", row.get("guardian_seat", row.get("strategist_seat"))))
-                    key = (row["course"], row.get("opponent", ""),
+                    focal = row.get("gambler_seat", row.get("g2_seat", row.get("guardian_seat", row.get("strategist_seat", row.get("scout_seat")))))
+                    key = (row["course"], row.get("opponent", "") + ":" + row.get("focal_policy", ""),
                            seats, row["seed"], focal)
                     matches_by_id[key].append((int(row["actor_seat"]), won))
             for key, records in matches_by_id.items():

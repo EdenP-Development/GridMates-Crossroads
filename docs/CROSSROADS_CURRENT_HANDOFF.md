@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-13C Scout difficulty calibration
+
+AI2-13B rules 45956957612 and Android 45956957646 in progress at inspection. Added Scout tier competitive suite: five courses, six ordered distinct tier pairs, two/four seats, 24 seeds and every focal position = 4320 matches, 14400 actor records. Exact route risk/decision counts, winner flags and checkpoint replay checks; two-seat reversed ordered comparisons duplicate match lineups and must not be treated as independent evidence. Four-seat one focal versus three same-tier opponents. CSV includes focal policy and seat for correct grouping. Updated report upload and ZIP summarizer match keys. No runtime changes, tier ordering claims, UI, defaults, save format, LAN or signing changes. CI pending; next inspect actual artifact and quantify matched outcomes/route differences before expanding tiers. No merge/release.
+
+---
+
 # Active checkpoint — AI2-13B Scout difficulty pilot
 
 AI2-13A rules 45956799645 and Android 45956799628 were in progress at inspection. Added immutable SCOUT_RELAXED_V1 and SCOUT_ADVANCED_V1 IDs, route-only adjustment dispatch, Standard unchanged (R2). Other phases fall back to exact R2 behavior; target adjustments not wired. New BotOpponentPolicyV1 resolver supports all six Standard personalities and only Scout nonstandard tiers, rejects unsupported pairs. Added 72 three-seat mixed-tier replay matches and resolver tests. CI pending; no claim of difficulty ordering. Next verify all tests and calibrate actual route-choice differences and strength before extending other personalities. No public UI, default, LAN, checkpoint schema or signing change. No merge/release.
