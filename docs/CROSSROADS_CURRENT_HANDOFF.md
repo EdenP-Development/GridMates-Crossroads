@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-13G Guardian finishing candidate
+
+AI2-13F rules 45960365286 passed, Android 45960365351 in progress at inspection. Actual ZIP artifact 15180751859 inspected with Python csv: 24876 rolls, 1215 eligible, 270 positive direct gains, 74 final-round positive gains. Guardian 62/203 improvements, all to Push, 37 final-round. Evidence docs/AI2_13G_FINISH_AUDIT_EVIDENCE.md. Added GUARDIAN_FINISH_CANDIDATE_V1 immutable policy, uses direct finish recommendation only on eligible roll states with unequal direct counts, otherwise retains Guardian behavior. Added 96 mixed Guardian candidate replay matches and recommendation assertions. CI pending. No calibrated strength claim; not registered in difficulty resolver. Next head-to-head tournament and actual results. No default, UI, save schema, LAN, signing or release change.
+
+---
+
 # Active checkpoint — AI2-13F controlled finish opportunity audit
 
 AI2-13E both workflows passed (45958881490 rules,45958881630 Android). Added internal read-only GameSession.directFinishOpportunity() for Lab roll phase using current final-round leader excess; no policy dispatch change. Added 1440 homogeneous personality races across five courses, six selected personalities, 2/4 seats and 24 seeds, paired with unobserved control sessions. Every action checks exact receipt and snapshot parity; CSV records every roll, eligible corridor, direct success counts, recommendation and potential gain in six movement outcomes. Upload configured. CI pending; no quantitative outcome claims. Next inspect actual CSV or CI summary; assess opportunity frequency and direct gains before registering refined Advanced policy. No save schema, default, UI, LAN, signing or release change.
