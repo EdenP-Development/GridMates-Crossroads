@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-11A Guardian personality foundation
+
+AI2-10E workflows 45950432133 rules and 45950432144 Android still in progress at inspection; no G2 outcome claims. Added unregistered pure GuardianPersonalityV1 candidate: cautious travel with catch-up thresholds, shield-aware shelter, hazard decisions distinguishing shield from steady protection, conditional extra safe-route preference layered on R2 score. Tests cover contrasts, conditional route scoring and 6400 visible race states with two encounter pools and both steady flags. No executable ID, dispatch, preset remapping, save format, UI or default changes. CI pending. Next verify G2 results from actual CSV and integrate Guardian under separate immutable ID only after tests. No merge/release. Physical QA and difficulty/fairness outstanding.
+
+---
+
 # Active checkpoint — AI2-10E executable Gambler refinement comparison
 
 AI2-10D rules 45950054876 passed; Android 45950054885 in progress at inspection. Added GAMBLER_V2 immutable ID and dispatch using the V2 encounter refinement only; travel, routes and targets unchanged, G1 dispatch preserved. No preset remapping. Added 1440 matches (five courses, 2/4 seats, 48 seeds, every G2 seat), one G2 versus G1 opponents, 4800 actor rows with exact receipts and checkpoint replay. CSV reporting added. CI pending. Next inspect actual CSV for brace frequency, win rates, course/seat exposure and pacing before adopting. Previous QA1914 verified. No UI/default/LAN/signing changes, no merge/release. Physical acceptance outstanding.
