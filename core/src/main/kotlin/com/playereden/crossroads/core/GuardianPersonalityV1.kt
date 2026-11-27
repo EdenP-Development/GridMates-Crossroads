@@ -1,6 +1,6 @@
 package com.playereden.crossroads.core
 
-/** Unregistered defensive personality candidate. Visible state only. */
+/** Frozen defensive personality policy. Visible state only. */
 internal object GuardianPersonalityV1 {
     fun shouldPush(race: BotRaceAwareness): Boolean {
         val gap = race.gapToLeader ?: 0

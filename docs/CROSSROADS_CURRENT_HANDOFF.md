@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-11C executable Guardian personality
+
+AI2-11B rules 45950998925 passed, Android 45950998875 in progress at inspection; AI2-11A rules 45950620705 passed, Android cancelled. G2 competition core suite passed but numerical CSV results not yet inspected in this turn. Added immutable GUARDIAN_V1 dispatch with independent travel, encounter and route preference, R4 targeting fallback; previous policy and preset mappings unchanged. Added 48 mirrored Guardian/Gambler integration matches on convergence V02 with distinct opening receipt, midpoint codec/recovery, continued exact decisions and rematch checks. Exact-head CI pending. Next analyze G2 CSV and run Guardian dedicated competitive calibration before any preset remapping. No public UI, LAN, default, signing or release changes. Physical QA remains outstanding.
+
+---
+
 # Active checkpoint — AI2-11B reproducible evidence tooling
 
 AI2-10E workflows 45950432133/45950432144 cancelled after new head; AI2-11A workflows 45950620705/45950620713 still running at inspection. Existing concurrency cancels superseded runs. Avoid another core/app change until current combined CI completes. Rechecked actual AI2-10C artifact 15176076243 locally: Gambler wins 576/1200 and 556/2400, 17444 Push / 20497 travel, 9449 Gamble / 0 Brace; prior exact calibration Guardian/Strategist aggregates match. Added standalone standard-library tools/summarize_ai2_competition.py for repeatable ZIP evidence summaries and seat/winner validation, outside current CI trigger paths. No engine changes. Next inspect completed G2 artifact and validate Guardian before registration. No merge/release.

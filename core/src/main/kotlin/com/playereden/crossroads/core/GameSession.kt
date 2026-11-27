@@ -436,6 +436,7 @@ class GameSession(
         BotPolicyVersion.ADAPTIVE_V2_R4 -> adaptiveTargetBotStep()
         BotPolicyVersion.GAMBLER_V1 -> gamblerBotStep()
         BotPolicyVersion.GAMBLER_V2 -> gamblerBotStep(refined = true)
+        BotPolicyVersion.GUARDIAN_V1 -> guardianBotStep()
         }
     }
 
@@ -481,6 +482,43 @@ class GameSession(
                 else GamblerPersonalityV1.chooseEncounter(options,
                     awareness, remainingSteps, steadyTravelChosen, pendingPushHazardBonus)
                 chooseEncounter(choice)
+            }
+        } finally {
+            insideBotCommand = false
+        }
+        record(MatchAction(MatchActionKind.BOT))
+    }
+
+    private fun guardianBotStep() {
+        require(players[currentIndex].isBot && phase != Phase.FINISHED)
+        if (!playtestRules || phase == Phase.TARGET) {
+            adaptiveTargetBotStep()
+            return
+        }
+        val awareness = BotRaceAssessment.assess(currentIndex,
+            players.mapIndexed { seat, player ->
+                BotRacerView(seat, distanceToFinish(player.position), player.shield)
+            }, distanceToFinish(board.start), finalRoundPending)
+        insideBotCommand = true
+        try {
+            when (phase) {
+                Phase.ROLL -> if (GuardianPersonalityV1.shouldPush(awareness))
+                    rollBold() else rollSteady()
+                Phase.ENCOUNTER -> chooseEncounter(GuardianPersonalityV1.chooseEncounter(
+                    availableEncounterChoices(), awareness, remainingSteps, steadyTravelChosen))
+                Phase.ROUTE -> {
+                    val fork = board.forkAt(players[currentIndex].position)
+                    val chosen = availableRoutes().minWith(compareBy<BoardNode> { route ->
+                        val risk = fork?.choices?.firstOrNull { it.to == route.id }?.risk
+                        val base = AdaptiveBotRouteR2.score(distanceToFinish(route.id), risk,
+                            BotRouteLookahead.inspect(board, route.id, remainingSteps),
+                            awareness, routeEncounterAvailable, steadyTravelChosen &&
+                                DecisionLab.supportsSteadyShelterBonus(board))
+                        GuardianPersonalityV1.routeScore(base, risk, awareness, routeEncounterAvailable)
+                    }.thenBy { it.id })
+                    chooseRoute(chosen.id)
+                }
+                else -> error("Unexpected Guardian phase")
             }
         } finally {
             insideBotCommand = false
