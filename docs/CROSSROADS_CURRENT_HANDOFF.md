@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-12E selected personality roster
+
+AI2-12D rules 45954691900 passed; Android 45954691869 in progress at inspection. Actual ZIP artifact 15178202767 inspected via Python csv; 16800 actor records, 883/1680 and 847/3360 Strategist wins, 19453/28651 Push, 394/12311 Brace. Evidence docs/AI2_12E_STRATEGIST_EVIDENCE.md. Added separate BotPersonalityV1 and lineup resolver for selected six-personality roster; historical BotStrategyPreset remains unchanged. Added roster/seat validation tests. No UI wiring, default, engine dispatch, save schema or LAN changes. CI pending. Next design versioned difficulty settings and evaluate fairness; physical QA outstanding. No merge/release.
+
+---
+
 # Active checkpoint — AI2-12D Strategist competitive calibration
 
 AI2-12C both workflows passed (45953155025 rules,45953154953 Android); 96 mixed four-seat replay matches verified. Added 5040 dedicated Strategist focal matches (five courses, seven opponents including Guardian V1 and Gambler V1, 2/4 seats, 24 seeds, every focal seat), 16800 actor records, exact decision counts and checkpoint replay checks. Original cohorts unchanged; one focal vs homogeneous opposing policy, not full mixed roster tournament. CSV upload and standalone summary utility updated. CI pending; no numerical results yet. Next inspect actual ZIP bytes or CI logs and select roster; evaluate starting-position fairness, difficulty and Android customization. No runtime, defaults, preset, save, LAN, signing or publication changes. Physical QA remains outstanding.
