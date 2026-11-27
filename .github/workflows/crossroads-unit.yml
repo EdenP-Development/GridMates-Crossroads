@@ -59,6 +59,11 @@ jobs:
           cp core/src/test/kotlin/com/playereden/crossroads/core/HistoricalBotReplayTest.kt legacy-reference/core/src/test/kotlin/com/playereden/crossroads/core/HistoricalBotReplayTest.kt
           CROSSROADS_HISTORY_MODE=generate gradle -p legacy-reference --no-daemon :core:test --tests '*HistoricalBotReplayTest' --console=plain
           CROSSROADS_HISTORY_MODE=verify gradle --no-daemon :core:test --tests '*HistoricalBotReplayTest' --rerun-tasks --console=plain
+      - name: Validate and display Guardian tier results
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/summarize_guardian_tiers.py core/build/reports/ai2-comparison/guardian_difficulty_competition.csv | tee core/build/reports/ai2-comparison/guardian_difficulty_summary.json
       - name: Upload AI baseline and historical fixtures
         uses: actions/upload-artifact@v4
         with:
@@ -84,6 +89,8 @@ jobs:
             core/build/reports/ai2-comparison/scout_difficulty_competition.csv
             core/build/reports/ai2-comparison/finish_opportunity_audit.csv
             core/build/reports/ai2-comparison/guardian_finish_competition.csv
+            core/build/reports/ai2-comparison/guardian_difficulty_competition.csv
+            core/build/reports/ai2-comparison/guardian_difficulty_summary.json
             ${{ runner.temp }}/crossroads-history/*.json
           if-no-files-found: error
           retention-days: 30
