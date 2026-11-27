@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-10A Gambler decision foundation
+
+AI2-09C rules 45918709240 passed; Android 45918709219 in progress at inspection. Added pure GamblerPersonalityV1 candidate travel and encounter heuristics and legality/contrast tests. Opening/midgame Push when gap >= -2; preserve near safe finish unless final round; shelter supplies unless substantial lead with defensive need; hazard Gamble when visible upside or close race. These are uncalibrated heuristics, not demonstrated difficulty. No registration, dispatch, serialized ID, preset mapping, RNG, UI or LAN changes yet. Prior tests use enum entries with fixed matrix sizes; pin historical comparison cohorts before adding new executable policy. Exact calibration CSV numerical analysis outstanding. CI pending. Next integrate separately versioned policy and run mixed competition with exact receipts. No merge/release.
+
+---
+
 # Active checkpoint — AI2-09C exact decision receipts
 
 AI2-09B both CI passed (45916504120 rules,45916504122 Android). Added internal ephemeral lastBotDecision receipt captured at nested accepted legal action record; reset on botStep, no serialization, policy reads, RNG changes or additional checkpoint actions. Added 720 exact calibration races across two Woven layouts, five presets, 2–4 seats, 24 seeds, legal action assertions, action count reconciliation and replay receipt/snapshot checks. Prior inferred calibration retained for comparison. Exact CSV uploaded. CI pending. Need inspect actual data before selecting personality or difficulty policies. No UI/LAN/default changes, no merge/release.
