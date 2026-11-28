@@ -135,7 +135,8 @@ internal fun CrossroadsResultsContent(
     elapsedSeconds: Long,
     modifier: Modifier = Modifier,
     finishReceipt: FairFinishReceipt? = null,
-    displayName: (String) -> String = { it }
+    displayName: (String) -> String = { it },
+    displayNarrative: (String) -> String = { it }
 ) {
     val winnerIndex = state.winnerIndex
     val winnerName = winnerIndex?.let { state.players.getOrNull(it)?.name } ?: "A player"
@@ -241,7 +242,7 @@ internal fun CrossroadsResultsContent(
                     Text("${displayName(lastEncounter.actor)} · ${lastEncounter.title}",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold, color = Evergreen)
-                    Text(lastEncounter.outcome,
+                    Text(displayNarrative(lastEncounter.outcome),
                         style = MaterialTheme.typography.bodySmall, color = Earth)
                 }
             }
