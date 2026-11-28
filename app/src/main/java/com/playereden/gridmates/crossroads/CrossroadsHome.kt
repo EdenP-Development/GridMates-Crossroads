@@ -55,6 +55,11 @@ internal fun homeRaceSummary(
     }
 }
 
+/** Keep a selected experimental course explicit even when its picker is closed. */
+internal fun homeQaCourseToggleLabel(expanded: Boolean, experimentalSelected: Boolean): String =
+    if (expanded) "Hide test courses" else if (experimentalSelected)
+        "Test course selected · Show courses" else "Test courses · QA"
+
 /** A short single-line disclosure on compact portrait phones. */
 internal fun homeOptionsToggleLabel(expanded: Boolean): String =
     if (expanded) "Hide more options ↑" else "More options ↓"
@@ -345,8 +350,7 @@ internal fun CrossroadsHomeScreen(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
             ) {
-                Text(if (showQaCourses) "Hide test courses" else if (experimentalSelected)
-                    "Test course selected · Show courses" else "Test courses · QA")
+                Text(homeQaCourseToggleLabel(showQaCourses, experimentalSelected))
             }
             if (showQaCourses) {
         if (regionalCourseId != null) {
