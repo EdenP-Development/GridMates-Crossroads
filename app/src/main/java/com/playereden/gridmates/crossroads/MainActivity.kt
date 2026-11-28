@@ -127,7 +127,7 @@ private fun CrossroadsApp(
 ) {
     val knownBoards = remember(classicBoard, quickBoard, longBoard, regionalBoard, convergenceBoard) {
         val original = listOfNotNull(classicBoard, quickBoard, longBoard, regionalBoard)
-        (original + original.map(DecisionLab::variant) +
+        (if (!BuildConfig.DEBUG) original else original + original.map(DecisionLab::variant) +
             original.map(DecisionLab::variantV2) +
             original.map(DecisionLab::variantV3) +
             original.map(DecisionLab::variantV4) +
@@ -185,14 +185,14 @@ private fun CrossroadsApp(
         )
     }
     var playtestRules by remember {
-        mutableStateOf(initialRecovery.match?.game?.playtestRules ?: false)
+        mutableStateOf(BuildConfig.DEBUG && (initialRecovery.match?.game?.playtestRules ?: false))
     }
     // Only users who explicitly choose Fair Finish start Lab v5.
     // Existing saved Lab v4/v5 games always restore their own version.
     var fairFinishExperiment by remember {
         mutableStateOf(
-            initialRecovery.match?.game?.board?.id?.endsWith(DecisionLab.V5_SUFFIX) == true ||
-                prefs.getBoolean("lab_v5_equal_round_opt_in_v1", false)
+            BuildConfig.DEBUG && (initialRecovery.match?.game?.board?.id?.endsWith(DecisionLab.V5_SUFFIX) == true ||
+                prefs.getBoolean("lab_v5_equal_round_opt_in_v1", false))
         )
     }
     var activeMatchId by remember { mutableStateOf(initialRecovery.match?.matchId ?: "") }
@@ -283,26 +283,27 @@ private fun CrossroadsApp(
     var lanLastPort by remember { mutableIntStateOf(0) }
     var lanLastCode by remember { mutableStateOf("") }
     val nearby = remember(context) {
-        CrossroadsNearby(context) { error ->
+        if (BuildConfig.DEBUG) CrossroadsNearby(context) { error ->
             mainHandler.post { lanMessage = error }
-        }
+        } else null
     }
     LaunchedEffect(lanScreen, lanHost, lanRole) {
+        if (!BuildConfig.DEBUG) return@LaunchedEffect
         when {
             lanRole == LanRole.HOST && lanHost != null -> lanHost?.let {
                 // Keep the room advertised while the game is active so the
                 // same guest can discover it again after a Wi-Fi interruption.
-                nearby.advertise(it.port, it.code.isNotEmpty())
+                nearby?.advertise(it.port, it.code.isNotEmpty())
             }
-            lanScreen == LanScreen.JOIN -> nearby.discover { lanRooms = it }
-            else -> nearby.stop()
+            lanScreen == LanScreen.JOIN -> nearby?.discover { lanRooms = it }
+            else -> nearby?.stop()
         }
     }
     DisposableEffect(nearby) {
         onDispose {
             lanHost?.close()
             lanGuest?.close()
-            nearby.close()
+            nearby?.close()
         }
     }
     val game = session
@@ -375,7 +376,7 @@ private fun CrossroadsApp(
     fun leaveGame() {
         lanHost?.close()
         lanGuest?.close()
-        nearby.stop()
+        nearby?.stop()
         lanHost = null
         lanGuest = null
         lanScreen = LanScreen.NONE
@@ -550,7 +551,7 @@ private fun CrossroadsApp(
         if (lanRole != LanRole.OFFLINE) leaveGame()
         val humans = if (passAndPlay) (0 until seats).toSet() else setOf(0)
         val boardId = CrossroadsExperimentalMode.boardId(
-            selectedCourseId, playtestRules, fairFinishExperiment
+            selectedCourseId, BuildConfig.DEBUG && playtestRules, BuildConfig.DEBUG && fairFinishExperiment
         )
         val newGame = GameSession(knownBoards.getValue(boardId), catalogue, seats = seats,
             seed = java.util.Random().nextInt(), humanIndices = humans,
@@ -562,11 +563,12 @@ private fun CrossroadsApp(
     }
 
     fun startLanHost(requireCode: Boolean, seats: Int) {
+        if (!BuildConfig.DEBUG) return
         if (seats !in 2..4) {
             lanMessage = "Nearby games support two to four participants."
             return
         }
-        if (!nearby.hasWifi()) {
+        if (nearby?.hasWifi() != true) {
             lanMessage = "Connect both phones to the same Wi-Fi before hosting."
             return
         }
@@ -668,7 +670,8 @@ private fun CrossroadsApp(
     }
 
     fun joinLan(host: String, port: Int, code: String, resume: Boolean = false) {
-        if (!nearby.hasWifi()) {
+        if (!BuildConfig.DEBUG) return
+        if (nearby?.hasWifi() != true) {
             lanMessage = "Connect both phones to the same Wi-Fi before joining."
             return
         }
@@ -682,7 +685,7 @@ private fun CrossroadsApp(
         if (!resume || lanGuest == null) {
             lanGuest?.close()
             lanGuest = CrossroadsLanGuest(
-                socketFactory = { nearby.wifiSocket() },
+                socketFactory = { requireNotNull(nearby).wifiSocket() },
                 onState = { checkpoint ->
                     mainHandler.post {
                         if (lanRole == LanRole.GUEST) {
@@ -871,11 +874,11 @@ private fun CrossroadsApp(
     }
 
     BackHandler(enabled = lanScreen != LanScreen.NONE) { leaveGame() }
-    if (lanScreen != LanScreen.NONE) {
+    if (BuildConfig.DEBUG && lanScreen != LanScreen.NONE) {
         CrossroadsLanLobby(
             screen = lanScreen,
             rooms = lanRooms,
-            hostAddress = nearby.address(),
+            hostAddress = nearby?.address().orEmpty(),
             hostPort = lanHost?.port ?: 0,
             hostSeats = lanSeats,
             inviteCode = lanHost?.code.orEmpty(),
@@ -883,7 +886,7 @@ private fun CrossroadsApp(
             busy = lanBusy,
             onHost = { requireCode, seats -> startLanHost(requireCode, seats) },
             onJoin = { host, port, code -> joinLan(host, port, code) },
-            onRefresh = { nearby.discover { lanRooms = it } },
+            onRefresh = { nearby?.discover { lanRooms = it } },
             onExit = { leaveGame() },
             onRejoin = {
                 if (lanLastHost.isNotBlank() && lanLastPort in 1..65535) {
@@ -910,21 +913,27 @@ private fun CrossroadsApp(
                 prefs.edit().putString("board_look_v1", look.name).apply()
             },
             playtestRules = playtestRules,
-            onPlaytestRulesChange = { playtestRules = it },
+            onPlaytestRulesChange = { if (BuildConfig.DEBUG) playtestRules = it },
             fairFinishExperiment = fairFinishExperiment,
             onFairFinishExperimentChange = {
-                fairFinishExperiment = it
-                prefs.edit().putBoolean("lab_v5_equal_round_opt_in_v1", it).apply()
+                if (BuildConfig.DEBUG) {
+                    fairFinishExperiment = it
+                    prefs.edit().putBoolean("lab_v5_equal_round_opt_in_v1", it).apply()
+                }
             },
             onNearbyHost = {
-                lanMessage = null
-                lanRole = LanRole.HOST
-                lanScreen = LanScreen.HOST_SETUP
+                if (BuildConfig.DEBUG) {
+                    lanMessage = null
+                    lanRole = LanRole.HOST
+                    lanScreen = LanScreen.HOST_SETUP
+                }
             },
             onNearbyJoin = {
-                lanMessage = null
-                lanRole = LanRole.GUEST
-                lanScreen = LanScreen.JOIN
+                if (BuildConfig.DEBUG) {
+                    lanMessage = null
+                    lanRole = LanRole.GUEST
+                    lanScreen = LanScreen.JOIN
+                }
             },
             onExportProgress = { exportLauncher.launch("GridMates-Crossroads-backup.json") },
             onImportProgress = {
