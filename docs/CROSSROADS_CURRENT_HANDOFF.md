@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-17A AI roster and difficulty readiness
+
+AI2-16F head f340355 verified: rules run 46094077185 (#457) and Android 46094077169 (#999) both passed. QA1997 physical acceptance remains outstanding. Audited current personality and difficulty resolvers and historical evidence reports AI2-09A, 11D, 12B, 12E, 13A, 13D, 13N, 15B and 15F. Retain six Standard personalities, Guardian Advanced offline preview only, Classic default; no calibrated easy/hard ladder, no public activation. Historical evidence read from repository reports, not independently rerun. Readiness decision and promotion gates recorded in docs/AI2_17A_ROSTER_READINESS.md (464fae0). Next AI2-17B audit actual QA selector labels/help and concise evidence-backed behavior descriptions. No code, save, signing, LAN, merge or release changes.
+
+---
+
 # Active checkpoint — AI2-16F consolidated QA1997 acceptance
 
 AI2-16E head 6a65edc verified: rules 46085455315 (#455), Android 46085455388 (#997), actual PR synthetic merge checkout 36a3d4c. Verified job steps: core/app JVM tests, historical replay, lint, debug APK, unsigned public variant and signer/branding checks passed. QA1997 artifact 15238793637 (expires Dec 12 UTC), package com.playereden.gridmates.crossroads.qa, versionCode 1997; signed identity verified in job 140793883389. Full evidence and 12 unchecked physical acceptance gates in docs/AI2_16F_ANDROID_ACCEPTANCE.md (commit 5c0c968). Archive not independently downloaded; use included receipt for APK hash. Automated starting-seat phase passed; owner physical QA remains open, no release promotion. Next review AI difficulty/fairness evidence and broader player-experience gates, with physical acceptance tracked separately. No production changes, merge, release, signing or LAN changes.
