@@ -1,3 +1,9 @@
+# Active checkpoint — BETA-ITCH-02B owner screenshot audit
+
+Owner confirmed both screenshot batches complete (16 submissions including Sudoku reference and repeated Balance Preview). Consolidated visual observations and prioritized fixes in docs/BETA_1_QA2031_SCREENSHOT_AUDIT.md. Latest prior doc head cc23a87 rules #481 and Android #1036 passed; QA2031 remains screenshot target, version not independently visible. Prioritize camera/dock, bridge geometry, terrain/scenery integration, home/map consistency. Preserve numbered woodland tokens and existing rules/saves. No full race/recovery/LAN/accessibility acceptance inferred from screenshots. Next inspect camera and dock source, reproduce framing and implement focused fixes, then bridge/terrain pass. Public release/signing/security gates still open. No runtime changes or release.
+
+---
+
 # Active checkpoint — BETA-ITCH-02A owner test ready
 
 Owner requested hands-on testing/screenshots and complete recovery documentation before chat fills. Pin QA2031, source fa97c9fe6b6cbe51046ec5dc0866752e069f0534, actual PR merge checkout 5d5d903117f3daf6c74e819861fd74d6953978ad; rules 46098835258 and Android 46098835214 passed. Direct signing logs confirm QA package, code 2031 and existing cert. Artifact 15244109906 expires Dec 12 UTC. Owner test instructions and S01–S12 screenshot plan: docs/BETA_1_OWNER_TEST_QA2031.md (40d7cc9). QA2031 is intentionally pinned; subsequent documentation-only CI builds are not necessary to test. Await owner screenshots, then prioritize reproducible Beta 1 blockers. All physical acceptance still NOT RUN for this candidate. Do not uninstall/clear data; backup first, no downgrade. Public surface audit, Nearby security disposition, private signing branch reconciliation, custody, release acceptance and itch packaging remain open. No runtime changes, main merge, signing changes or publication.
