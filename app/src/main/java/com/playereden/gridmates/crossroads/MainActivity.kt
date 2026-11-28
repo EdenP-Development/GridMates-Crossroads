@@ -948,6 +948,11 @@ private fun CrossroadsApp(
             OfflineOpponentPreview.recordedName(name, state.players.map { it.name },
                 state.players.indices.map { displaySeatName(it) })
 
+        fun displayNarrative(message: String): String =
+            if (showOpponentIdentity) OfflineOpponentPreview.narrative(message,
+                state.players.map { it.name }, state.players.indices.map { displaySeatName(it) })
+            else message
+
         // UI-52: game-first layout, not a scrolling app page. The real board
         // occupies the playfield; status and contextual controls float above it.
         // All actions still invoke the exact existing match/nearby callbacks.
@@ -1046,8 +1051,9 @@ private fun CrossroadsApp(
                 state.players.forEachIndexed { i, player ->
                     val isFocused = i == displayedSeat && state.phase != Phase.FINISHED
                     val seatStatus = when {
-                        state.phase == Phase.FINISHED && state.winnerIndex == i -> "finished first"
-                        state.phase == Phase.FINISHED -> "still on the trail"
+                        state.phase == Phase.FINISHED -> OfflineOpponentPreview.finishedStatus(
+                            state.winnerIndex == i, board.id.endsWith(DecisionLab.V5_SUFFIX),
+                            player.position == board.finish)
                         isFocused && !turnReady -> "currently moving"
                         isFocused -> "current player"
                         else -> "waiting"
@@ -1321,13 +1327,13 @@ private fun CrossroadsApp(
                         state.phase == Phase.ROLL && state.die == null &&
                         state.encounters.isEmpty()
                     val actionNote = if (game.finalRoundPending)
-                            "Final round · ${game.leadingFinisherName} is at Finish. Remaining racers get one last turn."
+                            "Final round · ${game.leadingFinisherName?.let { displayRecordedName(it) } ?: "A racer"} is at Finish. Remaining racers get one last turn."
                         else if (initialInstructions) "Ready for your first move"
                         else turnActionSummary(
                             phase = state.phase,
                             botTurn = state.players[state.playerIndex].isBot,
                             actorName = currentName,
-                            latestAction = state.lastMessage
+                            latestAction = displayNarrative(state.lastMessage)
                         )
                     // Long encounter explanations should not be clipped while
                     // an otherwise empty action dock occupies the bottom.
@@ -1705,7 +1711,7 @@ private fun CrossroadsApp(
                                     Text("Turn ${note.turn} · ${displayRecordedName(note.actor)}",
                                         style = MaterialTheme.typography.labelSmall, color = Bark)
                                     Text(note.title, fontWeight = FontWeight.SemiBold, color = Forest)
-                                    Text(note.outcome, style = MaterialTheme.typography.bodySmall, color = Bark)
+                                    Text(displayNarrative(note.outcome), style = MaterialTheme.typography.bodySmall, color = Bark)
                                 }
                             }
                         }
@@ -1863,6 +1869,7 @@ private fun CrossroadsApp(
                                 elapsedSeconds = finishedElapsedSeconds,
                                 finishReceipt = game.fairFinishReceipt,
                                 displayName = ::displayRecordedName,
+                                displayNarrative = ::displayNarrative,
                                 modifier = Modifier.weight(1f, fill = false)
                             )
                             TabletopPrimaryActionButton(
