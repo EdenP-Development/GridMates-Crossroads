@@ -9,10 +9,13 @@ on:
 permissions:
   contents: read
 jobs:
-  beta:
+  build:
     if: github.repository == 'EdenP-Development/GridMates-Crossroads' && github.ref == 'refs/heads/release/beta-1-candidate' && inputs.reviewed_source == github.sha
     runs-on: ubuntu-latest
     timeout-minutes: 35
+    outputs:
+      beta_code: ${{ steps.compile.outputs.beta_code }}
+      unsigned_sha: ${{ steps.compile.outputs.unsigned_sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -50,12 +53,13 @@ jobs:
           curl --fail --location --silent --show-error --retry 3             "https://raw.githubusercontent.com/PlayerEden/GridMates-Word-Search/183b8845b247a0ca40541f06e517999961600bc9/qa-signing/wordsearch-qa.p12"             --output qa-signing/wordsearch-qa.p12
           echo "cbe50b2b4a34f3a8433e28ddc0efd5307a1adf9aa91e324ca757f40c6aec91ee  qa-signing/wordsearch-qa.p12" | sha256sum --check
       - name: Build unsigned candidate and validate source
+        id: compile
         shell: bash
         run: |
           set -euo pipefail
           [[ "$GITHUB_RUN_ATTEMPT" == 1 ]]
           code=$((3000 + GITHUB_RUN_NUMBER))
-          echo "BETA_CODE=$code" >> "$GITHUB_ENV"
+          echo "beta_code=$code" >> "$GITHUB_OUTPUT"
           sdkmanager_bin="$(command -v sdkmanager || true)"
           if [[ -z "$sdkmanager_bin" && -n "${ANDROID_HOME:-}" ]]; then
             sdkmanager_bin="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager -print -quit || true)"
@@ -82,6 +86,56 @@ jobs:
             exit 1
           fi
           echo "Unsigned public preview compiled with correct package and label. NOT distributable before private signing." >> "$GITHUB_STEP_SUMMARY"
+          echo "unsigned_sha=$(sha256sum "$unsigned" | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-reviewed-candidate
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
+          retention-days: 1
+          if-no-files-found: error
+  sign:
+    needs: build
+    if: github.repository == 'EdenP-Development/GridMates-Crossroads' && github.ref == 'refs/heads/release/beta-1-candidate' && inputs.reviewed_source == github.sha && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BETA_CODE: ${{ needs.build.outputs.beta_code }}
+      UNSIGNED_SHA: ${{ needs.build.outputs.unsigned_sha }}
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install signing tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdkmanager_bin="$(command -v sdkmanager || true)"
+          if [[ -z "$sdkmanager_bin" ]]; then
+            sdkmanager_bin="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager -print -quit)"
+          fi
+          [[ -n "$sdkmanager_bin" ]]
+          "$sdkmanager_bin" 'build-tools;35.0.0'
+      - uses: actions/download-artifact@v4
+        with:
+          name: unsigned-reviewed-candidate
+          path: unsigned-input
+      - name: Verify unsigned artifact identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$UNSIGNED_SHA" =~ ^[a-f0-9]{64}$ ]]
+          [[ "$BETA_CODE" =~ ^[0-9]+$ ]]
+          (( BETA_CODE > 2002 ))
+          unsigned=unsigned-input/app-release-unsigned.apk
+          test -f "$unsigned" && test ! -L "$unsigned"
+          echo "$UNSIGNED_SHA  $unsigned" | sha256sum -c -
+          tools="$ANDROID_HOME/build-tools/35.0.0"
+          "$tools/aapt" dump badging "$unsigned" > "$RUNNER_TEMP/unsigned-badging.txt"
+          grep -F "package: name='com.playereden.gridmates.crossroads' versionCode='$BETA_CODE' versionName='0.1.0'" "$RUNNER_TEMP/unsigned-badging.txt"
+          "$tools/aapt" dump permissions "$unsigned" > "$RUNNER_TEMP/unsigned-permissions.txt"
+          if grep -E 'android\.permission\.(INTERNET|ACCESS_NETWORK_STATE|ACCESS_WIFI_STATE|CHANGE_WIFI_MULTICAST_STATE)' "$RUNNER_TEMP/unsigned-permissions.txt"; then exit 1; fi
+          if "$tools/apksigner" verify "$unsigned" >/dev/null 2>&1; then exit 1; fi
       - name: Sign and verify candidate
         shell: bash
         env:
@@ -98,8 +152,9 @@ jobs:
           keytool -exportcert -alias crossroadsBeta -storetype PKCS12 -storepass:env KEYSTORE_PASSWORD -keystore "$private_dir/key.p12" -file "$private_dir/cert.der"
           [[ "$(sha256sum "$private_dir/cert.der" | awk '{print $1}')" == "$EXPECTED_CERT_SHA256" ]]
           tools="$ANDROID_HOME/build-tools/35.0.0"
-          unsigned=app/build/outputs/apk/release/app-release-unsigned.apk
+          unsigned=unsigned-input/app-release-unsigned.apk
           test -s "$unsigned"
+          echo "$UNSIGNED_SHA  $unsigned" | sha256sum -c -
           "$tools/zipalign" -f -p 4 "$unsigned" "$private_dir/aligned.apk"
           mkdir -p beta-output
           apk="beta-output/GridMates-Crossroads-Beta-$BETA_CODE.apk"
@@ -121,7 +176,7 @@ jobs:
           p=next(pathlib.Path("beta-output").glob("*.apk"))
           digest=hashlib.sha256(p.read_bytes()).hexdigest()
           p.with_suffix(".apk.sha256").write_text(digest+"  "+p.name+"\n")
-          pathlib.Path("beta-output/receipt.json").write_text(json.dumps(dict(channel="itch-beta-candidate",application_id="com.playereden.gridmates.crossroads",version_code=int(os.environ["BETA_CODE"]),version_name="0.1.0",signer_cert_sha256=os.environ["EXPECTED_CERT_SHA256"],apk_sha256=digest,source_commit=os.environ["GITHUB_SHA"],owner_accepted=False,install_over_tested=False),indent=2)+"\n")
+          pathlib.Path("beta-output/receipt.json").write_text(json.dumps(dict(channel="itch-beta-candidate",application_id="com.playereden.gridmates.crossroads",version_code=int(os.environ["BETA_CODE"]),version_name="0.1.0",signer_cert_sha256=os.environ["EXPECTED_CERT_SHA256"],apk_sha256=digest,unsigned_sha256=os.environ["UNSIGNED_SHA"],source_commit=os.environ["GITHUB_SHA"],owner_accepted=False,install_over_tested=False),indent=2)+"\n")
           PY
       - uses: actions/upload-artifact@v4
         with:
