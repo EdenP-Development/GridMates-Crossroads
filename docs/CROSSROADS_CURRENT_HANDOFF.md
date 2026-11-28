@@ -1,3 +1,9 @@
+# Active checkpoint — BETA-ITCH-01 public Beta 1 priority
+
+Owner wants to approach itch.io Beta 1. AI2-17E head fa97c9f both CI passed (rules 46098835258, Android 46098835214); QA2031 artifact 15244109906, AI2-17D compile repair verified. #1030 cancelled, superseded. Freeze AI expansion at QA scope. New docs/BETA_1_ITCH_RELEASE_GATE.md defines proposed offline-first beta scope, public surface/security, physical acceptance, signing reconciliation and publication gates. Separate feature/edenp-beta-signing already has verified older signed build 2002; current branch lacks workflow, do not generate another key or distribute QA signer. Owner backup custody and current signed candidate not verified. Recommend excluding plaintext Nearby from first beta, pending scope decision; no runtime gate implemented yet. Next public surface audit and trusted signing lineage reconciliation plan. No main merge, release, signing or gameplay changes.
+
+---
+
 # Active checkpoint — AI2-17E consolidated AI acceptance
 
 AI2-17D head fe59647 rules 46098498654 (#475) passed; Android 46098498630 (#1030) job 140835327986 build/unit test/lint in progress at inspection. Prior Android failure not yet verified repaired. Consolidated AI scope and eight additional physical checks in docs/AI2_17E_AI_ACCEPTANCE.md; carry forward P01–P12, all physical gates outstanding. No new runtime changes. Next inspect exact AI2-17D workflow completion and artifact/signing evidence before recommending APK; then freeze QA AI expansion and review broader roadmap/player experience. Public activation remains separate, no merge/release/signing changes.
