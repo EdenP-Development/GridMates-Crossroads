@@ -40,6 +40,28 @@ internal object OfflineOpponentPreview {
         return if (index >= 0 && originalNames.lastIndexOf(name) == index) displayNames[index] else name
     }
 
+    /** Engine messages use an actor prefix and a specific prank template.
+     * Translate only those positions; never search/replace arbitrary prose. */
+    fun narrative(message: String, originalNames: List<String>, displayNames: List<String>): String {
+        val actor = originalNames.firstOrNull { message.startsWith("$it ") ||
+            message.startsWith("$it:") || message.startsWith("$it's ") } ?: return message
+        val rest = message.substring(actor.length)
+        val translated = if (rest.startsWith(" pranked ")) {
+            val target = originalNames.firstOrNull { rest.startsWith(" pranked $it: back ") }
+            if (target != null) " pranked " + recordedName(target, originalNames, displayNames) +
+                rest.substring(" pranked ".length + target.length) else rest
+        } else rest
+        return recordedName(actor, originalNames, displayNames) + translated
+    }
+
+    fun finishedStatus(winner: Boolean, equalRound: Boolean, reachedFinish: Boolean): String =
+        when {
+            winner && equalRound -> "final-round winner"
+            winner -> "finished first"
+            reachedFinish -> "reached Finish"
+            else -> "still on the trail"
+        }
+
     /** Seat plates already have a numbered pawn. Avoid repeating the number. */
     fun plateName(original: String, seat: Int, policy: BotPolicyVersion?): String =
         if (policy == null) original else liveName(original, seat, policy)
