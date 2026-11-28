@@ -12,13 +12,14 @@ import com.playereden.crossroads.core.DecisionLab
 import kotlin.math.min
 
 internal enum class CourseOverheadStyle {
-    BROOKSIDE, WOVEN, CEDARWOOD;
+    BROOKSIDE, WOVEN, CEDARWOOD, REGIONAL;
 
     companion object {
         fun forBoard(id: String): CourseOverheadStyle? = when (DecisionLab.baseId(id)) {
             "woodland_brookside_quick_v01" -> BROOKSIDE
             "woodland_woven_trail_v02" -> WOVEN
             "woodland_cedarwood_long_v01" -> CEDARWOOD
+            CrossroadsCourse.REGIONAL_ID -> REGIONAL
             else -> null
         }
     }
@@ -53,6 +54,29 @@ internal object CourseOverheadScenery {
                 p(.284f,.936f,EnvironmentSprite.BUSH),
                 p(.716f,.944f,EnvironmentSprite.FENCE)
             )
+            CourseOverheadStyle.REGIONAL -> listOf(
+                p(.18f,.10f,EnvironmentSprite.COTTAGE),
+                p(.42f,.11f,EnvironmentSprite.ORCHARD),
+                p(.75f,.10f,EnvironmentSprite.COTTAGE),
+                p(.30f,.43f,EnvironmentSprite.FIR_GROVE),
+                p(.53f,.43f,EnvironmentSprite.OAK),
+                p(.72f,.43f,EnvironmentSprite.FIR_GROVE),
+                p(.28f,.74f,EnvironmentSprite.FLOWERS),
+                p(.52f,.74f,EnvironmentSprite.MEADOW_CLEARING),
+                p(.72f,.74f,EnvironmentSprite.FLOWERS),
+                // Village outskirts and grouped forest companions, screened by the same graph clearance.
+                p(.08f,.08f,EnvironmentSprite.BUSH),
+                p(.30f,.08f,EnvironmentSprite.FENCE),
+                p(.55f,.07f,EnvironmentSprite.BUSH),
+                p(.88f,.09f,EnvironmentSprite.ORCHARD),
+                p(.63f,.44f,EnvironmentSprite.FIR),
+                p(.85f,.43f,EnvironmentSprite.FIR),
+                p(.40f,.75f,EnvironmentSprite.BUSH),
+                // Trailhead boundary and destination cottage: real empty terrain,
+                // never a new route or an obstruction on the S/F socket.
+                p(.15f,.725f,EnvironmentSprite.FENCE),
+                p(.925f,.175f,EnvironmentSprite.COTTAGE)
+            )
             CourseOverheadStyle.CEDARWOOD -> listOf(
                 p(.052f,.048f,EnvironmentSprite.FIR),
                 p(.17f,.064f,EnvironmentSprite.FIR_GROVE),
@@ -83,11 +107,30 @@ internal object CourseOverheadScenery {
     }
 }
 
+/** Fixed overlapping pigment pools soften the regional boundaries without suggesting new paths. */
+internal data class RegionalTerrainWash(val x: Float, val y: Float, val radius: Float, val tone: Int)
+
+internal object RegionalTerrainComposition {
+    val washes = listOf(
+        RegionalTerrainWash(.14f,.15f,.23f,0),
+        RegionalTerrainWash(.48f,.19f,.20f,0),
+        RegionalTerrainWash(.86f,.21f,.22f,0),
+        RegionalTerrainWash(.16f,.43f,.23f,1),
+        RegionalTerrainWash(.43f,.48f,.24f,1),
+        RegionalTerrainWash(.72f,.40f,.22f,1),
+        RegionalTerrainWash(.91f,.56f,.17f,1),
+        RegionalTerrainWash(.20f,.71f,.20f,2),
+        RegionalTerrainWash(.52f,.79f,.24f,2),
+        RegionalTerrainWash(.84f,.88f,.23f,2)
+    )
+}
+
 /** Course-specific printed terrain with shared atlas. No artificial paths or bridge claims. */
 internal fun DrawScope.drawSiblingCourseOverhead(
     style: CourseOverheadStyle, accents: List<EnvironmentAccent>,
     atlas: ImageBitmap, left: Float, top: Float, width: Float, height: Float,
-    groundcover: List<GroundcoverPatch> = emptyList()
+    groundcover: List<GroundcoverPatch> = emptyList(),
+    footprints: List<LandscapeFootprint> = emptyList()
 ) {
     if (width <= 0f || height <= 0f) return
     val unit = min(width,height)
@@ -96,7 +139,13 @@ internal fun DrawScope.drawSiblingCourseOverhead(
         listOf(Color(0xFFE5DDB2),Color(0xFFC7D3A4),Color(0xFFDDD3A6))
     else listOf(Color(0xFFC8C6A0),Color(0xFF9DAF87),Color(0xFFC9BC95))
     clipRect(left,top,left+width,top+height) {
-        drawRect(Brush.linearGradient(palette,start=at(0f,.2f),end=at(1f,.8f)),
+        val terrainBrush = if (style == CourseOverheadStyle.REGIONAL)
+            Brush.verticalGradient(0f to Color(0xFFE4D1AC), .30f to Color(0xFFD4D4AA),
+                .49f to Color(0xFF9DAF87), .65f to Color(0xFFA9BA8D),
+                .82f to Color(0xFFD6DAA7), 1f to Color(0xFFE8DDB2),
+                startY=top, endY=top+height)
+        else Brush.linearGradient(palette,start=at(0f,.2f),end=at(1f,.8f))
+        drawRect(terrainBrush,
             topLeft=at(0f,0f),size=Size(width,height))
         val pools = if (style == CourseOverheadStyle.BROOKSIDE)
             listOf(Triple(.18f,.3f,.25f),Triple(.48f,.5f,.19f),Triple(.88f,.81f,.22f))
@@ -106,12 +155,33 @@ internal fun DrawScope.drawSiblingCourseOverhead(
             drawCircle(Brush.radialGradient(listOf(tint.copy(alpha=.27f),tint.copy(alpha=0f)),
                 center=at(x,y),radius=unit*r),radius=unit*r,center=at(x,y))
         }
+        if (style == CourseOverheadStyle.REGIONAL) {
+            RegionalTerrainComposition.washes.forEach { wash ->
+                val tint = when (wash.tone) {
+                    0 -> Color(0xFFB88F59)
+                    1 -> Color(0xFF486E46)
+                    else -> Color(0xFFF1D58B)
+                }
+                val center = at(wash.x,wash.y)
+                val radius = unit * wash.radius
+                drawCircle(Brush.radialGradient(
+                    listOf(tint.copy(alpha = .24f), tint.copy(alpha = 0f)),
+                    center = center, radius = radius), radius = radius, center = center)
+            }
+        }
         WovenTerrainTexture.flecks.forEach { f ->
-            val tint = if (f.tone==1) Color(0xFFF5E9C5).copy(alpha=.24f)
+            val tint = if (style == CourseOverheadStyle.REGIONAL && f.tone != 1) {
+                when {
+                    f.y < .30f -> Color(0xFF92734C).copy(alpha=.20f)
+                    f.y < .67f -> Color(0xFF405F40).copy(alpha=.22f)
+                    else -> Color(0xFF8A9154).copy(alpha=.18f)
+                }
+            } else if (f.tone==1) Color(0xFFF5E9C5).copy(alpha=.24f)
                 else Color(0xFF536B49).copy(alpha=.15f)
             val center=at(f.x,f.y)
             drawCircle(tint,radius=f.size*unit*.42f,center=center)
         }
+        drawLandscapeFootprints(footprints, left, top, width, height)
         drawWoodlandGroundcover(groundcover, left, top, width, height)
         accents.forEach { a -> tryDrawEnvironmentSprite(atlas,a.sprite,at(a.x,a.y),unit) }
     }

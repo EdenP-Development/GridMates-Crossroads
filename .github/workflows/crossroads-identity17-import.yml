@@ -1,0 +1,35 @@
+name: Crossroads IDENTITY-17 artwork verification
+on:
+  push:
+    branches: [feature/identity-17-art-import]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify original archive SHA256
+        run: |
+          set -euo pipefail
+          cd design/art/imports
+          sha256sum -c <<'EOF'
+          c14294767e47a1489baa4f4415bd18232310ed1c9295a9fbdcc13d7112e3c1cb  crossroads_environment_v2.zip
+          80e8030c5520dde93eeb4a45eb56137b407a57a2c83d65fc0a944df0ff437085  crossroads_ui_core_v1.zip
+          EOF
+      - name: Import exact original candidates and validate runtime registry
+        run: |
+          set -euo pipefail
+          python3 tools/import_environment_v2.py design/art/imports/crossroads_environment_v2.zip
+          python3 tools/import_ui_core_v1.py design/art/imports/crossroads_ui_core_v1.zip
+          python3 tools/check_crossroads_art_pack.py
+      - name: Preserve verified import output for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: identity17-verified-import-${{ github.sha }}
+          path: |
+            app/src/main/assets/art/v1/environment_atlas_v2.png
+            app/src/main/assets/art/v1/manifest.json
+            design/art/library/ui_core_v1/
+          if-no-files-found: error

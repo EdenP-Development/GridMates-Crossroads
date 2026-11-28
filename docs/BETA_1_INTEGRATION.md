@@ -1,3 +1,5 @@
+> **Active owner test / Beta 1 priority (Nov 27, 2026):** Active branch `feature/identity-17-art-import`, draft PR #120. Verified QA2031 ([APK archive](https://github.com/EdenP-Development/GridMates-Crossroads/actions/runs/46098835214/artifacts/15244109906), [rules](https://github.com/EdenP-Development/GridMates-Crossroads/actions/runs/46098835258)) pinned for hands-on feedback; see [owner test](BETA_1_OWNER_TEST_QA2031.md), [release gates](BETA_1_ITCH_RELEASE_GATE.md), [current handoff](CROSSROADS_CURRENT_HANDOFF.md). Physical acceptance pending; older branch/build status below is historical. No public release or main merge.
+
 > **Current checkpoint: [Crossroads development handoff](CROSSROADS_CURRENT_HANDOFF.md).** Active branch integration/beta-1-polish; QA1698 Android passed. New environment and UI binaries remain external; physical acceptance pending. Earlier records below are historical. No main merge or public release.
 
 ---

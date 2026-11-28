@@ -1,6 +1,12 @@
 package com.playereden.gridmates.crossroads
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -29,6 +35,19 @@ internal fun TabletopPanel(
         shape = RoundedCornerShape(corner),
         border = border,
         shadowElevation = elevation,
-        content = content
-    )
+    ) {
+        Box(Modifier.drawBehind {
+            // Quiet inset engraving, no bitmap substitute or interactive overlay.
+            val inset = 4.dp.toPx()
+            if (size.width > inset * 2 && size.height > inset * 2) {
+                drawRoundRect(
+                    color = TabletopMaterials.brass.copy(alpha = 0.22f),
+                    topLeft = Offset(inset, inset),
+                    size = Size(size.width - inset * 2, size.height - inset * 2),
+                    cornerRadius = CornerRadius((corner.toPx() - inset).coerceAtLeast(0f)),
+                    style = Stroke(width = 0.7.dp.toPx())
+                )
+            }
+        }) { content() }
+    }
 }

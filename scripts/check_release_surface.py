@@ -20,6 +20,20 @@ def require(condition, detail):
 
 manifest_path = root / "app/src/main/AndroidManifest.xml"
 manifest = ET.parse(manifest_path).getroot()
+network_permissions = {
+    "android.permission.INTERNET",
+    "android.permission.ACCESS_NETWORK_STATE",
+    "android.permission.ACCESS_WIFI_STATE",
+    "android.permission.CHANGE_WIFI_MULTICAST_STATE",
+}
+def declared_permissions(doc):
+    return {node.get(a + "name") for node in doc.findall("uses-permission")}
+require(not (declared_permissions(manifest) & network_permissions),
+        "Public main manifest must not request Nearby network permissions")
+debug_manifest = ET.parse(root / "app/src/debug/AndroidManifest.xml").getroot()
+require(network_permissions <= declared_permissions(debug_manifest),
+        "Debug QA must retain all Nearby network permissions")
+
 app = manifest.find("application")
 require(app is not None, "Android application node is missing")
 if app is not None:
@@ -71,6 +85,21 @@ require('if (BuildConfig.DEBUG) "CROSSROADS · QA" else "CROSSROADS"' in activit
         "In-match QA title must not appear in the public UI")
 require('"crossroads_qa_profile_v1"' in activity,
         "Legacy local profile key changed; QA updates could lose progress")
+
+require("if (!BuildConfig.DEBUG) original else original +" in activity,
+        "Public recovery registry must exclude experimental board variants")
+require("selectedCourseId, BuildConfig.DEBUG && playtestRules, BuildConfig.DEBUG && fairFinishExperiment" in activity,
+        "Public new sessions must force original rules")
+require("if (BuildConfig.DEBUG) CrossroadsNearby(context)" in activity,
+        "Nearby initialization must be debug-only")
+for entry in ("fun startLanHost(requireCode: Boolean, seats: Int) {",
+              "fun joinLan(host: String, port: Int, code: String, resume: Boolean = false) {"):
+    require(entry + "\n        if (!BuildConfig.DEBUG) return" in activity,
+            "Nearby entry point is missing public guard: " + entry)
+require('if (BuildConfig.DEBUG) {\n        Text("Nearby · Two phones on the same Wi-Fi"' in home,
+        "Public home must hide Nearby entry points")
+require("if (BuildConfig.DEBUG) {\n        TabletopPanel(\n            color = if (playtestRules)" in home,
+        "Public home must hide tactical rule controls")
 
 if failures:
     print("RELEASE-25 preflight FAILED:")

@@ -18,4 +18,23 @@ class TabletopButtonArtTest {
             assertEquals("${family.stem}_disabled.png", TabletopButtonArt.filename(family, false, true, true))
         }
     }
+    @Test fun wideControlsPreserveProportionalEndCaps() {
+        assertEquals(72, TabletopButtonArt.expandedCap(384, 144))
+        assertEquals(72, TabletopButtonArt.expandedCap(768, 144))
+        assertEquals(36, TabletopButtonArt.expandedCap(300, 72))
+    }
+
+    @Test fun illustrationRequiresRoomForOrnamentsAndLabels() {
+        assertEquals(false, TabletopButtonArt.usesIllustration(144, 48 + 1))
+        assertEquals(true, TabletopButtonArt.usesIllustration(144, 48))
+        assertEquals(true, TabletopButtonArt.usesIllustration(300, 54))
+        assertEquals(false, TabletopButtonArt.usesIllustration(0, 48))
+        assertEquals(false, TabletopButtonArt.usesIllustration(300, 0))
+    }
+
+    @Test fun narrowOrInvalidBoundsRetainFitFallback() {
+        assertEquals(null, TabletopButtonArt.expandedCap(120, 72))
+        assertEquals(null, TabletopButtonArt.expandedCap(0, 72))
+        assertEquals(null, TabletopButtonArt.expandedCap(300, 0))
+    }
 }

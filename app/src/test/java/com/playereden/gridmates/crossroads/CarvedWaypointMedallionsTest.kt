@@ -4,6 +4,18 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class CarvedWaypointMedallionsTest {
+    @Test fun startAndFinishHaveDistinctStableRimPatterns() {
+        val start = CarvedWaypointGeometry.rimMarks(false)
+        val finish = CarvedWaypointGeometry.rimMarks(true)
+        assertEquals(4, start.size)
+        assertEquals(6, finish.size)
+        assertNotEquals(start, finish)
+        listOf(start, finish).forEach { marks ->
+            assertEquals(marks.size, marks.distinct().size)
+            assertTrue(marks.all { it >= 0f && it < 360f })
+        }
+    }
+
     @Test fun startFinishBaseIsBoundedByNeighborDistanceOnDenseCourse() {
         val original = 13f
         val radius = CarvedWaypointGeometry.socketRadius(original, 0.035f, 960f)

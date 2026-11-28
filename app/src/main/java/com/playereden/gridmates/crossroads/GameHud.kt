@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,21 +32,23 @@ internal fun GameHudTurnStrip(
     moving: Boolean,
     seatColor: Color,
     botTurn: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    detailsExpanded: Boolean = false,
+    onToggleDetails: (() -> Unit)? = null
 ) {
     val moment = turnMomentName(phase, moving, botTurn)
     Surface(
-        modifier = modifier.semantics(mergeDescendants = true) {
+        modifier = if (onToggleDetails == null) modifier.semantics(mergeDescendants = true) {
             contentDescription = "$moment. $title"
-        },
+        } else modifier,
         color = Color(0xFF385945),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(10.dp),
         border = BorderStroke(1.dp, Color(0xFFBDA677)),
-        shadowElevation = 2.dp
+        shadowElevation = 0.dp
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp)
-                .padding(horizontal = 10.dp, vertical = 4.dp),
+                .padding(horizontal = 9.dp, vertical = 3.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(9.dp)
         ) {
@@ -53,16 +56,31 @@ internal fun GameHudTurnStrip(
                 modifier = Modifier.width(5.dp).height(26.dp)
                     .background(seatColor, RoundedCornerShape(4.dp))
             )
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Column(modifier = Modifier.weight(1f).semantics(mergeDescendants = true) {
+                if (onToggleDetails != null) contentDescription = "$moment. $title"
+            }, verticalArrangement = Arrangement.spacedBy(0.dp)) {
                 Text(moment, fontSize = 10.sp, fontWeight = FontWeight.Bold,
                     color = Color(0xFFF0D7A5))
                 Text(title, style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold, color = Color(0xFFFFF7E8),
-                    maxLines = 1)
+                    maxLines = 2)
+            }
+            if (onToggleDetails != null) {
+                TextButton(onClick = onToggleDetails,
+                    modifier = Modifier.heightIn(min = 48.dp).semantics {
+                        contentDescription = turnDetailsLabel(detailsExpanded)
+                    }, contentPadding = PaddingValues(horizontal = 4.dp)) {
+                    Text(if (detailsExpanded) "Hide" else "Details", color = Color(0xFFF8EED7),
+                        style = MaterialTheme.typography.labelMedium)
+                }
             }
         }
     }
 }
+
+/** Keep the disclosure short while preserving its purpose. */
+internal fun turnDetailsLabel(expanded: Boolean): String =
+    if (expanded) "Hide details" else "Turn details"
 
 /** Used by the prototype and its tests; no gameplay phase is changed by HUD. */
 internal fun gameHudActionHeading(phase: Phase): String = when (phase) {

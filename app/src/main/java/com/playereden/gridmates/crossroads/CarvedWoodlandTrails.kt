@@ -77,22 +77,31 @@ internal fun DrawScope.drawCrossroadsEarthenTrail(
     val w = carvedRoadLayout(length, dense, visibilityScale).weight
     if (w <= 0f) return
     val normal = Offset(-delta.y / length, delta.x / length)
-    drawLine(Color(0xFF52613B).copy(alpha = .25f), from, to,
+    // Soft, irregular verge outside the exact playable centerline.
+    // Keep the central deck straight for hit testing and movement animation.
+    drawLine(Color(0xFF52613B).copy(alpha = .14f), from, to,
         strokeWidth = 25f*w, cap = StrokeCap.Round)
-    drawLine(Color(0xFF66543A), from, to,
-        strokeWidth = 19f*w, cap = StrokeCap.Round)
-    drawLine(carvedRoadRiskColor(route), from, to,
+    drawLine(Color(0xFF796842).copy(alpha = .22f), from, to,
+        strokeWidth = 20f*w, cap = StrokeCap.Round)
+    drawLine(Color(0xFF66543A).copy(alpha = .58f), from, to,
         strokeWidth = 16f*w, cap = StrokeCap.Round)
-    drawLine(Color(0xFFC4A575), from, to,
-        strokeWidth = 11f*w, cap = StrokeCap.Round)
+    drawLine(carvedRoadRiskColor(route), from, to,
+        strokeWidth = 13.5f*w, cap = StrokeCap.Round)
+    drawLine(Color(0xFFD1B889), from, to,
+        strokeWidth = 9.5f*w, cap = StrokeCap.Round)
     // Small broken flecks suggest packed earth, never transverse plank joints.
     val count = (length / (13f * visibilityScale)).toInt().coerceIn(1, 36)
     for (i in 1..count) {
         val t = i.toFloat() / (count + 1)
-        val p = from + delta*t + normal*((i*7%5-2)*1.3f*w)
+        val p = from + delta*t + normal*((i*7%5-2)*1.1f*w)
         val tint = if (i%2==0) Color(0xFFEDCF95) else Color(0xFF92734B)
         drawLine(tint.copy(alpha=.40f),p,p+delta/length*(2.2f*w),
             strokeWidth=1.2f*w,cap=StrokeCap.Round)
+        // Broken, low-contrast shoulder pigment instead of another continuous rail.
+        val side = if (i % 2 == 0) 1f else -1f
+        val verge = from + delta*t + normal*(side*(8.0f + i%3*.65f)*w)
+        drawLine(Color(0xFF887A4E).copy(alpha=.20f), verge,
+            verge + delta/length*(3.0f*w), strokeWidth=1.8f*w, cap=StrokeCap.Round)
     }
 }
 

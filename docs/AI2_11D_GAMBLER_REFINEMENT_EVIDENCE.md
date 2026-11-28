@@ -1,0 +1,3 @@
+# AI2-11D — Gambler V2 evidence
+
+Actual CSV gambler_refinement.csv inspected from rules run 45950998925 artifact 15176483702. 4800 actor rows; 1440 G2 focal matches. G2 wins 240/480 two-seat and 240/960 four-seat; each of five courses 48/96 and 48/192 respectively. G2 decisions: steady 1304, push 6646, supplies 1273, cover 477, gamble 3454, brace 0. G1 per-exposure aggregate decision counts identical (two-seat identical totals, four-seat three times G2 totals). No observed defensive action; cannot establish improvement. Retain G1 preset, preserve G2 immutable ID; defer further refinement. These are mirrored mixed simulations with shared seeds, not proof of human enjoyment or general fairness.

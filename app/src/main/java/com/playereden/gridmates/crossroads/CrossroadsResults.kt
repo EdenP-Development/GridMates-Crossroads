@@ -3,6 +3,8 @@ package com.playereden.gridmates.crossroads
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.Canvas
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -46,21 +48,21 @@ internal object CrossroadsFinishCopy {
     fun isLocalWinner(winnerName: String): Boolean = winnerName == "You"
 
     /** This copy describes the actual finish decision, not a generic rule. */
-    fun fairFinishExplanation(receipt: FairFinishReceipt): String {
+    fun fairFinishExplanation(receipt: FairFinishReceipt, displayName: (String) -> String = { it }): String {
         if (receipt.finishers == 1) {
             return if (receipt.laterSeatsGotFinalChance)
-                "${receipt.firstFinisherName} crossed first. Later racers had their last turn, " +
+                "${displayName(receipt.firstFinisherName)} crossed first. Later racers had their last turn, " +
                     "but nobody else reached Finish."
             else
-                "${receipt.firstFinisherName} crossed from the final seat. " +
+                "${displayName(receipt.firstFinisherName)} crossed from the final seat. " +
                     "Everyone already had their turn this round."
         }
         val steps = receipt.winningUnusedSteps
         val plural = if (steps == 1) "step" else "steps"
         val tie = if (receipt.tiedOnWinningSteps)
             " Tied on unused steps; the earlier of the tied finishers won." else ""
-        return "${receipt.firstFinisherName} crossed first. ${receipt.finishers} racers " +
-            "reached Finish. ${receipt.winnerName} won with $steps unused $plural.$tie"
+        return "${displayName(receipt.firstFinisherName)} crossed first. ${receipt.finishers} racers " +
+            "reached Finish. ${displayName(receipt.winnerName)} won with $steps unused $plural.$tie"
     }
 }
 
@@ -132,7 +134,9 @@ internal fun CrossroadsResultsContent(
     courseId: String,
     elapsedSeconds: Long,
     modifier: Modifier = Modifier,
-    finishReceipt: FairFinishReceipt? = null
+    finishReceipt: FairFinishReceipt? = null,
+    displayName: (String) -> String = { it },
+    displayNarrative: (String) -> String = { it }
 ) {
     val winnerIndex = state.winnerIndex
     val winnerName = winnerIndex?.let { state.players.getOrNull(it)?.name } ?: "A player"
@@ -167,14 +171,15 @@ internal fun CrossroadsResultsContent(
             Image(
                 bitmap = victoryArtwork,
                 contentDescription = null, // Winner and time remain readable text.
-                modifier = Modifier.fillMaxWidth().height(84.dp),
+                modifier = Modifier.fillMaxWidth().height(84.dp).clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Crop
             )
         }
-        Surface(
+        TabletopPanel(
             color = if (CrossroadsFinishCopy.isLocalWinner(winnerName))
                 Color(0xFFE4EAD5) else Color(0xFFF0E5CF),
-            shape = MaterialTheme.shapes.large,
+            corner = 15.dp,
+            elevation = 2.dp,
             modifier = Modifier.fillMaxWidth().graphicsLayer {
                 scaleX = finishScale
                 scaleY = finishScale
@@ -190,7 +195,7 @@ internal fun CrossroadsResultsContent(
                 Column(modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        CrossroadsFinishCopy.headline(winnerName),
+                        CrossroadsFinishCopy.headline(displayName(winnerName)),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Evergreen
@@ -203,7 +208,7 @@ internal fun CrossroadsResultsContent(
         if (equalRound) {
             Text(
                 if (finishReceipt != null)
-                    CrossroadsFinishCopy.fairFinishExplanation(finishReceipt)
+                    CrossroadsFinishCopy.fairFinishExplanation(finishReceipt, displayName)
                 else "Fair finish · The finishing round is complete.",
                 style = MaterialTheme.typography.bodySmall,
                 color = Earth
@@ -222,9 +227,10 @@ internal fun CrossroadsResultsContent(
         // Show the *complete* last outcome before secondary traveler details,
         // rather than a heading with its explanation hidden below the fold.
         if (lastEncounter != null) {
-            Surface(
-                color = Color(0xFFECE7D9),
-                shape = MaterialTheme.shapes.medium,
+            TabletopPanel(
+                color = Parchment,
+                corner = 12.dp,
+                elevation = 0.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
@@ -233,10 +239,10 @@ internal fun CrossroadsResultsContent(
                 ) {
                     Text("Last encounter", style = MaterialTheme.typography.labelMedium,
                         color = Evergreen, fontWeight = FontWeight.Bold)
-                    Text("${lastEncounter.actor} · ${lastEncounter.title}",
+                    Text("${displayName(lastEncounter.actor)} · ${lastEncounter.title}",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold, color = Evergreen)
-                    Text(lastEncounter.outcome,
+                    Text(displayNarrative(lastEncounter.outcome),
                         style = MaterialTheme.typography.bodySmall, color = Earth)
                 }
             }
@@ -256,7 +262,7 @@ internal fun CrossroadsResultsContent(
                         .background(SeatColors[index % SeatColors.size],
                             androidx.compose.foundation.shape.CircleShape)
                 )
-                Text(player.name, modifier = Modifier.weight(1f),
+                Text(displayName(player.name), modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.bodyMedium)
                 Text(
                     when {

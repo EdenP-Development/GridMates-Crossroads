@@ -4,7 +4,7 @@ on:
   # Draft feature branches are checked by pull_request (one build per head).
   # Keep push CI only for standalone design branches and manual dispatch.
   push:
-    branches: ["design/**"]
+    branches: ["design/**", "feature/identity-17-art-import"]
     paths:
       - "app/**"
       - "core/**"
@@ -39,6 +39,22 @@ jobs:
       - uses: actions/checkout@v4
       - name: Public-facing release surface preflight
         run: python3 scripts/check_release_surface.py
+      - name: Verify and import original artwork if candidate archives are present
+        shell: bash
+        run: |
+          set -euo pipefail
+          dir=design/art/imports
+          if [[ -e "$dir/crossroads_environment_v2.zip" || -e "$dir/crossroads_ui_core_v1.zip" ]]; then
+            (cd "$dir" && sha256sum -c <<'EOF'
+          c14294767e47a1489baa4f4415bd18232310ed1c9295a9fbdcc13d7112e3c1cb  crossroads_environment_v2.zip
+          80e8030c5520dde93eeb4a45eb56137b407a57a2c83d65fc0a944df0ff437085  crossroads_ui_core_v1.zip
+          EOF
+            )
+            python3 tools/import_environment_v2.py "$dir/crossroads_environment_v2.zip"
+            python3 tools/import_ui_core_v1.py "$dir/crossroads_ui_core_v1.zip"
+            python3 tools/promote_ui_preview.py
+            echo "Original environment atlas and UI source archive verified." >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Validate optional woodland art, provenance and size budget
         run: python3 tools/check_crossroads_art_pack.py
       - uses: actions/setup-java@v4
@@ -77,6 +93,26 @@ jobs:
         shell: bash
         run: |
           gradle --no-daemon :core:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug             "-PcrossroadsQaVersionCode=$QA_CODE" --console=plain
+      - name: Publish course decision exposure report
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-GAMEPLAY-104-${{ github.sha }}
+          path: core/build/reports/gameplay-104/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Summarize course decision exposure
+        shell: bash
+        run: cat core/build/reports/gameplay-104/summary.txt
+      - name: Publish regional tactical strategy report
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-GAMEPLAY-109-${{ github.sha }}
+          path: core/build/reports/gameplay-109/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Summarize regional tactical strategy
+        shell: bash
+        run: cat core/build/reports/gameplay-109/tactical_factorial_summary.txt
       - name: Validate unsigned public variant without distributing it
         shell: bash
         run: |
@@ -84,10 +120,17 @@ jobs:
           gradle --no-daemon :app:assembleRelease "-PcrossroadsQaVersionCode=$QA_CODE" --console=plain
           unsigned=app/build/outputs/apk/release/app-release-unsigned.apk
           test -s "$unsigned"
+          unzip -p "$unsigned" assets/branding/startup/v1/spudacus.png | sha256sum -c <(echo "74773dbda822161f73a639f959e8bce5c6e0b333a94ebeb8ee27f620d4995d25  -")
+          unzip -p "$unsigned" assets/branding/startup/v1/gridmates.png | sha256sum -c <(echo "eef6d631cac0b9523f7e0dbebac229f9a2458d36fe2e73e111d251704d9ff292  -")
           tools="$ANDROID_HOME/build-tools/35.0.0"
           "$tools/aapt" dump badging "$unsigned" | tee /tmp/crossroads-release-badging.txt
           grep -F "package: name='com.playereden.gridmates.crossroads'" /tmp/crossroads-release-badging.txt
           grep -F "application-label:'GridMates: Crossroads'" /tmp/crossroads-release-badging.txt
+          "$tools/aapt" dump permissions "$unsigned" | tee /tmp/crossroads-release-permissions.txt
+          if grep -E "android\.permission\.(INTERNET|ACCESS_NETWORK_STATE|ACCESS_WIFI_STATE|CHANGE_WIFI_MULTICAST_STATE)" /tmp/crossroads-release-permissions.txt; then
+            echo "ERROR: offline public APK requests network permissions." >&2
+            exit 1
+          fi
           if "$tools/apksigner" verify "$unsigned" >/dev/null 2>&1; then
             echo "ERROR: public preview was unexpectedly signed; review release signing setup." >&2
             exit 1
@@ -100,10 +143,39 @@ jobs:
           APK=app/build/outputs/apk/debug/app-debug.apk
           TOOLS="$ANDROID_HOME/build-tools/35.0.0"
           test -s "$APK"
+          unzip -p "$APK" assets/branding/startup/v1/spudacus.png | sha256sum -c <(echo "74773dbda822161f73a639f959e8bce5c6e0b333a94ebeb8ee27f620d4995d25  -")
+          unzip -p "$APK" assets/branding/startup/v1/gridmates.png | sha256sum -c <(echo "eef6d631cac0b9523f7e0dbebac229f9a2458d36fe2e73e111d251704d9ff292  -")
           "$TOOLS/apksigner" verify --print-certs "$APK" | tee /tmp/crossroads-certs.txt
           grep -iF '75cc3c896247d71fbd51f7a3ed41f90c8218a8a5a70df8c0f6b494b5cc23d419' /tmp/crossroads-certs.txt
           "$TOOLS/aapt" dump badging "$APK" | grep -F "name='com.playereden.gridmates.crossroads.qa' versionCode='$QA_CODE'"
           "$TOOLS/aapt" dump badging "$APK" | grep -F "application-label:'Crossroads QA'"
+          "$TOOLS/aapt" dump permissions "$APK" > /tmp/crossroads-qa-permissions.txt
+          for permission in INTERNET ACCESS_NETWORK_STATE ACCESS_WIFI_STATE CHANGE_WIFI_MULTICAST_STATE; do
+            grep -F "android.permission.$permission" /tmp/crossroads-qa-permissions.txt
+          done
+          if [[ -f design/art/imports/crossroads_environment_v2.zip ]]; then
+            unzip -p "$APK" assets/art/v1/environment_atlas_v2.png | sha256sum -c <(echo "779c42c21558a24ef9eb56f341d465ddeae68061389149bfe17fa00fe53525ab  -")
+          fi
+          if [[ -f design/art/imports/crossroads_ui_core_v1.zip ]]; then
+            python3 - "$APK" <<'PY'
+          import hashlib, json, sys, zipfile
+          from pathlib import Path
+          root = Path("app/src/main/assets/art/ui/v1")
+          manifest = json.loads((root / "manifest.json").read_text())
+          with zipfile.ZipFile(sys.argv[1]) as apk:
+              prefix = "assets/art/ui/v1/"
+              expected = {prefix + a["filename"] for a in manifest["assets"]}
+              actual = {n for n in apk.namelist() if n.startswith(prefix) and n.endswith(".png")}
+              if actual != expected or len(expected) != 16:
+                  raise ValueError("Runtime UI asset set mismatch")
+              for a in manifest["assets"]:
+                  if hashlib.sha256(apk.read(prefix + a["filename"])).hexdigest() != a["sha256"]:
+                      raise ValueError("Packaged UI hash mismatch: " + a["filename"])
+              if apk.read(prefix + "manifest.json") != (root / "manifest.json").read_bytes():
+                  raise ValueError("Packaged UI manifest mismatch")
+          print("Verified 16 illustrated UI assets inside signed APK.")
+          PY
+          fi
           cp "$APK" "GridMates-Crossroads-QA-$QA_CODE.apk"
           sha256sum "GridMates-Crossroads-QA-$QA_CODE.apk" > "GridMates-Crossroads-QA-$QA_CODE.apk.sha256"
           python3 - <<'PY'

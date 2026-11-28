@@ -111,7 +111,7 @@ internal fun DrawScope.drawWoodlandBoardArt(
     }
     // Decorative art is unique to each handcrafted course. Never paint a
     // known map's landmarks onto a different route graph.
-    if (boardId != "woodland_woven_trail_v02") return
+    if (com.playereden.crossroads.core.DecisionLab.baseId(boardId) != "woodland_woven_trail_v02") return
 
     // Very soft zones, instead of the previous blocky rectangular color panels.
     // The roads are drawn afterwards, so the regions never hide a route.

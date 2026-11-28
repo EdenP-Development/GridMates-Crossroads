@@ -6,6 +6,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class GameHudTextTest {
+    @Test fun turnDetailsDisclosureHasShortStableLabels() {
+        assertEquals("Turn details", turnDetailsLabel(false))
+        assertEquals("Hide details", turnDetailsLabel(true))
+    }
+
     @Test fun gameHudUsesShortActionStageLabels() {
         assertEquals("CHOOSE YOUR PACE", gameHudActionHeading(Phase.ROLL))
         assertEquals("PICK YOUR PATH", gameHudActionHeading(Phase.ROUTE))

@@ -41,6 +41,151 @@ class MatchRecoveryStoreTest {
         assertEquals(Phase.FINISHED, game.phase)
     }
 
+    @Test fun customizedOfflineOpponentsSurviveRecoveryBackupAndRematch() {
+        val lab = DecisionLab.variantV5(quick)
+        val registry = mapOf(board.id to board, quick.id to quick, lab.id to lab)
+        val prefs = MemoryPreferences()
+        prefs.edit().putInt("completed", 12).putInt("wins", 5).commit()
+        val store = MatchRecoveryStore(prefs, board, events, registry)
+        val choices = mapOf(
+            1 to BotOpponentConfigurationV1(BotPersonalityV1.SCOUT),
+            2 to BotOpponentConfigurationV1(BotPersonalityV1.GAMBLER),
+            3 to BotOpponentConfigurationV1(BotPersonalityV1.GUARDIAN, BotDifficultyV1.ADVANCED)
+        )
+        for (seats in 2..4) {
+            val policies = OfflineOpponentPreview.policies(true, false, lab.id, seats, choices)
+            assertEquals(mapOf(1 to BotPolicyVersion.ADAPTIVE_V2_R2,
+                2 to BotPolicyVersion.GAMBLER_V1,
+                3 to BotPolicyVersion.GUARDIAN_FINISH_CANDIDATE_V1).filterKeys { it < seats }, policies)
+            fun assertPolicies(game: GameSession) {
+                for ((seat, policy) in policies) assertEquals(policy, game.policyForBotSeat(seat))
+                assertFalse(game.players[0].isBot)
+                assertTrue(game.players.drop(1).all { it.isBot })
+            }
+            fun advance(game: GameSession) {
+                if (game.players[game.currentIndex].isBot) game.botStep()
+                else when (game.phase) {
+                    Phase.ROLL -> game.rollSteady()
+                    Phase.ROUTE -> game.chooseRoute(game.availableRoutes().first().id)
+                    Phase.ENCOUNTER -> game.chooseEncounter(game.availableEncounterChoices().first())
+                    Phase.TARGET -> game.chooseTarget(game.availableTargets().first())
+                    Phase.FINISHED -> Unit
+                }
+            }
+            for (seed in 1..12) {
+                val starter = OfflineStartingSeatPreview.resolve(true, false, lab.id, seats,
+                    OfflineStartingSeatPreview.RANDOM) { count -> seed % count }
+                val game = GameSession(lab, events, seats, seed, setOf(0), botSeatPolicies = policies,
+                    startingSeat = starter)
+                val id = "custom-opponents-$seats-$seed"
+                val began = System.currentTimeMillis() - 1000L
+                repeat(5) { if (game.phase != Phase.FINISHED) advance(game) }
+                assertTrue(store.persist(game, id, began))
+                val reopened = requireNotNull(MatchRecoveryStore(prefs, board, events, registry).load().match).game
+                assertPolicies(reopened)
+                assertEquals(starter, reopened.startingSeat)
+                assertEquals(game.snapshot(), reopened.snapshot())
+                val transfer = store.exportProgress()
+                val importedPrefs = MemoryPreferences()
+                val imported = MatchRecoveryStore(importedPrefs, board, events, registry)
+                assertTrue(imported.importProgress(imported.previewImport(transfer)))
+                val moved = requireNotNull(imported.load().match).game
+                assertPolicies(moved)
+                assertEquals(starter, moved.startingSeat)
+                assertEquals(game.snapshot(), moved.snapshot())
+                var actions = 0
+                while (game.phase != Phase.FINISHED && actions++ < 1500) {
+                    advance(game)
+                    advance(reopened)
+                    advance(moved)
+                    assertEquals(game.snapshot(), reopened.snapshot())
+                    assertEquals(game.snapshot(), moved.snapshot())
+                }
+                assertEquals(Phase.FINISHED, game.phase)
+                assertEquals(game.fairFinishReceipt, moved.fairFinishReceipt)
+                assertTrue(imported.persist(moved, id, began))
+                val finished = requireNotNull(imported.load().match).game
+                assertPolicies(finished)
+                assertEquals(game.snapshot(), finished.snapshot())
+                val rematch = finished.freshRematch(seed + 100)
+                assertPolicies(rematch)
+                assertEquals(lab.id, rematch.board.id)
+                assertEquals(starter, finished.startingSeat)
+                assertEquals(starter, rematch.startingSeat)
+                val rotated = finished.freshRematch(seed + 100, rotateStarter = true)
+                assertPolicies(rotated)
+                assertEquals((starter + 1) % seats, rotated.startingSeat)
+                assertEquals(rotated.startingSeat, rotated.currentIndex)
+                assertTrue(imported.persist(rotated, "rotated-$seats-$seed", began + 1))
+                val rotatedRecovered = requireNotNull(imported.load().match).game
+                assertEquals(rotated.startingSeat, rotatedRecovered.startingSeat)
+                assertEquals(rotated.snapshot(), rotatedRecovered.snapshot())
+                val rotatedBackup = MatchRecoveryStore(MemoryPreferences(), board, events, registry)
+                assertTrue(rotatedBackup.importProgress(rotatedBackup.previewImport(imported.exportProgress())))
+                val rotatedMoved = requireNotNull(rotatedBackup.load().match).game
+                assertEquals(rotated.startingSeat, rotatedMoved.startingSeat)
+                assertEquals(rotated.snapshot(), rotatedMoved.snapshot())
+                assertPolicies(rotatedMoved)
+                assertEquals(12, importedPrefs.getInt("completed", 0))
+                assertEquals(5, importedPrefs.getInt("wins", 0))
+            }
+        }
+    }
+
+    @Test fun balancePreviewRecoversWithoutChangingClassicOrPublicRegistry() {
+        val candidateFile = listOf(File("design/prototypes/woodland_woven_convergence_v02.json"),
+            File("../design/prototypes/woodland_woven_convergence_v02.json")).first { it.isFile }
+        val candidate = GameData.board(candidateFile.readText())
+        assertEquals(CrossroadsCourse.CONVERGENCE_ID,candidate.id)
+        val preview = DecisionLab.variantV5(candidate)
+        val prefs = MemoryPreferences()
+        val registry = mapOf(board.id to board,candidate.id to candidate,preview.id to preview)
+        val classic = GameSession(board,events,seed=47)
+        classic.roll()
+        assertTrue(MatchRecoveryStore(prefs,board,events).persist(classic,"classic-before-preview",1L))
+        val qa = MatchRecoveryStore(prefs,board,events,registry)
+        assertEquals(classic.snapshot(),requireNotNull(qa.load().match).game.snapshot())
+        val race = GameSession(preview,events,seed=47)
+        race.rollSteady()
+        assertTrue(qa.persist(race,"balance-preview",2L))
+        val recovered = requireNotNull(MatchRecoveryStore(prefs,board,events,registry).load().match)
+        assertEquals(preview.id,recovered.game.board.id)
+        assertEquals(race.snapshot(),recovered.game.snapshot())
+        val publicStore = MatchRecoveryStore(prefs,board,events)
+        assertTrue(publicStore.load().invalidSavedMatch)
+        assertEquals(race.snapshot(),requireNotNull(qa.load().match).game.snapshot())
+        val backup = qa.exportProgress()
+        val imported = MatchRecoveryStore(MemoryPreferences(),board,events,registry)
+        assertTrue(imported.importProgress(imported.previewImport(backup)))
+        assertEquals(race.snapshot(),requireNotNull(imported.load().match).game.snapshot())
+    }
+
+    @Test fun offlinePublicRegistryRejectsExperimentalTransferWithoutReplacingProgress() {
+        val lab = DecisionLab.variantV5(quick)
+        val qa = MatchRecoveryStore(MemoryPreferences(), board, events,
+            listOf(board, quick, cedarwood, lab).associateBy { it.id })
+        val experimental = GameSession(lab, events, seed = 42)
+        experimental.rollSteady()
+        assertTrue(qa.persist(experimental, "experimental-transfer", 1L))
+        val payload = qa.exportProgress()
+        val prefs = MemoryPreferences()
+        prefs.edit().putInt("completed", 8).putInt("wins", 3).commit()
+        val publicStore = MatchRecoveryStore(prefs, board, events,
+            listOf(board, quick, cedarwood).associateBy { it.id })
+        val classic = GameSession(quick, events, seed = 43)
+        classic.roll()
+        assertTrue(publicStore.persist(classic, "public-original", 2L))
+        assertTrue(runCatching { publicStore.previewImport(payload) }.isFailure)
+        assertTrue(runCatching { publicStore.importProgress(qa.previewImport(payload)) }.isFailure)
+        assertEquals(classic.snapshot(), requireNotNull(publicStore.load().match).game.snapshot())
+        assertEquals(8, prefs.getInt("completed", 0))
+        assertEquals(3, prefs.getInt("wins", 0))
+        val copy = MatchRecoveryStore(MemoryPreferences(), board, events,
+            listOf(board, quick, cedarwood).associateBy { it.id })
+        assertTrue(copy.importProgress(copy.previewImport(publicStore.exportProgress())))
+        assertEquals(classic.snapshot(), requireNotNull(copy.load().match).game.snapshot())
+    }
+
     @Test fun completedMatchTimeAndStatsSurviveReopenWithoutDoubleCounting() {
         for (passAndPlay in listOf(false, true)) {
             val prefs = MemoryPreferences()

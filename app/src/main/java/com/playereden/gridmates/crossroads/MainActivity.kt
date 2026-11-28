@@ -91,6 +91,8 @@ class MainActivity : ComponentActivity() {
         val classicBoard = GameData.board(assets.open("boards/woodland_woven_trail.json").bufferedReader().use { it.readText() })
         val quickBoard = GameData.board(assets.open("boards/woodland_brookside_quick.json").bufferedReader().use { it.readText() })
         val longBoard = GameData.board(assets.open("boards/woodland_cedarwood_long.json").bufferedReader().use { it.readText() })
+        val regionalBoard = if (BuildConfig.DEBUG) GameData.board(assets.open("woodland_woven_regional_v05.json").bufferedReader().use { it.readText() }) else null
+        val convergenceBoard = if (BuildConfig.DEBUG) GameData.board(assets.open("woodland_woven_convergence_v02.json").bufferedReader().use { it.readText() }) else null
         val catalogue = GameData.events(assets.open("events/woven_events_v02.json").bufferedReader().use { it.readText() })
         setContent {
             MaterialTheme(
@@ -106,7 +108,9 @@ class MainActivity : ComponentActivity() {
                     outline = Color(0xFF978B76), outlineVariant = Color(0xFFD8CCB3)
                 )
             ) {
-                CrossroadsApp(classicBoard, quickBoard, longBoard, catalogue)
+                StartupBranding(showInitially = savedInstanceState == null, lifecycle = lifecycle) {
+                    CrossroadsApp(classicBoard, quickBoard, longBoard, catalogue, regionalBoard, convergenceBoard)
+                }
             }
         }
     }
@@ -117,15 +121,17 @@ private fun CrossroadsApp(
     classicBoard: BoardDefinition,
     quickBoard: BoardDefinition,
     longBoard: BoardDefinition,
-    catalogue: EventCatalogue
+    catalogue: EventCatalogue,
+    regionalBoard: BoardDefinition? = null,
+    convergenceBoard: BoardDefinition? = null
 ) {
-    val knownBoards = remember(classicBoard, quickBoard, longBoard) {
-        val original = listOf(classicBoard, quickBoard, longBoard)
-        (original + original.map(DecisionLab::variant) +
+    val knownBoards = remember(classicBoard, quickBoard, longBoard, regionalBoard, convergenceBoard) {
+        val original = listOfNotNull(classicBoard, quickBoard, longBoard, regionalBoard)
+        (if (!BuildConfig.DEBUG) original else original + original.map(DecisionLab::variant) +
             original.map(DecisionLab::variantV2) +
             original.map(DecisionLab::variantV3) +
             original.map(DecisionLab::variantV4) +
-            original.map(DecisionLab::variantV5)).associateBy { it.id }
+            original.map(DecisionLab::variantV5) + listOfNotNull(convergenceBoard, convergenceBoard?.let(DecisionLab::variantV5))).associateBy { it.id }
     }
     val context = LocalContext.current
     // Crossroads runs inside its own ComponentActivity. Explicitly observe the
@@ -160,7 +166,7 @@ private fun CrossroadsApp(
     // judged next to the existing storybook landscapes before any replacement.
     // This is a local appearance preference, never a save or LAN rule.
     var topDownBoardPreview by remember {
-        mutableStateOf(BuildConfig.DEBUG && prefs.getBoolean("qa_overhead_board_v1", false))
+        mutableStateOf(BuildConfig.DEBUG && prefs.getBoolean("qa_overhead_board_v2", true))
     }
     val recoveryStore = remember(prefs, classicBoard, quickBoard, longBoard, catalogue) {
         MatchRecoveryStore(prefs, classicBoard, catalogue, knownBoards)
@@ -179,14 +185,14 @@ private fun CrossroadsApp(
         )
     }
     var playtestRules by remember {
-        mutableStateOf(initialRecovery.match?.game?.playtestRules ?: false)
+        mutableStateOf(BuildConfig.DEBUG && (initialRecovery.match?.game?.playtestRules ?: false))
     }
     // Only users who explicitly choose Fair Finish start Lab v5.
     // Existing saved Lab v4/v5 games always restore their own version.
     var fairFinishExperiment by remember {
         mutableStateOf(
-            initialRecovery.match?.game?.board?.id?.endsWith(DecisionLab.V5_SUFFIX) == true ||
-                prefs.getBoolean("lab_v5_equal_round_opt_in_v1", false)
+            BuildConfig.DEBUG && (initialRecovery.match?.game?.board?.id?.endsWith(DecisionLab.V5_SUFFIX) == true ||
+                prefs.getBoolean("lab_v5_equal_round_opt_in_v1", false))
         )
     }
     var activeMatchId by remember { mutableStateOf(initialRecovery.match?.matchId ?: "") }
@@ -277,26 +283,27 @@ private fun CrossroadsApp(
     var lanLastPort by remember { mutableIntStateOf(0) }
     var lanLastCode by remember { mutableStateOf("") }
     val nearby = remember(context) {
-        CrossroadsNearby(context) { error ->
+        if (BuildConfig.DEBUG) CrossroadsNearby(context) { error ->
             mainHandler.post { lanMessage = error }
-        }
+        } else null
     }
     LaunchedEffect(lanScreen, lanHost, lanRole) {
+        if (!BuildConfig.DEBUG) return@LaunchedEffect
         when {
             lanRole == LanRole.HOST && lanHost != null -> lanHost?.let {
                 // Keep the room advertised while the game is active so the
                 // same guest can discover it again after a Wi-Fi interruption.
-                nearby.advertise(it.port, it.code.isNotEmpty())
+                nearby?.advertise(it.port, it.code.isNotEmpty())
             }
-            lanScreen == LanScreen.JOIN -> nearby.discover { lanRooms = it }
-            else -> nearby.stop()
+            lanScreen == LanScreen.JOIN -> nearby?.discover { lanRooms = it }
+            else -> nearby?.stop()
         }
     }
     DisposableEffect(nearby) {
         onDispose {
             lanHost?.close()
             lanGuest?.close()
-            nearby.close()
+            nearby?.close()
         }
     }
     val game = session
@@ -369,7 +376,7 @@ private fun CrossroadsApp(
     fun leaveGame() {
         lanHost?.close()
         lanGuest?.close()
-        nearby.stop()
+        nearby?.stop()
         lanHost = null
         lanGuest = null
         lanScreen = LanScreen.NONE
@@ -539,23 +546,29 @@ private fun CrossroadsApp(
         revision++
     }
 
-    fun start(seats: Int, passAndPlay: Boolean) {
+    fun start(seats: Int, passAndPlay: Boolean,
+              opponents: Map<Int, BotOpponentConfigurationV1>, starterChoice: Int) {
         if (lanRole != LanRole.OFFLINE) leaveGame()
         val humans = if (passAndPlay) (0 until seats).toSet() else setOf(0)
         val boardId = CrossroadsExperimentalMode.boardId(
-            selectedCourseId, playtestRules, fairFinishExperiment
+            selectedCourseId, BuildConfig.DEBUG && playtestRules, BuildConfig.DEBUG && fairFinishExperiment
         )
         val newGame = GameSession(knownBoards.getValue(boardId), catalogue, seats = seats,
-            seed = java.util.Random().nextInt(), humanIndices = humans)
+            seed = java.util.Random().nextInt(), humanIndices = humans,
+            botSeatPolicies = OfflineOpponentPreview.policies(BuildConfig.DEBUG, passAndPlay,
+                boardId, seats, opponents),
+            startingSeat = OfflineStartingSeatPreview.resolve(BuildConfig.DEBUG, passAndPlay,
+                boardId, seats, starterChoice) { count -> java.util.Random().nextInt(count) })
         beginOfflineRace(newGame)
     }
 
     fun startLanHost(requireCode: Boolean, seats: Int) {
+        if (!BuildConfig.DEBUG) return
         if (seats !in 2..4) {
             lanMessage = "Nearby games support two to four participants."
             return
         }
-        if (!nearby.hasWifi()) {
+        if (nearby?.hasWifi() != true) {
             lanMessage = "Connect both phones to the same Wi-Fi before hosting."
             return
         }
@@ -657,7 +670,8 @@ private fun CrossroadsApp(
     }
 
     fun joinLan(host: String, port: Int, code: String, resume: Boolean = false) {
-        if (!nearby.hasWifi()) {
+        if (!BuildConfig.DEBUG) return
+        if (nearby?.hasWifi() != true) {
             lanMessage = "Connect both phones to the same Wi-Fi before joining."
             return
         }
@@ -671,7 +685,7 @@ private fun CrossroadsApp(
         if (!resume || lanGuest == null) {
             lanGuest?.close()
             lanGuest = CrossroadsLanGuest(
-                socketFactory = { nearby.wifiSocket() },
+                socketFactory = { requireNotNull(nearby).wifiSocket() },
                 onState = { checkpoint ->
                     mainHandler.post {
                         if (lanRole == LanRole.GUEST) {
@@ -798,9 +812,13 @@ private fun CrossroadsApp(
         revision++
     }
 
-    fun rematch() {
+    fun rematch(rotateStarter: Boolean = false) {
         val current = session ?: return
         if (current.phase != Phase.FINISHED) return
+        if (rotateStarter && (lanRole != LanRole.OFFLINE ||
+            !OfflineOpponentPreview.enabled(BuildConfig.DEBUG,
+                current.players.count { !it.isBot } != 1 || current.players[0].isBot,
+                current.board.id))) return
         if (lanRole == LanRole.HOST) {
             if (!lanConnected) return
             val next = current.freshRematch(java.util.Random().nextInt())
@@ -811,7 +829,7 @@ private fun CrossroadsApp(
             lanHost?.publish(next.checkpoint(activeMatchId, matchStartedAtEpochMillis))
             revision++
         } else if (lanRole == LanRole.OFFLINE) {
-            beginOfflineRace(current.freshRematch(java.util.Random().nextInt()))
+            beginOfflineRace(current.freshRematch(java.util.Random().nextInt(), rotateStarter))
         }
     }
 
@@ -856,11 +874,11 @@ private fun CrossroadsApp(
     }
 
     BackHandler(enabled = lanScreen != LanScreen.NONE) { leaveGame() }
-    if (lanScreen != LanScreen.NONE) {
+    if (BuildConfig.DEBUG && lanScreen != LanScreen.NONE) {
         CrossroadsLanLobby(
             screen = lanScreen,
             rooms = lanRooms,
-            hostAddress = nearby.address(),
+            hostAddress = nearby?.address().orEmpty(),
             hostPort = lanHost?.port ?: 0,
             hostSeats = lanSeats,
             inviteCode = lanHost?.code.orEmpty(),
@@ -868,7 +886,7 @@ private fun CrossroadsApp(
             busy = lanBusy,
             onHost = { requireCode, seats -> startLanHost(requireCode, seats) },
             onJoin = { host, port, code -> joinLan(host, port, code) },
-            onRefresh = { nearby.discover { lanRooms = it } },
+            onRefresh = { nearby?.discover { lanRooms = it } },
             onExit = { leaveGame() },
             onRejoin = {
                 if (lanLastHost.isNotBlank() && lanLastPort in 1..65535) {
@@ -882,8 +900,10 @@ private fun CrossroadsApp(
         CrossroadsHomeScreen(
             wins = wins,
             completed = matches,
-            onStart = { seats, localPlayers -> start(seats, localPlayers) },
+            onStart = { seats, localPlayers, opponents, starter -> start(seats, localPlayers, opponents, starter) },
             selectedCourseId = selectedCourseId,
+            regionalCourseId = regionalBoard?.id,
+            convergenceCourseId = convergenceBoard?.id,
             onCourseChange = { courseId ->
                 if (courseId in knownBoards) selectedCourseId = courseId
             },
@@ -893,21 +913,27 @@ private fun CrossroadsApp(
                 prefs.edit().putString("board_look_v1", look.name).apply()
             },
             playtestRules = playtestRules,
-            onPlaytestRulesChange = { playtestRules = it },
+            onPlaytestRulesChange = { if (BuildConfig.DEBUG) playtestRules = it },
             fairFinishExperiment = fairFinishExperiment,
             onFairFinishExperimentChange = {
-                fairFinishExperiment = it
-                prefs.edit().putBoolean("lab_v5_equal_round_opt_in_v1", it).apply()
+                if (BuildConfig.DEBUG) {
+                    fairFinishExperiment = it
+                    prefs.edit().putBoolean("lab_v5_equal_round_opt_in_v1", it).apply()
+                }
             },
             onNearbyHost = {
-                lanMessage = null
-                lanRole = LanRole.HOST
-                lanScreen = LanScreen.HOST_SETUP
+                if (BuildConfig.DEBUG) {
+                    lanMessage = null
+                    lanRole = LanRole.HOST
+                    lanScreen = LanScreen.HOST_SETUP
+                }
             },
             onNearbyJoin = {
-                lanMessage = null
-                lanRole = LanRole.GUEST
-                lanScreen = LanScreen.JOIN
+                if (BuildConfig.DEBUG) {
+                    lanMessage = null
+                    lanRole = LanRole.GUEST
+                    lanScreen = LanScreen.JOIN
+                }
             },
             onExportProgress = { exportLauncher.launch("GridMates-Crossroads-backup.json") },
             onImportProgress = {
@@ -916,6 +942,26 @@ private fun CrossroadsApp(
             recoveryWarning = recoveryWarning
         )
     } else {
+        val showOpponentIdentity = BuildConfig.DEBUG && lanRole == LanRole.OFFLINE &&
+            board.id.endsWith(DecisionLab.V5_SUFFIX) &&
+            state.players.indices.any { seat ->
+                state.players[seat].isBot && game.policyForBotSeat(seat) != BotPolicyVersion.LEGACY_V1
+            }
+        fun displaySeatName(seat: Int): String {
+            val player = state.players[seat]
+            return OfflineOpponentPreview.liveName(player.name, seat,
+                if (showOpponentIdentity && player.isBot) game.policyForBotSeat(seat) else null)
+        }
+
+        fun displayRecordedName(name: String): String =
+            OfflineOpponentPreview.recordedName(name, state.players.map { it.name },
+                state.players.indices.map { displaySeatName(it) })
+
+        fun displayNarrative(message: String): String =
+            if (showOpponentIdentity) OfflineOpponentPreview.narrative(message,
+                state.players.map { it.name }, state.players.indices.map { displaySeatName(it) })
+            else message
+
         // UI-52: game-first layout, not a scrolling app page. The real board
         // occupies the playfield; status and contextual controls float above it.
         // All actions still invoke the exact existing match/nearby callbacks.
@@ -927,6 +973,8 @@ private fun CrossroadsApp(
             // Remember the BoxWithConstraints scope's dimensions outside
             // descendant Box lambdas, which have their own receiver.
             val viewportHeight = maxHeight
+            var topOverlayPx by remember(game) { mutableIntStateOf(0) }
+            var bottomOverlayPx by remember(game) { mutableIntStateOf(0) }
             // The world extends behind both HUD layers. It is a cropped
             // square, never a stretched portrait background or board card.
             Box(
@@ -934,6 +982,9 @@ private fun CrossroadsApp(
                 contentAlignment = Alignment.Center
             ) {
                 BoardCanvas(board, state, height = viewportHeight,
+                    displayName = ::displayRecordedName,
+                    topOverlayPx = topOverlayPx.toFloat(),
+                    bottomOverlayPx = bottomOverlayPx.toFloat(),
                     immersiveWorld = true,
                     matchKey = game,
                     boardLook = boardLook, trailStyle = trailStyle,
@@ -1000,28 +1051,34 @@ private fun CrossroadsApp(
             // Compact on-board scoreboard and controls, without a page header.
             Column(
                 modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth()
+                    .onSizeChanged { topOverlayPx = it.height }
                     .background(Color(0xED352C20))
-                    .padding(top = 6.dp, bottom = 5.dp),
+                    .padding(top = 3.dp, bottom = 2.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
             val displayedSeat = (if (!turnReady) cameraTrackIndex else state.playerIndex)
                 .coerceIn(state.players.indices)
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 1.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 state.players.forEachIndexed { i, player ->
                     val isFocused = i == displayedSeat && state.phase != Phase.FINISHED
                     val seatStatus = when {
-                        state.phase == Phase.FINISHED && state.winnerIndex == i -> "finished first"
-                        state.phase == Phase.FINISHED -> "still on the trail"
+                        state.phase == Phase.FINISHED -> OfflineOpponentPreview.finishedStatus(
+                            state.winnerIndex == i, board.id.endsWith(DecisionLab.V5_SUFFIX),
+                            player.position == board.finish)
                         isFocused && !turnReady -> "currently moving"
                         isFocused -> "current player"
                         else -> "waiting"
                     }
                     TabletopSeatPlate(
                         seatIndex = i,
-                        name = player.name,
+                        name = OfflineOpponentPreview.plateName(player.name, i,
+                            if (showOpponentIdentity && player.isBot) game.policyForBotSeat(i) else null),
+                        accessibleName = OfflineOpponentPreview.accessiblePlateName(player.name, i,
+                            if (showOpponentIdentity && player.isBot) game.policyForBotSeat(i) else null),
+                        stackLabel = showOpponentIdentity && state.players.size >= 3,
                         seatColor = PlayerColors[i],
                         active = isFocused,
                         shielded = player.shield,
@@ -1032,13 +1089,13 @@ private fun CrossroadsApp(
             }
 
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(start = 12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(start = 10.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     val matchBrand = if (BuildConfig.DEBUG) "CROSSROADS · QA" else "CROSSROADS"
                     Text(
-                        CrossroadsCourse.title(board.id),
+                        CrossroadsCourse.compactTitle(board.id),
                         modifier = Modifier.weight(1f).semantics {
                             contentDescription = "$matchBrand · ${CrossroadsCourse.title(board.id)}"
                         },
@@ -1048,13 +1105,10 @@ private fun CrossroadsApp(
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
-                    if (BuildConfig.DEBUG) {
-                        Text("QA", color = Color(0xFFF0D7A5),
-                            style = MaterialTheme.typography.labelSmall)
-                    }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         TabletopUtilityButton(
-                            text = "Full map", onClick = { inspectBoard = true }, dark = true,
+                            text = "Map", onClick = { inspectBoard = true }, dark = true,
+                            modifier = Modifier.width(94.dp).semantics { contentDescription = "Full map" },
                             icon = TabletopIconArt.MAP
                         )
                     Box {
@@ -1124,7 +1178,7 @@ private fun CrossroadsApp(
                                     onClick = {
                                         topDownBoardPreview = !topDownBoardPreview
                                         prefs.edit().putBoolean(
-                                            "qa_overhead_board_v1", topDownBoardPreview
+                                            "qa_overhead_board_v2", topDownBoardPreview
                                         ).apply()
                                         showMatchOptions = false
                                     }
@@ -1144,7 +1198,7 @@ private fun CrossroadsApp(
                                 )
                                 DropdownMenuItem(
                                     text = {
-                                        Text(if (woodlandPieces) "Pieces: Woodland (zoom detail)"
+                                        Text(if (woodlandPieces) "Pieces: Woodland"
                                             else "Pieces: Standard")
                                     },
                                     onClick = {
@@ -1232,6 +1286,7 @@ private fun CrossroadsApp(
             val dockMaxFraction = gameActionDockMaxFraction(state.phase)
             TabletopActionTray(
                 modifier = Modifier.align(Alignment.BottomCenter)
+                    .onSizeChanged { bottomOverlayPx = it.height }
                     .padding(horizontal = 8.dp, vertical = 5.dp)
                     .fillMaxWidth()
                     .heightIn(
@@ -1243,14 +1298,13 @@ private fun CrossroadsApp(
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
-                        .padding(horizontal = 10.dp, vertical = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     val round = (state.turn - 1) / state.players.size + 1
-                    val currentName = state.players[state.playerIndex].name
-                    val trackedName = state.players[
-                        cameraTrackIndex.coerceIn(state.players.indices)
-                    ].name
+                    val currentName = displaySeatName(state.playerIndex)
+                    val trackedName = displaySeatName(cameraTrackIndex.coerceIn(state.players.indices))
+                    val myAction = localIsCurrentSeat && !state.players[state.playerIndex].isBot
                     GameHudTurnStrip(
                         title = if (state.phase == Phase.FINISHED && !turnReady)
                             "Approaching the finish…"
@@ -1268,6 +1322,9 @@ private fun CrossroadsApp(
                                 .coerceIn(state.players.indices)
                         ],
                         botTurn = state.players[state.playerIndex].isBot,
+                        detailsExpanded = showTurnDetails,
+                        onToggleDetails = if (state.phase != Phase.FINISHED && (myAction || showTurnDetails))
+                            ({ showTurnDetails = !showTurnDetails }) else null,
                         modifier = Modifier.fillMaxWidth()
                     )
                     if (recoveryWarning != null) {
@@ -1289,20 +1346,20 @@ private fun CrossroadsApp(
                         state.phase == Phase.ROLL && state.die == null &&
                         state.encounters.isEmpty()
                     val actionNote = if (game.finalRoundPending)
-                            "Final round · ${game.leadingFinisherName} is at Finish. Remaining racers get one last turn."
+                            "Final round · ${game.leadingFinisherName?.let { displayRecordedName(it) } ?: "A racer"} is at Finish. Remaining racers get one last turn."
                         else if (initialInstructions) "Ready for your first move"
                         else turnActionSummary(
                             phase = state.phase,
                             botTurn = state.players[state.playerIndex].isBot,
                             actorName = currentName,
-                            latestAction = state.lastMessage
+                            latestAction = displayNarrative(state.lastMessage)
                         )
                     // Long encounter explanations should not be clipped while
                     // an otherwise empty action dock occupies the bottom.
                     // The encounter card itself explains the human's next action.
                     // Avoid a redundant two-line explanation above it, which
                     // pushed event choices off shorter portrait screens.
-                    if (showCollapsedActionNote(
+                    if (!showTurnDetails && !(initialInstructions && game.playtestRules && lanRole == LanRole.OFFLINE) && showCollapsedActionNote(
                             phase = state.phase,
                             humanEncounterChoiceReady =
                                 state.phase == Phase.ENCOUNTER &&
@@ -1370,7 +1427,6 @@ private fun CrossroadsApp(
                             }
                         }
                     }
-                    val myAction = localIsCurrentSeat && !state.players[state.playerIndex].isBot
                     if (state.phase == Phase.FINISHED && !turnReady) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                     } else if (state.phase == Phase.FINISHED) {
@@ -1417,7 +1473,7 @@ private fun CrossroadsApp(
                                         )
                                         TabletopActionTile(
                                             title = "PUSH",
-                                            detail = "Risk for speed",
+                                            detail = "1 or 5–8 spaces",
                                             warm = true,
                                             onClick = {
                                                 queuedLabRoll = LabRoll.PUSH
@@ -1491,7 +1547,7 @@ private fun CrossroadsApp(
                                         horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                                         pair.forEach { target ->
                                             TabletopActionTile(
-                                                title = state.players[target].name,
+                                                title = displaySeatName(target),
                                                 detail = if (state.players[target].shield)
                                                     "Shielded" else "Choose rival",
                                                 onClick = {
@@ -1507,16 +1563,6 @@ private fun CrossroadsApp(
                                 }
                             }
                             Phase.FINISHED -> Unit
-                        }
-                    }
-                    if (state.phase != Phase.FINISHED && (myAction || showTurnDetails)) {
-                        TextButton(
-                            onClick = { showTurnDetails = !showTurnDetails },
-                            modifier = Modifier.align(Alignment.End),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
-                        ) {
-                            Text(if (showTurnDetails) "Less detail" else "Rules & last action",
-                                style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 }
@@ -1551,9 +1597,9 @@ private fun CrossroadsApp(
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(
                             topStart = 24.dp, topEnd = 24.dp
                         ),
-                        color = Color(0xFFF1E4C8),
+                        color = TabletopMaterials.paper,
                         border = androidx.compose.foundation.BorderStroke(
-                            2.dp, Color(0xFF9D865E)
+                            2.dp, TabletopMaterials.brass
                         ),
                         shadowElevation = 12.dp
                     ) {
@@ -1631,9 +1677,9 @@ private fun CrossroadsApp(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 TabletopUtilityButton(
-                                    text = "Back to board",
+                                    text = "Board",
                                     onClick = { routeDialogDismissed = true },
-                                    modifier = Modifier.weight(1f), icon = TabletopIconArt.MAP
+                                    modifier = Modifier.weight(1f).semantics { contentDescription = "Back to board" }, icon = TabletopIconArt.MAP
                                 )
                                 TabletopUtilityButton(
                                     // Keep the legal route decision intact while inspecting.
@@ -1661,9 +1707,21 @@ private fun CrossroadsApp(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         state.encounters.asReversed().forEach { note ->
-                            Text("Turn ${note.turn} · ${note.actor}: ${note.title}",
-                                fontWeight = FontWeight.SemiBold)
-                            Text(note.outcome, style = MaterialTheme.typography.bodySmall, color = Bark)
+                            TabletopPanel(
+                                modifier = Modifier.fillMaxWidth(),
+                                color = TabletopMaterials.paper,
+                                elevation = 0.dp
+                            ) {
+                                Column(
+                                    Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
+                                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                                ) {
+                                    Text("Turn ${note.turn} · ${displayRecordedName(note.actor)}",
+                                        style = MaterialTheme.typography.labelSmall, color = Bark)
+                                    Text(note.title, fontWeight = FontWeight.SemiBold, color = Forest)
+                                    Text(displayNarrative(note.outcome), style = MaterialTheme.typography.bodySmall, color = Bark)
+                                }
+                            }
                         }
                     }
                 },
@@ -1673,96 +1731,66 @@ private fun CrossroadsApp(
             )
         }
         if (inspectBoard) {
-            // Large, readable read-only game map; this surface intentionally
-            // cannot send a ROUTE action or modify a saved position.
+            // A read-only full-screen map, independent of live camera and actions.
             Dialog(
                 onDismissRequest = { inspectBoard = false },
                 properties = DialogProperties(usePlatformDefaultWidth = false)
             ) {
-                BoxWithConstraints(
+                Column(
                     modifier = Modifier.fillMaxSize()
-                        .background(Color(0xDB142419))
-                        .windowInsetsPadding(WindowInsets.safeDrawing),
-                    contentAlignment = Alignment.Center
+                        .background(Cream)
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                        .padding(horizontal = 6.dp, vertical = 6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Surface(
-                        modifier = Modifier.widthIn(max = 680.dp).fillMaxWidth()
-                            .padding(horizontal = 4.dp)
-                            .heightIn(max = (maxHeight - 12.dp).coerceAtLeast(220.dp)),
-                        color = Cream,
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(25.dp),
-                        border = androidx.compose.foundation.BorderStroke(
-                            2.dp, Color(0xFFD0B98D)
-                        ),
-                        shadowElevation = 16.dp
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("FULL MAP", color = Bark, fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.labelSmall)
+                            Text(CrossroadsCourse.title(board.id), color = Forest,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleMedium)
+                        }
+                        TextButton(onClick = { inspectBoard = false },
+                            modifier = Modifier.heightIn(min = 48.dp)) {
+                            Text("Close")
+                        }
+                    }
+                    BoxWithConstraints(
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Column(
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 9.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(Modifier.weight(1f)) {
-                                    Text("THE COURSE", color = Bark,
-                                        fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.labelSmall)
-                                    Text(CrossroadsCourse.title(board.id), color = Forest,
-                                        fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.titleLarge)
-                                }
-                                TabletopUtilityButton(
-                                    text = "Close map", onClick = { inspectBoard = false },
-                                    icon = TabletopIconArt.COLLAPSE
-                                )
-                            }
-                            Column(
-                                modifier = Modifier.fillMaxWidth()
-                                    .weight(1f, fill = false)
-                                    .verticalScroll(rememberScrollState()),
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Surface(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    color = Color(0xFF263D2C),
-                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(15.dp),
-                                    border = androidx.compose.foundation.BorderStroke(
-                                        2.dp, Color(0xFFC5A773)
-                                    )
-                                ) {
-                                    BoxWithConstraints(
-                                        modifier = Modifier.fillMaxWidth().padding(3.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        // Fill the available inner width with a square board. The
-                                        // scroll container still supports short/landscape screens.
-                                        val mapHeight = maxWidth
-                                        BoardCanvas(
-                                            board, state,
-                                            height = mapHeight, tokenScale = 1.35f,
-                                            animateTokens = false, matchKey = game,
-                                            boardLook = boardLook, trailStyle = trailStyle,
-                                            woodlandPieces = woodlandPieces,
-                                            paintedMarkers = paintedMarkers,
-                                            topDownPreview = topDownBoardPreview
-                                        )
-                                    }
-                                }
-                                Text("Amber: hazard  •  Green: shelter  •  Purple: mischief",
-                                    style = MaterialTheme.typography.bodySmall, color = Bark)
-                                Text("Pinch to inspect · drag to explore",
-                                    style = MaterialTheme.typography.labelSmall, color = Bark)
-                            }
-                            TabletopPrimaryActionButton(
-                                text = if (state.phase == Phase.ROUTE && localIsCurrentSeat &&
-                                    game.availableRoutes().size >= 2 && !routeDialogDismissed)
-                                    "RETURN TO ROUTE CHOICES" else "BACK TO THE TRAIL",
-                                onClick = { inspectBoard = false },
-                                modifier = Modifier.fillMaxWidth()
+                        // Fit the complete square into the actual remaining
+                        // space. Pinch/pan belongs only to the map canvas.
+                        val mapSide = minOf(maxWidth, maxHeight).coerceAtLeast(1.dp)
+                        Box(Modifier.size(mapSide)) {
+                            BoardCanvas(
+                                board, state,
+                                height = mapSide, tokenScale = 1.35f,
+                                displayName = ::displayRecordedName,
+                                animateTokens = false, matchKey = game,
+                                boardLook = boardLook, trailStyle = trailStyle,
+                                woodlandPieces = woodlandPieces,
+                                paintedMarkers = paintedMarkers,
+                                topDownPreview = topDownBoardPreview
                             )
                         }
                     }
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text("Amber: hazard  •  Green: shelter  •  Purple: mischief",
+                            style = MaterialTheme.typography.bodySmall, color = Bark)
+                        Text("Pinch to inspect · drag to explore",
+                            style = MaterialTheme.typography.labelSmall, color = Bark)
+                    }
+                    TabletopPrimaryActionButton(
+                        text = if (state.phase == Phase.ROUTE && localIsCurrentSeat &&
+                            game.availableRoutes().size >= 2 && !routeDialogDismissed)
+                            "RETURN TO ROUTE CHOICES" else "BACK TO THE TRAIL",
+                        onClick = { inspectBoard = false },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
         }
@@ -1820,6 +1848,8 @@ private fun CrossroadsApp(
                                 courseId = board.id,
                                 elapsedSeconds = finishedElapsedSeconds,
                                 finishReceipt = game.fairFinishReceipt,
+                                displayName = ::displayRecordedName,
+                                displayNarrative = ::displayNarrative,
                                 modifier = Modifier.weight(1f, fill = false)
                             )
                             TabletopPrimaryActionButton(
@@ -1830,6 +1860,16 @@ private fun CrossroadsApp(
                                     (lanRole != LanRole.HOST || lanConnected),
                                 modifier = Modifier.fillMaxWidth()
                             )
+                            if (lanRole == LanRole.OFFLINE &&
+                                OfflineOpponentPreview.enabled(BuildConfig.DEBUG,
+                                    game.players.count { !it.isBot } != 1 || game.players[0].isBot,
+                                    game.board.id)) {
+                                TabletopUtilityButton(
+                                    text = "Race again · rotate starter (QA)",
+                                    onClick = { rematch(rotateStarter = true) },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1899,7 +1939,7 @@ private fun CrossroadsApp(
                             matchStartedAtEpochMillis = restored.match?.startedAtEpochMillis ?: 0L
                             startedFromCheckpoint = restored.match != null
                             if (restored.match != null) {
-                                selectedCourseId = restored.match.game.board.id
+                                selectedCourseId = DecisionLab.baseId(restored.match.game.board.id)
                             }
                             recoveryWarning = null
                             revision++
@@ -1948,7 +1988,10 @@ private fun BoardCanvas(
     stepMillis: Int = PresentationSpeed.COZY.stepMillis,
     focusPlayerIndex: Int = state.playerIndex,
     isTurnTransitioning: Boolean = false,
-    startAtCurrent: Boolean = false
+    startAtCurrent: Boolean = false,
+    displayName: (String) -> String = { it },
+    topOverlayPx: Float = 0f,
+    bottomOverlayPx: Float = 0f
 ) {
     // The scene is data-independent: scenery and optional illustrated pawns
     // are drawn beneath the authoritative routes and numeric seat labels.
@@ -1965,34 +2008,28 @@ private fun BoardCanvas(
     val environmentAtlas = rememberOptionalCrossroadsArt(
         if (useOverheadArtwork) CrossroadsArtSlot.ENVIRONMENT_ATLAS else null
     )
+    val visualProfile = PublicVisualProfile.resolve(BuildConfig.DEBUG,
+        trailStyle == CrossroadsTrailStyle.ARTWORK, woodlandPieces, paintedMarkers)
     val trailAtlas = rememberOptionalCrossroadsArt(
-        if (BuildConfig.DEBUG && boardLook == CrossroadsBoardLook.ILLUSTRATED)
+        if (boardLook == CrossroadsBoardLook.ILLUSTRATED)
             CrossroadsArtSlot.TRAIL_ATLAS else null
     )
     val effectiveTrails = effectiveTrailStyle(
-        wanted = if (BuildConfig.DEBUG) trailStyle else CrossroadsTrailStyle.SIMPLE,
+        wanted = if (BuildConfig.DEBUG) trailStyle else CrossroadsTrailStyle.ARTWORK,
         illustratedBoard = boardLook == CrossroadsBoardLook.ILLUSTRATED,
         atlasPresent = trailAtlas != null
     )
     val woodlandTokenAtlas = rememberOptionalCrossroadsArt(
-        if (BuildConfig.DEBUG && woodlandPieces) CrossroadsArtSlot.TOKEN_ATLAS else null
+        if (visualProfile.woodlandPieces) CrossroadsArtSlot.TOKEN_ATLAS else null
     )
-    val showWoodlandTokens = shouldShowWoodlandToken(
-        isQa = BuildConfig.DEBUG,
-        requested = woodlandPieces,
-        atlasLoaded = woodlandTokenAtlas != null
-    )
+    val showWoodlandTokens = visualProfile.woodlandPieces && woodlandTokenAtlas != null
     val markerAtlas = rememberOptionalCrossroadsArt(
-        if (BuildConfig.DEBUG && paintedMarkers &&
+        if (visualProfile.illustratedMarkers &&
             boardLook == CrossroadsBoardLook.ILLUSTRATED)
             CrossroadsArtSlot.MARKER_ATLAS else null
     )
-    val showPaintedMarkers = woodlandMarkerEnabled(
-        isDebug = BuildConfig.DEBUG,
-        requested = paintedMarkers,
-        atlasLoaded = markerAtlas != null,
-        illustratedBoard = boardLook == CrossroadsBoardLook.ILLUSTRATED
-    )
+    val showPaintedMarkers = visualProfile.illustratedMarkers && markerAtlas != null &&
+        boardLook == CrossroadsBoardLook.ILLUSTRATED
     // Pure, fixed overhead scenery positions are remembered per authored
     // graph; no per-frame random generation or fake game path data.
     val courseOverheadStyle = CourseOverheadStyle.forBoard(board.id)
@@ -2008,13 +2045,18 @@ private fun BoardCanvas(
         if (wovenOverhead) WovenEnvironmentAccents.plan(board.nodes, overheadDecor)
         else emptyList()
     }
-    val groundcover = remember(board, courseOverheadStyle, useOverheadArtwork,
+    val groundcover = remember(board, courseOverheadStyle, useOverheadArtwork, boardLook,
         overheadDecor, environmentAccents, siblingAccents) {
-        if (useOverheadArtwork && courseOverheadStyle != null) {
+        if (boardLook == CrossroadsBoardLook.ILLUSTRATED && courseOverheadStyle != null) {
             WoodlandGroundcover.plan(board.nodes, courseOverheadStyle,
                 overheadDecor.map { Offset(it.x,it.y) } +
                     (environmentAccents + siblingAccents).map { Offset(it.x,it.y) })
         } else emptyList()
+    }
+    val landscapeFootprints = remember(overheadDecor, environmentAccents, siblingAccents) {
+        LandscapeComposition.plan(overheadDecor.map {
+            EnvironmentAccent(it.x, it.y, EnvironmentAtlas.spriteFor(it.kind))
+        } + environmentAccents + siblingAccents)
     }
     val overheadBridges = remember(board, wovenOverhead) {
         if (wovenOverhead) OverheadScenery.bridges(board.nodes) else emptyList()
@@ -2126,7 +2168,7 @@ private fun BoardCanvas(
         }
     }
     val cameraSubject = focusPlayerIndex.coerceIn(displayed.indices)
-    val focusPlayerName = state.players[cameraSubject].name
+    val focusPlayerName = displayName(state.players[cameraSubject].name)
     val focusRegion = board.node(state.players[cameraSubject].position).region
     val cameraDescription = "${CrossroadsCourse.title(board.id)} board. $focusPlayerName in $focusRegion."
     // The snapshot may have advanced to the next player while a piece is still
@@ -2179,22 +2221,22 @@ private fun BoardCanvas(
     val cameraZoom = if (cameraMode == BoardCameraMode.MANUAL) manualZoom else autoZoom
     val drawWoodlandPortraits = shouldDrawWoodlandPortrait(
         artAvailable = showWoodlandTokens,
-        cameraZoom = cameraZoom
+        cameraZoom = cameraZoom,
+        liveWorld = immersiveWorld,
+        baseDiameterPx = 22f * gamePieceScale
     )
     val focusPx = worldFrame.position(followedFocus.x, followedFocus.y)
     val desiredTranslation = when (cameraMode) {
         BoardCameraMode.FOLLOW -> Offset(
             CameraGeometry.centerTranslation(viewportWidth / 2f, focusPx.x, cameraZoom),
             CameraGeometry.centerTranslation(viewportHeight / 2f, focusPx.y, cameraZoom) +
-                viewportHeight * ((if (forkPreview != null)
-                    CrossroadsCameraPreset.FORK_PREVIEW_HEIGHT
-                else CrossroadsCameraPreset.focusHeightFraction(
-                    state.phase, immersiveWorld
-                )) - 0.5f)
+                (CrossroadsCameraPreset.visibleFocusY(viewportHeight, topOverlayPx, bottomOverlayPx,
+                    if (forkPreview != null) CrossroadsCameraPreset.FORK_PREVIEW_HEIGHT
+                    else CrossroadsCameraPreset.focusHeightFraction(state.phase, immersiveWorld)) - viewportHeight / 2f)
         )
         BoardCameraMode.MANUAL -> manualTranslation
     }
-    val actualTranslation = Offset(
+    val boundedTranslation = Offset(
         CameraGeometry.boundTranslation(desiredTranslation.x, viewportWidth,
             worldFrame.left, worldFrame.right, cameraZoom),
         if (cameraMode == BoardCameraMode.FOLLOW)
@@ -2205,9 +2247,6 @@ private fun BoardCanvas(
         else CameraGeometry.boundTranslation(desiredTranslation.y, viewportHeight,
             worldFrame.top, worldFrame.bottom, cameraZoom)
     )
-    // Keep the pointer handler stable while receiving the newest following pose.
-    val liveZoom by rememberUpdatedState(cameraZoom)
-    val liveTranslation by rememberUpdatedState(actualTranslation)
 
     // Touching the focused piece or double-tapping resumes cinematic following.
     val liveViewportSize by rememberUpdatedState(canvasDimensions)
@@ -2220,9 +2259,24 @@ private fun BoardCanvas(
     val focusedOffset = CrossroadsPiecePlacement.offset(
         focusedRank.coerceAtLeast(0), focusedGroup.size.coerceAtLeast(1), gamePieceScale
     )
-    val livePieceLocation by rememberUpdatedState(
-        worldFrame.position(active.x, active.y) + focusedOffset
-    )
+    val paintedPawn = worldFrame.position(active.x, active.y) + focusedOffset
+    val actualTranslation = if (immersiveWorld && animateTokens &&
+        cameraMode == BoardCameraMode.FOLLOW && state.phase != Phase.FINISHED &&
+        topOverlayPx > 0f && bottomOverlayPx > 0f) {
+        val margin = 26f * gamePieceScale * cameraZoom
+        val center = Offset(viewportWidth / 2f, viewportHeight / 2f)
+        val pawnScreen = center + (paintedPawn - center) * cameraZoom + boundedTranslation
+        Offset(
+            CrossroadsCameraPreset.revealPawn(boundedTranslation.x, pawnScreen.x,
+                margin, viewportWidth - margin),
+            CrossroadsCameraPreset.revealPawn(boundedTranslation.y, pawnScreen.y,
+                topOverlayPx + margin, viewportHeight - bottomOverlayPx - margin)
+        )
+    } else boundedTranslation
+    // Keep pointer handlers in sync with the final rendered camera.
+    val liveZoom by rememberUpdatedState(cameraZoom)
+    val liveTranslation by rememberUpdatedState(actualTranslation)
+    val livePieceLocation by rememberUpdatedState(paintedPawn)
     // Pointer handlers persist across Compose recompositions; keep the latest
     // legal destinations and action callback bound to the latest phase.
     val liveRouteDestinations by rememberUpdatedState(
@@ -2361,7 +2415,7 @@ private fun BoardCanvas(
             if (useOverheadArtwork && !wovenOverhead && courseOverheadStyle != null &&
                 environmentAtlas != null && EnvironmentAtlas.validDimensions(environmentAtlas.width, environmentAtlas.height)) {
                 drawSiblingCourseOverhead(courseOverheadStyle, siblingAccents, environmentAtlas,
-                    left, top, drawWidth, drawHeight, groundcover)
+                    left, top, drawWidth, drawHeight, groundcover, landscapeFootprints)
             } else if (wovenOverhead) {
                 // Same graph, different VIEWPOINT: overhead trees, rock,
                 // rooftops and clearings rather than a landscape horizon.
@@ -2372,7 +2426,8 @@ private fun BoardCanvas(
                     left = left, top = top, width = drawWidth, height = drawHeight,
                     environmentAtlas = environmentAtlas,
                     environmentAccents = environmentAccents,
-                    groundcover = groundcover
+                    groundcover = groundcover,
+                    footprints = landscapeFootprints
                 )
             } else if (boardBackdrop == null) {
                 drawWoodlandBoardArt(
@@ -2390,6 +2445,10 @@ private fun BoardCanvas(
                     filterQuality = FilterQuality.Medium
                 )
             }
+            // Storybook also receives quiet route-safe groundcover; overhead already draws it.
+            if (!useOverheadArtwork && boardLook == CrossroadsBoardLook.ILLUSTRATED) {
+                drawWoodlandGroundcover(groundcover, left, top, drawWidth, drawHeight)
+            }
             // Region names make the fixed course easier to learn between matches.
             drawIntoCanvas { canvas ->
                 val labelPaint = android.graphics.Paint().apply {
@@ -2399,13 +2458,21 @@ private fun BoardCanvas(
                     isFakeBoldText = true
                     textAlign = android.graphics.Paint.Align.CENTER
                 }
-                listOf("MEADOW", "FOREST", "VILLAGE").forEachIndexed { index, label ->
-                    canvas.nativeCanvas.drawText(label, left + (0.2f + index * 0.29f) * drawWidth, top + 8f, labelPaint)
+                if (DecisionLab.baseId(board.id) == CrossroadsCourse.REGIONAL_ID) {
+                    listOf("VILLAGE" to .06f, "FOREST" to .47f, "MEADOW" to .76f)
+                        .forEach { (label, y) ->
+                            canvas.nativeCanvas.drawText(label, left + .50f * drawWidth,
+                                top + y * drawHeight, labelPaint)
+                        }
+                } else {
+                    listOf("MEADOW", "FOREST", "VILLAGE").forEachIndexed { index, label ->
+                        canvas.nativeCanvas.drawText(label, left + (0.2f + index * 0.29f) * drawWidth, top + 8f, labelPaint)
+                    }
                 }
             }
             // Longer authored courses have more route nodes in the same viewport.
             // Reduce plain-node and trail thickness just for this dense atlas.
-            val denseBoard = DecisionLab.baseId(board.id) == CrossroadsCourse.LONG_ID
+            val denseBoard = board.nodes.size >= 100
             // Shared board geography never changes with the event seed.
             board.nodes.forEach { node ->
                 val from = position(node.id)
@@ -2416,7 +2483,7 @@ private fun BoardCanvas(
                         else -> "neutral"
                     }
                     if (effectiveTrails == CrossroadsTrailStyle.ARTWORK && trailAtlas != null &&
-                        immersiveWorld && boardLook == CrossroadsBoardLook.ILLUSTRATED) {
+                        (immersiveWorld || useOverheadArtwork) && boardLook == CrossroadsBoardLook.ILLUSTRATED) {
                         // POLISH-03: live earthen trails are drawn at Canvas resolution,
                         // not stretched from a 128x32 atlas at 2-4x zoom.
                         // Original coordinates, route colors and tap hit geometry stay identical.
@@ -2428,8 +2495,7 @@ private fun BoardCanvas(
                             visibilityScale = roadVisibilityScale
                         )
                     } else if (effectiveTrails == CrossroadsTrailStyle.ARTWORK && trailAtlas != null) {
-                        // The miniature Full Map deliberately keeps its earlier
-                        // detailed route atlas for a consistent whole-course overview.
+                        // Storybook overview retains its older atlas for A/B review.
                         drawCrossroadsIllustratedTrail(
                             from = from,
                             to = position(dest),
@@ -2489,13 +2555,20 @@ private fun BoardCanvas(
                     "finish" -> Color(0xFFB47E40)
                     else -> Color(0xFFFDF8E9)
                 }
-                val radius = (when {
+                val nominalRadius = (when {
                     node.kind == "fork" -> if (denseBoard) 11f else 12f
                     node.kind == "start" || node.kind == "finish" -> 13f
                     denseBoard && node.kind == "plain" -> 4.75f
                     denseBoard && node.kind == "event" -> 6.25f
                     else -> 7f
                 }) * nodeVisibilityScale
+                // Regional special markers keep a footprint proportional to the actual
+                // nearest graph space. Preserve legacy marker sizes on other courses.
+                val radius = if (DecisionLab.baseId(board.id) == CrossroadsCourse.REGIONAL_ID &&
+                    (node.kind == "fork" || node.kind == "event")) {
+                    val spacingPx = (nearestSpaceSpacing[node.id] ?: Float.POSITIVE_INFINITY) * drawWidth
+                    minOf(nominalRadius, (spacingPx * .34f).coerceAtLeast(2f))
+                } else nominalRadius
                 // VISUAL-83: Start and Finish feel like physical sockets for
                 // the travelers, not two ordinary dots. Shared graph centers
                 // and the original S/F labels remain authoritative.

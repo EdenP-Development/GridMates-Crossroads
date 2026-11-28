@@ -6,6 +6,17 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class CourseOverheadArtTest {
+    @Test fun regionalPigmentCompositionIsBoundedAndCoversAllThreeRegions() {
+        val washes = RegionalTerrainComposition.washes
+        assertEquals(10, washes.size)
+        assertEquals(setOf(0,1,2), washes.map { it.tone }.toSet())
+        assertEquals(washes.size, washes.map { it.x to it.y }.distinct().size)
+        washes.forEach {
+            assertTrue(it.x in 0f..1f && it.y in 0f..1f)
+            assertTrue(it.radius in .15f.. .25f)
+        }
+    }
+
     @Test fun siblingCoursesHaveDistinctSafeScenery() {
         val results = listOf(
             "woodland_brookside_quick" to CourseOverheadStyle.BROOKSIDE,
@@ -32,5 +43,73 @@ class CourseOverheadArtTest {
             results[0].count { it.sprite == EnvironmentSprite.FIR })
         assertNull(CourseOverheadStyle.forBoard("unknown"))
         assertFalse(useOverheadBoardPreview("unknown",true,true,true))
+    }
+
+    @Test fun regionalSceneryRespectsItsOwnGeometryAndQaGate() {
+        val file = listOf(File("design/prototypes/woodland_woven_regional_v05.json"),
+            File("../design/prototypes/woodland_woven_regional_v05.json")).first { it.isFile }
+        val board = GameData.board(file.readText())
+        val style = CourseOverheadStyle.REGIONAL
+        assertEquals(style, CourseOverheadStyle.forBoard(board.id))
+        assertEquals(style, CourseOverheadStyle.forBoard(board.id + com.playereden.crossroads.core.DecisionLab.V5_SUFFIX))
+        assertTrue(useOverheadBoardPreview(board.id,true,true,true))
+        assertFalse(useOverheadBoardPreview(board.id,false,true,true))
+        val scenery = CourseOverheadScenery.plan(style,board.nodes)
+        assertTrue("Regional scenery should exceed the original nine landmarks", scenery.size >= 15)
+        assertTrue(scenery.any { it.sprite == EnvironmentSprite.FENCE && it.x == .15f && it.y == .725f })
+        assertTrue(scenery.any { it.sprite == EnvironmentSprite.COTTAGE && it.x == .925f && it.y == .175f })
+        assertEquals("Regional Journey", CrossroadsCourse.compactTitle(board.id))
+        assertEquals("Woven Trail: Regional Journey", CrossroadsCourse.title(board.id))
+        assertEquals(scenery,CourseOverheadScenery.plan(style,board.nodes))
+        scenery.forEach { a ->
+            val radius = a.sprite.diameter * kotlin.math.sqrt(2f) / 2f
+            assertTrue(a.x in radius..(1f-radius))
+            assertTrue(a.y in radius..(1f-radius))
+            assertTrue(OverheadScenery.clearOfPlay(a.x,a.y,board.nodes,.078f))
+            assertTrue(scenery.filter { it != a }.all { b ->
+                kotlin.math.hypot(a.x-b.x,a.y-b.y) >= .09f
+            })
+        }
+        val occupied = scenery.map { androidx.compose.ui.geometry.Offset(it.x,it.y) }
+        val patches = WoodlandGroundcover.plan(board.nodes,style,occupied)
+        assertTrue(patches.isNotEmpty())
+        assertTrue(patches.size <= 460)
+        assertTrue(patches.any { p -> occupied.any { a ->
+            kotlin.math.hypot(p.x-a.x,p.y-a.y) in .074f.. .094f
+        } })
+        assertEquals(patches,WoodlandGroundcover.plan(board.nodes,style,occupied))
+        patches.forEach { p ->
+            assertTrue(OverheadScenery.clearOfPlay(p.x,p.y,board.nodes,.034f+p.radius))
+            assertTrue(occupied.all { kotlin.math.hypot(p.x-it.x,p.y-it.y) >= .055f+p.radius })
+        }
+    }
+    @Test fun bridgeDeckIsNarrowAndStaysInsideOwningEdge() {
+        val crossing = OverheadBridge(.7f, .5f, 1f, 0f, .08f, .06f, 1f)
+        val deck = requireNotNull(overheadBridgeLayout(crossing))
+        assertEquals(.032f, deck.before, .0001f)
+        assertEquals(.032f, deck.after, .0001f)
+        assertTrue(deck.widthUnits < 3f)
+        assertTrue(deck.planks in 3..10)
+        val clipped = requireNotNull(overheadBridgeLayout(crossing.copy(before = .015f)))
+        assertTrue(clipped.before < .015f)
+        assertEquals(deck.after, clipped.after, .0001f)
+        assertNull(overheadBridgeLayout(crossing.copy(before = .002f)))
+        assertNull(overheadBridgeLayout(crossing.copy(crossingSine = .1f)))
+        val diagonal = requireNotNull(overheadBridgeLayout(crossing.copy(crossingSine = .5f)))
+        assertTrue(diagonal.before <= .05f && diagonal.after <= .05f)
+    }
+    @Test fun landscapeFoundationsAreDeterministicBoundedAndRegionAware() {
+        val accents = listOf(
+            EnvironmentAccent(.2f, .3f, EnvironmentSprite.OAK),
+            EnvironmentAccent(.5f, .6f, EnvironmentSprite.FLOWERS),
+            EnvironmentAccent(.9f, .9f, EnvironmentSprite.COTTAGE)
+        )
+        val plan = LandscapeComposition.plan(accents)
+        assertEquals(6, plan.size)
+        assertEquals(listOf(0, 0, 1, 1, 2, 2), plan.map { it.tone })
+        assertEquals(plan, LandscapeComposition.plan(accents))
+        assertTrue(plan.all { it.x in 0f..1f && it.y in 0f..1f && it.radius in .02f.. .08f })
+        assertEquals(80, LandscapeComposition.plan(List(100) { accents[0] }).size)
+        assertTrue(LandscapeComposition.plan(emptyList()).isEmpty())
     }
 }

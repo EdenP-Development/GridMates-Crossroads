@@ -7,13 +7,13 @@ import org.junit.Test
 class CrossroadsPresentationTest {
     @Test fun narrowPortraitFollowShowsMoreContextWithoutChangingManualOrMapPresets() {
         val preset = CrossroadsCameraPreset.followZoom(Phase.ROLL, 4, true)
-        assertEquals(1.88f, CrossroadsCameraPreset.portraitContextZoom(preset, 674f, 1536f), .0001f)
+        assertEquals(1.15f, CrossroadsCameraPreset.portraitContextZoom(preset, 674f, 1536f), .0001f)
         val intermediate = CrossroadsCameraPreset.portraitContextZoom(preset, 540f, 1000f)
-        assertTrue(intermediate > 1.88f && intermediate < preset)
-        assertEquals(preset, CrossroadsCameraPreset.portraitContextZoom(preset, 800f, 1000f), .0001f)
+        assertTrue(intermediate > 1.15f && intermediate < 1.65f)
+        assertEquals(1.65f, CrossroadsCameraPreset.portraitContextZoom(preset, 800f, 1000f), .0001f)
         assertEquals(preset, CrossroadsCameraPreset.portraitContextZoom(preset, 0f, 1000f), .0001f)
         assertEquals(1f, CrossroadsCameraPreset.portraitContextZoom(1f, 400f, 900f), .0001f)
-        assertEquals(1.65f, CrossroadsCameraPreset.portraitContextZoom(1.65f, 400f, 1000f), .0001f)
+        assertEquals(1.15f, CrossroadsCameraPreset.portraitContextZoom(1.65f, 400f, 1000f), .0001f)
     }
 
     @Test fun courseTitlesAreSpecificAndNeverAlterStoredIds() {
@@ -150,7 +150,7 @@ class CrossroadsPresentationTest {
         )
         val screenBottom = height / 2f + (height - height / 2f) * zoom + lo
         assertEquals("World bottom should live under the roll dock",
-            height * .68f, screenBottom, .01f)
+            height * .80f, screenBottom, .01f)
 
         val hi = CrossroadsCameraPreset.boundFollowVertical(
             10000f, height, 0f, height, zoom, Phase.ROLL, true
@@ -163,6 +163,11 @@ class CrossroadsPresentationTest {
             -10000f, height, 0f, height, zoom, Phase.ENCOUNTER, true
         )
         assertTrue("Tall encounter dock needs more reserved space", encounter < lo)
+        val target = CrossroadsCameraPreset.boundFollowVertical(
+            -10000f, height, 0f, height, zoom, Phase.TARGET, true
+        )
+        assertEquals(height * .65f, height / 2f + height / 2f * zoom + encounter, .01f)
+        assertEquals(height * .63f, height / 2f + height / 2f * zoom + target, .01f)
     }
 
     @Test fun fullMapNeverReceivesImmersiveHudClamping() {
@@ -226,5 +231,24 @@ class CrossroadsPresentationTest {
         }
         assertEquals(2f * CrossroadsPiecePlacement.offset(0, 4, 1f).x,
             CrossroadsPiecePlacement.offset(0, 4, 2f).x, 0.0001f)
+    }
+    @Test fun measuredPlayfieldCentersBetweenOverlaysWithSafeFallback() {
+        assertEquals(430f, CrossroadsCameraPreset.visibleFocusY(1000f, 160f, 300f, .43f), .001f)
+        assertEquals(330f, CrossroadsCameraPreset.visibleFocusY(1000f, 160f, 500f, .43f), .001f)
+        assertEquals(430f, CrossroadsCameraPreset.visibleFocusY(1000f, 0f, 300f, .43f), .001f)
+        assertEquals(430f, CrossroadsCameraPreset.visibleFocusY(1000f, 500f, 450f, .43f), .001f)
+    }
+
+    @Test fun pawnRevealCorrectsOnlyOutsideSafeInterval() {
+        assertEquals(35f, CrossroadsCameraPreset.revealPawn(10f, 25f, 50f, 350f), .001f)
+        assertEquals(-40f, CrossroadsCameraPreset.revealPawn(10f, 400f, 50f, 350f), .001f)
+        assertEquals(10f, CrossroadsCameraPreset.revealPawn(10f, 150f, 50f, 350f), .001f)
+        assertEquals(10f, CrossroadsCameraPreset.revealPawn(10f, 150f, 350f, 50f), .001f)
+    }
+    @Test fun collapsedQaCourseDisclosureRetainsSelectedWarning() {
+        assertEquals("Test courses · QA", homeQaCourseToggleLabel(false, false))
+        assertEquals("Test course selected · Show courses", homeQaCourseToggleLabel(false, true))
+        assertEquals("Hide test courses", homeQaCourseToggleLabel(true, false))
+        assertEquals("Hide test courses", homeQaCourseToggleLabel(true, true))
     }
 }

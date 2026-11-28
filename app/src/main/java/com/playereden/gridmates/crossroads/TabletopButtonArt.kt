@@ -1,6 +1,18 @@
 package com.playereden.gridmates.crossroads
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import kotlin.math.roundToInt
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -20,6 +32,21 @@ internal enum class TabletopArtFamily(val stem: String) {
 }
 
 internal object TabletopButtonArt {
+    const val SOURCE_WIDTH = 384
+    const val SOURCE_HEIGHT = 144
+    const val CAP_WIDTH = 72
+
+    // Only expand artwork horizontally; narrow controls retain proportional Fit.
+    fun expandedCap(width: Int, height: Int): Int? {
+        if (width <= 0 || height <= 0 || width.toLong() * SOURCE_HEIGHT < height.toLong() * SOURCE_WIDTH) return null
+        val cap = (height.toDouble() * CAP_WIDTH / SOURCE_HEIGHT).roundToInt()
+        return cap.takeIf { it > 0 && 2L * it < width }
+    }
+
+    // Narrow faces deliberately use the native frame; ornaments need room for labels.
+    fun usesIllustration(width: Int, height: Int): Boolean =
+        width > 0 && height > 0 && width.toLong() * 10 >= height.toLong() * 30
+
     fun filename(enabled: Boolean, pressed: Boolean): String =
         filename(TabletopArtFamily.PRIMARY, enabled, pressed, false)
 
@@ -48,21 +75,65 @@ internal fun BoxScope.OptionalTabletopButtonArt(
 ) {
     val context = LocalContext.current.applicationContext
     val filename = TabletopButtonArt.filename(family, enabled, pressed, selected)
-    // Key the produced value as well as the effect to avoid showing a stale state.
-    val image = androidx.compose.runtime.key(context, filename) {
-        val bitmap by produceState<ImageBitmap?>(null, context, filename) {
+    // Load a family's complete state set once, rather than decoding during a press.
+    val images = androidx.compose.runtime.key(context, family) {
+        val bitmaps by produceState<Map<String, ImageBitmap>>(emptyMap(), context, family) {
             value = withContext(Dispatchers.IO) {
-                runCatching {
-                    context.assets.open("art/ui/v1/$filename").use {
-                        BitmapFactory.decodeStream(it)?.takeIf { b -> b.width == 384 && b.height == 144 }?.asImageBitmap()
-                    }
-                }.getOrNull()
+                listOf("normal", "highlight", "pressed", "disabled").mapNotNull { state ->
+                    val name = "${family.stem}_$state.png"
+                    val bitmap = runCatching {
+                        context.assets.open("art/ui/v1/$name").use {
+                            BitmapFactory.decodeStream(it)
+                                ?.takeIf { b -> b.width == 384 && b.height == 144 }
+                                ?.asImageBitmap()
+                        }
+                    }.getOrNull()
+                    bitmap?.let { name to it }
+                }.toMap()
             }
         }
-        bitmap
+        bitmaps
     }
-    // Fit preserves painted corners. Leave existing surface visible outside artwork.
-    // Stretchable production surfaces require separate nine-slice review.
-    if (image != null) Image(bitmap = image, contentDescription = null,
-        modifier = Modifier.matchParentSize(), contentScale = ContentScale.Fit)
+    val image = images[filename]
+    // QA preview: preserve the end caps at the same scale as the image height.
+    // Only the middle band expands; narrow controls retain proportional Fit.
+    BoxWithConstraints(Modifier.matchParentSize()) {
+        val w = constraints.maxWidth
+        val h = constraints.maxHeight
+        val cap = TabletopButtonArt.expandedCap(w, h)
+        // Compact controls need a quiet face rather than crowded leaf ornaments.
+        // Keep a single native fallback frame if art is unavailable or too narrow.
+        if (image == null || !TabletopButtonArt.usesIllustration(w, h)) {
+            val dark = family == TabletopArtFamily.PRIMARY
+            val face = when {
+                !enabled -> TabletopLabelPalette.disabledPaper
+                dark -> TabletopLabelPalette.darkPaper
+                else -> TabletopLabelPalette.lightPaper
+            }
+            val edge = if (selected || dark) TabletopMaterials.brass else Color(0xFFAA9672)
+            val pressedFace = if (pressed && enabled) androidx.compose.ui.graphics.lerp(face, Color.Black, .08f) else face
+            val shape = RoundedCornerShape(12.dp)
+            Box(Modifier.matchParentSize().background(pressedFace, shape)
+                .border(if (selected) 2.dp else 1.dp, edge, shape))
+        } else if (cap == null) {
+            Image(bitmap = image, contentDescription = null,
+                modifier = Modifier.matchParentSize(), contentScale = ContentScale.Fit)
+        } else {
+            Canvas(Modifier.matchParentSize()) {
+                val sw = TabletopButtonArt.SOURCE_WIDTH
+                val sh = TabletopButtonArt.SOURCE_HEIGHT
+                val c = TabletopButtonArt.CAP_WIDTH
+                val source = intArrayOf(0, c, sw - c, sw)
+                val dest = intArrayOf(0, cap, w - cap, w)
+                for (i in 0..2) {
+                    drawImage(image,
+                        srcOffset = IntOffset(source[i], 0),
+                        srcSize = IntSize(source[i + 1] - source[i], sh),
+                        dstOffset = IntOffset(dest[i], 0),
+                        dstSize = IntSize(dest[i + 1] - dest[i], h),
+                        filterQuality = FilterQuality.Medium)
+                }
+            }
+        }
+    }
 }

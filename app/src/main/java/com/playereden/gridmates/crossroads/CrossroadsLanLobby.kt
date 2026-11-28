@@ -107,16 +107,19 @@ internal fun CrossroadsLanLobby(
                     Checkbox(checked = requireCode, onCheckedChange = { requireCode = it })
                     Text("Require a six-digit room code")
                 }
-                Button(
+                TabletopPrimaryActionButton(
+                    text = "CREATE ROOM",
                     onClick = { onHost(requireCode, participants) },
                     enabled = !busy,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
-                ) { Text("Create nearby room") }
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
             LanScreen.HOST_WAIT -> {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE5EBD8)),
-                    modifier = Modifier.fillMaxWidth()
+                TabletopPanel(
+                    color = Color(0xFFE5EBD8),
+                    contentColor = Color(0xFF3B5841),
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = 1.dp
                 ) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                         Text("Waiting for Player 2", color = forest,
@@ -150,10 +153,10 @@ internal fun CrossroadsLanLobby(
             LanScreen.JOIN -> {
                 Text("Nearby games", color = forest, style = MaterialTheme.typography.titleMedium)
                 if (rooms.isEmpty()) {
-                    Surface(
+                    TabletopPanel(
                         color = Color(0xFFE5EBD8),
-                        shape = MaterialTheme.shapes.large,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = 1.dp
                     ) {
                         Column(Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -164,6 +167,14 @@ internal fun CrossroadsLanLobby(
                         }
                     }
                 }
+                OutlinedTextField(
+                    value = code, onValueChange = {
+                        code = it.filter(Char::isDigit).take(6)
+                    },
+                    label = { Text("Room code (if required)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true, modifier = Modifier.fillMaxWidth()
+                )
                 rooms.forEach { room ->
                     OutlinedButton(
                         onClick = { onJoin(room.host, room.port, code) },
@@ -184,7 +195,7 @@ internal fun CrossroadsLanLobby(
                 }
                 HorizontalDivider()
                 Text("Join manually", color = forest, style = MaterialTheme.typography.titleMedium)
-                Text("Enter the address shown on the host phone (including the port).")
+                Text("Enter the address shown on the host phone (including the port). Use the room code above if needed.")
                 OutlinedTextField(
                     value = address, onValueChange = { address = it },
                     label = { Text("Host address") },
@@ -192,26 +203,19 @@ internal fun CrossroadsLanLobby(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                     singleLine = true, modifier = Modifier.fillMaxWidth()
                 )
-                OutlinedTextField(
-                    value = code, onValueChange = {
-                        code = it.filter(Char::isDigit).take(6)
-                    },
-                    label = { Text("Room code (if required)") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true, modifier = Modifier.fillMaxWidth()
-                )
-                Button(
+                TabletopPrimaryActionButton(
+                    text = if (busy) "Connecting…" else "Join by address",
                     onClick = { parseCrossroadsAddress(address)?.let { (h,p) -> onJoin(h,p,code) } },
                     enabled = !busy && parseCrossroadsAddress(address) != null &&
                         (code.isEmpty() || code.length == 6),
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
-                ) { Text(if (busy) "Connecting…" else "Join by address") }
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
             LanScreen.NONE -> Unit
         }
         if (busy) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         if (!note.isNullOrEmpty()) {
-            Surface(color = Color(0xFFF1E5D3), shape = MaterialTheme.shapes.medium) {
+            TabletopPanel(color = Color(0xFFF1E5D3), elevation = 0.dp) {
                 Text(note, modifier = Modifier.padding(12.dp))
             }
         }

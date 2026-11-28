@@ -73,12 +73,19 @@ internal fun shouldShowWoodlandToken(
 ): Boolean = isQa && requested && atlasLoaded
 
 /**
- * Keep portraits as an enlargement detail, not tiny, overlapping dots on
- * the fit-to-board map. The stable colored/numbered coin is always available.
+ * Live world tokens are already enlarged before the camera transform.
+ * Select portraits by displayed diameter, not zoom alone. Keep the full-map
+ * overview as numbered coins and preserve a fallback for small tokens.
  *
  * Zoom is camera-only; no game state, token location or hit radius changes.
  */
 internal fun shouldDrawWoodlandPortrait(
     artAvailable: Boolean,
-    cameraZoom: Float
-): Boolean = artAvailable && cameraZoom.isFinite() && cameraZoom >= 1.65f
+    cameraZoom: Float,
+    liveWorld: Boolean = false,
+    baseDiameterPx: Float = 0f
+): Boolean {
+    if (!artAvailable || !cameraZoom.isFinite() || cameraZoom < 1f) return false
+    if (!liveWorld) return cameraZoom >= 1.65f
+    return baseDiameterPx.isFinite() && baseDiameterPx * cameraZoom >= 44f
+}

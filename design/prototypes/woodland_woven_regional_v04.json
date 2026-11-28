@@ -1,0 +1,1256 @@
+{
+  "id": "woodland_woven_trail_v04_authored_prototype",
+  "version": 4,
+  "status": "INTERNAL_AUTHORED_PROTOTYPE_NOT_PLAYABLE",
+  "name": "Woven Trail · Regional journey prototype",
+  "start": "START",
+  "finish": "FINISH",
+  "regions": [
+    {
+      "id": "meadow",
+      "label": "Meadow",
+      "risk": "mixed"
+    },
+    {
+      "id": "forest",
+      "label": "Forest",
+      "risk": "mixed"
+    },
+    {
+      "id": "village",
+      "label": "Village",
+      "risk": "mixed"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "F1",
+      "region": "meadow",
+      "kind": "fork",
+      "x": 0.12,
+      "y": 0.83,
+      "next": [
+        "R1_1",
+        "S1_1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "F2",
+      "region": "meadow",
+      "kind": "fork",
+      "x": 0.37,
+      "y": 0.83,
+      "next": [
+        "R2_1",
+        "S2_1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "F3",
+      "region": "meadow",
+      "kind": "fork",
+      "x": 0.68,
+      "y": 0.83,
+      "next": [
+        "R3_1",
+        "S3_1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "F4",
+      "region": "forest",
+      "kind": "fork",
+      "x": 0.88,
+      "y": 0.64,
+      "next": [
+        "R4_1",
+        "S4_1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "F5",
+      "region": "forest",
+      "kind": "fork",
+      "x": 0.65,
+      "y": 0.6,
+      "next": [
+        "R5_1",
+        "S5_1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "F6",
+      "region": "forest",
+      "kind": "fork",
+      "x": 0.36,
+      "y": 0.6,
+      "next": [
+        "R6_1",
+        "S6_1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "F7",
+      "region": "village",
+      "kind": "fork",
+      "x": 0.12,
+      "y": 0.4,
+      "next": [
+        "R7_1",
+        "S7_1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "F8",
+      "region": "village",
+      "kind": "fork",
+      "x": 0.38,
+      "y": 0.32,
+      "next": [
+        "R8_1",
+        "S8_1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "FINISH",
+      "region": "village",
+      "kind": "finish",
+      "x": 0.7,
+      "y": 0.24,
+      "next": [],
+      "route": "neutral"
+    },
+    {
+      "id": "START",
+      "region": "meadow",
+      "kind": "start",
+      "x": 0.045,
+      "y": 0.96,
+      "next": [
+        "P1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "P1",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.0575,
+      "y": 0.93833,
+      "next": [
+        "P2"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "P2",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.07,
+      "y": 0.91667,
+      "next": [
+        "P3"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "P3",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.0825,
+      "y": 0.895,
+      "next": [
+        "P4"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "P4",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.095,
+      "y": 0.87333,
+      "next": [
+        "P5"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "P5",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.1075,
+      "y": 0.85167,
+      "next": [
+        "F1"
+      ],
+      "route": "neutral"
+    },
+    {
+      "id": "R1_1",
+      "region": "meadow",
+      "kind": "event",
+      "x": 0.17,
+      "y": 0.80943,
+      "next": [
+        "R1_2"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "R1_2",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.22,
+      "y": 0.79671,
+      "next": [
+        "R1_3"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "R1_3",
+      "region": "meadow",
+      "kind": "event",
+      "x": 0.27,
+      "y": 0.79671,
+      "next": [
+        "R1_4"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "R1_4",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.32,
+      "y": 0.80943,
+      "next": [
+        "F2"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "S1_1",
+      "region": "meadow",
+      "kind": "event",
+      "x": 0.15571,
+      "y": 0.86037,
+      "next": [
+        "S1_2"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "S1_2",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.19143,
+      "y": 0.88473,
+      "next": [
+        "S1_3"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S1_3",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.22714,
+      "y": 0.89824,
+      "next": [
+        "S1_4"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S1_4",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.26286,
+      "y": 0.89824,
+      "next": [
+        "S1_5"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S1_5",
+      "region": "meadow",
+      "kind": "event",
+      "x": 0.29857,
+      "y": 0.88473,
+      "next": [
+        "S1_6"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "S1_6",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.33429,
+      "y": 0.86037,
+      "next": [
+        "F2"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "R2_1",
+      "region": "meadow",
+      "kind": "event",
+      "x": 0.432,
+      "y": 0.80943,
+      "next": [
+        "R2_2"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "R2_2",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.494,
+      "y": 0.79671,
+      "next": [
+        "R2_3"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "R2_3",
+      "region": "meadow",
+      "kind": "event",
+      "x": 0.556,
+      "y": 0.79671,
+      "next": [
+        "R2_4"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "R2_4",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.618,
+      "y": 0.80943,
+      "next": [
+        "F3"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "S2_1",
+      "region": "meadow",
+      "kind": "event",
+      "x": 0.41429,
+      "y": 0.86037,
+      "next": [
+        "S2_2"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "S2_2",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.45857,
+      "y": 0.88473,
+      "next": [
+        "S2_3"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S2_3",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.50286,
+      "y": 0.89824,
+      "next": [
+        "S2_4"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S2_4",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.54714,
+      "y": 0.89824,
+      "next": [
+        "S2_5"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S2_5",
+      "region": "meadow",
+      "kind": "event",
+      "x": 0.59143,
+      "y": 0.88473,
+      "next": [
+        "S2_6"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "S2_6",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.63571,
+      "y": 0.86037,
+      "next": [
+        "F3"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "R3_1",
+      "region": "meadow",
+      "kind": "event",
+      "x": 0.70583,
+      "y": 0.77708,
+      "next": [
+        "R3_2"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "R3_2",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.73707,
+      "y": 0.72987,
+      "next": [
+        "R3_3"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "R3_3",
+      "region": "meadow",
+      "kind": "event",
+      "x": 0.77707,
+      "y": 0.69187,
+      "next": [
+        "R3_4"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "R3_4",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.82583,
+      "y": 0.66308,
+      "next": [
+        "F4"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "S3_1",
+      "region": "meadow",
+      "kind": "event",
+      "x": 0.72949,
+      "y": 0.82488,
+      "next": [
+        "S3_2"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "S3_2",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.77484,
+      "y": 0.81539,
+      "next": [
+        "S3_3"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S3_3",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.81272,
+      "y": 0.79805,
+      "next": [
+        "S3_4"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S3_4",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.84129,
+      "y": 0.77091,
+      "next": [
+        "S3_5"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S3_5",
+      "region": "meadow",
+      "kind": "event",
+      "x": 0.86055,
+      "y": 0.73396,
+      "next": [
+        "S3_6"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "S3_6",
+      "region": "meadow",
+      "kind": "plain",
+      "x": 0.87235,
+      "y": 0.68916,
+      "next": [
+        "F4"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "R4_1",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.83048,
+      "y": 0.65227,
+      "next": [
+        "R4_2"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "R4_2",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.7823,
+      "y": 0.65679,
+      "next": [
+        "R4_3"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "R4_3",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.7363,
+      "y": 0.64879,
+      "next": [
+        "R4_4"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "R4_4",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.69248,
+      "y": 0.62827,
+      "next": [
+        "F5"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "S4_1",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.85235,
+      "y": 0.60436,
+      "next": [
+        "S4_2"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "S4_2",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.82366,
+      "y": 0.57465,
+      "next": [
+        "S4_3"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S4_3",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.79312,
+      "y": 0.55562,
+      "next": [
+        "S4_4"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S4_4",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.76026,
+      "y": 0.54991,
+      "next": [
+        "S4_5"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S4_5",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.72509,
+      "y": 0.55751,
+      "next": [
+        "S4_6"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "S4_6",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.68806,
+      "y": 0.57579,
+      "next": [
+        "F5"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "R5_1",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.592,
+      "y": 0.62057,
+      "next": [
+        "R5_2"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "R5_2",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.534,
+      "y": 0.63329,
+      "next": [
+        "R5_3"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "R5_3",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.476,
+      "y": 0.63329,
+      "next": [
+        "R5_4"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "R5_4",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.418,
+      "y": 0.62057,
+      "next": [
+        "F6"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "S5_1",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.60857,
+      "y": 0.56963,
+      "next": [
+        "S5_2"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "S5_2",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.56714,
+      "y": 0.54527,
+      "next": [
+        "S5_3"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S5_3",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.52571,
+      "y": 0.53176,
+      "next": [
+        "S5_4"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S5_4",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.48429,
+      "y": 0.53176,
+      "next": [
+        "S5_5"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S5_5",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.44286,
+      "y": 0.54527,
+      "next": [
+        "S5_6"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "S5_6",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.40143,
+      "y": 0.56963,
+      "next": [
+        "F6"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "R6_1",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.29883,
+      "y": 0.5758,
+      "next": [
+        "R6_2"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "R6_2",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.24269,
+      "y": 0.54557,
+      "next": [
+        "R6_3"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "R6_3",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.19469,
+      "y": 0.50557,
+      "next": [
+        "R6_4"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "R6_4",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.15483,
+      "y": 0.4558,
+      "next": [
+        "F7"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "S6_1",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.34516,
+      "y": 0.5481,
+      "next": [
+        "S6_2"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "S6_2",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.32646,
+      "y": 0.50081,
+      "next": [
+        "S6_3"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S6_3",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.30083,
+      "y": 0.46186,
+      "next": [
+        "S6_4"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S6_4",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.26655,
+      "y": 0.43329,
+      "next": [
+        "S6_5"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S6_5",
+      "region": "forest",
+      "kind": "event",
+      "x": 0.22361,
+      "y": 0.4151,
+      "next": [
+        "S6_6"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "S6_6",
+      "region": "forest",
+      "kind": "plain",
+      "x": 0.17373,
+      "y": 0.40524,
+      "next": [
+        "F7"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "R7_1",
+      "region": "village",
+      "kind": "event",
+      "x": 0.16595,
+      "y": 0.36434,
+      "next": [
+        "R7_2"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "R7_2",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.21421,
+      "y": 0.33619,
+      "next": [
+        "R7_3"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "R7_3",
+      "region": "village",
+      "kind": "event",
+      "x": 0.26621,
+      "y": 0.32019,
+      "next": [
+        "R7_4"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "R7_4",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.32195,
+      "y": 0.31634,
+      "next": [
+        "F8"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "S7_1",
+      "region": "village",
+      "kind": "event",
+      "x": 0.16607,
+      "y": 0.4176,
+      "next": [
+        "S7_2"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "S7_2",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.21038,
+      "y": 0.42945,
+      "next": [
+        "S7_3"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S7_3",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.2515,
+      "y": 0.43094,
+      "next": [
+        "S7_4"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S7_4",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.28864,
+      "y": 0.41951,
+      "next": [
+        "S7_5"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S7_5",
+      "region": "village",
+      "kind": "event",
+      "x": 0.32181,
+      "y": 0.39517,
+      "next": [
+        "S7_6"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "S7_6",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.35179,
+      "y": 0.36046,
+      "next": [
+        "F8"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "R8_1",
+      "region": "village",
+      "kind": "event",
+      "x": 0.43901,
+      "y": 0.28404,
+      "next": [
+        "R8_2"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "R8_2",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.49993,
+      "y": 0.25571,
+      "next": [
+        "R8_3"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "R8_3",
+      "region": "village",
+      "kind": "event",
+      "x": 0.56393,
+      "y": 0.23971,
+      "next": [
+        "R8_4"
+      ],
+      "route": "risky",
+      "eventPool": "hazard"
+    },
+    {
+      "id": "R8_4",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.63101,
+      "y": 0.23604,
+      "next": [
+        "FINISH"
+      ],
+      "route": "risky"
+    },
+    {
+      "id": "S8_1",
+      "region": "village",
+      "kind": "event",
+      "x": 0.43308,
+      "y": 0.33804,
+      "next": [
+        "S8_2"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "S8_2",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.4847,
+      "y": 0.35024,
+      "next": [
+        "S8_3"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S8_3",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.53369,
+      "y": 0.35192,
+      "next": [
+        "S8_4"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S8_4",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.57941,
+      "y": 0.34049,
+      "next": [
+        "S8_5"
+      ],
+      "route": "safe"
+    },
+    {
+      "id": "S8_5",
+      "region": "village",
+      "kind": "event",
+      "x": 0.62184,
+      "y": 0.31595,
+      "next": [
+        "S8_6"
+      ],
+      "route": "safe",
+      "eventPool": "shelter"
+    },
+    {
+      "id": "S8_6",
+      "region": "village",
+      "kind": "plain",
+      "x": 0.66165,
+      "y": 0.28089,
+      "next": [
+        "FINISH"
+      ],
+      "route": "safe"
+    }
+  ],
+  "forks": [
+    {
+      "id": "F1",
+      "title": "Meadow Gate",
+      "choices": [
+        {
+          "to": "R1_1",
+          "label": "Briar Cut",
+          "risk": "high",
+          "description": "Shorter trail · hazard encounters"
+        },
+        {
+          "to": "S1_1",
+          "label": "Clover Walk",
+          "risk": "low",
+          "description": "Longer trail · shelter encounters"
+        }
+      ]
+    },
+    {
+      "id": "F2",
+      "title": "Clover Junction",
+      "choices": [
+        {
+          "to": "R2_1",
+          "label": "Stone Ford",
+          "risk": "high",
+          "description": "Shorter trail · hazard encounters"
+        },
+        {
+          "to": "S2_1",
+          "label": "Willow Bank",
+          "risk": "low",
+          "description": "Longer trail · shelter encounters"
+        }
+      ]
+    },
+    {
+      "id": "F3",
+      "title": "Brook Crossing",
+      "choices": [
+        {
+          "to": "R3_1",
+          "label": "Ridge Scramble",
+          "risk": "high",
+          "description": "Shorter trail · hazard encounters"
+        },
+        {
+          "to": "S3_1",
+          "label": "Footbridge Walk",
+          "risk": "low",
+          "description": "Longer trail · shelter encounters"
+        }
+      ]
+    },
+    {
+      "id": "F4",
+      "title": "Pine Ridge",
+      "choices": [
+        {
+          "to": "R4_1",
+          "label": "Fox Run",
+          "risk": "high",
+          "description": "Shorter trail · hazard encounters"
+        },
+        {
+          "to": "S4_1",
+          "label": "Pine Shelter",
+          "risk": "low",
+          "description": "Longer trail · shelter encounters"
+        }
+      ]
+    },
+    {
+      "id": "F5",
+      "title": "Old Forest Junction",
+      "choices": [
+        {
+          "to": "R5_1",
+          "label": "Thorn Track",
+          "risk": "high",
+          "description": "Shorter trail · hazard encounters"
+        },
+        {
+          "to": "S5_1",
+          "label": "Fern Garden",
+          "risk": "low",
+          "description": "Longer trail · shelter encounters"
+        }
+      ]
+    },
+    {
+      "id": "F6",
+      "title": "Fern Hollow",
+      "choices": [
+        {
+          "to": "R6_1",
+          "label": "Ravine Cut",
+          "risk": "high",
+          "description": "Shorter trail · hazard encounters"
+        },
+        {
+          "to": "S6_1",
+          "label": "Mossy Path",
+          "risk": "low",
+          "description": "Longer trail · shelter encounters"
+        }
+      ]
+    },
+    {
+      "id": "F7",
+      "title": "Mill Crossing",
+      "choices": [
+        {
+          "to": "R7_1",
+          "label": "Mill Shortcut",
+          "risk": "high",
+          "description": "Shorter trail · hazard encounters"
+        },
+        {
+          "to": "S7_1",
+          "label": "Mill Bridge",
+          "risk": "low",
+          "description": "Longer trail · shelter encounters"
+        }
+      ]
+    },
+    {
+      "id": "F8",
+      "title": "Orchard Gate",
+      "choices": [
+        {
+          "to": "R8_1",
+          "label": "Hilltop Dash",
+          "risk": "high",
+          "description": "Shorter trail · hazard encounters"
+        },
+        {
+          "to": "S8_1",
+          "label": "Lantern Lane",
+          "risk": "low",
+          "description": "Longer trail · shelter encounters"
+        }
+      ]
+    }
+  ]
+}

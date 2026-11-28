@@ -9,13 +9,20 @@ internal object CrossroadsCourse {
     const val CLASSIC_ID = "woodland_woven_trail_v02"
     const val QUICK_ID = "woodland_brookside_quick_v01"
     const val LONG_ID = "woodland_cedarwood_long_v01"
+    const val CONVERGENCE_ID = "woodland_woven_trail_v02_convergence_candidate_v02"
+    const val REGIONAL_ID = "woodland_woven_trail_v05_varied_prototype"
 
     fun title(boardId: String): String = when (DecisionLab.baseId(boardId)) {
         QUICK_ID -> "Brookside Dash"
         LONG_ID -> "Cedarwood Expedition"
+        REGIONAL_ID -> "Woven Trail: Regional Journey"
+        CONVERGENCE_ID -> "Woven Balance Preview"
         CLASSIC_ID -> "Woven Trail"
         else -> "Woodland Crossing"
     }
+
+    fun compactTitle(boardId: String): String =
+        if (DecisionLab.baseId(boardId) == REGIONAL_ID) "Regional Journey" else title(boardId)
 
     fun subtitle(boardId: String): String = if (boardId.endsWith(DecisionLab.V5_SUFFIX))
         "Gameplay 2.0 · Lab v5"
@@ -30,6 +37,8 @@ internal object CrossroadsCourse {
     else when (boardId) {
         QUICK_ID -> "Quick race"
         LONG_ID -> "Long race"
+        REGIONAL_ID -> "Experimental regional race"
+        CONVERGENCE_ID -> "QA balance preview"
         CLASSIC_ID -> "Classic race"
         else -> "Woodland race"
     }
@@ -51,7 +60,8 @@ internal object CrossroadsCourse {
 /** New-match selection only. Existing checkpoints always supply their own board ID. */
 internal object CrossroadsExperimentalMode {
     fun boardId(baseId: String, tactical: Boolean, fairFinish: Boolean): String =
-        if (!tactical) baseId
+        if (baseId == CrossroadsCourse.CONVERGENCE_ID) baseId + DecisionLab.V5_SUFFIX
+        else if (!tactical) baseId
         else baseId + if (fairFinish) DecisionLab.V5_SUFFIX else DecisionLab.V4_SUFFIX
 }
 
@@ -122,7 +132,8 @@ internal object CrossroadsCameraPreset {
             width <= 0f || height <= 0f) return preset
         val aspect = width / height
         val blend = ((aspect - .44f) / .26f).coerceIn(0f, 1f)
-        val cap = 1.88f + (preset - 1.88f).coerceAtLeast(0f) * blend
+        // QA1734 owner review: normal live framing must show the route, not magnify scenery.
+        val cap = 1.15f + (minOf(preset, 1.65f) - 1.15f).coerceAtLeast(0f) * blend
         return minOf(preset, cap)
     }
 
@@ -137,6 +148,23 @@ internal object CrossroadsCameraPreset {
             Phase.TARGET -> 0.40f
             else -> 0.43f
         }
+
+    /** Measured HUD/dock insets are screen pixels, not board coordinates.
+     * Fall back to the existing preset before layout or when overlays collide. */
+    fun visibleFocusY(height: Float, top: Float, bottom: Float, fallback: Float): Float {
+        if (!height.isFinite() || height <= 0f || !top.isFinite() || !bottom.isFinite() ||
+            top <= 0f || bottom <= 0f || top + bottom >= height * .90f)
+            return height * fallback
+        return (top + height - bottom) * .5f
+    }
+
+    /** Keep an actual painted pawn inside a safe interval after ordinary bounds.
+     * Only used for automatic following, never manual pan or full map. */
+    fun revealPawn(translation: Float, pawnScreen: Float, low: Float, high: Float): Float {
+        if (!translation.isFinite() || !pawnScreen.isFinite() ||
+            !low.isFinite() || !high.isFinite() || low > high) return translation
+        return translation + (pawnScreen.coerceIn(low, high) - pawnScreen)
+    }
 
     /** Focus the actual fork first; leave just enough room to preview exits. */
     fun forkAnchor(
@@ -175,9 +203,9 @@ internal object CrossroadsCameraPreset {
         val scaledBottom = center + (worldBottom - center) * zoom
         val safeTop = viewportHeight * 0.18f
         val safeBottom = viewportHeight * when (phase) {
-            Phase.ENCOUNTER -> 0.55f
-            Phase.TARGET -> 0.57f
-            else -> 0.68f
+            Phase.ENCOUNTER -> 0.65f
+            Phase.TARGET -> 0.63f
+            else -> 0.80f
         }
         val min = safeBottom - scaledBottom
         val max = safeTop - scaledTop

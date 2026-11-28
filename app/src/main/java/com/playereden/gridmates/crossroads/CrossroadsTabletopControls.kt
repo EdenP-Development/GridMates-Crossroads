@@ -3,12 +3,13 @@ package com.playereden.gridmates.crossroads
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -40,6 +41,19 @@ import androidx.compose.ui.unit.sp
  * Buttons react immediately to contact, but do not bounce, shake, or delay input.
  * All match choices still invoke the owner's existing callbacks unchanged.
  */
+/** Native fallback palette; illustrated labels retain the same ink colors. */
+internal object TabletopLabelPalette {
+    val darkPaper = Color(0xFF3D624A)
+    val lightInk = Color(0xFFFFF5DA)
+    val lightPaper = Color(0xFFECE2CA)
+    val darkInk = Color(0xFF493925)
+    val disabledPaper = Color(0xFFDCD6C2)
+    val disabledInk = Color(0xFF625747)
+}
+
+private fun tabletopInkShadow(light: Boolean): Shadow =
+    Shadow(if (light) Color(0xFF203526) else Color(0x99FFF5DA), Offset(0f, 1f), 2f)
+
 internal object CrossroadsTabletopFeedback {
     const val PRESSED_SCALE = 0.975f
     const val REST_SCALE = 1f
@@ -60,9 +74,7 @@ internal fun TabletopChoicePill(
         animationSpec = tween(durationMillis = 95),
         label = "tabletop-choice-contact"
     )
-    val bg = if (selected) Color(0xFF3D624A) else Color(0xFFECE2CA)
-    val ink = if (selected) Color(0xFFFFF5DA) else Color(0xFF6B563E)
-    val edging = if (selected) Color(0xFFE8CE94) else Color(0xFFAA9672)
+    val ink = if (selected) TabletopLabelPalette.lightInk else TabletopLabelPalette.darkInk
     Surface(
         onClick = onClick,
         interactionSource = interactionSource,
@@ -71,28 +83,28 @@ internal fun TabletopChoicePill(
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .semantics { this.selected = selected },
         shape = RoundedCornerShape(13.dp),
-        color = bg,
+        color = Color.Transparent,
         contentColor = ink,
-        shadowElevation = if (selected) 4.dp else 1.dp,
-        border = BorderStroke(if (selected) 1.8.dp else 1.dp, edging)
+        shadowElevation = 0.dp
     ) {
-        Box(contentAlignment = Alignment.Center) {
+        BoxWithConstraints(contentAlignment = Alignment.Center) {
+            val safeInset = if (maxWidth >= 200.dp) 28.dp else 10.dp
             OptionalTabletopButtonArt(
                 family = if (selected) TabletopArtFamily.PRIMARY else TabletopArtFamily.SECONDARY,
                 pressed = pressed, selected = selected
             )
             Box(
                 modifier = Modifier.fillMaxWidth()
-                    .padding(horizontal = 6.dp, vertical = 12.dp),
+                    .padding(horizontal = safeInset, vertical = 12.dp),
                 contentAlignment = Alignment.Center
             ) {
             Text(
                 text = text,
                 color = ink,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.labelLarge.copy(shadow = tabletopInkShadow(selected)),
                 textAlign = TextAlign.Center,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
         }
@@ -151,18 +163,15 @@ internal fun TabletopPrimaryActionButton(
         modifier = modifier.heightIn(min = if (withDie) 58.dp else 54.dp)
             .graphicsLayer { scaleX = scale; scaleY = scale },
         shape = RoundedCornerShape(16.dp),
-        color = if (enabled) Color(0xFF3D624A) else Color(0xFFDCD6C2),
+        color = Color.Transparent,
         contentColor = if (enabled) Color(0xFFFFF5DA) else Color(0xFF786D5A),
-        shadowElevation = if (enabled) 5.dp else 0.dp,
-        border = BorderStroke(
-            if (enabled) 2.dp else 1.dp,
-            if (enabled) Color(0xFFD6B97A) else Color(0xFFAEA58F)
-        )
+        shadowElevation = 0.dp
     ) {
-        Box {
+        BoxWithConstraints {
+            val safeInset = if (maxWidth >= 200.dp) 32.dp else 12.dp
             OptionalPrimaryButtonArt(enabled, pressed)
             Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 13.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = safeInset, vertical = 13.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -176,7 +185,8 @@ internal fun TabletopPrimaryActionButton(
                 text,
                 fontWeight = FontWeight.Bold,
                 fontSize = if (withDie) 17.sp else 15.sp,
-                color = if (enabled) Color(0xFFFFF5DA) else Color(0xFF786D5A),
+                style = MaterialTheme.typography.labelLarge.copy(shadow = tabletopInkShadow(enabled)),
+                color = if (enabled) TabletopLabelPalette.lightInk else TabletopLabelPalette.disabledInk,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -208,18 +218,18 @@ internal fun TabletopUtilityButton(
         modifier = modifier.heightIn(min = 48.dp)
             .graphicsLayer { scaleX = scale; scaleY = scale },
         shape = RoundedCornerShape(11.dp),
-        color = if (dark) Color(0xFF385945) else TabletopMaterials.paper,
+        color = Color.Transparent,
         contentColor = if (dark) Color(0xFFFFF3D6) else Color(0xFF385945),
-        border = BorderStroke(1.dp, if (dark) TabletopMaterials.brass else Color(0xFFAA9672)),
-        shadowElevation = 1.dp
+        shadowElevation = 0.dp
     ) {
-        Box(contentAlignment = Alignment.Center) {
+        BoxWithConstraints(contentAlignment = Alignment.Center) {
+            val safeInset = if (maxWidth >= 200.dp) 28.dp else 10.dp
             OptionalTabletopButtonArt(
                 family = if (dark) TabletopArtFamily.PRIMARY else TabletopArtFamily.SECONDARY,
                 pressed = pressed
             )
             Box(
-                modifier = Modifier.padding(horizontal = 9.dp, vertical = 8.dp),
+                modifier = Modifier.padding(horizontal = safeInset, vertical = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Row(
@@ -230,8 +240,10 @@ internal fun TabletopUtilityButton(
                         OptionalTabletopIcon(icon, Modifier.size(20.dp)
                             .padding(end = 3.dp)) { }
                     }
-                    Text(text, style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
+                    Text(text, style = MaterialTheme.typography.labelLarge.copy(shadow = tabletopInkShadow(dark)),
+                        color = if (dark) TabletopLabelPalette.lightInk else TabletopLabelPalette.darkInk,
+                        fontWeight = FontWeight.Medium, textAlign = TextAlign.Center,
+                        maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
             }
         }

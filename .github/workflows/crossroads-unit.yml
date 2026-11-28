@@ -46,6 +46,75 @@ jobs:
           gradle-version: "8.11.1"
       - name: Run JVM rules tests
         run: gradle --no-daemon :core:test --console=plain
+      - name: Check out pinned pre-policy engine
+        uses: actions/checkout@v4
+        with:
+          ref: 3bf768046e08f0724c4171c91b5a547647436289
+          path: legacy-reference
+      - name: Generate historical checkpoints and compare current replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          export CROSSROADS_HISTORY_DIR="$RUNNER_TEMP/crossroads-history"
+          cp core/src/test/kotlin/com/playereden/crossroads/core/HistoricalBotReplayTest.kt legacy-reference/core/src/test/kotlin/com/playereden/crossroads/core/HistoricalBotReplayTest.kt
+          CROSSROADS_HISTORY_MODE=generate gradle -p legacy-reference --no-daemon :core:test --tests '*HistoricalBotReplayTest' --console=plain
+          CROSSROADS_HISTORY_MODE=verify gradle --no-daemon :core:test --tests '*HistoricalBotReplayTest' --rerun-tasks --console=plain
+      - name: Validate and display Guardian tier results
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/summarize_guardian_tiers.py core/build/reports/ai2-comparison/guardian_difficulty_competition.csv | tee core/build/reports/ai2-comparison/guardian_difficulty_summary.json
+      - name: Validate and display starting seat fairness
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/summarize_starting_seats.py core/build/reports/ai2-comparison/starting_seat_fairness.csv | tee core/build/reports/ai2-comparison/starting_seat_summary.json
+      - name: Validate and display two-seat decision exposure
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/summarize_two_seat_exposure.py core/build/reports/ai2-comparison/two_seat_decision_exposure.csv | tee core/build/reports/ai2-comparison/two_seat_decision_summary.json
+      - name: Validate and display round-start awareness experiment
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/summarize_round_start_awareness.py core/build/reports/ai2-comparison/round_start_awareness.csv | tee core/build/reports/ai2-comparison/round_start_awareness_summary.json
+      - name: Upload AI baseline and historical fixtures
+        uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-AI2-baseline-${{ github.sha }}
+          path: |
+            core/build/reports/ai2-baseline/bot_policy_baseline.csv
+            core/build/reports/ai2-comparison/travel_samples.csv
+            core/build/reports/ai2-comparison/travel_summary.txt
+            core/build/reports/ai2-comparison/route_samples.csv
+            core/build/reports/ai2-comparison/encounter_samples.csv
+            core/build/reports/ai2-comparison/mixed_tournament.csv
+            core/build/reports/ai2-comparison/four_seat_tournament.csv
+            core/build/reports/ai2-comparison/route_exposure.csv
+            core/build/reports/ai2-comparison/finish_receipts.csv
+            core/build/reports/ai2-comparison/woven_spacing_experiment.csv
+            core/build/reports/ai2-comparison/woven_convergence_experiment.csv
+            core/build/reports/ai2-comparison/strategy_calibration.csv
+            core/build/reports/ai2-comparison/exact_strategy_calibration.csv
+            core/build/reports/ai2-comparison/gambler_competition.csv
+            core/build/reports/ai2-comparison/gambler_refinement.csv
+            core/build/reports/ai2-comparison/guardian_competition.csv
+            core/build/reports/ai2-comparison/strategist_competition.csv
+            core/build/reports/ai2-comparison/scout_difficulty_competition.csv
+            core/build/reports/ai2-comparison/finish_opportunity_audit.csv
+            core/build/reports/ai2-comparison/guardian_finish_competition.csv
+            core/build/reports/ai2-comparison/guardian_difficulty_competition.csv
+            core/build/reports/ai2-comparison/guardian_difficulty_summary.json
+            core/build/reports/ai2-comparison/starting_seat_fairness.csv
+            core/build/reports/ai2-comparison/starting_seat_summary.json
+            core/build/reports/ai2-comparison/two_seat_decision_exposure.csv
+            core/build/reports/ai2-comparison/two_seat_decision_summary.json
+            core/build/reports/ai2-comparison/round_start_awareness.csv
+            core/build/reports/ai2-comparison/round_start_awareness_summary.json
+            ${{ runner.temp }}/crossroads-history/*.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Upload reproducible gameplay balance report
         if: always()
         uses: actions/upload-artifact@v4

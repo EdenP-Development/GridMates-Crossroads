@@ -1,9 +1,12 @@
 package com.playereden.gridmates.crossroads
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import kotlin.math.roundToInt
@@ -75,6 +78,48 @@ internal object WovenEnvironmentAccents {
     }
 }
 
+/** Small irregular ground washes join existing landmarks to the landscape.
+ * No new props, routes or event markers; deterministic and bounded per board. */
+internal data class LandscapeFootprint(val x: Float, val y: Float,
+    val radius: Float, val tone: Int)
+
+internal object LandscapeComposition {
+    fun plan(accents: List<EnvironmentAccent>): List<LandscapeFootprint> =
+        accents.take(40).flatMap { a ->
+            val tone = when (a.sprite) {
+                EnvironmentSprite.COTTAGE, EnvironmentSprite.FENCE, EnvironmentSprite.ORCHARD -> 2
+                EnvironmentSprite.FIR, EnvironmentSprite.FIR_GROVE, EnvironmentSprite.OAK,
+                EnvironmentSprite.BUSH -> 0
+                else -> 1
+            }
+            val radius = a.sprite.diameter * .85f
+            listOf(LandscapeFootprint(a.x, a.y, radius, tone),
+                LandscapeFootprint((a.x + radius * .33f).coerceIn(0f, 1f),
+                    (a.y + radius * .24f).coerceIn(0f, 1f), radius * .63f, tone))
+        }
+}
+
+internal fun DrawScope.drawLandscapeFootprints(
+    footprints: List<LandscapeFootprint>, left: Float, top: Float, width: Float, height: Float
+) {
+    val unit = minOf(width, height)
+    if (unit <= 0f) return
+    clipRect(left, top, left + width, top + height) {
+        footprints.forEach { p ->
+            val center = Offset(left + p.x * width, top + p.y * height)
+            val radius = unit * p.radius
+            val tint = when (p.tone) {
+                0 -> Color(0xFF56764B)
+                2 -> Color(0xFFB49460)
+                else -> Color(0xFFEAD89E)
+            }
+            drawCircle(androidx.compose.ui.graphics.Brush.radialGradient(
+                listOf(tint.copy(alpha = .32f), tint.copy(alpha = .13f), tint.copy(alpha = 0f)),
+                center = center, radius = radius), radius = radius, center = center)
+        }
+    }
+}
+
 /** Draw only decorative art below the playable graph; false means draw fallback. */
 internal fun DrawScope.tryDrawEnvironmentSprite(
     atlas: ImageBitmap?,
@@ -86,6 +131,11 @@ internal fun DrawScope.tryDrawEnvironmentSprite(
         !boardSide.isFinite() || boardSide <= 0f ||
         !center.x.isFinite() || !center.y.isFinite()) return false
     val diameter = (boardSide * sprite.diameter).roundToInt().coerceAtLeast(1)
+    // A shared contact shadow anchors the cutout to the printed ground.
+    val d = diameter.toFloat()
+    drawOval(Color(0xFF34492D).copy(alpha = .20f),
+        topLeft = center + Offset(-d * .31f, d * .27f),
+        size = Size(d * .68f, d * .15f))
     drawImage(
         image = atlas,
         srcOffset = EnvironmentAtlas.source(sprite),

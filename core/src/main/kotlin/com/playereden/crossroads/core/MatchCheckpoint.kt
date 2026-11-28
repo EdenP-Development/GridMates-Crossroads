@@ -2,6 +2,8 @@ package com.playereden.crossroads.core
 
 import java.security.MessageDigest
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -27,6 +29,11 @@ data class MatchAction(
     val targetIndex: Int? = null
 )
 
+/** Stable serialized identifier; never change the behavior of an existing policy. */
+@Serializable
+enum class BotPolicyVersion { LEGACY_V1, ADAPTIVE_V2_R1, ADAPTIVE_V2_R2, ADAPTIVE_V2_R3, ADAPTIVE_V2_R4, GAMBLER_V1, GAMBLER_V2, GUARDIAN_V1, STRATEGIST_V1, SCOUT_RELAXED_V1, SCOUT_ADVANCED_V1, GUARDIAN_FINISH_CANDIDATE_V1, GUARDIAN_RELAXED_CANDIDATE_V1 }
+
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class MatchCheckpoint(
     val formatVersion: Int,
@@ -38,7 +45,13 @@ data class MatchCheckpoint(
     val seats: Int,
     val humanIndices: List<Int>,
     val actions: List<MatchAction>,
-    val expected: Snapshot
+    val expected: Snapshot,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    val botPolicy: BotPolicyVersion = BotPolicyVersion.LEGACY_V1,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    val botSeatPolicies: Map<Int, BotPolicyVersion> = emptyMap(),
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    val startingSeat: Int = 0
 )
 
 object MatchCheckpointCodec {

@@ -26,8 +26,12 @@ class GameSession(
     private val catalogue: EventCatalogue,
     seats: Int = 2,
     seed: Int = 1234,
-    humanIndices: Set<Int> = setOf(0)
+    humanIndices: Set<Int> = setOf(0),
+    val botPolicy: BotPolicyVersion = BotPolicyVersion.LEGACY_V1,
+    botSeatPolicies: Map<Int, BotPolicyVersion> = emptyMap(),
+    val startingSeat: Int = 0
 ) {
+    private val startingOrder = StartingOrderV1(seats, startingSeat)
     private val random = Random(seed)
     private val initialSeed = seed
     val playtestRules: Boolean = DecisionLab.enabled(board)
@@ -54,11 +58,24 @@ class GameSession(
             winningUnusedSteps = equalRoundLeadExcess,
             finishers = equalRoundFinishers,
             tiedOnWinningSteps = equalRoundBestExcessTies > 1,
-            laterSeatsGotFinalChance = first < players.lastIndex
+            laterSeatsGotFinalChance = startingOrder.hasLaterTurn(first)
         )
     }
     val finalRoundPending: Boolean get() =
         DecisionLab.finishRoundEqually(board) && equalRoundLeader != null && phase != Phase.FINISHED
+    /** Diagnostic only: same public-state race assessment used by adaptive policies. */
+    internal fun observedRaceAwareness(): BotRaceAwareness =
+        BotRaceAssessment.assess(currentIndex, players.mapIndexed { seat, player ->
+            BotRacerView(seat, distanceToFinish(player.position), player.shield)
+        }, distanceToFinish(board.start), finalRoundPending)
+
+    /** Read-only movement assessment; no random draws or state changes. */
+    internal fun directFinishOpportunity(): FinishOpportunityV1? {
+        if (!playtestRules || phase != Phase.ROLL) return null
+        return BotFinishOpportunityV1.assess(board, players[currentIndex].position,
+            if (finalRoundPending) equalRoundLeadExcess else null)
+    }
+
     val leadingFinisherName: String? get() =
         if (finalRoundPending) equalRoundLeader?.let { players[it].name } else null
     /** Live, replay-derived travel stance; used only to describe Lab route choices. */
@@ -70,12 +87,21 @@ class GameSession(
         if (phase == Phase.ENCOUNTER && pendingEncounterPool == "hazard")
             DecisionLab.pushHazardSuccessBonus(board, pushedThisTurn) else 0
     private val originalHumanIndices = humanIndices.toSortedSet()
+    private val seatPolicyOverrides = botSeatPolicies.toSortedMap()
+    fun policyForBotSeat(seat: Int): BotPolicyVersion {
+        require(seat in players.indices && players[seat].isBot)
+        return seatPolicyOverrides[seat] ?: botPolicy
+    }
     private val acceptedActions = mutableListOf<MatchAction>()
     // A bot turn executes one nested legal roll/route/target internally; the
     // checkpoint records only the public bot command, so replay consumes the
     // exact same random draws.
     private var insideBotCommand = false
+    // Diagnostic receipt only: never serialized, never read by a policy or rules.
+    internal var lastBotDecision: MatchAction? = null
+        private set
     private fun record(action: MatchAction) {
+        if (insideBotCommand) lastBotDecision = action
         if (!insideBotCommand) {
             check(acceptedActions.size < MatchCheckpointCodec.MAX_ACTIONS) {
                 "Match exceeded supported checkpoint action count"
@@ -86,7 +112,7 @@ class GameSession(
     val players: List<Player>
     var phase: Phase = Phase.ROLL
         private set
-    var currentIndex: Int = 0
+    var currentIndex: Int = startingSeat
         private set
     var remainingSteps: Int = 0
         private set
@@ -117,6 +143,8 @@ class GameSession(
 
     init {
         require(seats in 2..4)
+        require(startingSeat == 0 || DecisionLab.isV5(board)) { "Flexible starts require Lab v5" }
+        require(seatPolicyOverrides.keys.all { it in 0 until seats && it !in humanIndices })
         require(board.start != board.finish)
         require(board.nodes.map { it.id }.toSet().size == board.nodes.size)
         require(board.nodes.any { it.id == board.start } && board.nodes.any { it.id == board.finish })
@@ -148,7 +176,10 @@ class GameSession(
             seats = players.size,
             humanIndices = originalHumanIndices.toList(),
             actions = acceptedActions.toList(),
-            expected = snapshot()
+            expected = snapshot(),
+            botPolicy = botPolicy,
+            botSeatPolicies = seatPolicyOverrides.toMap(),
+            startingSeat = startingSeat
         )
     }
 
@@ -175,7 +206,10 @@ class GameSession(
 
             val game = GameSession(
                 board, catalogue, checkpoint.seats, checkpoint.seed,
-                humanIndices = checkpoint.humanIndices.toSet()
+                humanIndices = checkpoint.humanIndices.toSet(),
+                botPolicy = checkpoint.botPolicy,
+                botSeatPolicies = checkpoint.botSeatPolicies,
+                startingSeat = checkpoint.startingSeat
             )
             checkpoint.actions.forEach { action ->
                 when (action.kind) {
@@ -224,9 +258,13 @@ class GameSession(
      * human seats. A new seed is supplied by the caller. Never reuse match
      * progress or reinterpret a restored match through home preferences.
      */
-    fun freshRematch(seed: Int): GameSession {
+    fun freshRematch(seed: Int, rotateStarter: Boolean = false): GameSession {
         require(phase == Phase.FINISHED) { "Finish the current race before rematching" }
-        return GameSession(board, catalogue, players.size, seed, originalHumanIndices)
+        require(!rotateStarter || (DecisionLab.isV5(board) && originalHumanIndices == setOf(0))) {
+            "Rotating rematches require Solo Lab v5"
+        }
+        val nextStarter = if (rotateStarter) startingOrder.rotated().first else startingSeat
+        return GameSession(board, catalogue, players.size, seed, originalHumanIndices, botPolicy, seatPolicyOverrides, nextStarter)
     }
 
     fun snapshot(): Snapshot = Snapshot(
@@ -411,6 +449,270 @@ class GameSession(
 
     /** Bot submits exactly one regular legal action. UI may animate between actions. */
     fun botStep() {
+        lastBotDecision = null
+        when (policyForBotSeat(currentIndex)) {
+        BotPolicyVersion.LEGACY_V1 -> legacyBotStep()
+        BotPolicyVersion.ADAPTIVE_V2_R1 -> adaptiveBotStep()
+        BotPolicyVersion.ADAPTIVE_V2_R2 -> adaptiveRouteBotStep()
+        BotPolicyVersion.ADAPTIVE_V2_R3 -> adaptiveEncounterBotStep()
+        BotPolicyVersion.ADAPTIVE_V2_R4 -> adaptiveTargetBotStep()
+        BotPolicyVersion.GAMBLER_V1 -> gamblerBotStep()
+        BotPolicyVersion.GAMBLER_V2 -> gamblerBotStep(refined = true)
+        BotPolicyVersion.GUARDIAN_V1 -> guardianBotStep()
+        BotPolicyVersion.GUARDIAN_FINISH_CANDIDATE_V1 -> guardianBotStep(finishCandidate = true)
+        BotPolicyVersion.GUARDIAN_RELAXED_CANDIDATE_V1 -> guardianBotStep(relaxedCandidate = true)
+        BotPolicyVersion.STRATEGIST_V1 -> strategistBotStep()
+        BotPolicyVersion.SCOUT_RELAXED_V1 -> scoutDifficultyBotStep(BotDifficultyV1.RELAXED)
+        BotPolicyVersion.SCOUT_ADVANCED_V1 -> scoutDifficultyBotStep(BotDifficultyV1.ADVANCED)
+        }
+    }
+
+    // R1 is intentionally narrow: adaptive travel only; all other phases retain V1.
+    // Never mutate this version once saved matches exist; future revisions get new IDs.
+    private fun adaptiveBotStep() {
+        require(players[currentIndex].isBot && phase != Phase.FINISHED)
+        if (phase != Phase.ROLL || !playtestRules) {
+            legacyBotStep()
+            return
+        }
+        val awareness = BotRaceAssessment.assess(currentIndex,
+            players.mapIndexed { seat, player ->
+                BotRacerView(seat, distanceToFinish(player.position), player.shield)
+            }, distanceToFinish(board.start), finalRoundPending)
+        insideBotCommand = true
+        try {
+            if (AdaptiveBotTravelR1.shouldPush(awareness)) rollBold() else rollSteady()
+        } finally {
+            insideBotCommand = false
+        }
+        record(MatchAction(MatchActionKind.BOT))
+    }
+
+    private fun gamblerBotStep(refined: Boolean = false) {
+        require(players[currentIndex].isBot && phase != Phase.FINISHED)
+        if (!playtestRules || (phase != Phase.ROLL && phase != Phase.ENCOUNTER)) {
+            adaptiveTargetBotStep()
+            return
+        }
+        val awareness = BotRaceAssessment.assess(currentIndex,
+            players.mapIndexed { seat, player ->
+                BotRacerView(seat, distanceToFinish(player.position), player.shield)
+            }, distanceToFinish(board.start), finalRoundPending)
+        insideBotCommand = true
+        try {
+            if (phase == Phase.ROLL) {
+                if (GamblerPersonalityV1.shouldPush(awareness)) rollBold() else rollSteady()
+            } else {
+                val options = availableEncounterChoices()
+                val choice = if (refined) GamblerPersonalityV2.chooseEncounter(options,
+                    awareness, remainingSteps, steadyTravelChosen, pendingPushHazardBonus)
+                else GamblerPersonalityV1.chooseEncounter(options,
+                    awareness, remainingSteps, steadyTravelChosen, pendingPushHazardBonus)
+                chooseEncounter(choice)
+            }
+        } finally {
+            insideBotCommand = false
+        }
+        record(MatchAction(MatchActionKind.BOT))
+    }
+
+    private fun guardianBotStep(finishCandidate: Boolean = false, relaxedCandidate: Boolean = false) {
+        require(players[currentIndex].isBot && phase != Phase.FINISHED)
+        if (!playtestRules || phase == Phase.TARGET) {
+            adaptiveTargetBotStep()
+            return
+        }
+        val awareness = BotRaceAssessment.assess(currentIndex,
+            players.mapIndexed { seat, player ->
+                BotRacerView(seat, distanceToFinish(player.position), player.shield)
+            }, distanceToFinish(board.start), finalRoundPending)
+        insideBotCommand = true
+        try {
+            when (phase) {
+                Phase.ROLL -> {
+                    val push = if (relaxedCandidate) GuardianRelaxedCandidateV1.shouldPush(awareness)
+                        else (if (finishCandidate) directFinishOpportunity()?.preferPush()
+                            else null) ?: GuardianPersonalityV1.shouldPush(awareness)
+                    if (push) rollBold() else rollSteady()
+                }
+                Phase.ENCOUNTER -> chooseEncounter(GuardianPersonalityV1.chooseEncounter(
+                    availableEncounterChoices(), awareness, remainingSteps, steadyTravelChosen))
+                Phase.ROUTE -> {
+                    val fork = board.forkAt(players[currentIndex].position)
+                    val chosen = availableRoutes().minWith(compareBy<BoardNode> { route ->
+                        val risk = fork?.choices?.firstOrNull { it.to == route.id }?.risk
+                        val base = AdaptiveBotRouteR2.score(distanceToFinish(route.id), risk,
+                            BotRouteLookahead.inspect(board, route.id, remainingSteps),
+                            awareness, routeEncounterAvailable, steadyTravelChosen &&
+                                DecisionLab.supportsSteadyShelterBonus(board))
+                        GuardianPersonalityV1.routeScore(base, risk, awareness, routeEncounterAvailable)
+                    }.thenBy { it.id })
+                    chooseRoute(chosen.id)
+                }
+                else -> error("Unexpected Guardian phase")
+            }
+        } finally {
+            insideBotCommand = false
+        }
+        record(MatchAction(MatchActionKind.BOT))
+    }
+
+    private fun strategistBotStep() {
+        require(players[currentIndex].isBot && phase != Phase.FINISHED)
+        if (!playtestRules || phase == Phase.ENCOUNTER) {
+            adaptiveTargetBotStep()
+            return
+        }
+        val awareness = BotRaceAssessment.assess(currentIndex,
+            players.mapIndexed { seat, player ->
+                BotRacerView(seat, distanceToFinish(player.position), player.shield)
+            }, distanceToFinish(board.start), finalRoundPending)
+        insideBotCommand = true
+        try {
+            when (phase) {
+                Phase.ROLL -> if (StrategistPersonalityV1.shouldPush(awareness))
+                    rollBold() else rollSteady()
+                Phase.ROUTE -> {
+                    val fork = board.forkAt(players[currentIndex].position)
+                    val chosen = availableRoutes().minWith(compareBy<BoardNode> { route ->
+                        val risk = fork?.choices?.firstOrNull { it.to == route.id }?.risk
+                        val horizon = BotRouteLookahead.inspect(board, route.id, remainingSteps)
+                        val base = AdaptiveBotRouteR2.score(distanceToFinish(route.id), risk,
+                            horizon, awareness, routeEncounterAvailable, steadyTravelChosen &&
+                                DecisionLab.supportsSteadyShelterBonus(board))
+                        StrategistPersonalityV1.routeScore(base, horizon, awareness, routeEncounterAvailable)
+                    }.thenBy { it.id })
+                    chooseRoute(chosen.id)
+                }
+                Phase.TARGET -> {
+                    val candidates = availableTargets().map { seat ->
+                        val player = players[seat]
+                        val retreatIndex = (player.traversed.lastIndex - pendingPrank).coerceAtLeast(0)
+                        val distance = distanceToFinish(player.position)
+                        val after = if (player.shield) distance else
+                            distanceToFinish(player.traversed[retreatIndex])
+                        BotTargetView(seat, distance, player.shield, after)
+                    }
+                    val target = StrategistPersonalityV1.chooseTarget(candidates)
+                    if (target == null) { finishTurn(); revision++ }
+                    else chooseTarget(target)
+                }
+                else -> error("Unexpected Strategist phase")
+            }
+        } finally {
+            insideBotCommand = false
+        }
+        record(MatchAction(MatchActionKind.BOT))
+    }
+
+    private fun adaptiveTargetBotStep() {
+        require(players[currentIndex].isBot && phase != Phase.FINISHED)
+        if (phase != Phase.TARGET) {
+            adaptiveEncounterBotStep()
+            return
+        }
+        val candidates = availableTargets().map { seat ->
+            val player = players[seat]
+            val retreatIndex = (player.traversed.lastIndex - pendingPrank).coerceAtLeast(0)
+            val distance = distanceToFinish(player.position)
+            val after = if (player.shield) distance else
+                distanceToFinish(player.traversed[retreatIndex])
+            BotTargetView(seat, distance, player.shield, after)
+        }
+        val target = AdaptiveBotTargetR4.choose(candidates)
+        insideBotCommand = true
+        try {
+            if (target == null) { finishTurn(); revision++ }
+            else chooseTarget(target)
+        } finally {
+            insideBotCommand = false
+        }
+        record(MatchAction(MatchActionKind.BOT))
+    }
+
+    private fun adaptiveEncounterBotStep() {
+        require(players[currentIndex].isBot && phase != Phase.FINISHED)
+        if (phase != Phase.ENCOUNTER) {
+            adaptiveRouteBotStep()
+            return
+        }
+        val awareness = BotRaceAssessment.assess(currentIndex,
+            players.mapIndexed { seat, player ->
+                BotRacerView(seat, distanceToFinish(player.position), player.shield)
+            }, distanceToFinish(board.start), finalRoundPending)
+        val choice = AdaptiveBotEncounterR3.choose(availableEncounterChoices(),
+            awareness, remainingSteps, steadyTravelChosen, pendingPushHazardBonus)
+        insideBotCommand = true
+        try {
+            chooseEncounter(choice)
+        } finally {
+            insideBotCommand = false
+        }
+        record(MatchAction(MatchActionKind.BOT))
+    }
+
+    // First difficulty experiment: Scout route choices only. All other
+    // phases retain the exact existing R2 behavior and random draws.
+    private fun scoutDifficultyBotStep(difficulty: BotDifficultyV1) {
+        require(players[currentIndex].isBot && phase != Phase.FINISHED)
+        if (phase != Phase.ROUTE || !playtestRules) {
+            adaptiveRouteBotStep()
+            return
+        }
+        val awareness = BotRaceAssessment.assess(currentIndex,
+            players.mapIndexed { seat, player ->
+                BotRacerView(seat, distanceToFinish(player.position), player.shield)
+            }, distanceToFinish(board.start), finalRoundPending)
+        val fork = board.forkAt(players[currentIndex].position)
+        val chosen = availableRoutes().minWith(compareBy<BoardNode> { route ->
+            val distance = distanceToFinish(route.id)
+            val horizon = BotRouteLookahead.inspect(board, route.id, remainingSteps)
+            val base = AdaptiveBotRouteR2.score(distance,
+                fork?.choices?.firstOrNull { it.to == route.id }?.risk,
+                horizon, awareness, routeEncounterAvailable, steadyTravelChosen &&
+                    DecisionLab.supportsSteadyShelterBonus(board))
+            BotDifficultyRouteV1.score(difficulty, BotPersonalityV1.SCOUT,
+                base, distance, horizon, routeEncounterAvailable)
+        }.thenBy { it.id })
+        insideBotCommand = true
+        try {
+            chooseRoute(chosen.id)
+        } finally {
+            insideBotCommand = false
+        }
+        record(MatchAction(MatchActionKind.BOT))
+    }
+
+    private fun adaptiveRouteBotStep() {
+        require(players[currentIndex].isBot && phase != Phase.FINISHED)
+        if (phase != Phase.ROUTE || !playtestRules) {
+            adaptiveBotStep()
+            return
+        }
+        val awareness = BotRaceAssessment.assess(currentIndex,
+            players.mapIndexed { seat, player ->
+                BotRacerView(seat, distanceToFinish(player.position), player.shield)
+            }, distanceToFinish(board.start), finalRoundPending)
+        val fork = board.forkAt(players[currentIndex].position)
+        val chosen = availableRoutes().minWith(compareBy<BoardNode> { route ->
+            AdaptiveBotRouteR2.score(
+                distanceToFinish(route.id),
+                fork?.choices?.firstOrNull { it.to == route.id }?.risk,
+                BotRouteLookahead.inspect(board, route.id, remainingSteps),
+                awareness, routeEncounterAvailable, steadyTravelChosen &&
+                    DecisionLab.supportsSteadyShelterBonus(board)
+            )
+        }.thenBy { it.id })
+        insideBotCommand = true
+        try {
+            chooseRoute(chosen.id)
+        } finally {
+            insideBotCommand = false
+        }
+        record(MatchAction(MatchActionKind.BOT))
+    }
+
+    private fun legacyBotStep() {
         require(players[currentIndex].isBot && phase != Phase.FINISHED)
         insideBotCommand = true
         try {
@@ -675,7 +977,7 @@ class GameSession(
             equalRoundBestExcessTies++
         }
         equalRoundFinishers++
-        if (currentIndex == players.lastIndex) {
+        if (currentIndex == startingOrder.last) {
             finishEqualRound()
         } else {
             finishTurn()
@@ -699,11 +1001,11 @@ class GameSession(
         // A first finish never denies the last seat its current-round action.
         // Resolve only AFTER the last seat completes a legal turn or reaches FINISH.
         if (DecisionLab.finishRoundEqually(board) &&
-            equalRoundLeader != null && currentIndex == players.lastIndex) {
+            equalRoundLeader != null && currentIndex == startingOrder.last) {
             finishEqualRound()
             return
         }
-        currentIndex = (currentIndex + 1) % players.size
+        currentIndex = startingOrder.next(currentIndex)
         phase = Phase.ROLL
         remainingSteps = 0
         die = null
