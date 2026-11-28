@@ -73,11 +73,11 @@ private fun HomeTrailIllustration() {
             Image(
                 bitmap = commissionedArt,
                 contentDescription = null, // Nearby game text is the accessible label.
-                modifier = Modifier.fillMaxWidth().height(202.dp),
+                modifier = Modifier.fillMaxWidth().height(168.dp),
                 contentScale = ContentScale.Crop
             )
         } else {
-        Canvas(Modifier.fillMaxWidth().height(202.dp)) {
+        Canvas(Modifier.fillMaxWidth().height(168.dp)) {
             val inset = 12f
             val w = (size.width - 2f * inset).coerceAtLeast(1f)
             val h = (size.height - 2f * inset).coerceAtLeast(1f)
@@ -213,6 +213,7 @@ internal fun CrossroadsHomeScreen(
     // Keep the first viewport focused on starting a race. Secondary tools
     // remain available in an explicit, accessible options section.
     var showExtraOptions by remember { mutableStateOf(false) }
+    var showQaCourses by remember { mutableStateOf(false) }
     // Materials' default inactive switch is lavender; make BOTH experimental
     // controls use the same woodland palette at every on/off state.
     val woodlandSwitchColors = SwitchDefaults.colors(
@@ -336,6 +337,18 @@ internal fun CrossroadsHomeScreen(
                 )
             }
         }
+        if (BuildConfig.DEBUG && (regionalCourseId != null || convergenceCourseId != null)) {
+            val experimentalSelected = selectedCourseId == regionalCourseId ||
+                selectedCourseId == convergenceCourseId
+            OutlinedButton(
+                onClick = { showQaCourses = !showQaCourses },
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Text(if (showQaCourses) "Hide test courses" else if (experimentalSelected)
+                    "Test course selected · Show courses" else "Test courses · QA")
+            }
+            if (showQaCourses) {
         if (regionalCourseId != null) {
             Text("Experimental course · QA", style = MaterialTheme.typography.labelSmall, color = Muted)
             TabletopChoicePill(
@@ -353,6 +366,8 @@ internal fun CrossroadsHomeScreen(
                 modifier = Modifier.fillMaxWidth()
             )
         }
+            }
+        }
         Text(
             when (selectedCourseId) {
                 convergenceCourseId -> "QA only · balanced junction layout · offline Lab v5"
@@ -368,24 +383,31 @@ internal fun CrossroadsHomeScreen(
         )
         // The menu's next decision is Start. All secondary controls are
         // reachable but no longer make its first screen a long settings form.
-        HomeSectionHeading("PLAY TOGETHER")
-        Text("Two phones on the same Wi-Fi", style = MaterialTheme.typography.bodySmall,
+        HomeSectionHeading("More ways to play")
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = { showGuide = true },
+                modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 8.dp)) {
+                Text("How to play", textAlign = TextAlign.Center)
+            }
+            OutlinedButton(onClick = { showExtraOptions = !showExtraOptions },
+                modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 8.dp)) {
+                Text(if (showExtraOptions) "Hide options" else "More options", textAlign = TextAlign.Center)
+            }
+        }
+        Text("Nearby · Two phones on the same Wi-Fi", style = MaterialTheme.typography.bodySmall,
             color = Muted)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TabletopUtilityButton("Host", onNearbyHost, Modifier.weight(1f), icon = TabletopIconArt.MULTIPLAYER)
-            TabletopUtilityButton("Join", onNearbyJoin, Modifier.weight(1f), icon = TabletopIconArt.MULTIPLAYER)
+            OutlinedButton(onClick = onNearbyHost, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
+                Text("Host")
+            }
+            OutlinedButton(onClick = onNearbyJoin, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
+                Text("Join")
+            }
         }
-        TabletopUtilityButton(
-            text = "How to play", onClick = { showGuide = true },
-            modifier = Modifier.fillMaxWidth(), icon = TabletopIconArt.JOURNAL
-        )
-        TabletopUtilityButton(
-            text = homeOptionsToggleLabel(showExtraOptions),
-            onClick = { showExtraOptions = !showExtraOptions },
-            modifier = Modifier.fillMaxWidth(),
-            icon = if (showExtraOptions) TabletopIconArt.COLLAPSE else TabletopIconArt.EXPAND
-        )
         if (showExtraOptions) {
+        HomeSectionHeading("Race options")
         if (opponentPreview) {
             HomeSectionHeading("STARTING PLAYER · QA")
             TabletopUtilityButton(
@@ -485,10 +507,9 @@ internal fun CrossroadsHomeScreen(
                 color = Muted
             )
         }
-        TabletopUtilityButton(
-            text = "About & data", onClick = { showAbout = true },
-            modifier = Modifier.fillMaxWidth(), icon = TabletopIconArt.SETTINGS
-        )
+        HomeSectionHeading("Local progress")
+        OutlinedButton(onClick = { showAbout = true },
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("About & data") }
         TabletopPanel(
             color = Color(0xFFEAE1CA),
             modifier = Modifier.fillMaxWidth(),
