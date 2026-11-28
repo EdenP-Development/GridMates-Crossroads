@@ -1,0 +1,187 @@
+name: Crossroads private Beta 1 candidate
+on:
+  workflow_dispatch:
+    inputs:
+      reviewed_source:
+        description: 'Exact reviewed commit SHA of release/beta-1-candidate'
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  build:
+    if: github.repository == 'EdenP-Development/GridMates-Crossroads' && github.ref == 'refs/heads/release/beta-1-candidate' && inputs.reviewed_source == github.sha
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    outputs:
+      beta_code: ${{ steps.compile.outputs.beta_code }}
+      unsigned_sha: ${{ steps.compile.outputs.unsigned_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify and import original artwork if candidate archives are present
+        shell: bash
+        run: |
+          set -euo pipefail
+          dir=design/art/imports
+          if [[ -e "$dir/crossroads_environment_v2.zip" || -e "$dir/crossroads_ui_core_v1.zip" ]]; then
+            (cd "$dir" && sha256sum -c <<'EOF'
+          c14294767e47a1489baa4f4415bd18232310ed1c9295a9fbdcc13d7112e3c1cb  crossroads_environment_v2.zip
+          80e8030c5520dde93eeb4a45eb56137b407a57a2c83d65fc0a944df0ff437085  crossroads_ui_core_v1.zip
+          EOF
+            )
+            python3 tools/import_environment_v2.py "$dir/crossroads_environment_v2.zip"
+            python3 tools/import_ui_core_v1.py "$dir/crossroads_ui_core_v1.zip"
+            python3 tools/promote_ui_preview.py
+            echo "Original environment atlas and UI source archive verified." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Validate optional woodland art, provenance and size budget
+        run: python3 tools/check_crossroads_art_pack.py
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Restore immutable sibling QA-only signing key
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p qa-signing
+          curl --fail --location --silent --show-error --retry 3             "https://raw.githubusercontent.com/PlayerEden/GridMates-Word-Search/183b8845b247a0ca40541f06e517999961600bc9/qa-signing/wordsearch-qa.p12"             --output qa-signing/wordsearch-qa.p12
+          echo "cbe50b2b4a34f3a8433e28ddc0efd5307a1adf9aa91e324ca757f40c6aec91ee  qa-signing/wordsearch-qa.p12" | sha256sum --check
+      - name: Build unsigned candidate and validate source
+        id: compile
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_RUN_ATTEMPT" == 1 ]]
+          code=$((3000 + GITHUB_RUN_NUMBER))
+          echo "beta_code=$code" >> "$GITHUB_OUTPUT"
+          sdkmanager_bin="$(command -v sdkmanager || true)"
+          if [[ -z "$sdkmanager_bin" && -n "${ANDROID_HOME:-}" ]]; then
+            sdkmanager_bin="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager -print -quit || true)"
+          fi
+          [[ -n "$sdkmanager_bin" ]] || { echo "Android SDK cmdline tools unavailable"; exit 1; }
+          "$sdkmanager_bin" 'platforms;android-35' 'build-tools;35.0.0'
+          python3 scripts/check_release_surface.py
+          gradle --no-daemon :core:test :app:testDebugUnitTest :app:lintRelease :app:assembleRelease "-PcrossroadsQaVersionCode=$code" --console=plain
+          unsigned=app/build/outputs/apk/release/app-release-unsigned.apk
+          test -s "$unsigned"
+          unzip -p "$unsigned" assets/branding/startup/v1/spudacus.png | sha256sum -c <(echo "74773dbda822161f73a639f959e8bce5c6e0b333a94ebeb8ee27f620d4995d25  -")
+          unzip -p "$unsigned" assets/branding/startup/v1/gridmates.png | sha256sum -c <(echo "eef6d631cac0b9523f7e0dbebac229f9a2458d36fe2e73e111d251704d9ff292  -")
+          tools="$ANDROID_HOME/build-tools/35.0.0"
+          "$tools/aapt" dump badging "$unsigned" | tee /tmp/crossroads-release-badging.txt
+          grep -F "package: name='com.playereden.gridmates.crossroads'" /tmp/crossroads-release-badging.txt
+          grep -F "application-label:'GridMates: Crossroads'" /tmp/crossroads-release-badging.txt
+          "$tools/aapt" dump permissions "$unsigned" | tee /tmp/crossroads-release-permissions.txt
+          if grep -E "android\.permission\.(INTERNET|ACCESS_NETWORK_STATE|ACCESS_WIFI_STATE|CHANGE_WIFI_MULTICAST_STATE)" /tmp/crossroads-release-permissions.txt; then
+            echo "ERROR: offline public APK requests network permissions." >&2
+            exit 1
+          fi
+          if "$tools/apksigner" verify "$unsigned" >/dev/null 2>&1; then
+            echo "ERROR: public preview was unexpectedly signed; review release signing setup." >&2
+            exit 1
+          fi
+          echo "Unsigned public preview compiled with correct package and label. NOT distributable before private signing." >> "$GITHUB_STEP_SUMMARY"
+          echo "unsigned_sha=$(sha256sum "$unsigned" | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-reviewed-candidate
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
+          retention-days: 1
+          if-no-files-found: error
+  sign:
+    needs: build
+    environment: crossroads-beta-signing
+    if: github.repository == 'EdenP-Development/GridMates-Crossroads' && github.ref == 'refs/heads/release/beta-1-candidate' && inputs.reviewed_source == github.sha && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BETA_CODE: ${{ needs.build.outputs.beta_code }}
+      UNSIGNED_SHA: ${{ needs.build.outputs.unsigned_sha }}
+    steps:
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install signing tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdkmanager_bin="$(command -v sdkmanager || true)"
+          if [[ -z "$sdkmanager_bin" ]]; then
+            sdkmanager_bin="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager -print -quit)"
+          fi
+          [[ -n "$sdkmanager_bin" ]]
+          "$sdkmanager_bin" 'build-tools;35.0.0'
+      - uses: actions/download-artifact@v4
+        with:
+          name: unsigned-reviewed-candidate
+          path: unsigned-input
+      - name: Verify unsigned artifact identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$UNSIGNED_SHA" =~ ^[a-f0-9]{64}$ ]]
+          [[ "$BETA_CODE" =~ ^[0-9]+$ ]]
+          (( BETA_CODE > 2002 ))
+          unsigned=unsigned-input/app-release-unsigned.apk
+          test -f "$unsigned" && test ! -L "$unsigned"
+          echo "$UNSIGNED_SHA  $unsigned" | sha256sum -c -
+          tools="$ANDROID_HOME/build-tools/35.0.0"
+          "$tools/aapt" dump badging "$unsigned" > "$RUNNER_TEMP/unsigned-badging.txt"
+          grep -F "package: name='com.playereden.gridmates.crossroads' versionCode='$BETA_CODE' versionName='0.1.0'" "$RUNNER_TEMP/unsigned-badging.txt"
+          "$tools/aapt" dump permissions "$unsigned" > "$RUNNER_TEMP/unsigned-permissions.txt"
+          if grep -E 'android\.permission\.(INTERNET|ACCESS_NETWORK_STATE|ACCESS_WIFI_STATE|CHANGE_WIFI_MULTICAST_STATE)' "$RUNNER_TEMP/unsigned-permissions.txt"; then exit 1; fi
+          if "$tools/apksigner" verify "$unsigned" >/dev/null 2>&1; then exit 1; fi
+      - name: Sign and verify candidate
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.GRIDMATES_CROSSROADS_BETA_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.GRIDMATES_CROSSROADS_BETA_KEYSTORE_PASSWORD }}
+          EXPECTED_CERT_SHA256: e13d5b336c01a7ca4f29e83072ac304adc3a4233cf484b43268a88aec3f28914
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ -n "$KEYSTORE_BASE64" && -n "$KEYSTORE_PASSWORD" ]]
+          private_dir=$(mktemp -d)
+          trap 'rm -rf "$private_dir"' EXIT
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$private_dir/key.p12"
+          keytool -exportcert -alias crossroadsBeta -storetype PKCS12 -storepass:env KEYSTORE_PASSWORD -keystore "$private_dir/key.p12" -file "$private_dir/cert.der"
+          [[ "$(sha256sum "$private_dir/cert.der" | awk '{print $1}')" == "$EXPECTED_CERT_SHA256" ]]
+          tools="$ANDROID_HOME/build-tools/35.0.0"
+          unsigned=unsigned-input/app-release-unsigned.apk
+          test -s "$unsigned"
+          echo "$UNSIGNED_SHA  $unsigned" | sha256sum -c -
+          "$tools/zipalign" -f -p 4 "$unsigned" "$private_dir/aligned.apk"
+          mkdir -p beta-output
+          apk="beta-output/GridMates-Crossroads-Beta-$BETA_CODE.apk"
+          "$tools/apksigner" sign --ks "$private_dir/key.p12" --ks-type PKCS12 --ks-key-alias crossroadsBeta --ks-pass env:KEYSTORE_PASSWORD --key-pass env:KEYSTORE_PASSWORD --out "$apk" "$private_dir/aligned.apk"
+          "$tools/apksigner" verify --verbose --print-certs "$apk" | tee "$private_dir/verified.txt"
+          grep -Fx "Signer #1 certificate SHA-256 digest: $EXPECTED_CERT_SHA256" "$private_dir/verified.txt"
+          "$tools/aapt" dump badging "$apk" | tee "$private_dir/badging.txt"
+          grep -F "package: name='com.playereden.gridmates.crossroads' versionCode='$BETA_CODE' versionName='0.1.0'" "$private_dir/badging.txt"
+          grep -F "application-label:'GridMates: Crossroads'" "$private_dir/badging.txt"
+          "$tools/aapt" dump permissions "$apk" > "$private_dir/permissions.txt"
+          if grep -E 'android\.permission\.(INTERNET|ACCESS_NETWORK_STATE|ACCESS_WIFI_STATE|CHANGE_WIFI_MULTICAST_STATE)' "$private_dir/permissions.txt"; then
+            echo "Unexpected network permissions in signed beta."
+            exit 1
+          fi
+          "$tools/zipalign" -c -p 4 "$apk"
+
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          p=next(pathlib.Path("beta-output").glob("*.apk"))
+          digest=hashlib.sha256(p.read_bytes()).hexdigest()
+          p.with_suffix(".apk.sha256").write_text(digest+"  "+p.name+"\n")
+          pathlib.Path("beta-output/receipt.json").write_text(json.dumps(dict(channel="itch-beta-candidate",application_id="com.playereden.gridmates.crossroads",version_code=int(os.environ["BETA_CODE"]),version_name="0.1.0",signer_cert_sha256=os.environ["EXPECTED_CERT_SHA256"],apk_sha256=digest,unsigned_sha256=os.environ["UNSIGNED_SHA"],source_commit=os.environ["GITHUB_SHA"],owner_accepted=False,install_over_tested=False),indent=2)+"\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-private-beta-candidate-${{ env.BETA_CODE }}
+          path: beta-output/
+          retention-days: 14
+          if-no-files-found: error

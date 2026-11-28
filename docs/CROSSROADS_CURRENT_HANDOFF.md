@@ -1,3 +1,35 @@
+# Active release checkpoint — BETA-ITCH-06A successful isolated signing rehearsal
+
+Verified release head bf5bc04f956bc0bc2236943bf4797ed22aa28dcb, QA checkout 1a9e4863ad9e9974d1f697d8e10fe2bb455193a2. Rehearsal #5 run 46123094362 build job 140911634383 and sign job 140912779892 both passed. Logs show lintRelease and compilation successful, public package com.playereden.gridmates.crossroads version 3005/0.1.0, only app-specific dynamic receiver permission, transferred unsigned APK SHA256 check passed twice, disposable APK v2/v3 verified and alignment check passed. Disposable certificate 311d574136e9b46f494f1b9acc78c59475849e9cb07a0135803ca68c785deb56 is NOT public identity; no signed rehearsal artifact. QA #1099 run 46123094277 job 140911650160 passed debug unit/lint/build and unsigned public checks; QA2099 package .qa, expected QA certificate 75cc3c896247d71fbd51f7a3ed41f90c8218a8a5a70df8c0f6b494b5cc23d419, all four network permissions, 16 UI assets. QA archive 15254412822, 20337786 bytes, ZIP digest ec53eeb482f6b47520e34f9f0c8582f7fe1fc0cbc43967c1ac2cdc75999ebce3, expiry Dec 12 07:57 UTC; not independently downloaded. Not a public beta. Prior owner QA2072 remains test evidence. Runtime split verified automated only, not physical.
+
+Next: trusted private dispatch registration proposal isolated from main runtime, protected environment and key custody review, explicit authorization and actual signed candidate. GitHub connector lacks dispatch; do not claim secret access or enable automatic signing as workaround. No main merge or publication. Release PR #121, development PR #120.
+
+---
+
+# Active release checkpoint — BETA-ITCH-05I release lint correction
+
+Rehearsal #3 run 46122526077 build job 140909926170 failed lintRelease MissingPermission in CrossroadsNearby.kt:48; signing skipped. Move unchanged real Nearby code to debug source set 83a0a69; release stub 4f8687c has no Android network services; remove shared implementation. Preserve public manifest and QA permissions, no lint suppression. Release and debug compile/lint and rehearsal rerun required. Fix currently release branch only; reconcile with active development before subsequent release integration. Private dispatch/default branch registration and key custody still open; no private signing or publication.
+
+---
+
+# Active release checkpoint — BETA-ITCH-05D signing isolation
+
+Workflow d819ebf splits unsigned build and private signing into separate hosted jobs; build receives no private secrets, transfers APK with SHA256 and version output; sign runner does not check out source or run Gradle, verifies transfer, package/version and offline permissions before signing, then verifies pinned certificate, alignment and receipt. Manual exact-reviewed-SHA gate retained. Static inspection only; workflow not executed. Available GitHub connector has no dispatch action; workflow default-branch availability, environment/secret restrictions, independent owner key custody, pinned action dependencies and full source review remain open. No key rotation, secret retrieval, signing or publication. Next resolve trusted dispatch route and owner approval; do not force main merge or add automatic secret-bearing push trigger to bypass dispatch. Runtime baseline 7e3cddc verified #516/#1097. Privacy/store drafts remain staged.
+
+---
+
+# Active release checkpoint — BETA-ITCH-05C storefront draft
+
+Storefront copy, proposed metadata, limited verified asset inventory, release notes and player instructions in docs/BETA_1_ITCH_STOREFRONT.md. Free initial beta recommendation only. Existing launcher/art sources identified, final cover/banner and genuine public screenshots not verified. No live itch access or publication. Runtime unchanged at verified 7e3cddc. Next signing trust-boundary and dispatch review, then authorized signed candidate; privacy hosting and owner acceptance still pending.
+
+---
+
+# Active release checkpoint — BETA-ITCH-05B privacy and distribution
+
+Runtime 7e3cddc passed rules #516 and Android #1097. Release staging branch created in 05A, manual-only signing workflow c191f46, signing history 65f9f9a. Privacy draft abf7ec9 and distribution readiness 273158a now committed. Policy needs confirmed publisher/contact/effective date and durable hosted URL; no publication. Public offline scope retained; no runtime changes. Next prepare itch copy and asset inventory without fabricating actual release screenshots, then review signing trust boundary/dispatch path and independent key custody before authorized private candidate. Physical public acceptance outstanding. Development branch unchanged; PR #120 cross-links staging.
+
+---
+
 # Active checkpoint — BETA-ITCH-04E public visual candidate
 
 Previous 04C preflight failure #1089 caused by escaped newline matching; corrected at 0f5d33d. Rules #513 (46110053614), Android #1091 (46110053624) passed. Job 140871373326 logs confirm release only app-specific dynamic receiver permission, no four network permissions; QA retains all four. Asset registry technical approval is not owner visual approval. 4cf6735 adds fixed public candidate visual profile; 7e3c321 enables artwork trails, woodland portraits when sufficiently large, and illustrated markers on illustrated boards with existing missing-atlas fallbacks; QA comparisons retained. Storybook default retained, overhead preview stays debug-only, no promotion of QA gameplay. Public art is provisional until physical acceptance, not final owner approval. Added profile tests. Exact-head CI pending. Next private signing integration audit (separate branch PR #117), privacy, physical release candidate; no signing/merge/publication. QA2072 remains pinned owner build.
