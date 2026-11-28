@@ -95,6 +95,7 @@ jobs:
           if-no-files-found: error
   sign:
     needs: build
+    environment: crossroads-beta-signing
     if: github.repository == 'EdenP-Development/GridMates-Crossroads' && github.ref == 'refs/heads/release/beta-1-candidate' && inputs.reviewed_source == github.sha && github.run_attempt == 1
     runs-on: ubuntu-latest
     timeout-minutes: 15
