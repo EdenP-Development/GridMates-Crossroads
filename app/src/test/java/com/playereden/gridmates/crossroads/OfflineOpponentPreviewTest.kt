@@ -57,6 +57,23 @@ class OfflineOpponentPreviewTest {
         assertEquals("Bot 2", OfflineOpponentPreview.plateName("Bot 2",1,BotPolicyVersion.GUARDIAN_RELAXED_CANDIDATE_V1))
     }
 
+    @Test fun everyAvailableOpponentHasDistinctStyleCopyWithoutDifficultyPromises() {
+        val choices = BotPersonalityV1.entries.flatMap { personality ->
+            BotDifficultyPreviewV1.available(personality).map { difficulty ->
+                BotOpponentConfigurationV1(personality, difficulty)
+            }
+        }
+        assertEquals(7, choices.size)
+        val descriptions = choices.map { OfflineOpponentPreview.description(it) }
+        assertEquals(choices.size, descriptions.distinct().size)
+        assertTrue(descriptions.all { it.isNotBlank() && it.length <= 80 })
+        assertTrue(descriptions.none { it.contains("easy", ignoreCase = true) ||
+            it.contains("harder", ignoreCase = true) || it.contains("guarantee", ignoreCase = true) })
+        assertEquals("Tests a different approach to finishing the race.",
+            OfflineOpponentPreview.description(guardian))
+        assertEquals("Guardian · Advanced preview", OfflineOpponentPreview.label(guardian))
+    }
+
     @Test fun unavailableTierCannotResolve() {
         try {
             OfflineOpponentPreview.policies(true,false,board,2,mapOf(1 to
