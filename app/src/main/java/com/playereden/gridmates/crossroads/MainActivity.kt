@@ -1295,6 +1295,7 @@ private fun CrossroadsApp(
                     val round = (state.turn - 1) / state.players.size + 1
                     val currentName = displaySeatName(state.playerIndex)
                     val trackedName = displaySeatName(cameraTrackIndex.coerceIn(state.players.indices))
+                    val myAction = localIsCurrentSeat && !state.players[state.playerIndex].isBot
                     GameHudTurnStrip(
                         title = if (state.phase == Phase.FINISHED && !turnReady)
                             "Approaching the finish…"
@@ -1312,6 +1313,9 @@ private fun CrossroadsApp(
                                 .coerceIn(state.players.indices)
                         ],
                         botTurn = state.players[state.playerIndex].isBot,
+                        detailsExpanded = showTurnDetails,
+                        onToggleDetails = if (state.phase != Phase.FINISHED && (myAction || showTurnDetails))
+                            ({ showTurnDetails = !showTurnDetails }) else null,
                         modifier = Modifier.fillMaxWidth()
                     )
                     if (recoveryWarning != null) {
@@ -1414,7 +1418,6 @@ private fun CrossroadsApp(
                             }
                         }
                     }
-                    val myAction = localIsCurrentSeat && !state.players[state.playerIndex].isBot
                     if (state.phase == Phase.FINISHED && !turnReady) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                     } else if (state.phase == Phase.FINISHED) {
@@ -1551,16 +1554,6 @@ private fun CrossroadsApp(
                                 }
                             }
                             Phase.FINISHED -> Unit
-                        }
-                    }
-                    if (state.phase != Phase.FINISHED && (myAction || showTurnDetails)) {
-                        TextButton(
-                            onClick = { showTurnDetails = !showTurnDetails },
-                            modifier = Modifier.align(Alignment.End),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
-                        ) {
-                            Text(turnDetailsLabel(showTurnDetails),
-                                style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 }
