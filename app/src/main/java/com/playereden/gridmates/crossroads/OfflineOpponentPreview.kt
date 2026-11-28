@@ -33,6 +33,13 @@ internal object OfflineOpponentPreview {
         }
     }
 
+    /** Exact recorded actor lookup; never rewrite narrative or checkpoint text. */
+    fun recordedName(name: String, originalNames: List<String>, displayNames: List<String>): String {
+        require(originalNames.size == displayNames.size)
+        val index = originalNames.indexOf(name)
+        return if (index >= 0 && originalNames.lastIndexOf(name) == index) displayNames[index] else name
+    }
+
     /** Seat plates already have a numbered pawn. Avoid repeating the number. */
     fun plateName(original: String, seat: Int, policy: BotPolicyVersion?): String =
         if (policy == null) original else liveName(original, seat, policy)
