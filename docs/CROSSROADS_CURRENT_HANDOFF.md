@@ -1,3 +1,9 @@
+# Active release checkpoint — BETA-ITCH-05D signing isolation
+
+Workflow d819ebf splits unsigned build and private signing into separate hosted jobs; build receives no private secrets, transfers APK with SHA256 and version output; sign runner does not check out source or run Gradle, verifies transfer, package/version and offline permissions before signing, then verifies pinned certificate, alignment and receipt. Manual exact-reviewed-SHA gate retained. Static inspection only; workflow not executed. Available GitHub connector has no dispatch action; workflow default-branch availability, environment/secret restrictions, independent owner key custody, pinned action dependencies and full source review remain open. No key rotation, secret retrieval, signing or publication. Next resolve trusted dispatch route and owner approval; do not force main merge or add automatic secret-bearing push trigger to bypass dispatch. Runtime baseline 7e3cddc verified #516/#1097. Privacy/store drafts remain staged.
+
+---
+
 # Active release checkpoint — BETA-ITCH-05C storefront draft
 
 Storefront copy, proposed metadata, limited verified asset inventory, release notes and player instructions in docs/BETA_1_ITCH_STOREFRONT.md. Free initial beta recommendation only. Existing launcher/art sources identified, final cover/banner and genuine public screenshots not verified. No live itch access or publication. Runtime unchanged at verified 7e3cddc. Next signing trust-boundary and dispatch review, then authorized signed candidate; privacy hosting and owner acceptance still pending.
