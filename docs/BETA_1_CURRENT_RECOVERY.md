@@ -1,3 +1,9 @@
+# Latest checkpoint — BETA-ITCH-08C (2026-11-28)
+
+Owner confirmed reuse of previously established organization signing secrets, no new credentials or environment setup requested. Historical signed build 2002 verified successful again. Separate one-time execution branch release/beta-1-signing-execution, commit 936ab202e74a792549148c1b27f94a3e7aeaee40, attempts signing exact frozen source f99409374beb652f3661e872813c8bd392e57427 with existing secrets and isolated signing job. Push-triggered result not returned by connector; public endpoint retrieval and browser connection unsuccessful. No actual success/failure inferred. Do not retrigger blindly. Registration PR #122 remains draft and not required for this attempted path. Independent backup and current secret scope remain unverified. Owner reports Codex review allowance unavailable; exact notice not inspected, no causal link to Actions established. Continue ordinary development and testing without Codex reviews. Next retrieve actual signing run ID and receipt when accessible; meanwhile use secret-free QA for supplementary acceptance evidence only, not public signed-build acceptance. No public release.
+
+---
+
 # Crossroads current recovery — BETA-ITCH-08A (2026-11-28)
 
 START HERE when resuming Crossroads. Release source frozen at f99409374beb652f3661e872813c8bd392e57427 (release/beta-1-candidate, draft PR #121). Rehearsal #7 run 46124332268 and Android #1101 run 46124332236 passed. Marketing branch prior head 29f75401313e2efd25aa1d72d6623c6a6b77a26c passed media workflow #4 run 46126947355. Main remains 884170dd64d9ff21645dd662665eb3fb136c6fba. Development PR #120 remains separate. No main merge or public release.
