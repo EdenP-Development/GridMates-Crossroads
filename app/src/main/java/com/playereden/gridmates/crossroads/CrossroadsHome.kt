@@ -400,6 +400,7 @@ internal fun CrossroadsHomeScreen(
                 Text(if (showExtraOptions) "Hide options" else "More options", textAlign = TextAlign.Center)
             }
         }
+        if (BuildConfig.DEBUG) {
         Text("Nearby · Two phones on the same Wi-Fi", style = MaterialTheme.typography.bodySmall,
             color = Muted)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -409,6 +410,7 @@ internal fun CrossroadsHomeScreen(
             OutlinedButton(onClick = onNearbyJoin, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
                 Text("Join")
             }
+        }
         }
         if (showExtraOptions) {
         HomeSectionHeading("Race options")
@@ -449,6 +451,7 @@ internal fun CrossroadsHomeScreen(
                 Text(boardLook.label + " ▾")
             }
         }
+        if (BuildConfig.DEBUG) {
         TabletopPanel(
             color = if (playtestRules) Color(0xFFE4EBD9) else Color(0xFFECE5D4),
             elevation = 0.dp
@@ -510,6 +513,7 @@ internal fun CrossroadsHomeScreen(
                 style = MaterialTheme.typography.bodySmall,
                 color = Muted
             )
+        }
         }
         HomeSectionHeading("Local progress")
         OutlinedButton(onClick = { showAbout = true },
@@ -687,7 +691,7 @@ internal fun CrossroadsHomeScreen(
                     modifier = Modifier.verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text("A cozy GridMates board race. Play alone against AI, pass one phone around, or connect two phones over nearby Wi-Fi.")
+                    Text(if (BuildConfig.DEBUG) "A cozy GridMates board race. Play alone against AI, pass one phone around, or connect two phones over nearby Wi-Fi." else "A cozy offline GridMates board race. Play alone against AI or pass one phone around.")
                     Text("SAVING YOUR PROGRESS", color = Ink,
                         fontWeight = FontWeight.SemiBold)
                     Text("Current offline matches and your local win and match counts are stored on this device. No account or cloud sync is required. Clearing app storage or uninstalling can erase this progress.")
@@ -701,10 +705,10 @@ internal fun CrossroadsHomeScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) { Text("Import a backup") }
                     Text("Importing requires confirmation and replaces the current device's local record and saved offline race. It does not import multiplayer rooms or synchronize devices.")
+                    if (BuildConfig.DEBUG) {
                     Text("NEARBY PLAY", color = Ink,
                         fontWeight = FontWeight.SemiBold)
                     Text("Nearby games connect directly on the same Wi-Fi. The host shares live match data, including game actions and the match seed, with the joined device. The current nearby connection is not encrypted, so use a trusted private Wi-Fi network.")
-                    if (BuildConfig.DEBUG) {
                         Text("QA PRIVACY NOTE", color = Ink,
                             fontWeight = FontWeight.SemiBold)
                         Text("This information describes the test app's current behavior. A published privacy policy and distribution review are still required before public release.")
