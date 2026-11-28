@@ -232,4 +232,17 @@ class CrossroadsPresentationTest {
         assertEquals(2f * CrossroadsPiecePlacement.offset(0, 4, 1f).x,
             CrossroadsPiecePlacement.offset(0, 4, 2f).x, 0.0001f)
     }
+    @Test fun measuredPlayfieldCentersBetweenOverlaysWithSafeFallback() {
+        assertEquals(430f, CrossroadsCameraPreset.visibleFocusY(1000f, 160f, 300f, .43f), .001f)
+        assertEquals(330f, CrossroadsCameraPreset.visibleFocusY(1000f, 160f, 500f, .43f), .001f)
+        assertEquals(430f, CrossroadsCameraPreset.visibleFocusY(1000f, 0f, 300f, .43f), .001f)
+        assertEquals(430f, CrossroadsCameraPreset.visibleFocusY(1000f, 500f, 450f, .43f), .001f)
+    }
+
+    @Test fun pawnRevealCorrectsOnlyOutsideSafeInterval() {
+        assertEquals(35f, CrossroadsCameraPreset.revealPawn(10f, 25f, 50f, 350f), .001f)
+        assertEquals(-40f, CrossroadsCameraPreset.revealPawn(10f, 400f, 50f, 350f), .001f)
+        assertEquals(10f, CrossroadsCameraPreset.revealPawn(10f, 150f, 50f, 350f), .001f)
+        assertEquals(10f, CrossroadsCameraPreset.revealPawn(10f, 150f, 350f, 50f), .001f)
+    }
 }
