@@ -2008,34 +2008,28 @@ private fun BoardCanvas(
     val environmentAtlas = rememberOptionalCrossroadsArt(
         if (useOverheadArtwork) CrossroadsArtSlot.ENVIRONMENT_ATLAS else null
     )
+    val visualProfile = PublicVisualProfile.resolve(BuildConfig.DEBUG,
+        trailStyle == CrossroadsTrailStyle.ARTWORK, woodlandPieces, paintedMarkers)
     val trailAtlas = rememberOptionalCrossroadsArt(
-        if (BuildConfig.DEBUG && boardLook == CrossroadsBoardLook.ILLUSTRATED)
+        if (boardLook == CrossroadsBoardLook.ILLUSTRATED)
             CrossroadsArtSlot.TRAIL_ATLAS else null
     )
     val effectiveTrails = effectiveTrailStyle(
-        wanted = if (BuildConfig.DEBUG) trailStyle else CrossroadsTrailStyle.SIMPLE,
+        wanted = if (BuildConfig.DEBUG) trailStyle else CrossroadsTrailStyle.ARTWORK,
         illustratedBoard = boardLook == CrossroadsBoardLook.ILLUSTRATED,
         atlasPresent = trailAtlas != null
     )
     val woodlandTokenAtlas = rememberOptionalCrossroadsArt(
-        if (BuildConfig.DEBUG && woodlandPieces) CrossroadsArtSlot.TOKEN_ATLAS else null
+        if (visualProfile.woodlandPieces) CrossroadsArtSlot.TOKEN_ATLAS else null
     )
-    val showWoodlandTokens = shouldShowWoodlandToken(
-        isQa = BuildConfig.DEBUG,
-        requested = woodlandPieces,
-        atlasLoaded = woodlandTokenAtlas != null
-    )
+    val showWoodlandTokens = visualProfile.woodlandPieces && woodlandTokenAtlas != null
     val markerAtlas = rememberOptionalCrossroadsArt(
-        if (BuildConfig.DEBUG && paintedMarkers &&
+        if (visualProfile.illustratedMarkers &&
             boardLook == CrossroadsBoardLook.ILLUSTRATED)
             CrossroadsArtSlot.MARKER_ATLAS else null
     )
-    val showPaintedMarkers = woodlandMarkerEnabled(
-        isDebug = BuildConfig.DEBUG,
-        requested = paintedMarkers,
-        atlasLoaded = markerAtlas != null,
-        illustratedBoard = boardLook == CrossroadsBoardLook.ILLUSTRATED
-    )
+    val showPaintedMarkers = visualProfile.illustratedMarkers && markerAtlas != null &&
+        boardLook == CrossroadsBoardLook.ILLUSTRATED
     // Pure, fixed overhead scenery positions are remembered per authored
     // graph; no per-frame random generation or fake game path data.
     val courseOverheadStyle = CourseOverheadStyle.forBoard(board.id)
