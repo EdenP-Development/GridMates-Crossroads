@@ -61,15 +61,40 @@ def wide(w,h):
     line(d,"Solo • Local Pass & Play",x,round(h*.83),left-60,round(h*.055),SANS,GOLD)
     return im
 
+TOKEN = ART.parent / "token_atlas_v1.png"
+TOKEN_SHA = "ca2f8dceb3679dff75e24870f4a5b993458b3f853b69df48b6c28a43bed570dc"
+assert digest(TOKEN) == TOKEN_SHA, "Token atlas fingerprint mismatch"
+tokens = Image.open(TOKEN).convert("RGBA")
+assert tokens.size == (512,128)
+
+def board_cover():
+    # Promotional composition, not a screenshot or an actual course diagram.
+    im = cover()
+    d = ImageDraw.Draw(im)
+    # A small tabletop-inspired medallion strip over the scenic panel.
+    d.rounded_rectangle((244,397,1016,566),radius=38,fill=FOREST,outline=GOLD,width=5)
+    d.line([(326,482),(934,482)],fill=GOLD,width=8)
+    for i,x in enumerate((326,529,731,934)):
+        d.ellipse((x-69,413,x+69,551),fill=PARCHMENT,outline=GOLD,width=5)
+        piece=tokens.crop((i*128,0,(i+1)*128,128))
+        piece.thumbnail((116,116),Image.Resampling.LANCZOS)
+        im.paste(piece,(x-piece.width//2,482-piece.height//2),piece)
+    return im
+
+board_master=board_cover()
 master=cover()
 files={
     "cover-master.png":master,
     "itch-cover.png":master.resize((630,500),Image.Resampling.LANCZOS),
     "thumbnail-review.png":master.resize((315,250),Image.Resampling.LANCZOS),
+    "board-cover-master.png":board_master,
+    "board-itch-cover.png":board_master.resize((630,500),Image.Resampling.LANCZOS),
+    "board-thumbnail-review.png":board_master.resize((315,250),Image.Resampling.LANCZOS),
     "page-banner.png":wide(1600,480),
     "social-card.png":wide(1200,630),
 }
 receipt={"status":"draft-owner-review-required","source":str(ART.relative_to(ROOT)),"source_sha256":EXPECTED,"source_review":"qa-preview-only-not-owner-approved","assets":[]}
+receipt["additional_sources"]=[{"path":str(TOKEN.relative_to(ROOT)),"sha256":TOKEN_SHA,"review":"qa-preview-only-not-owner-approved"}]
 for name,img in files.items():
     path=OUT/name
     img.save(path,optimize=True)
