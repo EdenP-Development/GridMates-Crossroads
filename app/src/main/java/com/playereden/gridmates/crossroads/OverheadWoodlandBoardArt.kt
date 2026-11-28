@@ -38,8 +38,27 @@ internal enum class OverheadDecoration {
 }
 internal data class OverheadFeature(val x: Float, val y: Float, val kind: OverheadDecoration)
 internal data class OverheadBridge(
-    val x: Float, val y: Float, val directionX: Float, val directionY: Float
+    val x: Float, val y: Float, val directionX: Float, val directionY: Float,
+    val before: Float, val after: Float, val crossingSine: Float
 )
+
+internal data class OverheadBridgeLayout(
+    val before: Float, val after: Float, val widthUnits: Float, val planks: Int
+)
+
+/** Conservative visual span: use stream-bank width and crossing angle, bounded
+ * by the owning edge. Very short or nearly parallel crossings stay plain trails. */
+internal fun overheadBridgeLayout(bridge: OverheadBridge): OverheadBridgeLayout? {
+    if (!bridge.crossingSine.isFinite() || bridge.crossingSine < .35f ||
+        !bridge.before.isFinite() || !bridge.after.isFinite() ||
+        bridge.before < .008f || bridge.after < .008f) return null
+    val half = (.032f / bridge.crossingSine).coerceAtMost(.05f)
+    val before = min(half, bridge.before - .004f)
+    val after = min(half, bridge.after - .004f)
+    if (before + after < .025f) return null
+    return OverheadBridgeLayout(before, after, 2.8f,
+        ((before + after) / .009f).toInt().coerceIn(3, 10))
+}
 
 internal object OverheadScenery {
     private fun cubic(
@@ -102,7 +121,14 @@ internal object OverheadScenery {
                             ) < .018f
                         }) {
                             add(OverheadBridge(
-                                point.x, point.y, delta.x / length, delta.y / length
+                                point.x, point.y, delta.x / length, delta.y / length,
+                                (point - from).getDistance(), (to - point).getDistance(),
+                                run {
+                                    val tangent = stream[i] - stream[i - 1]
+                                    val tangentLength = tangent.getDistance().coerceAtLeast(.0001f)
+                                    kotlin.math.abs(delta.x * tangent.y - delta.y * tangent.x) /
+                                        (length * tangentLength)
+                                }
                             ))
                         }
                     }
@@ -249,34 +275,36 @@ internal fun DrawScope.drawOverheadWoodlandPrint(
 
     }
 
-    // These little plank bridges line up with the graph, not with arbitrary
-    // decorative map coordinates. Actual wooden roads still draw above them;
-    // their side rails remain visible beyond the route as physical joinery.
+    // Narrow rectangular timber crossings sit below the authoritative route.
+    // Clip their length to the actual edge: never extend a deck across a fork.
     bridges.forEach { bridge ->
+        val layout = overheadBridgeLayout(bridge) ?: return@forEach
         val middle = at(bridge.x, bridge.y)
-        val along = Offset(bridge.directionX, bridge.directionY)
+        val vector = Offset(bridge.directionX * width, bridge.directionY * height)
+        val scale = vector.getDistance()
+        if (scale <= 0f) return@forEach
+        val along = vector / scale
         val normal = Offset(-along.y, along.x)
-        val half = u * 3.8f
-        drawLine(Color(0xFF3D3C2C).copy(alpha = .37f),
-            middle - along * half + Offset(0f, u * .35f),
-            middle + along * half + Offset(0f, u * .35f),
-            strokeWidth = u * 6.5f, cap = StrokeCap.Round)
-        drawLine(Color(0xFF75533A),
-            middle - along * half, middle + along * half,
-            strokeWidth = u * 6.0f, cap = StrokeCap.Round)
-        drawLine(Color(0xFFE1BF83),
-            middle - along * half, middle + along * half,
-            strokeWidth = u * 5.2f, cap = StrokeCap.Round)
+        val start = middle - along * (layout.before * scale)
+        val end = middle + along * (layout.after * scale)
+        val deckWidth = u * layout.widthUnits
+        drawLine(Color(0xFF453C2D).copy(alpha = .28f),
+            start + Offset(0f, u * .28f), end + Offset(0f, u * .28f),
+            strokeWidth = deckWidth + u * .3f, cap = StrokeCap.Butt)
+        drawLine(Color(0xFF816044), start, end,
+            strokeWidth = deckWidth, cap = StrokeCap.Butt)
+        drawLine(Color(0xFFD6B481), start, end,
+            strokeWidth = deckWidth - u * .48f, cap = StrokeCap.Butt)
+        for (i in 1 until layout.planks) {
+            val p = start + (end - start) * (i.toFloat() / layout.planks)
+            drawLine(Color(0xFF8E6C48).copy(alpha = .55f),
+                p - normal * (deckWidth * .43f), p + normal * (deckWidth * .43f),
+                strokeWidth = u * .15f, cap = StrokeCap.Butt)
+        }
         for (side in listOf(-1f, 1f)) {
-            val railOffset = normal * (side * u * 3.4f)
-            drawLine(Color(0xFF4D3A2D),
-                middle - along * half + railOffset,
-                middle + along * half + railOffset,
-                strokeWidth = u * .60f, cap = StrokeCap.Round)
-            for (end in listOf(-1f, 1f)) {
-                drawCircle(Color(0xFFF1D29A), radius = u * .39f,
-                    center = middle + along * (half * end) + railOffset)
-            }
+            val rail = normal * (side * deckWidth * .46f)
+            drawLine(Color(0xFF62472F), start + rail, end + rail,
+                strokeWidth = u * .32f, cap = StrokeCap.Butt)
         }
     }
 
