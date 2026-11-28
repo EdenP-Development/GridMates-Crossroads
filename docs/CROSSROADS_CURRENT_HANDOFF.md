@@ -1,3 +1,9 @@
+# Active checkpoint — BETA-ITCH-03F QA2072 owner test ready
+
+Frozen runtime source 0192abc, actual merge checkout 5d854c0. Rules #501 and Android #1072 passed. Artifact 15247627332, package com.playereden.gridmates.crossroads.qa code 2072 version 0.1.0-qa and unchanged QA signer verified directly in CI logs. Owner test and exact receipt references: docs/BETA_1_OWNER_TEST_QA2072.md. Pin this APK rather than chase doc-only CI. Await screenshots and gameplay feedback; all physical gates remain open. Public release configuration, private signer integration, security/privacy and itch publication remain outstanding. No runtime changes in this checkpoint.
+
+---
+
 # Active checkpoint — BETA-ITCH-03E full-map presentation
 
 Previous home hierarchy head 99debed rules #499 (46104000494) and Android #1069 (46104000474) passed. Full-map source commit 11dabed replaces nested framed/scrolling map dialog with cream full-screen layout, compact title and Close, square canvas fitted to min of available width/height, pinned legend and return action. Map remains read-only, separate camera, same board/markers/pawns, same route-dialog return behavior. Removed outer/double frame and competing vertical scroll; map gestures retained. On very short screens fit may reduce map size, so physical landscape/large-font tests and pinch/pan required. No rules/saves/network/signing/merge/release changes. Next verify exact-head CI and pin consolidated owner test APK; compare actual Woven/Regional scenery, bridge coverage, camera visibility, compact dock, home disclosures, full map and return. Public scope/security/private signing and complete device acceptance remain open. QA2031 screenshots remain previous evidence, not proof of new implementation.
