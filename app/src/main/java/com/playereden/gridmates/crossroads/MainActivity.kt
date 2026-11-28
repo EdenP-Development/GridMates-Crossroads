@@ -1722,94 +1722,66 @@ private fun CrossroadsApp(
             )
         }
         if (inspectBoard) {
-            // Large, readable read-only game map; this surface intentionally
-            // cannot send a ROUTE action or modify a saved position.
+            // A read-only full-screen map, independent of live camera and actions.
             Dialog(
                 onDismissRequest = { inspectBoard = false },
                 properties = DialogProperties(usePlatformDefaultWidth = false)
             ) {
-                BoxWithConstraints(
+                Column(
                     modifier = Modifier.fillMaxSize()
-                        .background(Color(0xDB142419))
-                        .windowInsetsPadding(WindowInsets.safeDrawing),
-                    contentAlignment = Alignment.Center
+                        .background(Cream)
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                        .padding(horizontal = 6.dp, vertical = 6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Surface(
-                        modifier = Modifier.widthIn(max = 680.dp).fillMaxWidth()
-                            .padding(horizontal = 4.dp)
-                            .heightIn(max = (maxHeight - 12.dp).coerceAtLeast(220.dp)),
-                        color = Cream,
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(25.dp),
-                        border = androidx.compose.foundation.BorderStroke(
-                            2.dp, Color(0xFFD0B98D)
-                        ),
-                        shadowElevation = 16.dp
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("FULL MAP", color = Bark, fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.labelSmall)
+                            Text(CrossroadsCourse.title(board.id), color = Forest,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleMedium)
+                        }
+                        TextButton(onClick = { inspectBoard = false },
+                            modifier = Modifier.heightIn(min = 48.dp)) {
+                            Text("Close")
+                        }
+                    }
+                    BoxWithConstraints(
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Column(
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 9.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(Modifier.weight(1f)) {
-                                    Text("THE COURSE", color = Bark,
-                                        fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.labelSmall)
-                                    Text(CrossroadsCourse.title(board.id), color = Forest,
-                                        fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.titleLarge)
-                                }
-                                // The pinned return action below closes the map; avoid a duplicate cramped header control.
-                            }
-                            Column(
-                                modifier = Modifier.fillMaxWidth()
-                                    .weight(1f, fill = false)
-                                    .verticalScroll(rememberScrollState()),
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Surface(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    color = Color(0xFF263D2C),
-                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(15.dp),
-                                    border = androidx.compose.foundation.BorderStroke(
-                                        2.dp, Color(0xFFC5A773)
-                                    )
-                                ) {
-                                    BoxWithConstraints(
-                                        modifier = Modifier.fillMaxWidth().padding(3.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        // Fill the available inner width with a square board. The
-                                        // scroll container still supports short/landscape screens.
-                                        val mapHeight = maxWidth
-                                        BoardCanvas(
-                                            board, state,
-                                            height = mapHeight, tokenScale = 1.35f,
-                                            displayName = ::displayRecordedName,
-                                            animateTokens = false, matchKey = game,
-                                            boardLook = boardLook, trailStyle = trailStyle,
-                                            woodlandPieces = woodlandPieces,
-                                            paintedMarkers = paintedMarkers,
-                                            topDownPreview = topDownBoardPreview
-                                        )
-                                    }
-                                }
-                                Text("Amber: hazard  •  Green: shelter  •  Purple: mischief",
-                                    style = MaterialTheme.typography.bodySmall, color = Bark)
-                                Text("Pinch to inspect · drag to explore",
-                                    style = MaterialTheme.typography.labelSmall, color = Bark)
-                            }
-                            TabletopPrimaryActionButton(
-                                text = if (state.phase == Phase.ROUTE && localIsCurrentSeat &&
-                                    game.availableRoutes().size >= 2 && !routeDialogDismissed)
-                                    "RETURN TO ROUTE CHOICES" else "BACK TO THE TRAIL",
-                                onClick = { inspectBoard = false },
-                                modifier = Modifier.fillMaxWidth()
+                        // Fit the complete square into the actual remaining
+                        // space. Pinch/pan belongs only to the map canvas.
+                        val mapSide = minOf(maxWidth, maxHeight).coerceAtLeast(1.dp)
+                        Box(Modifier.size(mapSide)) {
+                            BoardCanvas(
+                                board, state,
+                                height = mapSide, tokenScale = 1.35f,
+                                displayName = ::displayRecordedName,
+                                animateTokens = false, matchKey = game,
+                                boardLook = boardLook, trailStyle = trailStyle,
+                                woodlandPieces = woodlandPieces,
+                                paintedMarkers = paintedMarkers,
+                                topDownPreview = topDownBoardPreview
                             )
                         }
                     }
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text("Amber: hazard  •  Green: shelter  •  Purple: mischief",
+                            style = MaterialTheme.typography.bodySmall, color = Bark)
+                        Text("Pinch to inspect · drag to explore",
+                            style = MaterialTheme.typography.labelSmall, color = Bark)
+                    }
+                    TabletopPrimaryActionButton(
+                        text = if (state.phase == Phase.ROUTE && localIsCurrentSeat &&
+                            game.availableRoutes().size >= 2 && !routeDialogDismissed)
+                            "RETURN TO ROUTE CHOICES" else "BACK TO THE TRAIL",
+                        onClick = { inspectBoard = false },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
         }
