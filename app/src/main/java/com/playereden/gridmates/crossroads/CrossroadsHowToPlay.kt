@@ -82,7 +82,7 @@ internal fun CrossroadsHowToPlayDialog(onDismiss: () -> Unit) {
                             fontWeight = FontWeight.SemiBold)
                         GuideStep(
                             "1", "Reach the finish first",
-                            "Everyone begins at Start. The first player to reach Finish wins the race."
+                            "Everyone begins at Start. In Classic rules, the first player to reach Finish wins the race."
                         )
                         GuideStep(
                             "2", "Roll and travel",
@@ -110,10 +110,23 @@ internal fun CrossroadsHowToPlayDialog(onDismiss: () -> Unit) {
                             color = HelpBark
                         )
                         Text(
-                            "Offline choices: Solo against 1–3 AI opponents, or Pass & Play for 2–4 people taking turns on one phone. Same-Wi-Fi play is not available yet.",
+                            "Offline choices: Solo against 1–3 AI opponents, or Pass & Play for 2–4 people taking turns on one phone. Nearby play connects two phones over trusted private Wi-Fi.",
                             style = MaterialTheme.typography.bodySmall,
                             color = HelpBark
                         )
+                        if (BuildConfig.DEBUG) {
+                            HorizontalDivider(color = HelpBark.copy(alpha = 0.22f))
+                            Text("Experimental Solo options (QA)",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold, color = HelpForest)
+                            Text("In Lab v5, later racers can finish the round after the first arrival. " +
+                                "If several finish, unused movement decides the winner; ties favor the earlier finisher.",
+                                style = MaterialTheme.typography.bodySmall, color = HelpBark)
+                            Text("In eligible Solo Lab v5 setup, More options lets you choose AI playing styles and a starting player. " +
+                                "Styles are not difficulty rankings. Guardian Advanced is experimental. " +
+                                "Race again keeps the starter; the optional rotate action advances to the next seat.",
+                                style = MaterialTheme.typography.bodySmall, color = HelpBark)
+                        }
                     }
                     Button(
                         onClick = onDismiss,
