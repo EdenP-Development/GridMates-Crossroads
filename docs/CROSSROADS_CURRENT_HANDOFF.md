@@ -1,3 +1,9 @@
+# Active release checkpoint — BETA-ITCH-05C storefront draft
+
+Storefront copy, proposed metadata, limited verified asset inventory, release notes and player instructions in docs/BETA_1_ITCH_STOREFRONT.md. Free initial beta recommendation only. Existing launcher/art sources identified, final cover/banner and genuine public screenshots not verified. No live itch access or publication. Runtime unchanged at verified 7e3cddc. Next signing trust-boundary and dispatch review, then authorized signed candidate; privacy hosting and owner acceptance still pending.
+
+---
+
 # Active release checkpoint — BETA-ITCH-05B privacy and distribution
 
 Runtime 7e3cddc passed rules #516 and Android #1097. Release staging branch created in 05A, manual-only signing workflow c191f46, signing history 65f9f9a. Privacy draft abf7ec9 and distribution readiness 273158a now committed. Policy needs confirmed publisher/contact/effective date and durable hosted URL; no publication. Public offline scope retained; no runtime changes. Next prepare itch copy and asset inventory without fabricating actual release screenshots, then review signing trust boundary/dispatch path and independent key custody before authorized private candidate. Physical public acceptance outstanding. Development branch unchanged; PR #120 cross-links staging.
