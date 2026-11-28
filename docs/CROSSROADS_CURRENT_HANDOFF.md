@@ -1,3 +1,9 @@
+# Active release checkpoint — BETA-ITCH-05B privacy and distribution
+
+Runtime 7e3cddc passed rules #516 and Android #1097. Release staging branch created in 05A, manual-only signing workflow c191f46, signing history 65f9f9a. Privacy draft abf7ec9 and distribution readiness 273158a now committed. Policy needs confirmed publisher/contact/effective date and durable hosted URL; no publication. Public offline scope retained; no runtime changes. Next prepare itch copy and asset inventory without fabricating actual release screenshots, then review signing trust boundary/dispatch path and independent key custody before authorized private candidate. Physical public acceptance outstanding. Development branch unchanged; PR #120 cross-links staging.
+
+---
+
 # Active checkpoint — BETA-ITCH-04E public visual candidate
 
 Previous 04C preflight failure #1089 caused by escaped newline matching; corrected at 0f5d33d. Rules #513 (46110053614), Android #1091 (46110053624) passed. Job 140871373326 logs confirm release only app-specific dynamic receiver permission, no four network permissions; QA retains all four. Asset registry technical approval is not owner visual approval. 4cf6735 adds fixed public candidate visual profile; 7e3c321 enables artwork trails, woodland portraits when sufficiently large, and illustrated markers on illustrated boards with existing missing-atlas fallbacks; QA comparisons retained. Storybook default retained, overhead preview stays debug-only, no promotion of QA gameplay. Public art is provisional until physical acceptance, not final owner approval. Added profile tests. Exact-head CI pending. Next private signing integration audit (separate branch PR #117), privacy, physical release candidate; no signing/merge/publication. QA2072 remains pinned owner build.
