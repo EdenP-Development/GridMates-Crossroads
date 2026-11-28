@@ -1,3 +1,9 @@
+# Active checkpoint — BETA-ITCH-04C offline public release restrictions
+
+Conservative staging decision: public Beta 1 only standard Quick/Classic/Long, original rules, Solo and Pass & Play, local progress; defer Nearby and experimental gameplay to QA pending acceptance. edcbb24 limits public board registry and session rules, blocks Nearby creation/lifecycle/host/join; 397044d and a7535d8 hide public QA settings and adjust guide/About; 6242235 and 5957e30 move four network permissions to debug manifest; 7095167 static preflight, 30464d0 merged APK network permission assertions, 5c61419 regression test rejecting experimental transfers without replacing normal save/records. QA preferences, data format and signing unchanged. Exact-head CI pending; verify release registry behavior, compile, merged permissions and QA Nearby before acceptance. Public artwork selection, physical release test, signing branch integration and privacy/store documentation still open. QA2072 remains last pinned owner build; no public release or merge. Public scope is reversible staging pending owner approval before distribution.
+
+---
+
 # Active checkpoint — QA2072 partial owner review
 
 Owner supplied five home/setup images and reached screenshot upload limit. See docs/BETA_1_QA2072_PARTIAL_OWNER_REVIEW.md. Home hierarchy/disclosures visibly improved; remaining minor style mismatch not a release blocker by itself. Board/camera/bridge/map and complete gameplay/recovery physical gates remain open. Accept written feedback; keep QA2072 pinned. Next public surface/security audit and private signing integration planning, no publish. No runtime changes.
