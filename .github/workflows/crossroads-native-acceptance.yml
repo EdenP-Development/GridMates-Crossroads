@@ -1,0 +1,93 @@
+name: Crossroads native emulator launch evidence
+on:
+  pull_request:
+    branches: [release/beta-1-candidate]
+    types: [opened, synchronize, reopened]
+permissions:
+  contents: read
+jobs:
+  launch:
+    if: github.repository == 'EdenP-Development/GridMates-Crossroads' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'qa/beta-1-native-acceptance'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: f99409374beb652f3661e872813c8bd392e57427
+          persist-credentials: false
+      - name: Public-facing release surface preflight
+        run: python3 scripts/check_release_surface.py
+      - name: Verify and import original artwork if candidate archives are present
+        shell: bash
+        run: |
+          set -euo pipefail
+          dir=design/art/imports
+          if [[ -e "$dir/crossroads_environment_v2.zip" || -e "$dir/crossroads_ui_core_v1.zip" ]]; then
+            (cd "$dir" && sha256sum -c <<'EOF'
+          c14294767e47a1489baa4f4415bd18232310ed1c9295a9fbdcc13d7112e3c1cb  crossroads_environment_v2.zip
+          80e8030c5520dde93eeb4a45eb56137b407a57a2c83d65fc0a944df0ff437085  crossroads_ui_core_v1.zip
+          EOF
+            )
+            python3 tools/import_environment_v2.py "$dir/crossroads_environment_v2.zip"
+            python3 tools/import_ui_core_v1.py "$dir/crossroads_ui_core_v1.zip"
+            python3 tools/promote_ui_preview.py
+            echo "Original environment atlas and UI source archive verified." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Validate optional woodland art, provenance and size budget
+        run: python3 tools/check_crossroads_art_pack.py
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.11.1"
+      - name: Restore immutable sibling QA-only signing key
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p qa-signing
+          curl --fail --location --silent --show-error --retry 3             "https://raw.githubusercontent.com/PlayerEden/GridMates-Word-Search/183b8845b247a0ca40541f06e517999961600bc9/qa-signing/wordsearch-qa.p12"             --output qa-signing/wordsearch-qa.p12
+          echo "cbe50b2b4a34f3a8433e28ddc0efd5307a1adf9aa91e324ca757f40c6aec91ee  qa-signing/wordsearch-qa.p12" | sha256sum --check
+      - name: Build exact frozen QA source
+        run: |
+          gradle --no-daemon :app:assembleDebug -PcrossroadsQaVersionCode=2900 --console=plain
+          mkdir -p native-evidence
+          sha256sum app/build/outputs/apk/debug/app-debug.apk > native-evidence/apk.sha256
+          git rev-parse HEAD > native-evidence/source.txt
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Launch disposable Android QA app
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            adb install app/build/outputs/apk/debug/app-debug.apk
+            adb shell am start -W -n com.playereden.gridmates.crossroads.qa/com.playereden.gridmates.crossroads.MainActivity
+            sleep 12
+            adb shell pidof com.playereden.gridmates.crossroads.qa
+            adb shell dumpsys activity activities > native-evidence/activity.txt
+            adb shell wm size > native-evidence/display.txt
+            adb shell wm density >> native-evidence/display.txt
+            adb shell getprop ro.build.version.sdk >> native-evidence/display.txt
+            adb exec-out screencap -p > native-evidence/launch.png
+            adb shell uiautomator dump /sdcard/crossroads-launch.xml
+            adb pull /sdcard/crossroads-launch.xml native-evidence/launch.xml
+      - name: Validate capture
+        run: |
+          python3 -c "from pathlib import Path; p=Path('native-evidence/launch.png'); assert p.stat().st_size > 10000 and p.read_bytes()[:8] == bytes.fromhex('89504e470d0a1a0a')"
+          grep -F com.playereden.gridmates.crossroads.qa native-evidence/activity.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Crossroads-native-launch-evidence
+          path: native-evidence/
+          retention-days: 14
+          if-no-files-found: warn
