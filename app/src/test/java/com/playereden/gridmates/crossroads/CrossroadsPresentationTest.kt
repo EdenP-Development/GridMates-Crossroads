@@ -245,4 +245,10 @@ class CrossroadsPresentationTest {
         assertEquals(10f, CrossroadsCameraPreset.revealPawn(10f, 150f, 50f, 350f), .001f)
         assertEquals(10f, CrossroadsCameraPreset.revealPawn(10f, 150f, 350f, 50f), .001f)
     }
+    @Test fun collapsedQaCourseDisclosureRetainsSelectedWarning() {
+        assertEquals("Test courses · QA", homeQaCourseToggleLabel(false, false))
+        assertEquals("Test course selected · Show courses", homeQaCourseToggleLabel(false, true))
+        assertEquals("Hide test courses", homeQaCourseToggleLabel(true, false))
+        assertEquals("Hide test courses", homeQaCourseToggleLabel(true, true))
+    }
 }
