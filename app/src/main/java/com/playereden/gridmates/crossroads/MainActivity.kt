@@ -952,6 +952,10 @@ private fun CrossroadsApp(
                     if (showOpponentIdentity && player.isBot) game.policyForBotSeat(seat) else null)
             }
 
+            fun displayRecordedName(name: String): String =
+                OfflineOpponentPreview.recordedName(name, state.players.map { it.name },
+                    state.players.indices.map { displaySeatName(it) })
+
             // Remember the BoxWithConstraints scope's dimensions outside
             // descendant Box lambdas, which have their own receiver.
             val viewportHeight = maxHeight
@@ -962,6 +966,7 @@ private fun CrossroadsApp(
                 contentAlignment = Alignment.Center
             ) {
                 BoardCanvas(board, state, height = viewportHeight,
+                    displayName = ::displayRecordedName,
                     immersiveWorld = true,
                     matchKey = game,
                     boardLook = boardLook, trailStyle = trailStyle,
@@ -1518,7 +1523,7 @@ private fun CrossroadsApp(
                                         horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                                         pair.forEach { target ->
                                             TabletopActionTile(
-                                                title = state.players[target].name,
+                                                title = displaySeatName(target),
                                                 detail = if (state.players[target].shield)
                                                     "Shielded" else "Choose rival",
                                                 onClick = {
@@ -1697,7 +1702,7 @@ private fun CrossroadsApp(
                                     Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
                                     verticalArrangement = Arrangement.spacedBy(3.dp)
                                 ) {
-                                    Text("Turn ${note.turn} · ${note.actor}",
+                                    Text("Turn ${note.turn} · ${displayRecordedName(note.actor)}",
                                         style = MaterialTheme.typography.labelSmall, color = Bark)
                                     Text(note.title, fontWeight = FontWeight.SemiBold, color = Forest)
                                     Text(note.outcome, style = MaterialTheme.typography.bodySmall, color = Bark)
@@ -1777,6 +1782,7 @@ private fun CrossroadsApp(
                                         BoardCanvas(
                                             board, state,
                                             height = mapHeight, tokenScale = 1.35f,
+                                            displayName = ::displayRecordedName,
                                             animateTokens = false, matchKey = game,
                                             boardLook = boardLook, trailStyle = trailStyle,
                                             woodlandPieces = woodlandPieces,
@@ -1856,6 +1862,7 @@ private fun CrossroadsApp(
                                 courseId = board.id,
                                 elapsedSeconds = finishedElapsedSeconds,
                                 finishReceipt = game.fairFinishReceipt,
+                                displayName = ::displayRecordedName,
                                 modifier = Modifier.weight(1f, fill = false)
                             )
                             TabletopPrimaryActionButton(
@@ -1994,7 +2001,8 @@ private fun BoardCanvas(
     stepMillis: Int = PresentationSpeed.COZY.stepMillis,
     focusPlayerIndex: Int = state.playerIndex,
     isTurnTransitioning: Boolean = false,
-    startAtCurrent: Boolean = false
+    startAtCurrent: Boolean = false,
+    displayName: (String) -> String = { it }
 ) {
     // The scene is data-independent: scenery and optional illustrated pawns
     // are drawn beneath the authoritative routes and numeric seat labels.
@@ -2172,7 +2180,7 @@ private fun BoardCanvas(
         }
     }
     val cameraSubject = focusPlayerIndex.coerceIn(displayed.indices)
-    val focusPlayerName = state.players[cameraSubject].name
+    val focusPlayerName = displayName(state.players[cameraSubject].name)
     val focusRegion = board.node(state.players[cameraSubject].position).region
     val cameraDescription = "${CrossroadsCourse.title(board.id)} board. $focusPlayerName in $focusRegion."
     // The snapshot may have advanced to the next player while a piece is still
