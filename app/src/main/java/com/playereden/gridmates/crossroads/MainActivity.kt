@@ -933,6 +933,21 @@ private fun CrossroadsApp(
             recoveryWarning = recoveryWarning
         )
     } else {
+        val showOpponentIdentity = BuildConfig.DEBUG && lanRole == LanRole.OFFLINE &&
+            board.id.endsWith(DecisionLab.V5_SUFFIX) &&
+            state.players.indices.any { seat ->
+                state.players[seat].isBot && game.policyForBotSeat(seat) != BotPolicyVersion.LEGACY_V1
+            }
+        fun displaySeatName(seat: Int): String {
+            val player = state.players[seat]
+            return OfflineOpponentPreview.liveName(player.name, seat,
+                if (showOpponentIdentity && player.isBot) game.policyForBotSeat(seat) else null)
+        }
+
+        fun displayRecordedName(name: String): String =
+            OfflineOpponentPreview.recordedName(name, state.players.map { it.name },
+                state.players.indices.map { displaySeatName(it) })
+
         // UI-52: game-first layout, not a scrolling app page. The real board
         // occupies the playfield; status and contextual controls float above it.
         // All actions still invoke the exact existing match/nearby callbacks.
@@ -941,21 +956,6 @@ private fun CrossroadsApp(
                 .background(Color(0xFF304433))
                 .windowInsetsPadding(WindowInsets.safeDrawing)
         ) {
-            val showOpponentIdentity = BuildConfig.DEBUG && lanRole == LanRole.OFFLINE &&
-                board.id.endsWith(DecisionLab.V5_SUFFIX) &&
-                state.players.indices.any { seat ->
-                    state.players[seat].isBot && game.policyForBotSeat(seat) != BotPolicyVersion.LEGACY_V1
-                }
-            fun displaySeatName(seat: Int): String {
-                val player = state.players[seat]
-                return OfflineOpponentPreview.liveName(player.name, seat,
-                    if (showOpponentIdentity && player.isBot) game.policyForBotSeat(seat) else null)
-            }
-
-            fun displayRecordedName(name: String): String =
-                OfflineOpponentPreview.recordedName(name, state.players.map { it.name },
-                    state.players.indices.map { displaySeatName(it) })
-
             // Remember the BoxWithConstraints scope's dimensions outside
             // descendant Box lambdas, which have their own receiver.
             val viewportHeight = maxHeight
