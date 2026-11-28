@@ -74,6 +74,18 @@ class OfflineOpponentPreviewTest {
         assertEquals("Guardian · Advanced preview", OfflineOpponentPreview.label(guardian))
     }
 
+    @Test fun recordedActorNamesResolveExactlyAndKeepSeatIdentity() {
+        val original = listOf("You", "AI 1", "AI 2", "AI 3")
+        val display = listOf("You", "2 · Scout", "3 · Scout", "4 · Guardian+")
+        for (seat in original.indices)
+            assertEquals(display[seat], OfflineOpponentPreview.recordedName(original[seat], original, display))
+        assertEquals("AI 10", OfflineOpponentPreview.recordedName("AI 10", original, display))
+        assertEquals("AI 1 found shelter", OfflineOpponentPreview.recordedName("AI 1 found shelter", original, display))
+        assertEquals("AI 1", OfflineOpponentPreview.recordedName("AI 1", original, original))
+        assertEquals("AI 1", OfflineOpponentPreview.recordedName("AI 1",
+            listOf("AI 1", "AI 1"), listOf("2 · Scout", "3 · Scout")))
+    }
+
     @Test fun unavailableTierCannotResolve() {
         try {
             OfflineOpponentPreview.policies(true,false,board,2,mapOf(1 to
