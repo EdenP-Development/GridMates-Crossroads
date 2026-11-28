@@ -110,7 +110,7 @@ internal fun CrossroadsHowToPlayDialog(onDismiss: () -> Unit) {
                             color = HelpBark
                         )
                         Text(
-                            "Offline choices: Solo against 1–3 AI opponents, or Pass & Play for 2–4 people taking turns on one phone. Nearby play connects two phones over trusted private Wi-Fi.",
+                            "Offline choices: Solo against 1–3 AI opponents, or Pass & Play for 2–4 people taking turns on one phone." + if (BuildConfig.DEBUG) " Nearby play connects two phones over trusted private Wi-Fi." else "",
                             style = MaterialTheme.typography.bodySmall,
                             color = HelpBark
                         )
