@@ -2078,6 +2078,11 @@ private fun BoardCanvas(
                     (environmentAccents + siblingAccents).map { Offset(it.x,it.y) })
         } else emptyList()
     }
+    val landscapeFootprints = remember(overheadDecor, environmentAccents, siblingAccents) {
+        LandscapeComposition.plan(overheadDecor.map {
+            EnvironmentAccent(it.x, it.y, EnvironmentAtlas.spriteFor(it.kind))
+        } + environmentAccents + siblingAccents)
+    }
     val overheadBridges = remember(board, wovenOverhead) {
         if (wovenOverhead) OverheadScenery.bridges(board.nodes) else emptyList()
     }
@@ -2435,7 +2440,7 @@ private fun BoardCanvas(
             if (useOverheadArtwork && !wovenOverhead && courseOverheadStyle != null &&
                 environmentAtlas != null && EnvironmentAtlas.validDimensions(environmentAtlas.width, environmentAtlas.height)) {
                 drawSiblingCourseOverhead(courseOverheadStyle, siblingAccents, environmentAtlas,
-                    left, top, drawWidth, drawHeight, groundcover)
+                    left, top, drawWidth, drawHeight, groundcover, landscapeFootprints)
             } else if (wovenOverhead) {
                 // Same graph, different VIEWPOINT: overhead trees, rock,
                 // rooftops and clearings rather than a landscape horizon.
@@ -2446,7 +2451,8 @@ private fun BoardCanvas(
                     left = left, top = top, width = drawWidth, height = drawHeight,
                     environmentAtlas = environmentAtlas,
                     environmentAccents = environmentAccents,
-                    groundcover = groundcover
+                    groundcover = groundcover,
+                    footprints = landscapeFootprints
                 )
             } else if (boardBackdrop == null) {
                 drawWoodlandBoardArt(
