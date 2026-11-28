@@ -1,3 +1,11 @@
+# Active release checkpoint — BETA-ITCH-06A successful isolated signing rehearsal
+
+Verified release head bf5bc04f956bc0bc2236943bf4797ed22aa28dcb, QA checkout 1a9e4863ad9e9974d1f697d8e10fe2bb455193a2. Rehearsal #5 run 46123094362 build job 140911634383 and sign job 140912779892 both passed. Logs show lintRelease and compilation successful, public package com.playereden.gridmates.crossroads version 3005/0.1.0, only app-specific dynamic receiver permission, transferred unsigned APK SHA256 check passed twice, disposable APK v2/v3 verified and alignment check passed. Disposable certificate 311d574136e9b46f494f1b9acc78c59475849e9cb07a0135803ca68c785deb56 is NOT public identity; no signed rehearsal artifact. QA #1099 run 46123094277 job 140911650160 passed debug unit/lint/build and unsigned public checks; QA2099 package .qa, expected QA certificate 75cc3c896247d71fbd51f7a3ed41f90c8218a8a5a70df8c0f6b494b5cc23d419, all four network permissions, 16 UI assets. QA archive 15254412822, 20337786 bytes, ZIP digest ec53eeb482f6b47520e34f9f0c8582f7fe1fc0cbc43967c1ac2cdc75999ebce3, expiry Dec 12 07:57 UTC; not independently downloaded. Not a public beta. Prior owner QA2072 remains test evidence. Runtime split verified automated only, not physical.
+
+Next: trusted private dispatch registration proposal isolated from main runtime, protected environment and key custody review, explicit authorization and actual signed candidate. GitHub connector lacks dispatch; do not claim secret access or enable automatic signing as workaround. No main merge or publication. Release PR #121, development PR #120.
+
+---
+
 # Active release checkpoint — BETA-ITCH-05I release lint correction
 
 Rehearsal #3 run 46122526077 build job 140909926170 failed lintRelease MissingPermission in CrossroadsNearby.kt:48; signing skipped. Move unchanged real Nearby code to debug source set 83a0a69; release stub 4f8687c has no Android network services; remove shared implementation. Preserve public manifest and QA permissions, no lint suppression. Release and debug compile/lint and rehearsal rerun required. Fix currently release branch only; reconcile with active development before subsequent release integration. Private dispatch/default branch registration and key custody still open; no private signing or publication.
