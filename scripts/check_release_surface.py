@@ -94,11 +94,11 @@ require("if (BuildConfig.DEBUG) CrossroadsNearby(context)" in activity,
         "Nearby initialization must be debug-only")
 for entry in ("fun startLanHost(requireCode: Boolean, seats: Int) {",
               "fun joinLan(host: String, port: Int, code: String, resume: Boolean = false) {"):
-    require(entry + "\\n        if (!BuildConfig.DEBUG) return" in activity,
+    require(entry + "\n        if (!BuildConfig.DEBUG) return" in activity,
             "Nearby entry point is missing public guard: " + entry)
-require('if (BuildConfig.DEBUG) {\\n        Text("Nearby · Two phones on the same Wi-Fi"' in home,
+require('if (BuildConfig.DEBUG) {\n        Text("Nearby · Two phones on the same Wi-Fi"' in home,
         "Public home must hide Nearby entry points")
-require("if (BuildConfig.DEBUG) {\\n        TabletopPanel(\\n            color = if (playtestRules)" in home,
+require("if (BuildConfig.DEBUG) {\n        TabletopPanel(\n            color = if (playtestRules)" in home,
         "Public home must hide tactical rule controls")
 
 if failures:
