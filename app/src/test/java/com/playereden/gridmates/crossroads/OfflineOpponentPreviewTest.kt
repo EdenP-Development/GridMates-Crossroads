@@ -86,6 +86,26 @@ class OfflineOpponentPreviewTest {
             listOf("AI 1", "AI 1"), listOf("2 · Scout", "3 · Scout")))
     }
 
+    @Test fun narrativeChangesOnlyActorAndRecognizedPrankTarget() {
+        val names = listOf("You", "AI 1", "AI 2", "AI 3")
+        val labels = listOf("You", "2 · Scout", "3 · Scout", "4 · Guardian+")
+        fun show(message: String) = OfflineOpponentPreview.narrative(message, names, labels)
+        assertEquals("2 · Scout rolled 4.", show("AI 1 rolled 4."))
+        assertEquals("3 · Scout's shield blocked a prank.", show("AI 2's shield blocked a prank."))
+        assertEquals("2 · Scout pranked 3 · Scout: back 2!", show("AI 1 pranked AI 2: back 2!"))
+        assertEquals("4 · Guardian+: Shelter! +2 steps.", show("AI 3: Shelter! +2 steps."))
+        assertEquals("Quiet stretch of road.", show("Quiet stretch of road."))
+        assertEquals("AI 10 rolled 4.", show("AI 10 rolled 4."))
+        assertEquals("You chose AI 1 Trail.", show("You chose AI 1 Trail."))
+    }
+
+    @Test fun finishedStatusDistinguishesWinnerFromOtherFinishers() {
+        assertEquals("finished first", OfflineOpponentPreview.finishedStatus(true, false, true))
+        assertEquals("final-round winner", OfflineOpponentPreview.finishedStatus(true, true, true))
+        assertEquals("reached Finish", OfflineOpponentPreview.finishedStatus(false, true, true))
+        assertEquals("still on the trail", OfflineOpponentPreview.finishedStatus(false, true, false))
+    }
+
     @Test fun unavailableTierCannotResolve() {
         try {
             OfflineOpponentPreview.policies(true,false,board,2,mapOf(1 to
