@@ -129,7 +129,8 @@ internal object RegionalTerrainComposition {
 internal fun DrawScope.drawSiblingCourseOverhead(
     style: CourseOverheadStyle, accents: List<EnvironmentAccent>,
     atlas: ImageBitmap, left: Float, top: Float, width: Float, height: Float,
-    groundcover: List<GroundcoverPatch> = emptyList()
+    groundcover: List<GroundcoverPatch> = emptyList(),
+    footprints: List<LandscapeFootprint> = emptyList()
 ) {
     if (width <= 0f || height <= 0f) return
     val unit = min(width,height)
@@ -180,6 +181,7 @@ internal fun DrawScope.drawSiblingCourseOverhead(
             val center=at(f.x,f.y)
             drawCircle(tint,radius=f.size*unit*.42f,center=center)
         }
+        drawLandscapeFootprints(footprints, left, top, width, height)
         drawWoodlandGroundcover(groundcover, left, top, width, height)
         accents.forEach { a -> tryDrawEnvironmentSprite(atlas,a.sprite,at(a.x,a.y),unit) }
     }
