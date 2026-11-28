@@ -1,3 +1,9 @@
+# Active checkpoint — QA2072 partial owner review
+
+Owner supplied five home/setup images and reached screenshot upload limit. See docs/BETA_1_QA2072_PARTIAL_OWNER_REVIEW.md. Home hierarchy/disclosures visibly improved; remaining minor style mismatch not a release blocker by itself. Board/camera/bridge/map and complete gameplay/recovery physical gates remain open. Accept written feedback; keep QA2072 pinned. Next public surface/security audit and private signing integration planning, no publish. No runtime changes.
+
+---
+
 # Active checkpoint — BETA-ITCH-03F QA2072 owner test ready
 
 Frozen runtime source 0192abc, actual merge checkout 5d854c0. Rules #501 and Android #1072 passed. Artifact 15247627332, package com.playereden.gridmates.crossroads.qa code 2072 version 0.1.0-qa and unchanged QA signer verified directly in CI logs. Owner test and exact receipt references: docs/BETA_1_OWNER_TEST_QA2072.md. Pin this APK rather than chase doc-only CI. Await screenshots and gameplay feedback; all physical gates remain open. Public release configuration, private signer integration, security/privacy and itch publication remain outstanding. No runtime changes in this checkpoint.
