@@ -964,6 +964,8 @@ private fun CrossroadsApp(
             // Remember the BoxWithConstraints scope's dimensions outside
             // descendant Box lambdas, which have their own receiver.
             val viewportHeight = maxHeight
+            var topOverlayPx by remember(game) { mutableIntStateOf(0) }
+            var bottomOverlayPx by remember(game) { mutableIntStateOf(0) }
             // The world extends behind both HUD layers. It is a cropped
             // square, never a stretched portrait background or board card.
             Box(
@@ -972,6 +974,8 @@ private fun CrossroadsApp(
             ) {
                 BoardCanvas(board, state, height = viewportHeight,
                     displayName = ::displayRecordedName,
+                    topOverlayPx = topOverlayPx.toFloat(),
+                    bottomOverlayPx = bottomOverlayPx.toFloat(),
                     immersiveWorld = true,
                     matchKey = game,
                     boardLook = boardLook, trailStyle = trailStyle,
@@ -1038,6 +1042,7 @@ private fun CrossroadsApp(
             // Compact on-board scoreboard and controls, without a page header.
             Column(
                 modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth()
+                    .onSizeChanged { topOverlayPx = it.height }
                     .background(Color(0xED352C20))
                     .padding(top = 3.dp, bottom = 2.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
@@ -1272,6 +1277,7 @@ private fun CrossroadsApp(
             val dockMaxFraction = gameActionDockMaxFraction(state.phase)
             TabletopActionTray(
                 modifier = Modifier.align(Alignment.BottomCenter)
+                    .onSizeChanged { bottomOverlayPx = it.height }
                     .padding(horizontal = 8.dp, vertical = 5.dp)
                     .fillMaxWidth()
                     .heightIn(
@@ -2009,7 +2015,9 @@ private fun BoardCanvas(
     focusPlayerIndex: Int = state.playerIndex,
     isTurnTransitioning: Boolean = false,
     startAtCurrent: Boolean = false,
-    displayName: (String) -> String = { it }
+    displayName: (String) -> String = { it },
+    topOverlayPx: Float = 0f,
+    bottomOverlayPx: Float = 0f
 ) {
     // The scene is data-independent: scenery and optional illustrated pawns
     // are drawn beneath the authoritative routes and numeric seat labels.
@@ -2249,15 +2257,13 @@ private fun BoardCanvas(
         BoardCameraMode.FOLLOW -> Offset(
             CameraGeometry.centerTranslation(viewportWidth / 2f, focusPx.x, cameraZoom),
             CameraGeometry.centerTranslation(viewportHeight / 2f, focusPx.y, cameraZoom) +
-                viewportHeight * ((if (forkPreview != null)
-                    CrossroadsCameraPreset.FORK_PREVIEW_HEIGHT
-                else CrossroadsCameraPreset.focusHeightFraction(
-                    state.phase, immersiveWorld
-                )) - 0.5f)
+                (CrossroadsCameraPreset.visibleFocusY(viewportHeight, topOverlayPx, bottomOverlayPx,
+                    if (forkPreview != null) CrossroadsCameraPreset.FORK_PREVIEW_HEIGHT
+                    else CrossroadsCameraPreset.focusHeightFraction(state.phase, immersiveWorld)) - viewportHeight / 2f)
         )
         BoardCameraMode.MANUAL -> manualTranslation
     }
-    val actualTranslation = Offset(
+    val boundedTranslation = Offset(
         CameraGeometry.boundTranslation(desiredTranslation.x, viewportWidth,
             worldFrame.left, worldFrame.right, cameraZoom),
         if (cameraMode == BoardCameraMode.FOLLOW)
@@ -2268,9 +2274,6 @@ private fun BoardCanvas(
         else CameraGeometry.boundTranslation(desiredTranslation.y, viewportHeight,
             worldFrame.top, worldFrame.bottom, cameraZoom)
     )
-    // Keep the pointer handler stable while receiving the newest following pose.
-    val liveZoom by rememberUpdatedState(cameraZoom)
-    val liveTranslation by rememberUpdatedState(actualTranslation)
 
     // Touching the focused piece or double-tapping resumes cinematic following.
     val liveViewportSize by rememberUpdatedState(canvasDimensions)
@@ -2283,9 +2286,24 @@ private fun BoardCanvas(
     val focusedOffset = CrossroadsPiecePlacement.offset(
         focusedRank.coerceAtLeast(0), focusedGroup.size.coerceAtLeast(1), gamePieceScale
     )
-    val livePieceLocation by rememberUpdatedState(
-        worldFrame.position(active.x, active.y) + focusedOffset
-    )
+    val paintedPawn = worldFrame.position(active.x, active.y) + focusedOffset
+    val actualTranslation = if (immersiveWorld && animateTokens &&
+        cameraMode == BoardCameraMode.FOLLOW && state.phase != Phase.FINISHED &&
+        topOverlayPx > 0f && bottomOverlayPx > 0f) {
+        val margin = 26f * gamePieceScale * cameraZoom
+        val center = Offset(viewportWidth / 2f, viewportHeight / 2f)
+        val pawnScreen = center + (paintedPawn - center) * cameraZoom + boundedTranslation
+        Offset(
+            CrossroadsCameraPreset.revealPawn(boundedTranslation.x, pawnScreen.x,
+                margin, viewportWidth - margin),
+            CrossroadsCameraPreset.revealPawn(boundedTranslation.y, pawnScreen.y,
+                topOverlayPx + margin, viewportHeight - bottomOverlayPx - margin)
+        )
+    } else boundedTranslation
+    // Keep pointer handlers in sync with the final rendered camera.
+    val liveZoom by rememberUpdatedState(cameraZoom)
+    val liveTranslation by rememberUpdatedState(actualTranslation)
+    val livePieceLocation by rememberUpdatedState(paintedPawn)
     // Pointer handlers persist across Compose recompositions; keep the latest
     // legal destinations and action callback bound to the latest phase.
     val liveRouteDestinations by rememberUpdatedState(
