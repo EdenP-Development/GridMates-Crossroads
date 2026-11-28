@@ -83,4 +83,19 @@ class CourseOverheadArtTest {
             assertTrue(occupied.all { kotlin.math.hypot(p.x-it.x,p.y-it.y) >= .055f+p.radius })
         }
     }
+    @Test fun bridgeDeckIsNarrowAndStaysInsideOwningEdge() {
+        val crossing = OverheadBridge(.7f, .5f, 1f, 0f, .08f, .06f, 1f)
+        val deck = requireNotNull(overheadBridgeLayout(crossing))
+        assertEquals(.032f, deck.before, .0001f)
+        assertEquals(.032f, deck.after, .0001f)
+        assertTrue(deck.widthUnits < 3f)
+        assertTrue(deck.planks in 3..10)
+        val clipped = requireNotNull(overheadBridgeLayout(crossing.copy(before = .015f)))
+        assertTrue(clipped.before < .015f)
+        assertEquals(deck.after, clipped.after, .0001f)
+        assertNull(overheadBridgeLayout(crossing.copy(before = .002f)))
+        assertNull(overheadBridgeLayout(crossing.copy(crossingSine = .1f)))
+        val diagonal = requireNotNull(overheadBridgeLayout(crossing.copy(crossingSine = .5f)))
+        assertTrue(diagonal.before <= .05f && diagonal.after <= .05f)
+    }
 }
