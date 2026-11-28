@@ -1,5 +1,8 @@
 name: Crossroads release pipeline rehearsal (no private key)
 on:
+  pull_request:
+    branches: [feature/identity-17-art-import]
+    types: [opened, synchronize, reopened]
   push:
     branches: [release/beta-1-candidate]
     paths: ['.github/workflows/crossroads-beta-rehearsal.yml']
@@ -7,7 +10,7 @@ permissions:
   contents: read
 jobs:
   build:
-    if: github.repository == 'EdenP-Development/GridMates-Crossroads' && github.ref == 'refs/heads/release/beta-1-candidate'
+    if: github.repository == 'EdenP-Development/GridMates-Crossroads' && (github.ref == 'refs/heads/release/beta-1-candidate' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'release/beta-1-candidate' && github.base_ref == 'feature/identity-17-art-import'))
     runs-on: ubuntu-latest
     timeout-minutes: 35
     outputs:
@@ -92,7 +95,7 @@ jobs:
           if-no-files-found: error
   sign:
     needs: build
-    if: github.repository == 'EdenP-Development/GridMates-Crossroads' && github.ref == 'refs/heads/release/beta-1-candidate' && github.run_attempt == 1
+    if: github.repository == 'EdenP-Development/GridMates-Crossroads' && (github.ref == 'refs/heads/release/beta-1-candidate' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'release/beta-1-candidate' && github.base_ref == 'feature/identity-17-art-import')) && github.run_attempt == 1
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
