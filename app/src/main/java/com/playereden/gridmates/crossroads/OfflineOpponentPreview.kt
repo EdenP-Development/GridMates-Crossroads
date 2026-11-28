@@ -57,6 +57,21 @@ internal object OfflineOpponentPreview {
         return "${seat + 1} · $personality"
     }
 
+    /** Player-facing style hints, not a ranking or promise of outcomes. */
+    fun description(configuration: BotOpponentConfigurationV1): String {
+        if (configuration.personality == BotPersonalityV1.GUARDIAN &&
+            configuration.difficulty == BotDifficultyV1.ADVANCED)
+            return "Tests a different approach to finishing the race."
+        return when (configuration.personality) {
+            BotPersonalityV1.CLASSIC -> "The original Crossroads opponent."
+            BotPersonalityV1.TRAVELER -> "Adjusts travel choices to its place in the race."
+            BotPersonalityV1.SCOUT -> "Weighs route distance and risk."
+            BotPersonalityV1.GAMBLER -> "Often takes risks for extra movement."
+            BotPersonalityV1.GUARDIAN -> "Favors protection and steadier choices when possible."
+            BotPersonalityV1.STRATEGIST -> "Looks for finish opportunities and ways to slow rivals."
+        }
+    }
+
     fun label(configuration: BotOpponentConfigurationV1): String {
         val name = when(configuration.personality) {
             BotPersonalityV1.CLASSIC -> "Classic"
