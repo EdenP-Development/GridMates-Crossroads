@@ -1,0 +1,28 @@
+name: Crossroads draft storefront media kit
+on:
+  pull_request:
+    branches: [release/beta-1-candidate]
+    types: [opened, synchronize, reopened]
+permissions:
+  contents: read
+jobs:
+  render:
+    if: github.repository == 'EdenP-Development/GridMates-Crossroads' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'marketing/beta-1-media-kit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install image composition dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y python3-pil fonts-dejavu-core fonts-dejavu-extra
+      - name: Render draft assets from verified source
+        run: /usr/bin/python3 tools/render_itch_media_kit.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Crossroads-draft-storefront-media-kit
+          path: marketing-output/
+          retention-days: 14
+          if-no-files-found: error
