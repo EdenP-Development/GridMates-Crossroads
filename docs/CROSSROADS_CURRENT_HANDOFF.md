@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-17B opponent style descriptions and selector accessibility
+
+AI2-17A exact head 22b0d3e verified: rules 46096138707 (#459) and Android 46096138701 (#1001) passed. Audited actual R1 travel, R2 route, Gambler V1, Guardian V1, Strategist V1 and finish opportunity implementations. Added seven concise style hints (f6602d2), clearly distinguish personality from difficulty and label Advanced experimental; existing QA-only picker now has selectable full-width rows, single radio semantics per option, scrollable descriptions and minimum 48dp height (9ff0b84). Added JVM coverage for seven unique compact descriptions, no easy/harder/guarantee claims, unchanged Advanced label (daed897). No policy, RNG, save, default, LAN or public eligibility changes. Exact-head CI pending; physical QA of narrow screen, large text, TalkBack, selected row, scroll and per-seat selection remains required. QA1997 physical acceptance also outstanding. Next AI2-17C verify CI and audit gameplay labels/guide consistency, then consolidated player-experience review. No merge/release/signing changes.
+
+---
+
 # Active checkpoint — AI2-17A AI roster and difficulty readiness
 
 AI2-16F head f340355 verified: rules run 46094077185 (#457) and Android 46094077169 (#999) both passed. QA1997 physical acceptance remains outstanding. Audited current personality and difficulty resolvers and historical evidence reports AI2-09A, 11D, 12B, 12E, 13A, 13D, 13N, 15B and 15F. Retain six Standard personalities, Guardian Advanced offline preview only, Classic default; no calibrated easy/hard ladder, no public activation. Historical evidence read from repository reports, not independently rerun. Readiness decision and promotion gates recorded in docs/AI2_17A_ROSTER_READINESS.md (464fae0). Next AI2-17B audit actual QA selector labels/help and concise evidence-backed behavior descriptions. No code, save, signing, LAN, merge or release changes.
