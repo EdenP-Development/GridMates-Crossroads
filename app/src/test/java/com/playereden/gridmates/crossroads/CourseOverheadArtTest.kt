@@ -98,4 +98,18 @@ class CourseOverheadArtTest {
         val diagonal = requireNotNull(overheadBridgeLayout(crossing.copy(crossingSine = .5f)))
         assertTrue(diagonal.before <= .05f && diagonal.after <= .05f)
     }
+    @Test fun landscapeFoundationsAreDeterministicBoundedAndRegionAware() {
+        val accents = listOf(
+            EnvironmentAccent(.2f, .3f, EnvironmentSprite.OAK),
+            EnvironmentAccent(.5f, .6f, EnvironmentSprite.FLOWERS),
+            EnvironmentAccent(.9f, .9f, EnvironmentSprite.COTTAGE)
+        )
+        val plan = LandscapeComposition.plan(accents)
+        assertEquals(6, plan.size)
+        assertEquals(listOf(0, 0, 1, 1, 2, 2), plan.map { it.tone })
+        assertEquals(plan, LandscapeComposition.plan(accents))
+        assertTrue(plan.all { it.x in 0f..1f && it.y in 0f..1f && it.radius in .02f.. .08f })
+        assertEquals(80, LandscapeComposition.plan(List(100) { accents[0] }).size)
+        assertTrue(LandscapeComposition.plan(emptyList()).isEmpty())
+    }
 }
