@@ -4,6 +4,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -393,7 +396,8 @@ internal fun CrossroadsHomeScreen(
             Text("Tap to cycle: You, other players, or Random", color = Muted,
                 style = MaterialTheme.typography.bodySmall)
             HomeSectionHeading("AI OPPONENTS · QA")
-            Text("Optional · Lab v5 only", color = Muted, style = MaterialTheme.typography.bodySmall)
+            Text("Optional · Lab v5 only · Different playing styles, not difficulty levels",
+                color = Muted, style = MaterialTheme.typography.bodySmall)
             for (seat in 1 until seats) {
                 val choice = opponentChoices[seat]
                 TabletopUtilityButton(
@@ -577,23 +581,28 @@ internal fun CrossroadsHomeScreen(
             title = { Text("Player ${editingSeat + 1} opponent", color = Ink) },
             text = {
                 Column(Modifier.fillMaxWidth().heightIn(max = 360.dp)
-                    .verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    .verticalScroll(rememberScrollState()).selectableGroup(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("Choose a playing style. Advanced is experimental, not a proven harder level.",
+                        color = Muted, style = MaterialTheme.typography.bodySmall)
                     for (personality in BotPersonalityV1.entries) {
                         for (difficulty in BotDifficultyPreviewV1.available(personality)) {
                             val config = BotOpponentConfigurationV1(personality, difficulty)
                             val selected = (opponentChoices[editingSeat] ?:
                                 BotOpponentConfigurationV1(BotPersonalityV1.CLASSIC)) == config
-                            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                                verticalAlignment = Alignment.CenterVertically) {
-                                RadioButton(selected = selected, onClick = {
+                            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                                .selectable(selected = selected, role = Role.RadioButton, onClick = {
                                     opponentChoices[editingSeat] = config
                                     opponentSeat = null
-                                })
-                                TextButton(onClick = {
-                                    opponentChoices[editingSeat] = config
-                                    opponentSeat = null
-                                }, modifier = Modifier.weight(1f)) {
-                                    Text(OfflineOpponentPreview.label(config), color = Ink)
+                                }).padding(horizontal = 4.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                RadioButton(selected = selected, onClick = null)
+                                Column(Modifier.weight(1f)) {
+                                    Text(OfflineOpponentPreview.label(config), color = Ink,
+                                        fontWeight = FontWeight.SemiBold)
+                                    Text(OfflineOpponentPreview.description(config), color = Muted,
+                                        style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                         }
