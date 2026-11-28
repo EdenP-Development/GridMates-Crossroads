@@ -126,6 +126,11 @@ jobs:
           "$tools/aapt" dump badging "$unsigned" | tee /tmp/crossroads-release-badging.txt
           grep -F "package: name='com.playereden.gridmates.crossroads'" /tmp/crossroads-release-badging.txt
           grep -F "application-label:'GridMates: Crossroads'" /tmp/crossroads-release-badging.txt
+          "$tools/aapt" dump permissions "$unsigned" | tee /tmp/crossroads-release-permissions.txt
+          if grep -E "android\.permission\.(INTERNET|ACCESS_NETWORK_STATE|ACCESS_WIFI_STATE|CHANGE_WIFI_MULTICAST_STATE)" /tmp/crossroads-release-permissions.txt; then
+            echo "ERROR: offline public APK requests network permissions." >&2
+            exit 1
+          fi
           if "$tools/apksigner" verify "$unsigned" >/dev/null 2>&1; then
             echo "ERROR: public preview was unexpectedly signed; review release signing setup." >&2
             exit 1
@@ -144,6 +149,10 @@ jobs:
           grep -iF '75cc3c896247d71fbd51f7a3ed41f90c8218a8a5a70df8c0f6b494b5cc23d419' /tmp/crossroads-certs.txt
           "$TOOLS/aapt" dump badging "$APK" | grep -F "name='com.playereden.gridmates.crossroads.qa' versionCode='$QA_CODE'"
           "$TOOLS/aapt" dump badging "$APK" | grep -F "application-label:'Crossroads QA'"
+          "$TOOLS/aapt" dump permissions "$APK" > /tmp/crossroads-qa-permissions.txt
+          for permission in INTERNET ACCESS_NETWORK_STATE ACCESS_WIFI_STATE CHANGE_WIFI_MULTICAST_STATE; do
+            grep -F "android.permission.$permission" /tmp/crossroads-qa-permissions.txt
+          done
           if [[ -f design/art/imports/crossroads_environment_v2.zip ]]; then
             unzip -p "$APK" assets/art/v1/environment_atlas_v2.png | sha256sum -c <(echo "779c42c21558a24ef9eb56f341d465ddeae68061389149bfe17fa00fe53525ab  -")
           fi
