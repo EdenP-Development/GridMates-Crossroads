@@ -160,6 +160,32 @@ class MatchRecoveryStoreTest {
         assertEquals(race.snapshot(),requireNotNull(imported.load().match).game.snapshot())
     }
 
+    @Test fun offlinePublicRegistryRejectsExperimentalTransferWithoutReplacingProgress() {
+        val lab = DecisionLab.variantV5(quick)
+        val qa = MatchRecoveryStore(MemoryPreferences(), board, events,
+            listOf(board, quick, cedarwood, lab).associateBy { it.id })
+        val experimental = GameSession(lab, events, seed = 42)
+        experimental.rollSteady()
+        assertTrue(qa.persist(experimental, "experimental-transfer", 1L))
+        val payload = qa.exportProgress()
+        val prefs = MemoryPreferences()
+        prefs.edit().putInt("completed", 8).putInt("wins", 3).commit()
+        val publicStore = MatchRecoveryStore(prefs, board, events,
+            listOf(board, quick, cedarwood).associateBy { it.id })
+        val classic = GameSession(quick, events, seed = 43)
+        classic.roll()
+        assertTrue(publicStore.persist(classic, "public-original", 2L))
+        assertTrue(runCatching { publicStore.previewImport(payload) }.isFailure)
+        assertTrue(runCatching { publicStore.importProgress(qa.previewImport(payload)) }.isFailure)
+        assertEquals(classic.snapshot(), requireNotNull(publicStore.load().match).game.snapshot())
+        assertEquals(8, prefs.getInt("completed", 0))
+        assertEquals(3, prefs.getInt("wins", 0))
+        val copy = MatchRecoveryStore(MemoryPreferences(), board, events,
+            listOf(board, quick, cedarwood).associateBy { it.id })
+        assertTrue(copy.importProgress(copy.previewImport(publicStore.exportProgress())))
+        assertEquals(classic.snapshot(), requireNotNull(copy.load().match).game.snapshot())
+    }
+
     @Test fun completedMatchTimeAndStatsSurviveReopenWithoutDoubleCounting() {
         for (passAndPlay in listOf(false, true)) {
             val prefs = MemoryPreferences()
