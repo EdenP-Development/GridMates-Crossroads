@@ -1,3 +1,9 @@
+# Active checkpoint — AI2-17E consolidated AI acceptance
+
+AI2-17D head fe59647 rules 46098498654 (#475) passed; Android 46098498630 (#1030) job 140835327986 build/unit test/lint in progress at inspection. Prior Android failure not yet verified repaired. Consolidated AI scope and eight additional physical checks in docs/AI2_17E_AI_ACCEPTANCE.md; carry forward P01–P12, all physical gates outstanding. No new runtime changes. Next inspect exact AI2-17D workflow completion and artifact/signing evidence before recommending APK; then freeze QA AI expansion and review broader roadmap/player experience. Public activation remains separate, no merge/release/signing changes.
+
+---
+
 # Active checkpoint — AI2-17D Android compile repair and final narrative consistency
 
 AI2-17C rules 46097480589 (#469) passed; Android 46097480549 (#1019) failed compileDebugKotlin, job 140832081990: unresolved displayRecordedName in journal/map/results because resolver was inside BoxWithConstraints. Moved identity resolver to enclosing active-match scope (dc40f29). Audited GameSession message templates; display-only actor prefix and recognized prank target formatting, no persisted text changes; finished status distinguishes final-round winner and other finishers (1998b22, 3154617, 9f3be0d). Added JVM tests for exact actor boundaries, prank target, route-name preservation, legacy fallback and finish status (f3e6614). Unrecognized narrative forms remain unchanged; no policy, RNG, checkpoint, default gameplay, LAN, signing or public release changes. Exact-head CI pending; do not mark compile repair verified until Android passes. Next verify both workflows and consolidate physical acceptance before moving to wider player-experience polish. No merge/release.
