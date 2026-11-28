@@ -1,0 +1,18 @@
+name: Crossroads private Beta 1 candidate
+on:
+  workflow_dispatch:
+    inputs:
+      reviewed_source:
+        description: 'Exact reviewed commit SHA of release/beta-1-candidate'
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  registration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refuse signing from default branch
+        run: |
+          echo "Registration only. Select the reviewed release/beta-1-candidate branch and its exact SHA."
+          exit 1
