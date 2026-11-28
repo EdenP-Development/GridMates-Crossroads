@@ -149,6 +149,23 @@ internal object CrossroadsCameraPreset {
             else -> 0.43f
         }
 
+    /** Measured HUD/dock insets are screen pixels, not board coordinates.
+     * Fall back to the existing preset before layout or when overlays collide. */
+    fun visibleFocusY(height: Float, top: Float, bottom: Float, fallback: Float): Float {
+        if (!height.isFinite() || height <= 0f || !top.isFinite() || !bottom.isFinite() ||
+            top <= 0f || bottom <= 0f || top + bottom >= height * .90f)
+            return height * fallback
+        return (top + height - bottom) * .5f
+    }
+
+    /** Keep an actual painted pawn inside a safe interval after ordinary bounds.
+     * Only used for automatic following, never manual pan or full map. */
+    fun revealPawn(translation: Float, pawnScreen: Float, low: Float, high: Float): Float {
+        if (!translation.isFinite() || !pawnScreen.isFinite() ||
+            !low.isFinite() || !high.isFinite() || low > high) return translation
+        return translation + (pawnScreen.coerceIn(low, high) - pawnScreen)
+    }
+
     /** Focus the actual fork first; leave just enough room to preview exits. */
     fun forkAnchor(
         source: Offset,
