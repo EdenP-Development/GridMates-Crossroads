@@ -1,3 +1,9 @@
+# Active release checkpoint — BETA-ITCH-05I release lint correction
+
+Rehearsal #3 run 46122526077 build job 140909926170 failed lintRelease MissingPermission in CrossroadsNearby.kt:48; signing skipped. Move unchanged real Nearby code to debug source set 83a0a69; release stub 4f8687c has no Android network services; remove shared implementation. Preserve public manifest and QA permissions, no lint suppression. Release and debug compile/lint and rehearsal rerun required. Fix currently release branch only; reconcile with active development before subsequent release integration. Private dispatch/default branch registration and key custody still open; no private signing or publication.
+
+---
+
 # Active release checkpoint — BETA-ITCH-05D signing isolation
 
 Workflow d819ebf splits unsigned build and private signing into separate hosted jobs; build receives no private secrets, transfers APK with SHA256 and version output; sign runner does not check out source or run Gradle, verifies transfer, package/version and offline permissions before signing, then verifies pinned certificate, alignment and receipt. Manual exact-reviewed-SHA gate retained. Static inspection only; workflow not executed. Available GitHub connector has no dispatch action; workflow default-branch availability, environment/secret restrictions, independent owner key custody, pinned action dependencies and full source review remain open. No key rotation, secret retrieval, signing or publication. Next resolve trusted dispatch route and owner approval; do not force main merge or add automatic secret-bearing push trigger to bypass dispatch. Runtime baseline 7e3cddc verified #516/#1097. Privacy/store drafts remain staged.
