@@ -55,6 +55,12 @@ jobs:
           mkdir -p native-evidence
           sha256sum app/build/outputs/apk/debug/app-debug.apk > native-evidence/apk.sha256
           git rev-parse HEAD > native-evidence/source.txt
+      - name: Checkout acceptance harness separately
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: acceptance-harness
+          persist-credentials: false
       - name: Enable emulator acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -80,6 +86,7 @@ jobs:
             adb exec-out screencap -p > native-evidence/launch.png
             adb shell uiautomator dump /sdcard/crossroads-launch.xml
             adb pull /sdcard/crossroads-launch.xml native-evidence/launch.xml
+            python3 acceptance-harness/tools/native_acceptance_smoke.py native-evidence
       - name: Validate capture
         run: |
           python3 -c "from pathlib import Path; p=Path('native-evidence/launch.png'); assert p.stat().st_size > 10000 and p.read_bytes()[:8] == bytes.fromhex('89504e470d0a1a0a')"
